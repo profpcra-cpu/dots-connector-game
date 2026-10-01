@@ -22,7 +22,7 @@
         .wood-board {
             background: linear-gradient(135deg, #deb887 0%, #c49a6c 50%, #b58351 100%);
             box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.5), inset 0 -3px 6px rgba(0,0,0,0.3);
-            border: 6px solid #7d4e24;
+            border: 5px solid #7d4e24;
         }
         .btn-game {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -47,45 +47,56 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 h-screen text-white flex flex-col items-center justify-between py-1.5 px-3 overflow-hidden">
+<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 h-screen text-white flex flex-col items-center justify-between py-2 px-3 overflow-hidden">
 
-    <!-- Header & Profile Bar -->
-    <header class="w-full max-w-sm flex flex-col items-center gap-1 shrink-0">
-        <div class="flex justify-between w-full px-1 items-center">
-            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 px-2.5 py-1 rounded-xl font-bold shadow-md flex items-center gap-1.5 text-xs btn-game border border-amber-400/40">
+    <!-- Header & Action Controls Bar -->
+    <header class="w-full max-w-sm flex flex-col items-center gap-1.5 shrink-0">
+        <!-- Top Navigation & Utility Buttons -->
+        <div class="grid grid-cols-4 gap-1.5 w-full px-0.5">
+            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-amber-400/40">
                 <i class="fa-solid fa-list-ul"></i> Níveis
             </button>
-            
-            <!-- User Profile Button -->
-            <button onclick="app.showProfileModal()" class="bg-slate-800/90 hover:bg-slate-700 px-2.5 py-1 rounded-xl font-bold shadow-md flex items-center gap-1.5 text-xs border border-purple-500/40 btn-game">
-                <span id="header-avatar" class="text-sm">🦊</span>
-                <span id="header-username" class="text-amber-300 truncate max-w-[80px]">Jogador</span>
-                <i class="fa-solid fa-pen text-[9px] text-slate-400"></i>
+            <button onclick="app.giveHint()" class="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-blue-400/30">
+                <i class="fa-solid fa-lightbulb text-amber-300"></i> Dica
             </button>
-
-            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 px-2.5 py-1 rounded-xl font-bold shadow-md flex items-center gap-1.5 text-xs btn-game border border-rose-400/40">
+            <button onclick="app.showSolution()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-purple-400/30">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> Solução
+            </button>
+            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-rose-400/40">
                 <i class="fa-solid fa-rotate-right"></i> Reiniciar
             </button>
         </div>
 
-        <!-- IQ & Score Meter Card -->
+        <!-- User Profile Bar -->
+        <div class="flex justify-between w-full px-0.5 items-center bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl px-2 py-1">
+            <button onclick="app.showProfileModal()" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span id="header-avatar" class="text-sm">🦊</span>
+                <span id="header-username" class="text-amber-300 font-bold text-xs truncate max-w-[120px]">Jogador</span>
+                <i class="fa-solid fa-pen text-[9px] text-slate-400"></i>
+            </button>
+            <span class="text-[11px] font-semibold text-purple-200 flex items-center gap-1">
+                <i class="fa-solid fa-star text-amber-300"></i> Score: <strong id="total-score" class="text-cyan-300">0</strong>
+            </span>
+        </div>
+
+        <!-- IQ Meter Card -->
         <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-xl p-2 shadow-lg flex flex-col gap-0.5">
             <div class="flex justify-between text-[11px] font-bold text-purple-200 px-1 items-center">
                 <span class="flex items-center gap-1"><i class="fa-solid fa-brain text-pink-400"></i> QI: <strong id="iq-score" class="text-amber-400 text-xs">75</strong></span>
-                <span class="flex items-center gap-1"><i class="fa-solid fa-star text-amber-300"></i> Score: <strong id="total-score" class="text-cyan-300 text-xs">0</strong></span>
+                <span class="text-[10px] text-slate-400 font-semibold" id="iq-title">Iniciante Curioso</span>
             </div>
             <div class="relative w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
                 <div id="iq-bar" class="bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
             </div>
             <div class="flex justify-between text-[9px] text-slate-400 font-semibold px-1">
-                <span id="iq-title">Iniciante Curioso</span>
+                <span>Início</span>
                 <span>Meta: 180 (Einstein)</span>
             </div>
         </div>
     </header>
 
     <!-- Main Game Board -->
-    <main class="relative w-full max-w-[240px] sm:max-w-[270px] aspect-square flex items-center justify-center my-auto shrink-0">
+    <main class="relative w-full max-w-[230px] sm:max-w-[260px] aspect-square flex items-center justify-center my-auto shrink-0">
         <div class="wood-board w-full h-full rounded-2xl p-2 relative flex items-center justify-center shadow-xl">
             <div class="relative w-full h-full bg-slate-100 rounded-xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
                 <canvas id="gameCanvas" class="w-full h-full block"></canvas>
@@ -106,16 +117,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Footer Controls -->
-    <footer class="w-full max-w-sm flex gap-2.5 shrink-0 pb-1">
-        <button onclick="app.giveHint()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-2.5 px-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-1.5 btn-game text-xs border border-blue-400/30">
-            <i class="fa-solid fa-lightbulb text-amber-300 text-sm"></i> Dica
-        </button>
-        <button onclick="app.showSolution()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-2.5 px-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-1.5 btn-game text-xs border border-purple-400/30">
-            <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-sm"></i> Solução
-        </button>
-    </footer>
 
     <!-- Level Selection Modal -->
     <div id="level-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
