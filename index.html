@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Link the Balls - Brain Puzzle</title>
-    <!-- Tailwind CSS for modern responsive styling -->
+    <title>Link the Balls - Ultimate Edition</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Fredoka -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
             font-family: 'Fredoka', sans-serif;
@@ -19,8 +21,8 @@
         }
         .wood-board {
             background: linear-gradient(135deg, #deb887 0%, #c49a6c 50%, #b58351 100%);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 3px 8px rgba(255,255,255,0.5), inset 0 -5px 10px rgba(0,0,0,0.3);
-            border: 10px solid #7d4e24;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 3px 6px rgba(255,255,255,0.5), inset 0 -4px 8px rgba(0,0,0,0.3);
+            border: 8px solid #7d4e24;
         }
         .btn-game {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -32,7 +34,6 @@
         .btn-game:active {
             transform: translateY(1px);
         }
-        /* Custom scrollbar for level modal */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -46,72 +47,77 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 min-h-screen text-white flex flex-col items-center justify-between p-3 sm:p-5 overflow-hidden">
+<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 h-screen text-white flex flex-col items-center justify-between py-2 px-3 sm:p-4 overflow-hidden">
 
-    <header class="w-full max-w-md flex flex-col items-center gap-2">
+    <!-- Header & Profile Bar -->
+    <header class="w-full max-w-sm flex flex-col items-center gap-1.5 shrink-0">
         <div class="flex justify-between w-full px-1 items-center">
-            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 px-3.5 py-2 rounded-2xl font-bold shadow-md flex items-center gap-2 text-sm btn-game border border-amber-400/40">
+            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-2 text-xs sm:text-sm btn-game border border-amber-400/40">
                 <i class="fa-solid fa-list-ul"></i> Níveis
             </button>
-            <div class="text-center">
-                <h1 class="text-lg sm:text-xl font-bold tracking-wider text-amber-300 drop-shadow-md">CONECTE AS BOLAS</h1>
-                <p id="level-indicator" class="text-xs text-purple-200 font-medium">Nível 1 - Iniciante</p>
-            </div>
-            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 px-3.5 py-2 rounded-2xl font-bold shadow-md flex items-center gap-2 text-sm btn-game border border-rose-400/40">
+            
+            <!-- User Profile Button -->
+            <button onclick="app.showProfileModal()" class="bg-slate-800/90 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-2 text-xs border border-purple-500/40 btn-game">
+                <span id="header-avatar" class="text-base">🦊</span>
+                <span id="header-username" class="text-amber-300 truncate max-w-[90px]">Jogador</span>
+                <i class="fa-solid fa-pen text-[10px] text-slate-400"></i>
+            </button>
+
+            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-2 text-xs sm:text-sm btn-game border border-rose-400/40">
                 <i class="fa-solid fa-rotate-right"></i> Reiniciar
             </button>
         </div>
 
-        <!-- IQ Meter Card -->
-        <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-2xl p-3 shadow-xl flex flex-col gap-1.5">
+        <!-- IQ & Score Meter Card -->
+        <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-xl p-2.5 shadow-xl flex flex-col gap-1">
             <div class="flex justify-between text-xs font-bold text-purple-200 px-1 items-center">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-brain text-pink-400"></i> QI Atual: <strong id="iq-score" class="text-amber-400 text-sm">75</strong></span>
-                <span id="iq-title" class="text-cyan-300 text-[11px] bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">Iniciante Curioso</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-brain text-pink-400"></i> QI: <strong id="iq-score" class="text-amber-400 text-sm">75</strong></span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-star text-amber-300"></i> Score: <strong id="total-score" class="text-cyan-300 text-sm">0</strong></span>
             </div>
-            <div class="relative w-full bg-slate-800 h-4 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
+            <div class="relative w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
                 <div id="iq-bar" class="bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
             </div>
             <div class="flex justify-between text-[10px] text-slate-400 font-semibold px-1">
-                <span>75</span>
-                <span>130 (Einstein)</span>
-                <span>180</span>
+                <span id="iq-title">Iniciante Curioso</span>
+                <span>Meta: 180 (Einstein)</span>
             </div>
         </div>
     </header>
 
-    <main class="relative w-full max-w-sm aspect-square my-auto flex items-center justify-center">
-        <!-- Wood Board Outer Frame -->
-        <div class="wood-board w-full h-full rounded-3xl p-3 sm:p-4 relative flex items-center justify-center shadow-2xl">
-            <!-- Canvas container -->
-            <div class="relative w-full h-full bg-slate-100 rounded-2xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
+    <!-- Main Game Board -->
+    <main class="relative w-full max-w-[280px] sm:max-w-[310px] aspect-square flex items-center justify-center my-auto shrink-0">
+        <div class="wood-board w-full h-full rounded-2xl p-2.5 sm:p-3 relative flex items-center justify-center shadow-2xl">
+            <div class="relative w-full h-full bg-slate-100 rounded-xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
                 <canvas id="gameCanvas" class="w-full h-full block"></canvas>
             </div>
         </div>
 
         <!-- Success Modal Overlay -->
-        <div id="success-modal" class="absolute inset-0 bg-black/75 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
-            <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-6 rounded-3xl shadow-2xl max-w-xs w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="success-card">
-                <div class="w-16 h-16 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-lg mb-3 animate-bounce">
-                    <i class="fa-solid fa-star"></i>
+        <div id="success-modal" class="absolute inset-0 bg-black/75 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-5 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
+            <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-5 rounded-2xl shadow-2xl max-w-xs w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="success-card">
+                <div class="w-14 h-14 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 text-2xl shadow-lg mb-2.5 animate-bounce">
+                    <i class="fa-solid fa-trophy"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-amber-300 mb-1">Nível Concluído!</h2>
-                <p id="success-message" class="text-sm text-slate-300 mb-5">+20 Pontos de QI Adicionados!</p>
-                <button onclick="app.nextLevel()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-2xl shadow-lg text-white btn-game flex items-center justify-center gap-2">
+                <h2 class="text-xl font-bold text-amber-300 mb-1">Nível Concluído!</h2>
+                <p id="success-message" class="text-xs text-slate-300 mb-4">+20 Pontos de QI Adicionados!</p>
+                <button onclick="app.nextLevel()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-xl shadow-lg text-white btn-game flex items-center justify-center gap-2 text-sm">
                     Próximo Nível <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </div>
     </main>
 
-    <footer class="w-full max-w-md flex gap-3">
-        <button onclick="app.giveHint()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-3.5 px-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-sm border border-blue-400/30">
+    <!-- Footer Controls -->
+    <footer class="w-full max-w-sm flex gap-3 shrink-0 pb-1">
+        <button onclick="app.giveHint()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-3 px-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-xs sm:text-sm border border-blue-400/30">
             <i class="fa-solid fa-lightbulb text-amber-300 text-base"></i> Dica
         </button>
-        <button onclick="app.showSolution()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3.5 px-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-sm border border-purple-400/30">
+        <button onclick="app.showSolution()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 px-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-xs sm:text-sm border border-purple-400/30">
             <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-base"></i> Solução
         </button>
     </footer>
 
+    <!-- Level Selection Modal -->
     <div id="level-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-slate-900 border border-purple-500/40 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -120,12 +126,35 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <div id="level-grid" class="grid grid-cols-3 gap-3.5 py-2 max-h-64 overflow-y-auto px-1">
-                <!-- Dynamic levels rendered here -->
-            </div>
+            <div id="level-grid" class="grid grid-cols-3 gap-3.5 py-2 max-h-64 overflow-y-auto px-1"></div>
         </div>
     </div>
 
+    <!-- User Profile & Registration Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-purple-500/40 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-amber-300 flex items-center gap-2"><i class="fa-solid fa-user-pen"></i> Perfil do Jogador</h2>
+                <button onclick="app.hideProfileModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="flex flex-col gap-3 py-2">
+                <label class="text-xs text-slate-300 font-semibold">Seu Nome:</label>
+                <input type="text" id="input-username" maxlength="15" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold outline-none focus:border-amber-400 transition-colors" placeholder="Digite seu nome...">
+                
+                <label class="text-xs text-slate-300 font-semibold mt-1">Escolha seu Avatar:</label>
+                <div class="grid grid-cols-5 gap-2" id="avatar-selector">
+                    <!-- Avatars injected via JS -->
+                </div>
+            </div>
+            <button onclick="app.saveProfile()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-lg btn-game mt-2">
+                Salvar Perfil
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Script -->
     <script>
         const levels = [
             {
@@ -215,24 +244,64 @@
             }
         ];
 
+        class SoundManager {
+            constructor() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = AudioContext ? new AudioContext() : null;
+            }
+            playTone(freq, type, duration) {
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+            connect() { this.playTone(580, 'sine', 0.15); }
+            win() {
+                if (!this.ctx) return;
+                setTimeout(() => this.playTone(440, 'triangle', 0.15), 0);
+                setTimeout(() => this.playTone(554, 'triangle', 0.15), 150);
+                setTimeout(() => this.playTone(659, 'triangle', 0.3), 300);
+            }
+            hint() { this.playTone(350, 'sine', 0.2); }
+        }
+
         class LinkPuzzleGame {
             constructor() {
                 this.currentLevelIndex = 0;
                 this.iqScore = parseInt(localStorage.getItem('link_balls_iq')) || 75;
+                this.totalScore = parseInt(localStorage.getItem('link_balls_score')) || 0;
                 this.completedLevels = JSON.parse(localStorage.getItem('link_balls_completed')) || [0];
+                this.username = localStorage.getItem('link_balls_username') || 'Jogador';
+                this.avatar = localStorage.getItem('link_balls_avatar') || '🦊';
+
                 this.userPaths = {};
                 this.completedPairs = new Set();
                 this.activePair = null;
                 this.currentPathPoints = [];
 
+                this.sound = new SoundManager();
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
 
                 this.initCanvasSize();
                 this.setupEventListeners();
+                this.updateProfileUI();
                 this.loadLevel(this.currentLevelIndex);
                 this.updateIQDisplay();
                 this.renderLevelGrid();
+                this.setupAvatarSelector();
+
+                if (!localStorage.getItem('link_balls_username')) {
+                    setTimeout(() => this.showProfileModal(), 500);
+                }
             }
 
             initCanvasSize() {
@@ -246,8 +315,6 @@
 
             loadLevel(index) {
                 this.currentLevelIndex = index;
-                const level = levels[index];
-                document.getElementById('level-indicator').innerText = `Nível ${level.id} - ${level.name}`;
                 this.userPaths = {};
                 this.completedPairs = new Set();
                 this.activePair = null;
@@ -311,6 +378,7 @@
                         const key = [this.activePair.fromDot.id, dot.id].sort((a,b)=>a-b).join('-');
                         this.userPaths[key] = [...this.currentPathPoints];
                         this.completedPairs.add(key);
+                        this.sound.connect();
                         this.checkWinCondition();
                     }
 
@@ -340,7 +408,7 @@
 
             findDotAt(x, y) {
                 const level = levels[this.currentLevelIndex];
-                const threshold = 38;
+                const threshold = 35;
                 for (let dot of level.dots) {
                     const dx = dot.x * this.width - x;
                     const dy = dot.y * this.height - y;
@@ -358,11 +426,11 @@
                 for (let [key, path] of Object.entries(this.userPaths)) {
                     if (path.length < 2) continue;
                     const firstDot = level.dots.find(d => d.id === Number(key.split('-')[0]));
-                    this.drawPathLine(path, firstDot ? firstDot.color : '#64748b', 14);
+                    this.drawPathLine(path, firstDot ? firstDot.color : '#64748b', 12);
                 }
 
                 if (this.activePair && this.currentPathPoints.length > 1) {
-                    this.drawPathLine(this.currentPathPoints, this.activePair.color, 14, true);
+                    this.drawPathLine(this.currentPathPoints, this.activePair.color, 12, true);
                 }
 
                 for (let dot of level.dots) {
@@ -385,7 +453,7 @@
                     this.ctx.setLineDash([8, 6]);
                 }
                 this.ctx.shadowColor = 'rgba(0,0,0,0.25)';
-                this.ctx.shadowBlur = 6;
+                this.ctx.shadowBlur = 5;
                 this.ctx.stroke();
                 this.ctx.restore();
             }
@@ -393,14 +461,14 @@
             drawDot(dot) {
                 const x = dot.x * this.width;
                 const y = dot.y * this.height;
-                const radius = 23;
+                const radius = 20;
 
                 this.ctx.save();
                 this.ctx.shadowColor = 'rgba(0,0,0,0.35)';
-                this.ctx.shadowBlur = 8;
-                this.ctx.shadowOffsetY = 4;
+                this.ctx.shadowBlur = 6;
+                this.ctx.shadowOffsetY = 3;
 
-                const gradient = this.ctx.createRadialGradient(x - 6, y - 6, 4, x, y, radius);
+                const gradient = this.ctx.createRadialGradient(x - 5, y - 5, 3, x, y, radius);
                 gradient.addColorStop(0, '#ffffff');
                 gradient.addColorStop(0.35, dot.color);
                 gradient.addColorStop(1, this.darkenColor(dot.color, 45));
@@ -410,7 +478,7 @@
                 this.ctx.fillStyle = gradient;
                 this.ctx.fill();
 
-                this.ctx.lineWidth = 3.5;
+                this.ctx.lineWidth = 3;
                 this.ctx.strokeStyle = 'rgba(255,255,255,0.85)';
                 this.ctx.stroke();
                 this.ctx.restore();
@@ -429,15 +497,24 @@
                 const level = levels[this.currentLevelIndex];
                 const totalPairs = level.dots.length / 2;
                 if (this.completedPairs.size === totalPairs) {
-                    this.iqScore = Math.min(180, this.iqScore + 25);
+                    this.iqScore = Math.min(180, this.iqScore + 20);
+                    this.totalScore += 100 * level.id;
                     this.updateIQDisplay();
                     localStorage.setItem('link_balls_iq', this.iqScore);
+                    localStorage.setItem('link_balls_score', this.totalScore);
 
                     if (!this.completedLevels.includes(this.currentLevelIndex + 1) && this.currentLevelIndex + 1 < levels.length) {
                         this.completedLevels.push(this.currentLevelIndex + 1);
                         localStorage.setItem('link_balls_completed', JSON.stringify(this.completedLevels));
                     }
                     this.renderLevelGrid();
+                    this.sound.win();
+
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
 
                     setTimeout(() => {
                         const modal = document.getElementById('success-modal');
@@ -451,6 +528,7 @@
 
             updateIQDisplay() {
                 document.getElementById('iq-score').innerText = this.iqScore;
+                document.getElementById('total-score').innerText = this.totalScore;
                 const percentage = ((this.iqScore - 75) / (180 - 75)) * 100;
                 document.getElementById('iq-bar').style.width = `${Math.max(4, Math.min(100, percentage))}%`;
 
@@ -466,6 +544,7 @@
                     const key = [conn.from, conn.to].sort((a,b)=>a-b).join('-');
                     if (!this.completedPairs.has(key)) {
                         this.userPaths[key] = conn.path.slice(0, Math.ceil(conn.path.length / 2));
+                        this.sound.hint();
                         this.redraw();
                         break;
                     }
@@ -484,6 +563,7 @@
                         const key = [conn.from, conn.to].sort((a,b)=>a-b).join('-');
                         this.userPaths[key] = conn.path;
                         this.completedPairs.add(key);
+                        this.sound.connect();
                         this.redraw();
                         step++;
                         setTimeout(animateStep, 450);
@@ -514,21 +594,66 @@
                 document.getElementById('level-modal').classList.add('hidden');
             }
 
+            showProfileModal() {
+                document.getElementById('input-username').value = this.username;
+                document.getElementById('profile-modal').classList.remove('hidden');
+            }
+
+            hideProfileModal() {
+                document.getElementById('profile-modal').classList.add('hidden');
+            }
+
+            setupAvatarSelector() {
+                const avatars = ['🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🦄', '🐨', '🐸', '🤖'];
+                const container = document.getElementById('avatar-selector');
+                container.innerHTML = '';
+                avatars.forEach(av => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `text-2xl p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border transition-all ${this.avatar === av ? 'border-amber-400 bg-slate-700 scale-105' : 'border-slate-700'}`;
+                    btn.innerText = av;
+                    btn.onclick = () => {
+                        this.avatar = av;
+                        this.setupAvatarSelector();
+                    };
+                    container.appendChild(btn);
+                });
+            }
+
+            saveProfile() {
+                const val = document.getElementById('input-username').value.trim();
+                if (val) {
+                    this.username = val;
+                }
+                localStorage.setItem('link_balls_username', this.username);
+                localStorage.setItem('link_balls_avatar', this.avatar);
+                this.updateProfileUI();
+                this.hideProfileModal();
+            }
+
+            updateProfileUI() {
+                document.getElementById('header-avatar').innerText = this.avatar;
+                document.getElementById('header-username').innerText = this.username;
+            }
+
             renderLevelGrid() {
                 const grid = document.getElementById('level-grid');
                 grid.innerHTML = '';
                 levels.forEach((lvl, idx) => {
                     const unlocked = this.completedLevels.includes(idx);
                     const btn = document.createElement('button');
-                    btn.className = `aspect-square rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-md transition-all ${
+                    btn.type = 'button';
+                    btn.className = `py-3 rounded-2xl font-bold flex flex-col items-center justify-center gap-1 transition-all ${
                         unlocked 
-                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 cursor-pointer btn-game border border-amber-300' 
-                        : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700/50'
+                            ? 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-md btn-game' 
+                            : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
                     }`;
+                    
                     btn.innerHTML = `
-                        <span class="text-xl">${lvl.id}</span>
-                        <i class="fa-solid ${unlocked ? 'fa-unlock text-xs' : 'fa-lock text-xs'}"></i>
+                        <span class="text-sm">Nível ${lvl.id}</span>
+                        <span class="text-[10px] opacity-80">${unlocked ? (idx === this.currentLevelIndex ? 'Atual' : 'Liberado') : '<i class="fa-solid fa-lock"></i>'}</span>
                     `;
+
                     if (unlocked) {
                         btn.onclick = () => {
                             this.loadLevel(idx);
@@ -540,10 +665,11 @@
             }
         }
 
-        let app;
-        window.onload = () => {
+        // Inicialização da aplicação
+        let app = null;
+        window.addEventListener('DOMContentLoaded', () => {
             app = new LinkPuzzleGame();
-        };
+        });
     </script>
 </body>
 </html>
