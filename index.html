@@ -3,633 +3,674 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots</title>
+    <title>Link the Balls - Ultimate Edition</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        * {
-            font-family: 'Outfit', sans-serif;
+        body {
+            font-family: 'Fredoka', sans-serif;
             touch-action: none;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
         }
-        body {
-            background: radial-gradient(circle at 50% 0%, #2a2a3e 0%, #0f0f17 100%);
-            color: #cdd6f4;
-            min-height: 100vh;
-            overflow: hidden;
+        .wood-board {
+            background: linear-gradient(135deg, #deb887 0%, #c49a6c 50%, #b58351 100%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 2px 5px rgba(255,255,255,0.5), inset 0 -3px 6px rgba(0,0,0,0.3);
+            border: 5px solid #7d4e24;
         }
-        
-        .glass-panel {
-            background: rgba(30, 30, 46, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .btn-game {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .board-frame {
-            background: #2b1d12;
-            border: 10px solid #5c3d2e;
-            box-shadow: 
-                inset 0 0 25px rgba(0,0,0,0.9), 
-                0 15px 40px rgba(0,0,0,0.6),
-                0 0 0 1px rgba(255,255,255,0.05);
-            border-radius: 20px;
-            transition: box-shadow 0.3s;
+        .btn-game:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
         }
-
-        .board-frame.win-glow {
-            box-shadow: 
-                inset 0 0 25px rgba(0,0,0,0.9),
-                0 15px 40px rgba(0,0,0,0.6),
-                0 0 60px rgba(34, 197, 94, 0.6);
+        .btn-game:active {
+            transform: translateY(1px);
         }
-
-        .iq-progress {
-            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        ::-webkit-scrollbar {
+            width: 6px;
         }
-
-        @keyframes pulse-glow {
-            0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
-            50% { filter: drop-shadow(0 0 20px currentColor); }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
         }
-        .glow-effect { animation: pulse-glow 2s infinite; }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
         }
-        .shake { animation: shake 0.3s; }
-
-        @keyframes float-up {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
-        }
-        .float-text {
-            position: absolute;
-            pointer-events: none;
-            font-weight: 900;
-            font-size: 20px;
-            animation: float-up 1s ease-out forwards;
-            z-index: 100;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-        }
-
-        .modal-bg {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-press:active { transform: scale(0.92); }
-
-        /* Combo indicator */
-        @keyframes combo-pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .combo-pop { animation: combo-pop 0.4s ease-out; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-between h-screen p-3 md:p-6 select-none">
+<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 h-screen text-white flex flex-col items-center justify-between py-2 px-3 overflow-hidden">
 
-    <header class="w-full max-w-md flex flex-col items-center gap-3 glass-panel p-4 rounded-2xl shadow-xl">
-        <div class="flex justify-between items-center w-full">
-            <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-indigo-600/30 rounded-xl flex items-center justify-center text-indigo-400 font-bold text-lg border border-indigo-500/30">
-                    <i class="fa-solid fa-puzzle-piece"></i>
-                </div>
-                <div>
-                    <h1 class="text-sm text-gray-400 font-semibold tracking-wider">NÍVEL <span id="level-num" class="text-white text-base">1</span></h1>
-                    <p id="level-name" class="text-xs text-indigo-400 font-medium">Grid 4x4 - Iniciante</p>
-                </div>
-            </div>
-
-            <div class="flex flex-col items-end gap-1">
-                <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                    <i class="fa-solid fa-brain text-white text-lg"></i>
-                    <div class="flex flex-col">
-                        <span class="text-[10px] text-amber-100 uppercase tracking-wider font-bold">QI Atual</span>
-                        <span id="iq-value" class="text-lg font-black text-white leading-none">75</span>
-                    </div>
-                </div>
-                <div id="move-counter" class="text-[10px] text-gray-400 font-bold">
-                    <i class="fa-solid fa-shoe-prints text-indigo-400"></i> <span id="move-count">0</span> movimentos
-                </div>
-            </div>
+    <!-- Header & Action Controls Bar -->
+    <header class="w-full max-w-sm flex flex-col items-center gap-1.5 shrink-0">
+        <!-- Top Navigation & Utility Buttons -->
+        <div class="grid grid-cols-4 gap-1.5 w-full px-0.5">
+            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-amber-400/40">
+                <i class="fa-solid fa-list-ul"></i> Níveis
+            </button>
+            <button onclick="app.giveHint()" class="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-blue-400/30">
+                <i class="fa-solid fa-lightbulb text-amber-300"></i> Dica
+            </button>
+            <button onclick="app.showSolution()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-purple-400/30">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> Solução
+            </button>
+            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 py-1.5 px-1 rounded-xl font-bold shadow-md flex items-center justify-center gap-1 text-[11px] btn-game border border-rose-400/40">
+                <i class="fa-solid fa-rotate-right"></i> Reiniciar
+            </button>
         </div>
 
-        <div class="w-full mt-1">
-            <div class="flex justify-between text-[11px] font-bold text-gray-400 mb-1 px-1">
-                <span class="flex items-center gap-1"><i class="fa-solid fa-brain text-pink-400"></i> 75</span>
-                <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-yellow-400"></i> 130</span>
-                <span class="flex items-center gap-1"><i class="fa-solid fa-graduation-cap text-cyan-400"></i> 180+</span>
+        <!-- User Profile Bar -->
+        <div class="flex justify-between w-full px-0.5 items-center bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl px-2 py-1">
+            <button onclick="app.showProfileModal()" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <span id="header-avatar" class="text-sm">🦊</span>
+                <span id="header-username" class="text-amber-300 font-bold text-xs truncate max-w-[120px]">Jogador</span>
+                <i class="fa-solid fa-pen text-[9px] text-slate-400"></i>
+            </button>
+            <span class="text-[11px] font-semibold text-purple-200 flex items-center gap-1">
+                <i class="fa-solid fa-star text-amber-300"></i> Score: <strong id="total-score" class="text-cyan-300">0</strong>
+            </span>
+        </div>
+
+        <!-- IQ Meter Card -->
+        <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-xl p-2 shadow-lg flex flex-col gap-0.5">
+            <div class="flex justify-between text-[11px] font-bold text-purple-200 px-1 items-center">
+                <span class="flex items-center gap-1"><i class="fa-solid fa-brain text-pink-400"></i> QI: <strong id="iq-score" class="text-amber-400 text-xs">75</strong></span>
+                <span class="text-[10px] text-slate-400 font-semibold" id="iq-title">Iniciante Curioso</span>
             </div>
-            <div class="w-full h-3.5 bg-gray-800 rounded-full p-0.5 relative overflow-hidden border border-gray-700">
-                <div id="iq-bar" class="iq-progress h-full bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400 rounded-full" style="width: 0%;"></div>
+            <div class="relative w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
+                <div id="iq-bar" class="bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-between text-[9px] text-slate-400 font-semibold px-1">
+                <span>Início</span>
+                <span>Meta: 180 (Einstein)</span>
             </div>
         </div>
     </header>
 
-    <main class="relative flex-1 w-full max-w-md my-3 flex items-center justify-center">
-        <div id="board-wrapper" class="board-frame relative w-full aspect-square max-w-[420px] max-h-[420px] p-3 flex items-center justify-center">
-            <canvas id="gameCanvas" class="w-full h-full rounded-xl cursor-pointer touch-none"></canvas>
-            <canvas id="confettiCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl"></canvas>
-            <div id="float-layer" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl"></div>
+    <!-- Main Game Board -->
+    <main class="relative w-full max-w-[230px] sm:max-w-[260px] aspect-square flex items-center justify-center my-auto shrink-0">
+        <div class="wood-board w-full h-full rounded-2xl p-2 relative flex items-center justify-center shadow-xl">
+            <div class="relative w-full h-full bg-slate-100 rounded-xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+            </div>
+        </div>
+
+        <!-- Success Modal Overlay -->
+        <div id="success-modal" class="absolute inset-0 bg-black/75 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-4 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
+            <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-4 rounded-2xl shadow-2xl max-w-xs w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="success-card">
+                <div class="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 text-xl shadow-lg mb-2 animate-bounce">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-lg font-bold text-amber-300 mb-0.5">Nível Concluído!</h2>
+                <p id="success-message" class="text-[11px] text-slate-300 mb-3">+20 Pontos de QI Adicionados!</p>
+                <button onclick="app.nextLevel()" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-xl shadow-lg text-white btn-game flex items-center justify-center gap-2 text-xs">
+                    Próximo Nível <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </main>
 
-    <footer class="w-full max-w-md glass-panel p-3 rounded-2xl shadow-xl flex items-center justify-around gap-2">
-        <button id="btn-reset" class="btn-press flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
-            <i class="fa-solid fa-rotate-left text-amber-400 text-lg"></i>
-            <span class="text-[11px] font-semibold text-gray-300">Reiniciar</span>
-        </button>
-
-        <button id="btn-undo" class="btn-press flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
-            <i class="fa-solid fa-arrow-rotate-left text-blue-400 text-lg"></i>
-            <span class="text-[11px] font-semibold text-gray-300">Desfazer</span>
-        </button>
-
-        <button id="btn-hint" class="btn-press flex-1 py-2.5 px-3 bg-indigo-900/40 hover:bg-indigo-800/60 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-indigo-500/40 relative">
-            <span id="hint-badge" class="absolute -top-1.5 -right-1.5 bg-indigo-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-gray-900">3</span>
-            <i class="fa-solid fa-lightbulb text-yellow-300 text-lg"></i>
-            <span class="text-[11px] font-semibold text-indigo-200">Dica</span>
-        </button>
-
-        <button id="btn-levels" class="btn-press flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
-            <i class="fa-solid fa-grid-2 text-emerald-400 text-lg"></i>
-            <span class="text-[11px] font-semibold text-gray-300">Fases</span>
-        </button>
-    </footer>
-
-    <!-- Win Modal -->
-    <div id="win-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel bg-gray-900/90 border border-indigo-500/30 p-6 rounded-3xl max-w-sm w-full text-center shadow-2xl flex flex-col items-center gap-4 transform scale-90 transition-transform duration-300" id="win-modal-card">
-            <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center text-4xl text-gray-900 shadow-lg shadow-amber-500/30 animate-bounce">
-                <i class="fa-solid fa-trophy"></i>
+    <!-- Level Selection Modal -->
+    <div id="level-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-purple-500/40 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-amber-300 flex items-center gap-2"><i class="fa-solid fa-gamepad"></i> Selecionar Nível</h2>
+                <button onclick="app.hideLevelSelect()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            <div>
-                <h2 class="text-2xl font-extrabold text-white">Nível Concluído!</h2>
-                <p class="text-sm text-gray-300 mt-1" id="win-message">Conexões perfeitas e estrelas coletadas!</p>
+            <div id="level-grid" class="grid grid-cols-3 gap-3.5 py-2 max-h-64 overflow-y-auto px-1"></div>
+        </div>
+    </div>
+
+    <!-- User Profile & Registration Modal -->
+    <div id="profile-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-purple-500/40 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-amber-300 flex items-center gap-2"><i class="fa-solid fa-user-pen"></i> Perfil do Jogador</h2>
+                <button onclick="app.hideProfileModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            
-            <div class="w-full bg-gray-800/80 p-3 rounded-xl border border-gray-700 flex justify-around">
-                <div class="text-center">
-                    <p class="text-xs text-gray-400">Pontos QI</p>
-                    <p id="win-iq-gained" class="text-xl font-black text-amber-400">+10 QI</p>
-                </div>
-                <div class="w-[1px] bg-gray-700"></div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-400">Estrelas</p>
-                    <p id="win-stars" class="text-xl font-black text-yellow-300">★ ★ ★</p>
-                </div>
-                <div class="w-[1px] bg-gray-700"></div>
-                <div class="text-center">
-                    <p class="text-xs text-gray-400">Tempo</p>
-                    <p id="win-time" class="text-xl font-black text-cyan-400">0:00</p>
+            <div class="flex flex-col gap-3 py-2">
+                <label class="text-xs text-slate-300 font-semibold">Seu Nome:</label>
+                <input type="text" id="input-username" maxlength="15" class="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold outline-none focus:border-amber-400 transition-colors" placeholder="Digite seu nome...">
+                
+                <label class="text-xs text-slate-300 font-semibold mt-1">Escolha seu Avatar:</label>
+                <div class="grid grid-cols-5 gap-2" id="avatar-selector">
+                    <!-- Avatars injected via JS -->
                 </div>
             </div>
-
-            <button id="btn-next-level" class="btn-press w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 transition">
-                Próximo Nível <i class="fa-solid fa-arrow-right ml-2"></i>
+            <button onclick="app.saveProfile()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-lg btn-game mt-2">
+                Salvar Perfil
             </button>
         </div>
     </div>
 
-    <!-- Levels Modal -->
-    <div id="levels-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel bg-gray-900/95 border border-gray-700 p-6 rounded-3xl max-w-md w-full shadow-2xl flex flex-col gap-4 max-h-[85vh]">
-            <div class="flex justify-between items-center pb-2 border-b border-gray-800">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-map text-indigo-400"></i> Seleção de Níveis
-                </h2>
-                <button id="btn-close-levels" class="btn-press w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <div id="levels-grid" class="grid grid-cols-4 gap-3 overflow-y-auto p-1 max-h-[60vh]"></div>
-        </div>
-    </div>
-
+    <!-- Application Script -->
     <script>
-        /* ===================================================================
-           AUDIO SYNTHESIZER ENGINE (Melhorado com efeitos extras)
-           =================================================================== */
-        class SoundEngine {
-            constructor() {
-                this.ctx = null;
-                this.enabled = true;
-                this.masterGain = null;
+        const levels = [
+            {
+                id: 1,
+                name: "Iniciante",
+                dots: [
+                    { id: 1, color: '#ef4444', x: 0.2, y: 0.2 },
+                    { id: 2, color: '#ef4444', x: 0.8, y: 0.8 },
+                    { id: 3, color: '#3b82f6', x: 0.8, y: 0.2 },
+                    { id: 4, color: '#3b82f6', x: 0.2, y: 0.8 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.2, y:0.2}, {x:0.5, y:0.4}, {x:0.8, y:0.8}] },
+                    { from: 3, to: 4, path: [{x:0.8, y:0.2}, {x:0.5, y:0.6}, {x:0.2, y:0.8}] }
+                ]
+            },
+            {
+                id: 2,
+                name: "Curvas Acima",
+                dots: [
+                    { id: 1, color: '#22c55e', x: 0.15, y: 0.15 },
+                    { id: 2, color: '#22c55e', x: 0.85, y: 0.85 },
+                    { id: 3, color: '#ef4444', x: 0.85, y: 0.15 },
+                    { id: 4, color: '#ef4444', x: 0.15, y: 0.85 },
+                    { id: 5, color: '#3b82f6', x: 0.50, y: 0.50 },
+                    { id: 6, color: '#3b82f6', x: 0.50, y: 0.85 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.15, y:0.15}, {x:0.5, y:0.3}, {x:0.85, y:0.85}] },
+                    { from: 3, to: 4, path: [{x:0.85, y:0.15}, {x:0.5, y:0.5}, {x:0.15, y:0.85}] },
+                    { from: 5, to: 6, path: [{x:0.50, y:0.50}, {x:0.50, y:0.85}] }
+                ]
+            },
+            {
+                id: 3,
+                name: "Labirinto Cruzado",
+                dots: [
+                    { id: 1, color: '#eab308', x: 0.2, y: 0.2 },
+                    { id: 2, color: '#eab308', x: 0.8, y: 0.8 },
+                    { id: 3, color: '#ec4899', x: 0.8, y: 0.2 },
+                    { id: 4, color: '#ec4899', x: 0.2, y: 0.8 },
+                    { id: 5, color: '#06b6d4', x: 0.5, y: 0.2 },
+                    { id: 6, color: '#06b6d4', x: 0.5, y: 0.8 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.2, y:0.2}, {x:0.3, y:0.5}, {x:0.8, y:0.8}] },
+                    { from: 3, to: 4, path: [{x:0.8, y:0.2}, {x:0.7, y:0.5}, {x:0.2, y:0.8}] },
+                    { from: 5, to: 6, path: [{x:0.5, y:0.2}, {x:0.5, y:0.5}, {x:0.5, y:0.8}] }
+                ]
+            },
+            {
+                id: 4,
+                name: "Desafio Mestre",
+                dots: [
+                    { id: 1, color: '#ef4444', x: 0.2, y: 0.15 },
+                    { id: 2, color: '#ef4444', x: 0.8, y: 0.85 },
+                    { id: 3, color: '#3b82f6', x: 0.8, y: 0.15 },
+                    { id: 4, color: '#3b82f6', x: 0.2, y: 0.85 },
+                    { id: 5, color: '#22c55e', x: 0.5, y: 0.35 },
+                    { id: 6, color: '#22c55e', x: 0.5, y: 0.65 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.2, y:0.15}, {x:0.1, y:0.5}, {x:0.8, y:0.85}] },
+                    { from: 3, to: 4, path: [{x:0.8, y:0.15}, {x:0.9, y:0.5}, {x:0.2, y:0.85}] },
+                    { from: 5, to: 6, path: [{x:0.5, y:0.35}, {x:0.5, y:0.65}] }
+                ]
+            },
+            {
+                id: 5,
+                name: "Nível Einstein",
+                dots: [
+                    { id: 1, color: '#a855f7', x: 0.15, y: 0.15 },
+                    { id: 2, color: '#a855f7', x: 0.85, y: 0.85 },
+                    { id: 3, color: '#f97316', x: 0.85, y: 0.15 },
+                    { id: 4, color: '#f97316', x: 0.15, y: 0.85 },
+                    { id: 5, color: '#06b6d4', x: 0.50, y: 0.20 },
+                    { id: 6, color: '#06b6d4', x: 0.50, y: 0.80 },
+                    { id: 7, color: '#eab308', x: 0.20, y: 0.50 },
+                    { id: 8, color: '#eab308', x: 0.80, y: 0.50 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.15, y:0.15}, {x:0.3, y:0.3}, {x:0.85, y:0.85}] },
+                    { from: 3, to: 4, path: [{x:0.85, y:0.15}, {x:0.7, y:0.7}, {x:0.15, y:0.85}] },
+                    { from: 5, to: 6, path: [{x:0.50, y:0.20}, {x:0.35, y:0.5}, {x:0.50, y:0.80}] },
+                    { from: 7, to: 8, path: [{x:0.20, y:0.50}, {x:0.5, y:0.65}, {x:0.80, y:0.50}] }
+                ]
             }
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    this.masterGain = this.ctx.createGain();
-                    this.masterGain.gain.value = 0.5;
-                    this.masterGain.connect(this.ctx.destination);
-                }
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-            }
+        ];
 
-            playPop(freq = 440, duration = 0.08, volume = 0.25) {
-                if (!this.ctx || !this.enabled) return;
+        class SoundManager {
+            constructor() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = AudioContext ? new AudioContext() : null;
+            }
+            playTone(freq, type, duration) {
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(freq * 1.8, this.ctx.currentTime + duration);
-                gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
                 osc.connect(gain);
-                gain.connect(this.masterGain);
+                gain.connect(this.ctx.destination);
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             }
+            connect() { this.playTone(580, 'sine', 0.15); }
+            win() {
+                if (!this.ctx) return;
+                setTimeout(() => this.playTone(440, 'triangle', 0.15), 0);
+                setTimeout(() => this.playTone(554, 'triangle', 0.15), 150);
+                setTimeout(() => this.playTone(659, 'triangle', 0.3), 300);
+            }
+            hint() { this.playTone(350, 'sine', 0.2); }
+        }
 
-            playConnect() {
-                if (!this.ctx || !this.enabled) return;
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523.25, now);
-                osc.frequency.setValueAtTime(659.25, now + 0.08);
-                osc.frequency.setValueAtTime(783.99, now + 0.16);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start();
-                osc.stop(now + 0.3);
+        class LinkPuzzleGame {
+            constructor() {
+                this.currentLevelIndex = 0;
+                this.iqScore = parseInt(localStorage.getItem('link_balls_iq')) || 75;
+                this.totalScore = parseInt(localStorage.getItem('link_balls_score')) || 0;
+                this.completedLevels = JSON.parse(localStorage.getItem('link_balls_completed')) || [0];
+                this.username = localStorage.getItem('link_balls_username') || 'Jogador';
+                this.avatar = localStorage.getItem('link_balls_avatar') || '🦊';
+
+                this.userPaths = {};
+                this.completedPairs = new Set();
+                this.activePair = null;
+                this.currentPathPoints = [];
+
+                this.sound = new SoundManager();
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.initCanvasSize();
+                this.setupEventListeners();
+                this.updateProfileUI();
+                this.loadLevel(this.currentLevelIndex);
+                this.updateIQDisplay();
+                this.renderLevelGrid();
+                this.setupAvatarSelector();
+
+                if (!localStorage.getItem('link_balls_username')) {
+                    setTimeout(() => this.showProfileModal(), 500);
+                }
             }
 
-            playWin() {
-                if (!this.ctx || !this.enabled) return;
-                const notes = [523.25, 659.25, 783.99, 1046.5];
-                notes.forEach((freq, idx) => {
+            initCanvasSize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width * window.devicePixelRatio;
+                this.canvas.height = rect.height * window.devicePixelRatio;
+                this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                this.width = rect.width;
+                this.height = rect.height;
+            }
+
+            loadLevel(index) {
+                this.currentLevelIndex = index;
+                this.userPaths = {};
+                this.completedPairs = new Set();
+                this.activePair = null;
+                this.currentPathPoints = [];
+
+                document.getElementById('success-modal').classList.add('opacity-0', 'pointer-events-none');
+                document.getElementById('success-card').classList.remove('scale-100');
+                document.getElementById('success-card').classList.add('scale-95');
+                this.redraw();
+            }
+
+            setupEventListeners() {
+                window.addEventListener('resize', () => {
+                    this.initCanvasSize();
+                    this.redraw();
+                });
+
+                const startHandler = (e) => {
+                    const pos = this.getEventPos(e);
+                    const dot = this.findDotAt(pos.x, pos.y);
+                    if (dot) {
+                        for (let [key, path] of Object.entries(this.userPaths)) {
+                            const [id1, id2] = key.split('-').map(Number);
+                            if (id1 === dot.id || id2 === dot.id) {
+                                delete this.userPaths[key];
+                                this.completedPairs.delete(key);
+                            }
+                        }
+
+                        const level = levels[this.currentLevelIndex];
+                        const pairMatch = level.dots.find(d => d.color === dot.color && d.id !== dot.id);
+                        if (pairMatch) {
+                            this.activePair = {
+                                color: dot.color,
+                                fromDot: dot,
+                                targetDotId: pairMatch.id
+                            };
+                            this.currentPathPoints = [{x: dot.x, y: dot.y}];
+                        }
+                    }
+                };
+
+                const moveHandler = (e) => {
+                    if (!this.activePair) return;
+                    e.preventDefault();
+                    const pos = this.getEventPos(e);
+                    const nx = Math.max(0.06, Math.min(0.94, pos.x / this.width));
+                    const ny = Math.max(0.06, Math.min(0.94, pos.y / this.height));
+
+                    this.currentPathPoints.push({x: nx, y: ny});
+                    this.redraw();
+                };
+
+                const endHandler = (e) => {
+                    if (!this.activePair) return;
+                    const pos = this.getEventPos(e);
+                    const dot = this.findDotAt(pos.x, pos.y);
+
+                    if (dot && dot.id === this.activePair.targetDotId) {
+                        this.currentPathPoints.push({x: dot.x, y: dot.y});
+                        const key = [this.activePair.fromDot.id, dot.id].sort((a,b)=>a-b).join('-');
+                        this.userPaths[key] = [...this.currentPathPoints];
+                        this.completedPairs.add(key);
+                        this.sound.connect();
+                        this.checkWinCondition();
+                    }
+
+                    this.activePair = null;
+                    this.currentPathPoints = [];
+                    this.redraw();
+                };
+
+                this.canvas.addEventListener('mousedown', startHandler);
+                this.canvas.addEventListener('mousemove', moveHandler);
+                window.addEventListener('mouseup', endHandler);
+
+                this.canvas.addEventListener('touchstart', startHandler, {passive: false});
+                this.canvas.addEventListener('touchmove', moveHandler, {passive: false});
+                window.addEventListener('touchend', endHandler);
+            }
+
+            getEventPos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            findDotAt(x, y) {
+                const level = levels[this.currentLevelIndex];
+                const threshold = 32;
+                for (let dot of level.dots) {
+                    const dx = dot.x * this.width - x;
+                    const dy = dot.y * this.height - y;
+                    if (Math.sqrt(dx*dx + dy*dy) <= threshold) {
+                        return dot;
+                    }
+                }
+                return null;
+            }
+
+            redraw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                const level = levels[this.currentLevelIndex];
+
+                for (let [key, path] of Object.entries(this.userPaths)) {
+                    if (path.length < 2) continue;
+                    const firstDot = level.dots.find(d => d.id === Number(key.split('-')[0]));
+                    this.drawPathLine(path, firstDot ? firstDot.color : '#64748b', 10);
+                }
+
+                if (this.activePair && this.currentPathPoints.length > 1) {
+                    this.drawPathLine(this.currentPathPoints, this.activePair.color, 10, true);
+                }
+
+                for (let dot of level.dots) {
+                    this.drawDot(dot);
+                }
+            }
+
+            drawPathLine(points, color, width, dashed = false) {
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.moveTo(points[0].x * this.width, points[0].y * this.height);
+                for (let i = 1; i < points.length; i++) {
+                    this.ctx.lineTo(points[i].x * this.width, points[i].y * this.height);
+                }
+                this.ctx.strokeStyle = color;
+                this.ctx.lineWidth = width;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                if (dashed) {
+                    this.ctx.setLineDash([8, 6]);
+                }
+                this.ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                this.ctx.shadowBlur = 4;
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+
+            drawDot(dot) {
+                const x = dot.x * this.width;
+                const y = dot.y * this.height;
+                const radius = 18;
+
+                this.ctx.save();
+                this.ctx.shadowColor = 'rgba(0,0,0,0.35)';
+                this.ctx.shadowBlur = 5;
+                this.ctx.shadowOffsetY = 2;
+
+                const gradient = this.ctx.createRadialGradient(x - 4, y - 4, 2, x, y, radius);
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(0.35, dot.color);
+                gradient.addColorStop(1, this.darkenColor(dot.color, 45));
+
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+
+                this.ctx.lineWidth = 2.5;
+                this.ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+
+            darkenColor(hex, percent) {
+                let num = parseInt(hex.replace('#',''), 16);
+                let amt = Math.round(2.55 * percent);
+                let R = (num >> 16) - amt;
+                let G = (num >> 8 & 0x00ff) - amt;
+                let B = (num & 0x0000ff) - amt;
+                return `#${(0x1000000 + (R<0?0:R)*0x10000 + (G<0?0:G)*0x100 + (B<0?0:B)).toString(16).slice(1)}`;
+            }
+
+            checkWinCondition() {
+                const level = levels[this.currentLevelIndex];
+                const totalPairs = level.dots.length / 2;
+                if (this.completedPairs.size === totalPairs) {
+                    this.iqScore = Math.min(180, this.iqScore + 20);
+                    this.totalScore += 100 * level.id;
+                    this.updateIQDisplay();
+                    localStorage.setItem('link_balls_iq', this.iqScore);
+                    localStorage.setItem('link_balls_score', this.totalScore);
+
+                    if (!this.completedLevels.includes(this.currentLevelIndex + 1) && this.currentLevelIndex + 1 < levels.length) {
+                        this.completedLevels.push(this.currentLevelIndex + 1);
+                        localStorage.setItem('link_balls_completed', JSON.stringify(this.completedLevels));
+                    }
+                    this.renderLevelGrid();
+                    this.sound.win();
+
+                    confetti({
+                        particleCount: 80,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+
                     setTimeout(() => {
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
-                        osc.connect(gain);
-                        gain.connect(this.masterGain);
-                        osc.start();
-                        osc.stop(this.ctx.currentTime + 0.4);
-                    }, idx * 120);
-                });
-            }
-
-            playStar() {
-                if (!this.ctx || !this.enabled) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(987.77, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1567.98, this.ctx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.15);
-            }
-
-            playError() {
-                if (!this.ctx || !this.enabled) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.15);
-            }
-        }
-
-        const audio = new SoundEngine();
-
-        /* ===================================================================
-           LEVELS DATA (com solução de referência para hints)
-           =================================================================== */
-        const COLOR_PALETTE = {
-            red: { hex: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
-            blue: { hex: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
-            green: { hex: '#22c55e', glow: 'rgba(34, 197, 94, 0.5)' },
-            yellow: { hex: '#eab308', glow: 'rgba(234, 179, 8, 0.5)' },
-            purple: { hex: '#a855f7', glow: 'rgba(168, 85, 247, 0.5)' },
-            orange: { hex: '#f97316', glow: 'rgba(249, 115, 22, 0.5)' },
-            cyan: { hex: '#06b6d4', glow: 'rgba(6, 182, 212, 0.5)' }
-        };
-
-        const LEVELS = [
-            { size: 4, title: "Grid 4x4 - Desafio Inicial",
-              dots: [
-                { x: 0, y: 0, color: 'green' }, { x: 3, y: 3, color: 'green' },
-                { x: 3, y: 0, color: 'red' },   { x: 2, y: 2, color: 'red' },
-                { x: 0, y: 3, color: 'blue' },  { x: 2, y: 1, color: 'blue' }
-              ], stars: [{ x: 3, y: 2 }, { x: 1, y: 1 }] },
-            { size: 4, title: "Grid 4x4 - Curvas Práticas",
-              dots: [
-                { x: 0, y: 0, color: 'red' }, { x: 2, y: 3, color: 'red' },
-                { x: 1, y: 0, color: 'yellow' }, { x: 3, y: 2, color: 'yellow' },
-                { x: 0, y: 2, color: 'blue' }, { x: 3, y: 3, color: 'blue' }
-              ], stars: [{ x: 1, y: 2 }] },
-            { size: 5, title: "Grid 5x5 - Expansão de QI",
-              dots: [
-                { x: 0, y: 1, color: 'red' }, { x: 4, y: 1, color: 'red' },
-                { x: 1, y: 0, color: 'blue' }, { x: 3, y: 4, color: 'blue' },
-                { x: 0, y: 4, color: 'green' }, { x: 4, y: 3, color: 'green' },
-                { x: 2, y: 2, color: 'purple' }, { x: 4, y: 4, color: 'purple' }
-              ], stars: [{ x: 2, y: 1 }, { x: 3, y: 2 }] },
-            { size: 5, title: "Grid 5x5 - Labirinto de Cores",
-              dots: [
-                { x: 0, y: 0, color: 'orange' }, { x: 4, y: 2, color: 'orange' },
-                { x: 1, y: 1, color: 'cyan' }, { x: 3, y: 3, color: 'cyan' },
-                { x: 2, y: 0, color: 'red' }, { x: 0, y: 4, color: 'red' },
-                { x: 4, y: 0, color: 'yellow' }, { x: 2, y: 4, color: 'yellow' }
-              ], stars: [{ x: 2, y: 2 }] },
-            { size: 6, title: "Grid 6x6 - Mente Brilhante",
-              dots: [
-                { x: 0, y: 0, color: 'red' }, { x: 5, y: 5, color: 'red' },
-                { x: 0, y: 5, color: 'blue' }, { x: 5, y: 0, color: 'blue' },
-                { x: 2, y: 1, color: 'green' }, { x: 3, y: 4, color: 'green' },
-                { x: 1, y: 3, color: 'yellow' }, { x: 4, y: 2, color: 'yellow' },
-                { x: 2, y: 2, color: 'purple' }, { x: 3, y: 3, color: 'purple' }
-              ], stars: [{ x: 1, y: 1 }, { x: 4, y: 4 }] },
-            { size: 6, title: "Grid 6x6 - Nível Avançado",
-              dots: [
-                { x: 0, y: 2, color: 'red' }, { x: 4, y: 3, color: 'red' },
-                { x: 1, y: 0, color: 'cyan' }, { x: 5, y: 4, color: 'cyan' },
-                { x: 2, y: 2, color: 'green' }, { x: 3, y: 5, color: 'green' },
-                { x: 0, y: 4, color: 'orange' }, { x: 4, y: 1, color: 'orange' },
-                { x: 1, y: 5, color: 'purple' }, { x: 5, y: 1, color: 'purple' }
-              ], stars: [{ x: 3, y: 1 }, { x: 2, y: 4 }] },
-            { size: 7, title: "Grid 7x7 - Desafio de Einstein",
-              dots: [
-                { x: 0, y: 0, color: 'red' }, { x: 6, y: 6, color: 'red' },
-                { x: 0, y: 6, color: 'blue' }, { x: 6, y: 0, color: 'blue' },
-                { x: 1, y: 2, color: 'green' }, { x: 5, y: 4, color: 'green' },
-                { x: 2, y: 1, color: 'yellow' }, { x: 4, y: 5, color: 'yellow' },
-                { x: 3, y: 0, color: 'purple' }, { x: 3, y: 6, color: 'purple' },
-                { x: 2, y: 4, color: 'orange' }, { x: 4, y: 2, color: 'orange' }
-              ], stars: [{ x: 3, y: 3 }, { x: 1, y: 5 }, { x: 5, y: 1 }] }
-        ];
-
-        /* ===================================================================
-           GAME STATE
-           =================================================================== */
-        let currentLevelIdx = 0;
-        let IQ = 75;
-        let hintsLeft = 3;
-        let moveCount = 0;
-        let levelStartTime = 0;
-        let bestTimes = JSON.parse(localStorage.getItem('brainMaster_bestTimes') || '{}');
-        let unlockedLevels = JSON.parse(localStorage.getItem('brainMaster_unlocked') || '[0]');
-
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d', { alpha: false });
-        const confettiCanvas = document.getElementById('confettiCanvas');
-        const confettiCtx = confettiCanvas.getContext('2d');
-        const floatLayer = document.getElementById('float-layer');
-
-        let gridCount = 4;
-        let cellSize = 0;
-        let activeColor = null;
-        let isDrawing = false;
-        let paths = {};
-        let currentPath = [];
-        let collectedStars = new Set();
-        let particles = [];
-        let confetti = [];
-        let animationFrameId = null;
-        let winning = false;
-
-        /* ===================================================================
-           CANVAS & RENDERING (com cache de gradientes)
-           =================================================================== */
-        let ballGradients = {};
-
-        function resizeCanvas() {
-            const rect = canvas.parentElement.getBoundingClientRect();
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            confettiCanvas.width = rect.width * dpr;
-            confettiCanvas.height = rect.height * dpr;
-
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-            cellSize = rect.width / gridCount;
-            ballGradients = {}; // Reset cache
-            render();
-        }
-
-        function loadLevel(idx) {
-            currentLevelIdx = idx;
-            const lvl = LEVELS[currentLevelIdx];
-            gridCount = lvl.size;
-            
-            document.getElementById('level-num').innerText = currentLevelIdx + 1;
-            document.getElementById('level-name').innerText = lvl.title;
-
-            paths = {};
-            currentPath = [];
-            isDrawing = false;
-            activeColor = null;
-            collectedStars.clear();
-            moveCount = 0;
-            winning = false;
-            levelStartTime = Date.now();
-            document.getElementById('move-count').innerText = '0';
-            document.getElementById('board-wrapper').classList.remove('win-glow');
-
-            resizeCanvas();
-            updateIQBar();
-            saveProgress();
-        }
-
-        function getCellCoords(gridPos) {
-            return {
-                x: gridPos.x * cellSize + cellSize / 2,
-                y: gridPos.y * cellSize + cellSize / 2
-            };
-        }
-
-        function getGridPos(pixelX, pixelY) {
-            const x = Math.floor(pixelX / cellSize);
-            const y = Math.floor(pixelY / cellSize);
-            if (x >= 0 && x < gridCount && y >= 0 && y < gridCount) return { x, y };
-            return null;
-        }
-
-        function render() {
-            const rect = canvas.parentElement.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height;
-
-            // Background
-            ctx.fillStyle = '#22150c';
-            ctx.fillRect(0, 0, width, height);
-
-            // Grid lines (batch)
-            ctx.strokeStyle = '#3d281a';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for (let i = 0; i <= gridCount; i++) {
-                ctx.moveTo(i * cellSize, 0);
-                ctx.lineTo(i * cellSize, height);
-                ctx.moveTo(0, i * cellSize);
-                ctx.lineTo(width, i * cellSize);
-            }
-            ctx.stroke();
-
-            // Grid dots (batch)
-            ctx.fillStyle = '#4a3323';
-            ctx.beginPath();
-            for (let x = 0; x < gridCount; x++) {
-                for (let y = 0; y < gridCount; y++) {
-                    const c = getCellCoords({ x, y });
-                    ctx.moveTo(c.x, c.y);
-                    ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
+                        const modal = document.getElementById('success-modal');
+                        modal.classList.remove('opacity-0', 'pointer-events-none');
+                        const card = document.getElementById('success-card');
+                        card.classList.remove('scale-95');
+                        card.classList.add('scale-100');
+                    }, 400);
                 }
             }
-            ctx.fill();
 
-            const currentLvl = LEVELS[currentLevelIdx];
+            updateIQDisplay() {
+                document.getElementById('iq-score').innerText = this.iqScore;
+                document.getElementById('total-score').innerText = this.totalScore;
+                const percentage = ((this.iqScore - 75) / (180 - 75)) * 100;
+                document.getElementById('iq-bar').style.width = `${Math.max(4, Math.min(100, percentage))}%`;
 
-            // Stars
-            if (currentLvl.stars) {
-                currentLvl.stars.forEach(star => {
-                    const c = getCellCoords(star);
-                    const isCollected = collectedStars.has(`${star.x},${star.y}`);
-                    ctx.save();
-                    ctx.translate(c.x, c.y);
-                    if (isCollected) {
-                        ctx.globalAlpha = 0.3;
-                        ctx.fillStyle = '#6b7280';
+                let title = "Iniciante Curioso";
+                if (this.iqScore >= 110) title = "Mente Brilhante";
+                if (this.iqScore >= 145) title = "Gênio Absoluto (Einstein)";
+                document.getElementById('iq-title').innerText = title;
+            }
+
+            giveHint() {
+                const level = levels[this.currentLevelIndex];
+                for (let conn of level.connections) {
+                    const key = [conn.from, conn.to].sort((a,b)=>a-b).join('-');
+                    if (!this.completedPairs.has(key)) {
+                        this.userPaths[key] = conn.path.slice(0, Math.ceil(conn.path.length / 2));
+                        this.sound.hint();
+                        this.redraw();
+                        break;
+                    }
+                }
+            }
+
+            showSolution() {
+                const level = levels[this.currentLevelIndex];
+                this.userPaths = {};
+                this.completedPairs = new Set();
+
+                let step = 0;
+                const animateStep = () => {
+                    if (step < level.connections.length) {
+                        const conn = level.connections[step];
+                        const key = [conn.from, conn.to].sort((a,b)=>a-b).join('-');
+                        this.userPaths[key] = conn.path;
+                        this.completedPairs.add(key);
+                        this.sound.connect();
+                        this.redraw();
+                        step++;
+                        setTimeout(animateStep, 450);
                     } else {
-                        ctx.fillStyle = '#f59e0b';
-                        ctx.shadowColor = '#fbbf24';
-                        ctx.shadowBlur = 12;
+                        setTimeout(() => this.checkWinCondition(), 350);
                     }
-                    ctx.beginPath();
-                    for (let i = 0; i < 5; i++) {
-                        ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * (cellSize * 0.22),
-                                   -Math.sin((18 + i * 72) * Math.PI / 180) * (cellSize * 0.22));
-                        ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * (cellSize * 0.1),
-                                   -Math.sin((54 + i * 72) * Math.PI / 180) * (cellSize * 0.1));
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.restore();
+                };
+                animateStep();
+            }
+
+            restartLevel() {
+                this.loadLevel(this.currentLevelIndex);
+            }
+
+            nextLevel() {
+                if (this.currentLevelIndex + 1 < levels.length) {
+                    this.loadLevel(this.currentLevelIndex + 1);
+                } else {
+                    this.showLevelSelect();
+                }
+            }
+
+            showLevelSelect() {
+                document.getElementById('level-modal').classList.remove('hidden');
+            }
+
+            hideLevelSelect() {
+                document.getElementById('level-modal').classList.add('hidden');
+            }
+
+            showProfileModal() {
+                document.getElementById('input-username').value = this.username;
+                document.getElementById('profile-modal').classList.remove('hidden');
+            }
+
+            hideProfileModal() {
+                document.getElementById('profile-modal').classList.add('hidden');
+            }
+
+            setupAvatarSelector() {
+                const avatars = ['🦊', '🐱', '🐶', '🐼', '🦁', '🐯', '🦄', '🐨', '🐸', '🤖'];
+                const container = document.getElementById('avatar-selector');
+                container.innerHTML = '';
+                avatars.forEach(av => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `text-2xl p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border transition-all ${this.avatar === av ? 'border-amber-400 bg-slate-700 scale-105' : 'border-slate-700'}`;
+                    btn.innerText = av;
+                    btn.onclick = () => {
+                        this.avatar = av;
+                        this.setupAvatarSelector();
+                    };
+                    container.appendChild(btn);
                 });
             }
 
-            // Helper para desenhar linha
-            const drawPathLine = (pathArr, colorKey, alpha = 1) => {
-                if (!pathArr || pathArr.length === 0) return;
-                const palette = COLOR_PALETTE[colorKey] || { hex: '#ffffff' };
-                ctx.save();
-                ctx.globalAlpha = alpha;
-                ctx.strokeStyle = palette.hex;
-                ctx.lineWidth = cellSize * 0.28;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.shadowColor = palette.hex;
-                ctx.shadowBlur = 15;
-                ctx.beginPath();
-                const start = getCellCoords(pathArr[0]);
-                ctx.moveTo(start.x, start.y);
-                for (let i = 1; i < pathArr.length; i++) {
-                    const pt = getCellCoords(pathArr[i]);
-                    ctx.lineTo(pt.x, pt.y);
+            saveProfile() {
+                const val = document.getElementById('input-username').value.trim();
+                if (val) {
+                    this.username = val;
                 }
-                ctx.stroke();
-                ctx.restore();
-            };
-
-            Object.keys(paths).forEach(color => drawPathLine(paths[color], color));
-            if (isDrawing && activeColor && currentPath.length > 0) {
-                drawPathLine(currentPath, activeColor);
+                localStorage.setItem('link_balls_username', this.username);
+                localStorage.setItem('link_balls_avatar', this.avatar);
+                this.updateProfileUI();
+                this.hideProfileModal();
             }
 
-            // Endpoint balls (com gradiente cacheado)
-            currentLvl.dots.forEach(dot => {
-                const c = getCellCoords(dot);
-                const palette = COLOR_PALETTE[dot.color];
-                const cacheKey = `${dot.color}_${cellSize}`;
+            updateProfileUI() {
+                document.getElementById('header-avatar').innerText = this.avatar;
+                document.getElementById('header-username').innerText = this.username;
+            }
 
-                ctx.save();
-                ctx.shadowColor = palette.hex;
-                ctx.shadowBlur = 18;
+            renderLevelGrid() {
+                const grid = document.getElementById('level-grid');
+                grid.innerHTML = '';
+                levels.forEach((lvl, idx) => {
+                    const unlocked = this.completedLevels.includes(idx);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `py-3 rounded-2xl font-bold flex flex-col items-center justify-center gap-1 transition-all ${
+                        unlocked 
+                            ? 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-md btn-game' 
+                            : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
+                    }`;
+                    
+                    btn.innerHTML = `
+                        <span class="text-sm">Nível ${lvl.id}</span>
+                        <span class="text-[10px] opacity-80">${unlocked ? (idx === this.currentLevelIndex ? 'Atual' : 'Liberado') : '<i class="fa-solid fa-lock"></i>'}</span>
+                    `;
 
-                if (!ballGradients[cacheKey]) {
-                    const grad = ctx.createRadialGradient(
-                        -cellSize * 0.08, -cellSize * 0.08, cellSize * 0.05,
-                        0, 0, cellSize * 0.28
-                    );
-                    grad.addColorStop(0, '#ffffff');
-                    grad.addColorStop(0.3, palette.hex);
-                    grad.addColorStop(1, '#111827');
-                    ballGradients[cacheKey] = grad;
-                }
-
-                ctx.translate(c.x, c.y);
-                ctx.fillStyle = ballGradients[cacheKey];
-                ctx.beginPath();
-                ctx.arc(0, 0, cellSize * 0.26, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                ctx.beginPath();
-                ctx.arc(-cellSize * 0.08, -cellSize * 0.08, cellSize * 0.07, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            });
-
-            renderParticles();
+                    if (unlocked) {
+                        btn.onclick = () => {
+                            this.loadLevel(idx);
+                            this.hideLevelSelect();
+                        };
+                    }
+                    grid.appendChild(btn);
+                });
+            }
         }
 
-        /* ===================================================================
-           INTERACTION
-           =================================================================== */
-        function getPointerPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        function handlePointerStart(e) {
-            if (winning) return;
-            audio.init();
-            e.preventDefault();
-            const pos = getPointerPos(e);
-            const gridPos = getGridPos(pos.x, pos.y);
-            if (!gridPos) return;
-
-            const lvl = LEVELS[currentLevelIdx];
-            const dot = lvl.dots.find(d => d.x === gridPos.x && d.y === gridPos.y);
-
-            if (dot) {
-                activeColor = dot.color;
-                isDrawing = true;
-                currentPath = [{ x: gridPos.x, y: gridPos.y }];
-                delete paths[activeColor];
-                audio.playPop(300);
-                render();
-            } else {
-                for (let color in paths)
+        // Inicialização da aplicação
+        let app = null;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new LinkPuzzleGame();
+        });
+    </script>
+</body>
+</html>
