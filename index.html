@@ -21,8 +21,8 @@
         }
         .wood-board {
             background: linear-gradient(135deg, #deb887 0%, #c49a6c 50%, #b58351 100%);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 3px 8px rgba(255,255,255,0.5), inset 0 -5px 10px rgba(0,0,0,0.3);
-            border: 10px solid #7d4e24;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 3px 6px rgba(255,255,255,0.5), inset 0 -4px 8px rgba(0,0,0,0.3);
+            border: 8px solid #7d4e24;
         }
         .btn-game {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -47,34 +47,34 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 min-h-screen text-white flex flex-col items-center justify-between p-3 sm:p-5 overflow-hidden">
+<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 h-screen text-white flex flex-col items-center justify-between py-2 px-3 sm:p-4 overflow-hidden">
 
     <!-- Header & Profile Bar -->
-    <header class="w-full max-w-md flex flex-col items-center gap-2">
+    <header class="w-full max-w-sm flex flex-col items-center gap-1.5 shrink-0">
         <div class="flex justify-between w-full px-1 items-center">
-            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 px-3 py-2 rounded-2xl font-bold shadow-md flex items-center gap-2 text-xs sm:text-sm btn-game border border-amber-400/40">
+            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-2 text-xs sm:text-sm btn-game border border-amber-400/40">
                 <i class="fa-solid fa-list-ul"></i> Níveis
             </button>
             
             <!-- User Profile Button -->
-            <button onclick="app.showProfileModal()" class="bg-slate-800/90 hover:bg-slate-700 px-3 py-1.5 rounded-2xl font-bold shadow-md flex items-center gap-2 text-xs border border-purple-500/40 btn-game">
+            <button onclick="app.showProfileModal()" class="bg-slate-800/90 hover:bg-slate-700 px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-2 text-xs border border-purple-500/40 btn-game">
                 <span id="header-avatar" class="text-base">🦊</span>
                 <span id="header-username" class="text-amber-300 truncate max-w-[90px]">Jogador</span>
                 <i class="fa-solid fa-pen text-[10px] text-slate-400"></i>
             </button>
 
-            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 px-3 py-2 rounded-2xl font-bold shadow-md flex items-center gap-2 text-xs sm:text-sm btn-game border border-rose-400/40">
+            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 px-3 py-1.5 rounded-xl font-bold shadow-md flex items-center gap-2 text-xs sm:text-sm btn-game border border-rose-400/40">
                 <i class="fa-solid fa-rotate-right"></i> Reiniciar
             </button>
         </div>
 
         <!-- IQ & Score Meter Card -->
-        <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-2xl p-3 shadow-xl flex flex-col gap-1.5">
+        <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-xl p-2.5 shadow-xl flex flex-col gap-1">
             <div class="flex justify-between text-xs font-bold text-purple-200 px-1 items-center">
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-brain text-pink-400"></i> QI: <strong id="iq-score" class="text-amber-400 text-sm">75</strong></span>
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-star text-amber-300"></i> Score: <strong id="total-score" class="text-cyan-300 text-sm">0</strong></span>
             </div>
-            <div class="relative w-full bg-slate-800 h-3.5 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
+            <div class="relative w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
                 <div id="iq-bar" class="bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
             </div>
             <div class="flex justify-between text-[10px] text-slate-400 font-semibold px-1">
@@ -85,22 +85,22 @@
     </header>
 
     <!-- Main Game Board -->
-    <main class="relative w-full max-w-sm aspect-square my-auto flex items-center justify-center">
-        <div class="wood-board w-full h-full rounded-3xl p-3 sm:p-4 relative flex items-center justify-center shadow-2xl">
-            <div class="relative w-full h-full bg-slate-100 rounded-2xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
+    <main class="relative w-full max-w-[280px] sm:max-w-[310px] aspect-square flex items-center justify-center my-auto shrink-0">
+        <div class="wood-board w-full h-full rounded-2xl p-2.5 sm:p-3 relative flex items-center justify-center shadow-2xl">
+            <div class="relative w-full h-full bg-slate-100 rounded-xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
                 <canvas id="gameCanvas" class="w-full h-full block"></canvas>
             </div>
         </div>
 
         <!-- Success Modal Overlay -->
-        <div id="success-modal" class="absolute inset-0 bg-black/75 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
-            <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-6 rounded-3xl shadow-2xl max-w-xs w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="success-card">
-                <div class="w-16 h-16 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-lg mb-3 animate-bounce">
+        <div id="success-modal" class="absolute inset-0 bg-black/75 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-5 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
+            <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-5 rounded-2xl shadow-2xl max-w-xs w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="success-card">
+                <div class="w-14 h-14 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 text-2xl shadow-lg mb-2.5 animate-bounce">
                     <i class="fa-solid fa-trophy"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-amber-300 mb-1">Nível Concluído!</h2>
-                <p id="success-message" class="text-sm text-slate-300 mb-5">+20 Pontos de QI Adicionados!</p>
-                <button onclick="app.nextLevel()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-2xl shadow-lg text-white btn-game flex items-center justify-center gap-2">
+                <h2 class="text-xl font-bold text-amber-300 mb-1">Nível Concluído!</h2>
+                <p id="success-message" class="text-xs text-slate-300 mb-4">+20 Pontos de QI Adicionados!</p>
+                <button onclick="app.nextLevel()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-xl shadow-lg text-white btn-game flex items-center justify-center gap-2 text-sm">
                     Próximo Nível <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
@@ -108,11 +108,11 @@
     </main>
 
     <!-- Footer Controls -->
-    <footer class="w-full max-w-md flex gap-3">
-        <button onclick="app.giveHint()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-3.5 px-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-sm border border-blue-400/30">
+    <footer class="w-full max-w-sm flex gap-3 shrink-0 pb-1">
+        <button onclick="app.giveHint()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-3 px-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-xs sm:text-sm border border-blue-400/30">
             <i class="fa-solid fa-lightbulb text-amber-300 text-base"></i> Dica
         </button>
-        <button onclick="app.showSolution()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3.5 px-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-sm border border-purple-400/30">
+        <button onclick="app.showSolution()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 px-4 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-xs sm:text-sm border border-purple-400/30">
             <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-base"></i> Solução
         </button>
     </footer>
@@ -408,7 +408,7 @@
 
             findDotAt(x, y) {
                 const level = levels[this.currentLevelIndex];
-                const threshold = 38;
+                const threshold = 35;
                 for (let dot of level.dots) {
                     const dx = dot.x * this.width - x;
                     const dy = dot.y * this.height - y;
@@ -426,11 +426,11 @@
                 for (let [key, path] of Object.entries(this.userPaths)) {
                     if (path.length < 2) continue;
                     const firstDot = level.dots.find(d => d.id === Number(key.split('-')[0]));
-                    this.drawPathLine(path, firstDot ? firstDot.color : '#64748b', 14);
+                    this.drawPathLine(path, firstDot ? firstDot.color : '#64748b', 12);
                 }
 
                 if (this.activePair && this.currentPathPoints.length > 1) {
-                    this.drawPathLine(this.currentPathPoints, this.activePair.color, 14, true);
+                    this.drawPathLine(this.currentPathPoints, this.activePair.color, 12, true);
                 }
 
                 for (let dot of level.dots) {
@@ -453,7 +453,7 @@
                     this.ctx.setLineDash([8, 6]);
                 }
                 this.ctx.shadowColor = 'rgba(0,0,0,0.25)';
-                this.ctx.shadowBlur = 6;
+                this.ctx.shadowBlur = 5;
                 this.ctx.stroke();
                 this.ctx.restore();
             }
@@ -461,14 +461,14 @@
             drawDot(dot) {
                 const x = dot.x * this.width;
                 const y = dot.y * this.height;
-                const radius = 23;
+                const radius = 20;
 
                 this.ctx.save();
                 this.ctx.shadowColor = 'rgba(0,0,0,0.35)';
-                this.ctx.shadowBlur = 8;
-                this.ctx.shadowOffsetY = 4;
+                this.ctx.shadowBlur = 6;
+                this.ctx.shadowOffsetY = 3;
 
-                const gradient = this.ctx.createRadialGradient(x - 6, y - 6, 4, x, y, radius);
+                const gradient = this.ctx.createRadialGradient(x - 5, y - 5, 3, x, y, radius);
                 gradient.addColorStop(0, '#ffffff');
                 gradient.addColorStop(0.35, dot.color);
                 gradient.addColorStop(1, this.darkenColor(dot.color, 45));
@@ -478,7 +478,7 @@
                 this.ctx.fillStyle = gradient;
                 this.ctx.fill();
 
-                this.ctx.lineWidth = 3.5;
+                this.ctx.lineWidth = 3;
                 this.ctx.strokeStyle = 'rgba(255,255,255,0.85)';
                 this.ctx.stroke();
                 this.ctx.restore();
