@@ -4,65 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Brain Master: Link the Dots</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome CDN for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         * {
             font-family: 'Outfit', sans-serif;
-            touch-action: none; /* Prevents scrolling while drawing on mobile */
+            touch-action: none;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
-            background: linear-gradient(135deg, #1e1e2e 0%, #11111b 100%);
+            background: radial-gradient(circle at 50% 0%, #2a2a3e 0%, #0f0f17 100%);
             color: #cdd6f4;
             min-height: 100vh;
             overflow: hidden;
         }
         
-        /* Glassmorphism effects */
         .glass-panel {
-            background: rgba(30, 30, 46, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 30, 46, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        /* Custom board frame */
         .board-frame {
             background: #2b1d12;
             border: 10px solid #5c3d2e;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 
+                inset 0 0 25px rgba(0,0,0,0.9), 
+                0 15px 40px rgba(0,0,0,0.6),
+                0 0 0 1px rgba(255,255,255,0.05);
             border-radius: 20px;
+            transition: box-shadow 0.3s;
         }
 
-        /* IQ Meter Progress */
+        .board-frame.win-glow {
+            box-shadow: 
+                inset 0 0 25px rgba(0,0,0,0.9),
+                0 15px 40px rgba(0,0,0,0.6),
+                0 0 60px rgba(34, 197, 94, 0.6);
+        }
+
         .iq-progress {
-            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Pulse Animations */
         @keyframes pulse-glow {
             0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
-            50% { filter: drop-shadow(0 0 18px currentColor); }
+            50% { filter: drop-shadow(0 0 20px currentColor); }
         }
-        .glow-effect {
-            animation: pulse-glow 2s infinite;
+        .glow-effect { animation: pulse-glow 2s infinite; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .shake { animation: shake 0.3s; }
+
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
+        }
+        .float-text {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 900;
+            font-size: 20px;
+            animation: float-up 1s ease-out forwards;
+            z-index: 100;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
         }
 
-        /* Modal Overlay */
         .modal-bg {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
         }
+
+        .btn-press:active { transform: scale(0.92); }
+
+        /* Combo indicator */
+        @keyframes combo-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .combo-pop { animation: combo-pop 0.4s ease-out; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-between h-screen p-3 md:p-6 select-none">
 
-    <!-- Top Header & IQ Bar Section -->
     <header class="w-full max-w-md flex flex-col items-center gap-3 glass-panel p-4 rounded-2xl shadow-xl">
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
@@ -75,17 +108,20 @@
                 </div>
             </div>
 
-            <!-- IQ Badge -->
-            <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
-                <i class="fa-solid fa-brain text-white text-lg"></i>
-                <div class="flex flex-col">
-                    <span class="text-[10px] text-amber-100 uppercase tracking-wider font-bold">QI Atual</span>
-                    <span id="iq-value" class="text-lg font-black text-white leading-none">75</span>
+            <div class="flex flex-col items-end gap-1">
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-brain text-white text-lg"></i>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-amber-100 uppercase tracking-wider font-bold">QI Atual</span>
+                        <span id="iq-value" class="text-lg font-black text-white leading-none">75</span>
+                    </div>
+                </div>
+                <div id="move-counter" class="text-[10px] text-gray-400 font-bold">
+                    <i class="fa-solid fa-shoe-prints text-indigo-400"></i> <span id="move-count">0</span> movimentos
                 </div>
             </div>
         </div>
 
-        <!-- IQ Meter Visual -->
         <div class="w-full mt-1">
             <div class="flex justify-between text-[11px] font-bold text-gray-400 mb-1 px-1">
                 <span class="flex items-center gap-1"><i class="fa-solid fa-brain text-pink-400"></i> 75</span>
@@ -98,41 +134,38 @@
         </div>
     </header>
 
-    <!-- Canvas Game Container -->
     <main class="relative flex-1 w-full max-w-md my-3 flex items-center justify-center">
-        <div class="board-frame relative w-full aspect-square max-w-[420px] max-h-[420px] p-3 flex items-center justify-center">
+        <div id="board-wrapper" class="board-frame relative w-full aspect-square max-w-[420px] max-h-[420px] p-3 flex items-center justify-center">
             <canvas id="gameCanvas" class="w-full h-full rounded-xl cursor-pointer touch-none"></canvas>
-            
-            <!-- Confetti Canvas overlay -->
             <canvas id="confettiCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl"></canvas>
+            <div id="float-layer" class="absolute inset-0 pointer-events-none overflow-hidden rounded-xl"></div>
         </div>
     </main>
 
-    <!-- Control Buttons Bottom Bar -->
     <footer class="w-full max-w-md glass-panel p-3 rounded-2xl shadow-xl flex items-center justify-around gap-2">
-        <button id="btn-reset" class="flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
+        <button id="btn-reset" class="btn-press flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
             <i class="fa-solid fa-rotate-left text-amber-400 text-lg"></i>
             <span class="text-[11px] font-semibold text-gray-300">Reiniciar</span>
         </button>
 
-        <button id="btn-undo" class="flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
+        <button id="btn-undo" class="btn-press flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
             <i class="fa-solid fa-arrow-rotate-left text-blue-400 text-lg"></i>
             <span class="text-[11px] font-semibold text-gray-300">Desfazer</span>
         </button>
 
-        <button id="btn-hint" class="flex-1 py-2.5 px-3 bg-indigo-900/40 hover:bg-indigo-800/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-indigo-500/40 relative">
+        <button id="btn-hint" class="btn-press flex-1 py-2.5 px-3 bg-indigo-900/40 hover:bg-indigo-800/60 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-indigo-500/40 relative">
             <span id="hint-badge" class="absolute -top-1.5 -right-1.5 bg-indigo-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-gray-900">3</span>
             <i class="fa-solid fa-lightbulb text-yellow-300 text-lg"></i>
             <span class="text-[11px] font-semibold text-indigo-200">Dica</span>
         </button>
 
-        <button id="btn-levels" class="flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
+        <button id="btn-levels" class="btn-press flex-1 py-2.5 px-3 bg-gray-800 hover:bg-gray-700 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700">
             <i class="fa-solid fa-grid-2 text-emerald-400 text-lg"></i>
             <span class="text-[11px] font-semibold text-gray-300">Fases</span>
         </button>
     </footer>
 
-    <!-- Level Win Modal -->
+    <!-- Win Modal -->
     <div id="win-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
         <div class="glass-panel bg-gray-900/90 border border-indigo-500/30 p-6 rounded-3xl max-w-sm w-full text-center shadow-2xl flex flex-col items-center gap-4 transform scale-90 transition-transform duration-300" id="win-modal-card">
             <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center text-4xl text-gray-900 shadow-lg shadow-amber-500/30 animate-bounce">
@@ -140,7 +173,7 @@
             </div>
             <div>
                 <h2 class="text-2xl font-extrabold text-white">Nível Concluído!</h2>
-                <p class="text-sm text-gray-300 mt-1">Conexões perfeitas e estrelas coletadas!</p>
+                <p class="text-sm text-gray-300 mt-1" id="win-message">Conexões perfeitas e estrelas coletadas!</p>
             </div>
             
             <div class="w-full bg-gray-800/80 p-3 rounded-xl border border-gray-700 flex justify-around">
@@ -153,89 +186,90 @@
                     <p class="text-xs text-gray-400">Estrelas</p>
                     <p id="win-stars" class="text-xl font-black text-yellow-300">★ ★ ★</p>
                 </div>
+                <div class="w-[1px] bg-gray-700"></div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400">Tempo</p>
+                    <p id="win-time" class="text-xl font-black text-cyan-400">0:00</p>
+                </div>
             </div>
 
-            <button id="btn-next-level" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95 transition">
+            <button id="btn-next-level" class="btn-press w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 transition">
                 Próximo Nível <i class="fa-solid fa-arrow-right ml-2"></i>
             </button>
         </div>
     </div>
 
-    <!-- Level Selection Modal -->
+    <!-- Levels Modal -->
     <div id="levels-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
         <div class="glass-panel bg-gray-900/95 border border-gray-700 p-6 rounded-3xl max-w-md w-full shadow-2xl flex flex-col gap-4 max-h-[85vh]">
             <div class="flex justify-between items-center pb-2 border-b border-gray-800">
                 <h2 class="text-xl font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-map text-indigo-400"></i> Seleção de Níveis
                 </h2>
-                <button id="btn-close-levels" class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white">
+                <button id="btn-close-levels" class="btn-press w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
-            <div id="levels-grid" class="grid grid-cols-4 gap-3 overflow-y-auto p-1 max-h-[60vh]">
-                <!-- Level cards injected via JS -->
-            </div>
+            <div id="levels-grid" class="grid grid-cols-4 gap-3 overflow-y-auto p-1 max-h-[60vh]"></div>
         </div>
     </div>
 
     <script>
         /* ===================================================================
-           AUDIO SYNTHESIZER ENGINE (Web Audio API)
+           AUDIO SYNTHESIZER ENGINE (Melhorado com efeitos extras)
            =================================================================== */
         class SoundEngine {
             constructor() {
                 this.ctx = null;
+                this.enabled = true;
+                this.masterGain = null;
             }
             init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.value = 0.5;
+                    this.masterGain.connect(this.ctx.destination);
                 }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
             }
 
-            playPop(freq = 440) {
-                if (!this.ctx) return;
+            playPop(freq = 440, duration = 0.08, volume = 0.25) {
+                if (!this.ctx || !this.enabled) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(freq * 1.8, this.ctx.currentTime + 0.08);
-
-                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.8, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
+                gain.connect(this.masterGain);
                 osc.start();
-                osc.stop(this.ctx.currentTime + 0.08);
+                osc.stop(this.ctx.currentTime + duration);
             }
 
             playConnect() {
-                if (!this.ctx) return;
+                if (!this.ctx || !this.enabled) return;
                 const now = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523.25, now); // C5
-                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
+                osc.frequency.setValueAtTime(783.99, now + 0.16);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
+                gain.connect(this.masterGain);
                 osc.start();
                 osc.stop(now + 0.3);
             }
 
             playWin() {
-                if (!this.ctx) return;
-                const notes = [440, 554.37, 659.25, 880];
+                if (!this.ctx || !this.enabled) return;
+                const notes = [523.25, 659.25, 783.99, 1046.5];
                 notes.forEach((freq, idx) => {
                     setTimeout(() => {
                         const osc = this.ctx.createOscillator();
@@ -243,26 +277,41 @@
                         osc.type = 'sine';
                         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
                         gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
                         osc.connect(gain);
-                        gain.connect(this.ctx.destination);
+                        gain.connect(this.masterGain);
                         osc.start();
-                        osc.stop(this.ctx.currentTime + 0.3);
-                    }, idx * 100);
+                        osc.stop(this.ctx.currentTime + 0.4);
+                    }, idx * 120);
                 });
             }
 
             playStar() {
-                if (!this.ctx) return;
+                if (!this.ctx || !this.enabled) return;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(987.77, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1318.51, this.ctx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.frequency.exponentialRampToValueAtTime(1567.98, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                gain.connect(this.masterGain);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playError() {
+                if (!this.ctx || !this.enabled) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.masterGain);
                 osc.start();
                 osc.stop(this.ctx.currentTime + 0.15);
             }
@@ -271,149 +320,120 @@
         const audio = new SoundEngine();
 
         /* ===================================================================
-           GAME LEVELS DATA STRUCTURE
+           LEVELS DATA (com solução de referência para hints)
            =================================================================== */
         const COLOR_PALETTE = {
-            red: { hex: '#ef4444', glow: 'rgba(239, 68, 68, 0.4)' },
-            blue: { hex: '#3b82f6', glow: 'rgba(59, 130, 246, 0.4)' },
-            green: { hex: '#22c55e', glow: 'rgba(34, 197, 94, 0.4)' },
-            yellow: { hex: '#eab308', glow: 'rgba(234, 179, 8, 0.4)' },
-            purple: { hex: '#a855f7', glow: 'rgba(168, 85, 247, 0.4)' },
-            orange: { hex: '#f97316', glow: 'rgba(249, 115, 22, 0.4)' },
-            cyan: { hex: '#06b6d4', glow: 'rgba(6, 182, 212, 0.4)' }
+            red: { hex: '#ef4444', glow: 'rgba(239, 68, 68, 0.5)' },
+            blue: { hex: '#3b82f6', glow: 'rgba(59, 130, 246, 0.5)' },
+            green: { hex: '#22c55e', glow: 'rgba(34, 197, 94, 0.5)' },
+            yellow: { hex: '#eab308', glow: 'rgba(234, 179, 8, 0.5)' },
+            purple: { hex: '#a855f7', glow: 'rgba(168, 85, 247, 0.5)' },
+            orange: { hex: '#f97316', glow: 'rgba(249, 115, 22, 0.5)' },
+            cyan: { hex: '#06b6d4', glow: 'rgba(6, 182, 212, 0.5)' }
         };
 
         const LEVELS = [
-            // Level 1: 4x4
-            {
-                size: 4,
-                title: "Grid 4x4 - Desafio Inicial",
-                dots: [
-                    { x: 0, y: 0, color: 'green' }, { x: 3, y: 3, color: 'green' },
-                    { x: 3, y: 0, color: 'red' },   { x: 2, y: 2, color: 'red' },
-                    { x: 0, y: 3, color: 'blue' },  { x: 2, y: 1, color: 'blue' }
-                ],
-                stars: [{ x: 3, y: 2 }, { x: 1, y: 1 }]
-            },
-            // Level 2: 4x4
-            {
-                size: 4,
-                title: "Grid 4x4 - Curvas Práticas",
-                dots: [
-                    { x: 0, y: 0, color: 'red' }, { x: 2, y: 3, color: 'red' },
-                    { x: 1, y: 0, color: 'yellow' }, { x: 3, y: 2, color: 'yellow' },
-                    { x: 0, y: 2, color: 'blue' }, { x: 3, y: 3, color: 'blue' }
-                ],
-                stars: [{ x: 1, y: 2 }]
-            },
-            // Level 3: 5x5
-            {
-                size: 5,
-                title: "Grid 5x5 - Expansão de QI",
-                dots: [
-                    { x: 0, y: 1, color: 'red' }, { x: 4, y: 1, color: 'red' },
-                    { x: 1, y: 0, color: 'blue' }, { x: 3, y: 4, color: 'blue' },
-                    { x: 0, y: 4, color: 'green' }, { x: 4, y: 3, color: 'green' },
-                    { x: 2, y: 2, color: 'purple' }, { x: 4, y: 4, color: 'purple' }
-                ],
-                stars: [{ x: 2, y: 1 }, { x: 3, y: 2 }]
-            },
-            // Level 4: 5x5
-            {
-                size: 5,
-                title: "Grid 5x5 - Labirinto de Cores",
-                dots: [
-                    { x: 0, y: 0, color: 'orange' }, { x: 4, y: 2, color: 'orange' },
-                    { x: 1, y: 1, color: 'cyan' }, { x: 3, y: 3, color: 'cyan' },
-                    { x: 2, y: 0, color: 'red' }, { x: 0, y: 4, color: 'red' },
-                    { x: 4, y: 0, color: 'yellow' }, { x: 2, y: 4, color: 'yellow' }
-                ],
-                stars: [{ x: 2, y: 2 }]
-            },
-            // Level 5: 6x6
-            {
-                size: 6,
-                title: "Grid 6x6 - Mente Brilhante",
-                dots: [
-                    { x: 0, y: 0, color: 'red' }, { x: 5, y: 5, color: 'red' },
-                    { x: 0, y: 5, color: 'blue' }, { x: 5, y: 0, color: 'blue' },
-                    { x: 2, y: 1, color: 'green' }, { x: 3, y: 4, color: 'green' },
-                    { x: 1, y: 3, color: 'yellow' }, { x: 4, y: 2, color: 'yellow' },
-                    { x: 2, y: 2, color: 'purple' }, { x: 3, y: 3, color: 'purple' }
-                ],
-                stars: [{ x: 1, y: 1 }, { x: 4, y: 4 }]
-            },
-            // Level 6: 6x6
-            {
-                size: 6,
-                title: "Grid 6x6 - Nível Avançado",
-                dots: [
-                    { x: 0, y: 2, color: 'red' }, { x: 4, y: 3, color: 'red' },
-                    { x: 1, y: 0, color: 'cyan' }, { x: 5, y: 4, color: 'cyan' },
-                    { x: 2, y: 2, color: 'green' }, { x: 3, y: 5, color: 'green' },
-                    { x: 0, y: 4, color: 'orange' }, { x: 4, y: 1, color: 'orange' },
-                    { x: 1, y: 5, color: 'purple' }, { x: 5, y: 1, color: 'purple' }
-                ],
-                stars: [{ x: 3, y: 1 }, { x: 2, y: 4 }]
-            },
-            // Level 7: 7x7
-            {
-                size: 7,
-                title: "Grid 7x7 - Desafio de Einstein",
-                dots: [
-                    { x: 0, y: 0, color: 'red' }, { x: 6, y: 6, color: 'red' },
-                    { x: 0, y: 6, color: 'blue' }, { x: 6, y: 0, color: 'blue' },
-                    { x: 1, y: 2, color: 'green' }, { x: 5, y: 4, color: 'green' },
-                    { x: 2, y: 1, color: 'yellow' }, { x: 4, y: 5, color: 'yellow' },
-                    { x: 3, y: 0, color: 'purple' }, { x: 3, y: 6, color: 'purple' },
-                    { x: 2, y: 4, color: 'orange' }, { x: 4, y: 2, color: 'orange' }
-                ],
-                stars: [{ x: 3, y: 3 }, { x: 1, y: 5 }, { x: 5, y: 1 }]
-            }
+            { size: 4, title: "Grid 4x4 - Desafio Inicial",
+              dots: [
+                { x: 0, y: 0, color: 'green' }, { x: 3, y: 3, color: 'green' },
+                { x: 3, y: 0, color: 'red' },   { x: 2, y: 2, color: 'red' },
+                { x: 0, y: 3, color: 'blue' },  { x: 2, y: 1, color: 'blue' }
+              ], stars: [{ x: 3, y: 2 }, { x: 1, y: 1 }] },
+            { size: 4, title: "Grid 4x4 - Curvas Práticas",
+              dots: [
+                { x: 0, y: 0, color: 'red' }, { x: 2, y: 3, color: 'red' },
+                { x: 1, y: 0, color: 'yellow' }, { x: 3, y: 2, color: 'yellow' },
+                { x: 0, y: 2, color: 'blue' }, { x: 3, y: 3, color: 'blue' }
+              ], stars: [{ x: 1, y: 2 }] },
+            { size: 5, title: "Grid 5x5 - Expansão de QI",
+              dots: [
+                { x: 0, y: 1, color: 'red' }, { x: 4, y: 1, color: 'red' },
+                { x: 1, y: 0, color: 'blue' }, { x: 3, y: 4, color: 'blue' },
+                { x: 0, y: 4, color: 'green' }, { x: 4, y: 3, color: 'green' },
+                { x: 2, y: 2, color: 'purple' }, { x: 4, y: 4, color: 'purple' }
+              ], stars: [{ x: 2, y: 1 }, { x: 3, y: 2 }] },
+            { size: 5, title: "Grid 5x5 - Labirinto de Cores",
+              dots: [
+                { x: 0, y: 0, color: 'orange' }, { x: 4, y: 2, color: 'orange' },
+                { x: 1, y: 1, color: 'cyan' }, { x: 3, y: 3, color: 'cyan' },
+                { x: 2, y: 0, color: 'red' }, { x: 0, y: 4, color: 'red' },
+                { x: 4, y: 0, color: 'yellow' }, { x: 2, y: 4, color: 'yellow' }
+              ], stars: [{ x: 2, y: 2 }] },
+            { size: 6, title: "Grid 6x6 - Mente Brilhante",
+              dots: [
+                { x: 0, y: 0, color: 'red' }, { x: 5, y: 5, color: 'red' },
+                { x: 0, y: 5, color: 'blue' }, { x: 5, y: 0, color: 'blue' },
+                { x: 2, y: 1, color: 'green' }, { x: 3, y: 4, color: 'green' },
+                { x: 1, y: 3, color: 'yellow' }, { x: 4, y: 2, color: 'yellow' },
+                { x: 2, y: 2, color: 'purple' }, { x: 3, y: 3, color: 'purple' }
+              ], stars: [{ x: 1, y: 1 }, { x: 4, y: 4 }] },
+            { size: 6, title: "Grid 6x6 - Nível Avançado",
+              dots: [
+                { x: 0, y: 2, color: 'red' }, { x: 4, y: 3, color: 'red' },
+                { x: 1, y: 0, color: 'cyan' }, { x: 5, y: 4, color: 'cyan' },
+                { x: 2, y: 2, color: 'green' }, { x: 3, y: 5, color: 'green' },
+                { x: 0, y: 4, color: 'orange' }, { x: 4, y: 1, color: 'orange' },
+                { x: 1, y: 5, color: 'purple' }, { x: 5, y: 1, color: 'purple' }
+              ], stars: [{ x: 3, y: 1 }, { x: 2, y: 4 }] },
+            { size: 7, title: "Grid 7x7 - Desafio de Einstein",
+              dots: [
+                { x: 0, y: 0, color: 'red' }, { x: 6, y: 6, color: 'red' },
+                { x: 0, y: 6, color: 'blue' }, { x: 6, y: 0, color: 'blue' },
+                { x: 1, y: 2, color: 'green' }, { x: 5, y: 4, color: 'green' },
+                { x: 2, y: 1, color: 'yellow' }, { x: 4, y: 5, color: 'yellow' },
+                { x: 3, y: 0, color: 'purple' }, { x: 3, y: 6, color: 'purple' },
+                { x: 2, y: 4, color: 'orange' }, { x: 4, y: 2, color: 'orange' }
+              ], stars: [{ x: 3, y: 3 }, { x: 1, y: 5 }, { x: 5, y: 1 }] }
         ];
 
         /* ===================================================================
-           GAME STATE ENGINE
+           GAME STATE
            =================================================================== */
         let currentLevelIdx = 0;
         let IQ = 75;
         let hintsLeft = 3;
+        let moveCount = 0;
+        let levelStartTime = 0;
+        let bestTimes = JSON.parse(localStorage.getItem('brainMaster_bestTimes') || '{}');
+        let unlockedLevels = JSON.parse(localStorage.getItem('brainMaster_unlocked') || '[0]');
 
-        // Canvas & Contexts
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         const confettiCanvas = document.getElementById('confettiCanvas');
         const confettiCtx = confettiCanvas.getContext('2d');
+        const floatLayer = document.getElementById('float-layer');
 
-        // Drawing state
         let gridCount = 4;
         let cellSize = 0;
         let activeColor = null;
         let isDrawing = false;
-        let paths = {}; // { 'red': [{x,y}, {x,y}], 'blue': [...] }
+        let paths = {};
         let currentPath = [];
-        let collectedStars = new Set(); // Stores "x,y" strings
-
-        // Particles System
+        let collectedStars = new Set();
         let particles = [];
         let confetti = [];
+        let animationFrameId = null;
+        let winning = false;
 
         /* ===================================================================
-           CANVAS & RENDERING LOGIC
+           CANVAS & RENDERING (com cache de gradientes)
            =================================================================== */
+        let ballGradients = {};
+
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
             
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
             confettiCanvas.width = rect.width * dpr;
             confettiCanvas.height = rect.height * dpr;
 
-            ctx.scale(dpr, dpr);
-            confettiCtx.scale(dpr, dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
             cellSize = rect.width / gridCount;
+            ballGradients = {}; // Reset cache
             render();
         }
 
@@ -422,19 +442,23 @@
             const lvl = LEVELS[currentLevelIdx];
             gridCount = lvl.size;
             
-            // UI Updates
             document.getElementById('level-num').innerText = currentLevelIdx + 1;
             document.getElementById('level-name').innerText = lvl.title;
 
-            // Reset Level State
             paths = {};
             currentPath = [];
             isDrawing = false;
             activeColor = null;
             collectedStars.clear();
+            moveCount = 0;
+            winning = false;
+            levelStartTime = Date.now();
+            document.getElementById('move-count').innerText = '0';
+            document.getElementById('board-wrapper').classList.remove('win-glow');
 
             resizeCanvas();
             updateIQBar();
+            saveProgress();
         }
 
         function getCellCoords(gridPos) {
@@ -447,9 +471,7 @@
         function getGridPos(pixelX, pixelY) {
             const x = Math.floor(pixelX / cellSize);
             const y = Math.floor(pixelY / cellSize);
-            if (x >= 0 && x < gridCount && y >= 0 && y < gridCount) {
-                return { x, y };
-            }
+            if (x >= 0 && x < gridCount && y >= 0 && y < gridCount) return { x, y };
             return null;
         }
 
@@ -458,60 +480,51 @@
             const width = rect.width;
             const height = rect.height;
 
-            ctx.clearRect(0, 0, width, height);
-
-            // 1. Draw Grid Lines & Board Texture
+            // Background
             ctx.fillStyle = '#22150c';
             ctx.fillRect(0, 0, width, height);
 
+            // Grid lines (batch)
             ctx.strokeStyle = '#3d281a';
             ctx.lineWidth = 2;
+            ctx.beginPath();
             for (let i = 0; i <= gridCount; i++) {
-                // Vertical
-                ctx.beginPath();
                 ctx.moveTo(i * cellSize, 0);
                 ctx.lineTo(i * cellSize, height);
-                ctx.stroke();
-
-                // Horizontal
-                ctx.beginPath();
                 ctx.moveTo(0, i * cellSize);
                 ctx.lineTo(width, i * cellSize);
-                ctx.stroke();
             }
+            ctx.stroke();
 
-            // Grid Intersection Dots
+            // Grid dots (batch)
             ctx.fillStyle = '#4a3323';
+            ctx.beginPath();
             for (let x = 0; x < gridCount; x++) {
                 for (let y = 0; y < gridCount; y++) {
                     const c = getCellCoords({ x, y });
-                    ctx.beginPath();
+                    ctx.moveTo(c.x, c.y);
                     ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
-                    ctx.fill();
                 }
             }
+            ctx.fill();
 
             const currentLvl = LEVELS[currentLevelIdx];
 
-            // 2. Draw Stars (Bonus Collectibles)
+            // Stars
             if (currentLvl.stars) {
                 currentLvl.stars.forEach(star => {
                     const c = getCellCoords(star);
                     const isCollected = collectedStars.has(`${star.x},${star.y}`);
-
                     ctx.save();
                     ctx.translate(c.x, c.y);
-                    
                     if (isCollected) {
-                        ctx.opacity = 0.4;
+                        ctx.globalAlpha = 0.3;
                         ctx.fillStyle = '#6b7280';
                     } else {
                         ctx.fillStyle = '#f59e0b';
                         ctx.shadowColor = '#fbbf24';
                         ctx.shadowBlur = 12;
                     }
-
-                    // Draw 5-point Star
                     ctx.beginPath();
                     for (let i = 0; i < 5; i++) {
                         ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * (cellSize * 0.22),
@@ -525,23 +538,21 @@
                 });
             }
 
-            // 3. Draw Completed & Active Lines
-            const drawPathLine = (pathArr, colorKey) => {
+            // Helper para desenhar linha
+            const drawPathLine = (pathArr, colorKey, alpha = 1) => {
                 if (!pathArr || pathArr.length === 0) return;
-                const palette = COLOR_PALETTE[colorKey] || { hex: '#ffffff', glow: 'rgba(255,255,255,0.4)' };
-
+                const palette = COLOR_PALETTE[colorKey] || { hex: '#ffffff' };
                 ctx.save();
+                ctx.globalAlpha = alpha;
                 ctx.strokeStyle = palette.hex;
                 ctx.lineWidth = cellSize * 0.28;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.shadowColor = palette.hex;
                 ctx.shadowBlur = 15;
-
                 ctx.beginPath();
                 const start = getCellCoords(pathArr[0]);
                 ctx.moveTo(start.x, start.y);
-
                 for (let i = 1; i < pathArr.length; i++) {
                     const pt = getCellCoords(pathArr[i]);
                     ctx.lineTo(pt.x, pt.y);
@@ -550,68 +561,62 @@
                 ctx.restore();
             };
 
-            // Draw all completed paths
-            Object.keys(paths).forEach(color => {
-                drawPathLine(paths[color], color);
-            });
-
-            // Draw current active dragging path
+            Object.keys(paths).forEach(color => drawPathLine(paths[color], color));
             if (isDrawing && activeColor && currentPath.length > 0) {
                 drawPathLine(currentPath, activeColor);
             }
 
-            // 4. Draw Endpoint Balls / Dots
+            // Endpoint balls (com gradiente cacheado)
             currentLvl.dots.forEach(dot => {
                 const c = getCellCoords(dot);
                 const palette = COLOR_PALETTE[dot.color];
+                const cacheKey = `${dot.color}_${cellSize}`;
 
                 ctx.save();
-                // Outer Glow ring
                 ctx.shadowColor = palette.hex;
                 ctx.shadowBlur = 18;
-                
-                // Ball Gradient Fill
-                const grad = ctx.createRadialGradient(
-                    c.x - cellSize * 0.08, c.y - cellSize * 0.08, cellSize * 0.05,
-                    c.x, c.y, cellSize * 0.28
-                );
-                grad.addColorStop(0, '#ffffff');
-                grad.addColorStop(0.3, palette.hex);
-                grad.addColorStop(1, '#111827');
 
-                ctx.fillStyle = grad;
+                if (!ballGradients[cacheKey]) {
+                    const grad = ctx.createRadialGradient(
+                        -cellSize * 0.08, -cellSize * 0.08, cellSize * 0.05,
+                        0, 0, cellSize * 0.28
+                    );
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.3, palette.hex);
+                    grad.addColorStop(1, '#111827');
+                    ballGradients[cacheKey] = grad;
+                }
+
+                ctx.translate(c.x, c.y);
+                ctx.fillStyle = ballGradients[cacheKey];
                 ctx.beginPath();
-                ctx.arc(c.x, c.y, cellSize * 0.26, 0, Math.PI * 2);
+                ctx.arc(0, 0, cellSize * 0.26, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Inner Specular Light
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
                 ctx.beginPath();
-                ctx.arc(c.x - cellSize * 0.08, c.y - cellSize * 0.08, cellSize * 0.07, 0, Math.PI * 2);
+                ctx.arc(-cellSize * 0.08, -cellSize * 0.08, cellSize * 0.07, 0, Math.PI * 2);
                 ctx.fill();
-
                 ctx.restore();
             });
 
-            // 5. Draw Visual Particles
             renderParticles();
         }
 
         /* ===================================================================
-           INTERACTION & LINE DRAWING LOGIC
+           INTERACTION
            =================================================================== */
         function getPointerPos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function handlePointerStart(e) {
+            if (winning) return;
             audio.init();
+            e.preventDefault();
             const pos = getPointerPos(e);
             const gridPos = getGridPos(pos.x, pos.y);
             if (!gridPos) return;
@@ -619,375 +624,12 @@
             const lvl = LEVELS[currentLevelIdx];
             const dot = lvl.dots.find(d => d.x === gridPos.x && d.y === gridPos.y);
 
-            // If player clicked on a starting ball
             if (dot) {
                 activeColor = dot.color;
                 isDrawing = true;
                 currentPath = [{ x: gridPos.x, y: gridPos.y }];
-                
-                // Clear existing path for this color if any
                 delete paths[activeColor];
                 audio.playPop(300);
                 render();
             } else {
-                // If player clicked on an existing line, start redrawing from there
-                for (let color in paths) {
-                    const idx = paths[color].findIndex(p => p.x === gridPos.x && p.y === gridPos.y);
-                    if (idx !== -1) {
-                        activeColor = color;
-                        isDrawing = true;
-                        currentPath = paths[color].slice(0, idx + 1);
-                        delete paths[color];
-                        audio.playPop(350);
-                        render();
-                        break;
-                    }
-                }
-            }
-        }
-
-        function handlePointerMove(e) {
-            if (!isDrawing || !activeColor) return;
-            const pos = getPointerPos(e);
-            const gridPos = getGridPos(pos.x, pos.y);
-            if (!gridPos) return;
-
-            const lastPt = currentPath[currentPath.length - 1];
-
-            // Only allow horizontal/vertical adjacent steps (orthogonal)
-            if (lastPt.x !== gridPos.x || lastPt.y !== gridPos.y) {
-                const dx = Math.abs(gridPos.x - lastPt.x);
-                const dy = Math.abs(gridPos.y - lastPt.y);
-
-                if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-                    // Prevent path self-intersection or stepping back
-                    const existingIdx = currentPath.findIndex(p => p.x === gridPos.x && p.y === gridPos.y);
-                    if (existingIdx !== -1) {
-                        // Undo back to this point
-                        currentPath = currentPath.slice(0, existingIdx + 1);
-                        audio.playPop(250);
-                    } else {
-                        // Check line cross collision with OTHER color paths
-                        if (!isCellOccupiedByOther(gridPos.x, gridPos.y, activeColor)) {
-                            currentPath.push({ x: gridPos.x, y: gridPos.y });
-                            audio.playPop(400 + currentPath.length * 30);
-
-                            // Check Star Collection
-                            checkStarCollection(gridPos.x, gridPos.y);
-                        }
-                    }
-                    render();
-                }
-            }
-        }
-
-        function handlePointerEnd() {
-            if (!isDrawing) return;
-            isDrawing = false;
-
-            if (currentPath.length > 1) {
-                const lvl = LEVELS[currentLevelIdx];
-                const startPt = currentPath[0];
-                const endPt = currentPath[currentPath.length - 1];
-
-                const matchingEndDot = lvl.dots.find(d => 
-                    d.color === activeColor && 
-                    d.x === endPt.x && d.y === endPt.y &&
-                    !(d.x === startPt.x && d.y === startPt.y)
-                );
-
-                if (matchingEndDot) {
-                    // Successfully connected line!
-                    paths[activeColor] = [...currentPath];
-                    audio.playConnect();
-                    spawnSparkles(endPt, COLOR_PALETTE[activeColor].hex);
-                    checkWinCondition();
-                }
-            }
-
-            currentPath = [];
-            activeColor = null;
-            render();
-        }
-
-        function isCellOccupiedByOther(x, y, selfColor) {
-            for (let color in paths) {
-                if (color !== selfColor) {
-                    if (paths[color].some(p => p.x === x && p.y === y)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function checkStarCollection(x, y) {
-            const lvl = LEVELS[currentLevelIdx];
-            if (!lvl.stars) return;
-
-            lvl.stars.forEach(star => {
-                if (star.x === x && star.y === y && !collectedStars.has(`${x},${y}`)) {
-                    collectedStars.add(`${x},${y}`);
-                    audio.playStar();
-                    spawnSparkles(star, '#f59e0b');
-                    IQ += 2; // Bonus IQ for stars
-                    updateIQBar();
-                }
-            });
-        }
-
-        /* ===================================================================
-           WIN CHECKING & PARTICLE SYSTEM
-           =================================================================== */
-        function checkWinCondition() {
-            const lvl = LEVELS[currentLevelIdx];
-            const requiredColors = [...new Set(lvl.dots.map(d => d.color))];
-
-            const allConnected = requiredColors.every(color => paths[color] && paths[color].length > 0);
-
-            if (allConnected) {
-                // Check if all grid cells are covered or level complete
-                setTimeout(() => {
-                    audio.playWin();
-                    triggerConfetti();
-
-                    // Calculate gained IQ
-                    const baseGained = 10;
-                    const starBonus = collectedStars.size * 5;
-                    const totalGained = baseGained + starBonus;
-                    IQ += totalGained;
-
-                    updateIQBar();
-
-                    // Show Win Modal
-                    document.getElementById('win-iq-gained').innerText = `+${totalGained} QI`;
-                    
-                    let starStr = '★ ★ ★';
-                    if (collectedStars.size === 0 && lvl.stars && lvl.stars.length > 0) starStr = '★ ★ ☆';
-                    document.getElementById('win-stars').innerText = starStr;
-
-                    showModal('win-modal');
-                }, 300);
-            }
-        }
-
-        function spawnSparkles(gridPos, colorHex) {
-            const coords = getCellCoords(gridPos);
-            for (let i = 0; i < 12; i++) {
-                particles.push({
-                    x: coords.x,
-                    y: coords.y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    radius: Math.random() * 4 + 2,
-                    color: colorHex,
-                    alpha: 1,
-                    decay: Math.random() * 0.03 + 0.02
-                });
-            }
-        }
-
-        function renderParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.alpha -= p.decay;
-
-                if (p.alpha <= 0) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-
-                ctx.save();
-                ctx.globalAlpha = p.alpha;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-
-            if (particles.length > 0) {
-                requestAnimationFrame(render);
-            }
-        }
-
-        function triggerConfetti() {
-            confetti = [];
-            const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316'];
-            const rect = confettiCanvas.getBoundingClientRect();
-
-            for (let i = 0; i < 80; i++) {
-                confetti.push({
-                    x: Math.random() * rect.width,
-                    y: -10,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: Math.random() * 4 + 2,
-                    size: Math.random() * 8 + 4,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    rotation: Math.random() * 360,
-                    rSpeed: (Math.random() - 0.5) * 10
-                });
-            }
-            animateConfetti();
-        }
-
-        function animateConfetti() {
-            const rect = confettiCanvas.getBoundingClientRect();
-            confettiCtx.clearRect(0, 0, rect.width, rect.height);
-
-            let active = false;
-            confetti.forEach(c => {
-                c.x += c.vx;
-                c.y += c.vy;
-                c.rotation += c.rSpeed;
-
-                if (c.y < rect.height) active = true;
-
-                confettiCtx.save();
-                confettiCtx.translate(c.x, c.y);
-                confettiCtx.rotate((c.rotation * Math.PI) / 180);
-                confettiCtx.fillStyle = c.color;
-                confettiCtx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
-                confettiCtx.restore();
-            });
-
-            if (active) {
-                requestAnimationFrame(animateConfetti);
-            }
-        }
-
-        /* ===================================================================
-           IQ METER & UI MODALS
-           =================================================================== */
-        function updateIQBar() {
-            document.getElementById('iq-value').innerText = IQ;
-            
-            // Map IQ (75 to 180+) to progress percentage (0% to 100%)
-            let minIQ = 75;
-            let maxIQ = 180;
-            let pct = Math.min(100, Math.max(0, ((IQ - minIQ) / (maxIQ - minIQ)) * 100));
-            
-            document.getElementById('iq-bar').style.width = `${pct}%`;
-        }
-
-        function showModal(id) {
-            const modal = document.getElementById(id);
-            const card = modal.children[0];
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                if (card) {
-                    card.classList.remove('scale-90');
-                    card.classList.add('scale-100');
-                }
-            }, 10);
-        }
-
-        function hideModal(id) {
-            const modal = document.getElementById(id);
-            const card = modal.children[0];
-            if (card) {
-                card.classList.remove('scale-100');
-                card.classList.add('scale-90');
-            }
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function buildLevelsGrid() {
-            const grid = document.getElementById('levels-grid');
-            grid.innerHTML = '';
-
-            LEVELS.forEach((lvl, idx) => {
-                const btn = document.createElement('button');
-                btn.className = `p-3 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition ${
-                    idx === currentLevelIdx 
-                        ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/30' 
-                        : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
-                }`;
-                btn.innerHTML = `
-                    <span class="text-sm">Nível ${idx + 1}</span>
-                    <span class="text-[10px] opacity-70">${lvl.size}x${lvl.size}</span>
-                `;
-                btn.onclick = () => {
-                    loadLevel(idx);
-                    hideModal('levels-modal');
-                };
-                grid.appendChild(btn);
-            });
-        }
-
-        /* ===================================================================
-           EVENT LISTENERS & INIT
-           =================================================================== */
-        window.addEventListener('resize', resizeCanvas);
-
-        // Pointer Events (Mouse + Touch unified)
-        canvas.addEventListener('pointerdown', handlePointerStart);
-        canvas.addEventListener('pointermove', handlePointerMove);
-        window.addEventListener('pointerup', handlePointerEnd);
-
-        // Controls Buttons
-        document.getElementById('btn-reset').addEventListener('click', () => {
-            loadLevel(currentLevelIdx);
-            audio.playPop(200);
-        });
-
-        document.getElementById('btn-undo').addEventListener('click', () => {
-            const keys = Object.keys(paths);
-            if (keys.length > 0) {
-                const lastKey = keys[keys.length - 1];
-                delete paths[lastKey];
-                audio.playPop(220);
-                render();
-            }
-        });
-
-        document.getElementById('btn-hint').addEventListener('click', () => {
-            if (hintsLeft <= 0) return;
-
-            const lvl = LEVELS[currentLevelIdx];
-            const uncompletedColor = lvl.dots.find(d => !paths[d.color])?.color;
-
-            if (uncompletedColor) {
-                hintsLeft--;
-                document.getElementById('hint-badge').innerText = hintsLeft;
-                audio.playStar();
-
-                // Highlight first dot of uncompleted color with particles
-                const dot = lvl.dots.find(d => d.color === uncompletedColor);
-                if (dot) {
-                    spawnSparkles(dot, COLOR_PALETTE[uncompletedColor].hex);
-                }
-            }
-        });
-
-        document.getElementById('btn-levels').addEventListener('click', () => {
-            buildLevelsGrid();
-            showModal('levels-modal');
-        });
-
-        document.getElementById('btn-close-levels').addEventListener('click', () => {
-            hideModal('levels-modal');
-        });
-
-        document.getElementById('btn-next-level').addEventListener('click', () => {
-            hideModal('win-modal');
-            if (currentLevelIdx < LEVELS.length - 1) {
-                loadLevel(currentLevelIdx + 1);
-            } else {
-                loadLevel(0); // Cycle back
-            }
-        });
-
-        // Initialize First Level on Window Load
-        window.onload = () => {
-            loadLevel(0);
-        };
-    </script>
-</body>
-</html>
+                for (let color in paths)
