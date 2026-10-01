@@ -99,7 +99,7 @@
                     <i class="fa-solid fa-trophy"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-amber-300 mb-1">Nível Concluído!</h2>
-                <p id="success-message" class="text-sm text-slate-300 mb-5">+25 Pontos de QI Adicionados!</p>
+                <p id="success-message" class="text-sm text-slate-300 mb-5">+20 Pontos de QI Adicionados!</p>
                 <button onclick="app.nextLevel()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-2xl shadow-lg text-white btn-game flex items-center justify-center gap-2">
                     Próximo Nível <i class="fa-solid fa-arrow-right"></i>
                 </button>
@@ -299,7 +299,6 @@
                 this.renderLevelGrid();
                 this.setupAvatarSelector();
 
-                // Show profile on first run
                 if (!localStorage.getItem('link_balls_username')) {
                     setTimeout(() => this.showProfileModal(), 500);
                 }
@@ -316,8 +315,6 @@
 
             loadLevel(index) {
                 this.currentLevelIndex = index;
-                const level = levels[index];
-                document.getElementById('level-indicator')?.remove(); // Cleanup old indicators if any
                 this.userPaths = {};
                 this.completedPairs = new Set();
                 this.activePair = null;
@@ -513,7 +510,6 @@
                     this.renderLevelGrid();
                     this.sound.win();
 
-                    // Confetti celebration
                     confetti({
                         particleCount: 80,
                         spread: 70,
@@ -646,15 +642,18 @@
                 levels.forEach((lvl, idx) => {
                     const unlocked = this.completedLevels.includes(idx);
                     const btn = document.createElement('button');
-                    btn.className = `aspect-square rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-md transition-all ${
+                    btn.type = 'button';
+                    btn.className = `py-3 rounded-2xl font-bold flex flex-col items-center justify-center gap-1 transition-all ${
                         unlocked 
-                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 cursor-pointer btn-game border border-amber-300' 
-                        : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700/50'
+                            ? 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-md btn-game' 
+                            : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
                     }`;
+                    
                     btn.innerHTML = `
-                        <span class="text-xl">${lvl.id}</span>
-                        <i class="fa-solid ${unlocked ? 'fa-unlock text-xs' : 'fa-lock text-xs'}"></i>
+                        <span class="text-sm">Nível ${lvl.id}</span>
+                        <span class="text-[10px] opacity-80">${unlocked ? (idx === this.currentLevelIndex ? 'Atual' : 'Liberado') : '<i class="fa-solid fa-lock"></i>'}</span>
                     `;
+
                     if (unlocked) {
                         btn.onclick = () => {
                             this.loadLevel(idx);
@@ -666,10 +665,11 @@
             }
         }
 
-        let app;
-        window.onload = () => {
+        // Inicialização da aplicação
+        let app = null;
+        window.addEventListener('DOMContentLoaded', () => {
             app = new LinkPuzzleGame();
-        };
+        });
     </script>
 </body>
 </html>
