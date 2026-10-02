@@ -1,143 +1,549 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brain Flow Master</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Link the Balls - Brain Puzzle</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .wood-board {
+            background: linear-gradient(135deg, #deb887 0%, #c49a6c 50%, #b58351 100%);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 3px 8px rgba(255,255,255,0.5), inset 0 -5px 10px rgba(0,0,0,0.3);
+            border: 10px solid #7d4e24;
+        }
+        .btn-game {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-game:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+        .btn-game:active {
+            transform: translateY(1px);
+        }
+        /* Custom scrollbar for level modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 min-h-screen text-white flex flex-col items-center justify-between p-3 sm:p-5 overflow-hidden">
 
-  <div class="max-w-xl w-full bg-slate-800 rounded-xl p-6 shadow-2xl border border-slate-700">
-    <h1 class="text-3xl font-bold text-center text-cyan-400 mb-2">Brain Flow Master</h1>
-    <p class="text-center text-slate-400 text-sm mb-6">Desafie sua mente e registre seu QI no ranking global</p>
+    <header class="w-full max-w-md flex flex-col items-center gap-2">
+        <div class="flex justify-between w-full px-1 items-center">
+            <button onclick="app.showLevelSelect()" class="bg-amber-600/90 hover:bg-amber-500 px-3.5 py-2 rounded-2xl font-bold shadow-md flex items-center gap-2 text-sm btn-game border border-amber-400/40">
+                <i class="fa-solid fa-list-ul"></i> Níveis
+            </button>
+            <div class="text-center">
+                <h1 class="text-lg sm:text-xl font-bold tracking-wider text-amber-300 drop-shadow-md">CONECTE AS BOLAS</h1>
+                <p id="level-indicator" class="text-xs text-purple-200 font-medium">Nível 1 - Iniciante</p>
+            </div>
+            <button onclick="app.restartLevel()" class="bg-rose-600/90 hover:bg-rose-500 px-3.5 py-2 rounded-2xl font-bold shadow-md flex items-center gap-2 text-sm btn-game border border-rose-400/40">
+                <i class="fa-solid fa-rotate-right"></i> Reiniciar
+            </button>
+        </div>
 
-    <!-- ÁREA DE JOGO (Simulação de Exemplo) -->
-    <div id="game-container" class="space-y-4">
-      <div class="bg-slate-700 p-4 rounded-lg text-center">
-        <p class="text-slate-300 mb-2">Jogador Ativo:</p>
-        <input type="text" id="player-name" placeholder="Digite seu nome ou apelido" class="w-full p-2 bg-slate-900 rounded border border-slate-600 text-white text-center font-bold focus:outline-none focus:border-cyan-400">
-      </div>
+        <!-- IQ Meter Card -->
+        <div class="w-full bg-slate-900/80 backdrop-blur-md border border-purple-500/30 rounded-2xl p-3 shadow-xl flex flex-col gap-1.5">
+            <div class="flex justify-between text-xs font-bold text-purple-200 px-1 items-center">
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-brain text-pink-400"></i> QI Atual: <strong id="iq-score" class="text-amber-400 text-sm">75</strong></span>
+                <span id="iq-title" class="text-cyan-300 text-[11px] bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">Iniciante Curioso</span>
+            </div>
+            <div class="relative w-full bg-slate-800 h-4 rounded-full overflow-hidden p-0.5 shadow-inner border border-slate-700">
+                <div id="iq-bar" class="bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-700" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 font-semibold px-1">
+                <span>75</span>
+                <span>130 (Einstein)</span>
+                <span>180</span>
+            </div>
+        </div>
+    </header>
 
-      <div class="flex justify-between gap-4">
-        <button id="btn-simular" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 font-bold rounded transition">
-          Simular Partida (+ QI)
+    <main class="relative w-full max-w-sm aspect-square my-auto flex items-center justify-center">
+        <!-- Wood Board Outer Frame -->
+        <div class="wood-board w-full h-full rounded-3xl p-3 sm:p-4 relative flex items-center justify-center shadow-2xl">
+            <!-- Canvas container -->
+            <div class="relative w-full h-full bg-slate-100 rounded-2xl overflow-hidden shadow-inner cursor-crosshair border border-amber-900/20">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+            </div>
+        </div>
+
+        <!-- Success Modal Overlay -->
+        <div id="success-modal" class="absolute inset-0 bg-black/75 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center p-6 text-center opacity-0 pointer-events-none transition-all duration-300 z-30">
+            <div class="bg-gradient-to-b from-slate-800 to-slate-900 border border-purple-500/50 p-6 rounded-3xl shadow-2xl max-w-xs w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="success-card">
+                <div class="w-16 h-16 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-lg mb-3 animate-bounce">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-amber-300 mb-1">Nível Concluído!</h2>
+                <p id="success-message" class="text-sm text-slate-300 mb-5">+20 Pontos de QI Adicionados!</p>
+                <button onclick="app.nextLevel()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 font-bold rounded-2xl shadow-lg text-white btn-game flex items-center justify-center gap-2">
+                    Próximo Nível <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full max-w-md flex gap-3">
+        <button onclick="app.giveHint()" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 py-3.5 px-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-sm border border-blue-400/30">
+            <i class="fa-solid fa-lightbulb text-amber-300 text-base"></i> Dica
         </button>
-      </div>
+        <button onclick="app.showSolution()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3.5 px-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 btn-game text-sm border border-purple-400/30">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber-300 text-base"></i> Solução
+        </button>
+    </footer>
+
+    <div id="level-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-purple-500/40 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-lg font-bold text-amber-300 flex items-center gap-2"><i class="fa-solid fa-gamepad"></i> Selecionar Nível</h2>
+                <button onclick="app.hideLevelSelect()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="level-grid" class="grid grid-cols-3 gap-3.5 py-2 max-h-64 overflow-y-auto px-1">
+                <!-- Dynamic levels rendered here -->
+            </div>
+        </div>
     </div>
 
-    <!-- SEÇÃO DO RANKING -->
-    <div class="mt-8 border-t border-slate-700 pt-6">
-      <h2 class="text-xl font-bold text-cyan-300 mb-4 flex items-center justify-between">
-        <span>🏆 Ranking Global</span>
-        <span id="loading-status" class="text-xs text-slate-400 font-normal">Sincronizando...</span>
-      </h2>
+    <script>
+        const levels = [
+            {
+                id: 1,
+                name: "Iniciante",
+                dots: [
+                    { id: 1, color: '#ef4444', x: 0.2, y: 0.2 },
+                    { id: 2, color: '#ef4444', x: 0.8, y: 0.8 },
+                    { id: 3, color: '#3b82f6', x: 0.8, y: 0.2 },
+                    { id: 4, color: '#3b82f6', x: 0.2, y: 0.8 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.2, y:0.2}, {x:0.5, y:0.4}, {x:0.8, y:0.8}] },
+                    { from: 3, to: 4, path: [{x:0.8, y:0.2}, {x:0.5, y:0.6}, {x:0.2, y:0.8}] }
+                ]
+            },
+            {
+                id: 2,
+                name: "Curvas Acima",
+                dots: [
+                    { id: 1, color: '#22c55e', x: 0.15, y: 0.15 },
+                    { id: 2, color: '#22c55e', x: 0.85, y: 0.85 },
+                    { id: 3, color: '#ef4444', x: 0.85, y: 0.15 },
+                    { id: 4, color: '#ef4444', x: 0.15, y: 0.85 },
+                    { id: 5, color: '#3b82f6', x: 0.50, y: 0.50 },
+                    { id: 6, color: '#3b82f6', x: 0.50, y: 0.85 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.15, y:0.15}, {x:0.5, y:0.3}, {x:0.85, y:0.85}] },
+                    { from: 3, to: 4, path: [{x:0.85, y:0.15}, {x:0.5, y:0.5}, {x:0.15, y:0.85}] },
+                    { from: 5, to: 6, path: [{x:0.50, y:0.50}, {x:0.50, y:0.85}] }
+                ]
+            },
+            {
+                id: 3,
+                name: "Labirinto Cruzado",
+                dots: [
+                    { id: 1, color: '#eab308', x: 0.2, y: 0.2 },
+                    { id: 2, color: '#eab308', x: 0.8, y: 0.8 },
+                    { id: 3, color: '#ec4899', x: 0.8, y: 0.2 },
+                    { id: 4, color: '#ec4899', x: 0.2, y: 0.8 },
+                    { id: 5, color: '#06b6d4', x: 0.5, y: 0.2 },
+                    { id: 6, color: '#06b6d4', x: 0.5, y: 0.8 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.2, y:0.2}, {x:0.3, y:0.5}, {x:0.8, y:0.8}] },
+                    { from: 3, to: 4, path: [{x:0.8, y:0.2}, {x:0.7, y:0.5}, {x:0.2, y:0.8}] },
+                    { from: 5, to: 6, path: [{x:0.5, y:0.2}, {x:0.5, y:0.5}, {x:0.5, y:0.8}] }
+                ]
+            },
+            {
+                id: 4,
+                name: "Desafio Mestre",
+                dots: [
+                    { id: 1, color: '#ef4444', x: 0.2, y: 0.15 },
+                    { id: 2, color: '#ef4444', x: 0.8, y: 0.85 },
+                    { id: 3, color: '#3b82f6', x: 0.8, y: 0.15 },
+                    { id: 4, color: '#3b82f6', x: 0.2, y: 0.85 },
+                    { id: 5, color: '#22c55e', x: 0.5, y: 0.35 },
+                    { id: 6, color: '#22c55e', x: 0.5, y: 0.65 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.2, y:0.15}, {x:0.1, y:0.5}, {x:0.8, y:0.85}] },
+                    { from: 3, to: 4, path: [{x:0.8, y:0.15}, {x:0.9, y:0.5}, {x:0.2, y:0.85}] },
+                    { from: 5, to: 6, path: [{x:0.5, y:0.35}, {x:0.5, y:0.65}] }
+                ]
+            },
+            {
+                id: 5,
+                name: "Nível Einstein",
+                dots: [
+                    { id: 1, color: '#a855f7', x: 0.15, y: 0.15 },
+                    { id: 2, color: '#a855f7', x: 0.85, y: 0.85 },
+                    { id: 3, color: '#f97316', x: 0.85, y: 0.15 },
+                    { id: 4, color: '#f97316', x: 0.15, y: 0.85 },
+                    { id: 5, color: '#06b6d4', x: 0.50, y: 0.20 },
+                    { id: 6, color: '#06b6d4', x: 0.50, y: 0.80 },
+                    { id: 7, color: '#eab308', x: 0.20, y: 0.50 },
+                    { id: 8, color: '#eab308', x: 0.80, y: 0.50 }
+                ],
+                connections: [
+                    { from: 1, to: 2, path: [{x:0.15, y:0.15}, {x:0.3, y:0.3}, {x:0.85, y:0.85}] },
+                    { from: 3, to: 4, path: [{x:0.85, y:0.15}, {x:0.7, y:0.7}, {x:0.15, y:0.85}] },
+                    { from: 5, to: 6, path: [{x:0.50, y:0.20}, {x:0.35, y:0.5}, {x:0.50, y:0.80}] },
+                    { from: 7, to: 8, path: [{x:0.20, y:0.50}, {x:0.5, y:0.65}, {x:0.80, y:0.50}] }
+                ]
+            }
+        ];
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-700/50 text-slate-400 uppercase text-xs">
-            <tr>
-              <th class="p-2">Posição</th>
-              <th class="p-2">Jogador</th>
-              <th class="p-2 text-center">Pontos</th>
-              <th class="p-2 text-right">QI Estimado</th>
-            </tr>
-          </thead>
-          <tbody id="ranking-body">
-            <!-- Os dados do Firebase serão inseridos aqui -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+        class LinkPuzzleGame {
+            constructor() {
+                this.currentLevelIndex = 0;
+                this.iqScore = parseInt(localStorage.getItem('link_balls_iq')) || 75;
+                this.completedLevels = JSON.parse(localStorage.getItem('link_balls_completed')) || [0];
+                this.userPaths = {};
+                this.completedPairs = new Set();
+                this.activePair = null;
+                this.currentPathPoints = [];
 
-  <!-- SCRIPT FIREBASE MODULE v10 -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
 
-    // SUAS CREDENCIAIS DO BRAIN FLOW MASTER
-    const firebaseConfig = {
-      apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
-      authDomain: "brain-flow-master.firebaseapp.com",
-      databaseURL: "https://brain-flow-master-default-rtdb.firebaseio.com",
-      projectId: "brain-flow-master",
-      storageBucket: "brain-flow-master.firebasestorage.app",
-      messagingSenderId: "137353474062",
-      appId: "1:137353474062:web:b53db8e1cde4c341740c5f",
-      measurementId: "G-XHCEYHY37W"
-    };
+                this.initCanvasSize();
+                this.setupEventListeners();
+                this.loadLevel(this.currentLevelIndex);
+                this.updateIQDisplay();
+                this.renderLevelGrid();
+            }
 
-    // Inicialização
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+            initCanvasSize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width * window.devicePixelRatio;
+                this.canvas.height = rect.height * window.devicePixelRatio;
+                this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                this.width = rect.width;
+                this.height = rect.height;
+            }
 
-    // Elementos da Interface
-    const rankingBody = document.getElementById('ranking-body');
-    const loadingStatus = document.getElementById('loading-status');
-    const btnSimular = document.getElementById('btn-simular');
-    const playerNameInput = document.getElementById('player-name');
+            loadLevel(index) {
+                this.currentLevelIndex = index;
+                const level = levels[index];
+                document.getElementById('level-indicator').innerText = `Nível ${level.id} - ${level.name}`;
+                this.userPaths = {};
+                this.completedPairs = new Set();
+                this.activePair = null;
+                this.currentPathPoints = [];
 
-    // Função para Carregar o Ranking Global
-    async function carregarRanking() {
-      loadingStatus.textContent = "Atualizando...";
-      try {
-        const rankingRef = collection(db, "ranking");
-        const q = query(rankingRef, orderBy("qi", "desc"), limit(10));
-        const querySnapshot = await getDocs(q);
+                document.getElementById('success-modal').classList.add('opacity-0', 'pointer-events-none');
+                document.getElementById('success-card').classList.remove('scale-100');
+                document.getElementById('success-card').classList.add('scale-95');
+                this.redraw();
+            }
 
-        rankingBody.innerHTML = "";
-        let pos = 1;
+            setupEventListeners() {
+                window.addEventListener('resize', () => {
+                    this.initCanvasSize();
+                    this.redraw();
+                });
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const row = `
-            <tr class="border-b border-slate-700/50 hover:bg-slate-700/30">
-              <td class="p-2 font-bold text-cyan-400">#${pos}</td>
-              <td class="p-2">${data.nome || 'Anônimo'}</td>
-              <td class="p-2 text-center">${data.pontos || 0}</td>
-              <td class="p-2 text-right font-semibold text-emerald-400">${data.qi || 100}</td>
-            </tr>
-          `;
-          rankingBody.innerHTML += row;
-          pos++;
-        });
+                const startHandler = (e) => {
+                    const pos = this.getEventPos(e);
+                    const dot = this.findDotAt(pos.x, pos.y);
+                    if (dot) {
+                        for (let [key, path] of Object.entries(this.userPaths)) {
+                            const [id1, id2] = key.split('-').map(Number);
+                            if (id1 === dot.id || id2 === dot.id) {
+                                delete this.userPaths[key];
+                                this.completedPairs.delete(key);
+                            }
+                        }
 
-        loadingStatus.textContent = "Conectado ao GCP";
-      } catch (error) {
-        console.error("Erro ao carregar ranking:", error);
-        loadingStatus.textContent = "Erro na conexão";
-      }
-    }
+                        const level = levels[this.currentLevelIndex];
+                        const pairMatch = level.dots.find(d => d.color === dot.color && d.id !== dot.id);
+                        if (pairMatch) {
+                            this.activePair = {
+                                color: dot.color,
+                                fromDot: dot,
+                                targetDotId: pairMatch.id
+                            };
+                            this.currentPathPoints = [{x: dot.x, y: dot.y}];
+                        }
+                    }
+                };
 
-    // Função para Salvar Nova Pontuação
-    async function salvarResultado(nome, pontos, qi) {
-      loadingStatus.textContent = "Gravando no Firestore...";
-      try {
-        await addDoc(collection(db, "ranking"), {
-          nome: nome,
-          pontos: pontos,
-          qi: qi,
-          data: new Date()
-        });
-        await carregarRanking();
-      } catch (error) {
-        console.error("Erro ao salvar resultado:", error);
-        alert("Erro ao gravar dados no Firebase. Verifique se o Firestore está ativo no Console.");
-      }
-    }
+                const moveHandler = (e) => {
+                    if (!this.activePair) return;
+                    e.preventDefault();
+                    const pos = this.getEventPos(e);
+                    const nx = Math.max(0.06, Math.min(0.94, pos.x / this.width));
+                    const ny = Math.max(0.06, Math.min(0.94, pos.y / this.height));
 
-    // Ação do Botão de Teste/Simulação
-    btnSimular.addEventListener('click', () => {
-      const nome = playerNameInput.value.trim() || "Jogador Sem Nome";
-      const pontosRandom = Math.floor(Math.random() * 50) + 50; 
-      const qiRandom = Math.floor(Math.random() * 40) + 110; 
+                    this.currentPathPoints.push({x: nx, y: ny});
+                    this.redraw();
+                };
 
-      salvarResultado(nome, pontosRandom, qiRandom);
-    });
+                const endHandler = (e) => {
+                    if (!this.activePair) return;
+                    const pos = this.getEventPos(e);
+                    const dot = this.findDotAt(pos.x, pos.y);
 
-    // Carrega o ranking ao abrir a página
-    carregarRanking();
-  </script>
+                    if (dot && dot.id === this.activePair.targetDotId) {
+                        this.currentPathPoints.push({x: dot.x, y: dot.y});
+                        const key = [this.activePair.fromDot.id, dot.id].sort((a,b)=>a-b).join('-');
+                        this.userPaths[key] = [...this.currentPathPoints];
+                        this.completedPairs.add(key);
+                        this.checkWinCondition();
+                    }
+
+                    this.activePair = null;
+                    this.currentPathPoints = [];
+                    this.redraw();
+                };
+
+                this.canvas.addEventListener('mousedown', startHandler);
+                this.canvas.addEventListener('mousemove', moveHandler);
+                window.addEventListener('mouseup', endHandler);
+
+                this.canvas.addEventListener('touchstart', startHandler, {passive: false});
+                this.canvas.addEventListener('touchmove', moveHandler, {passive: false});
+                window.addEventListener('touchend', endHandler);
+            }
+
+            getEventPos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            findDotAt(x, y) {
+                const level = levels[this.currentLevelIndex];
+                const threshold = 38;
+                for (let dot of level.dots) {
+                    const dx = dot.x * this.width - x;
+                    const dy = dot.y * this.height - y;
+                    if (Math.sqrt(dx*dx + dy*dy) <= threshold) {
+                        return dot;
+                    }
+                }
+                return null;
+            }
+
+            redraw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                const level = levels[this.currentLevelIndex];
+
+                for (let [key, path] of Object.entries(this.userPaths)) {
+                    if (path.length < 2) continue;
+                    const firstDot = level.dots.find(d => d.id === Number(key.split('-')[0]));
+                    this.drawPathLine(path, firstDot ? firstDot.color : '#64748b', 14);
+                }
+
+                if (this.activePair && this.currentPathPoints.length > 1) {
+                    this.drawPathLine(this.currentPathPoints, this.activePair.color, 14, true);
+                }
+
+                for (let dot of level.dots) {
+                    this.drawDot(dot);
+                }
+            }
+
+            drawPathLine(points, color, width, dashed = false) {
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.moveTo(points[0].x * this.width, points[0].y * this.height);
+                for (let i = 1; i < points.length; i++) {
+                    this.ctx.lineTo(points[i].x * this.width, points[i].y * this.height);
+                }
+                this.ctx.strokeStyle = color;
+                this.ctx.lineWidth = width;
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                if (dashed) {
+                    this.ctx.setLineDash([8, 6]);
+                }
+                this.ctx.shadowColor = 'rgba(0,0,0,0.25)';
+                this.ctx.shadowBlur = 6;
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+
+            drawDot(dot) {
+                const x = dot.x * this.width;
+                const y = dot.y * this.height;
+                const radius = 23;
+
+                this.ctx.save();
+                this.ctx.shadowColor = 'rgba(0,0,0,0.35)';
+                this.ctx.shadowBlur = 8;
+                this.ctx.shadowOffsetY = 4;
+
+                const gradient = this.ctx.createRadialGradient(x - 6, y - 6, 4, x, y, radius);
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(0.35, dot.color);
+                gradient.addColorStop(1, this.darkenColor(dot.color, 45));
+
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+
+                this.ctx.lineWidth = 3.5;
+                this.ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+
+            darkenColor(hex, percent) {
+                let num = parseInt(hex.replace('#',''), 16);
+                let amt = Math.round(2.55 * percent);
+                let R = (num >> 16) - amt;
+                let G = (num >> 8 & 0x00ff) - amt;
+                let B = (num & 0x0000ff) - amt;
+                return `#${(0x1000000 + (R<0?0:R)*0x10000 + (G<0?0:G)*0x100 + (B<0?0:B)).toString(16).slice(1)}`;
+            }
+
+            checkWinCondition() {
+                const level = levels[this.currentLevelIndex];
+                const totalPairs = level.dots.length / 2;
+                if (this.completedPairs.size === totalPairs) {
+                    this.iqScore = Math.min(180, this.iqScore + 25);
+                    this.updateIQDisplay();
+                    localStorage.setItem('link_balls_iq', this.iqScore);
+
+                    if (!this.completedLevels.includes(this.currentLevelIndex + 1) && this.currentLevelIndex + 1 < levels.length) {
+                        this.completedLevels.push(this.currentLevelIndex + 1);
+                        localStorage.setItem('link_balls_completed', JSON.stringify(this.completedLevels));
+                    }
+                    this.renderLevelGrid();
+
+                    setTimeout(() => {
+                        const modal = document.getElementById('success-modal');
+                        modal.classList.remove('opacity-0', 'pointer-events-none');
+                        const card = document.getElementById('success-card');
+                        card.classList.remove('scale-95');
+                        card.classList.add('scale-100');
+                    }, 400);
+                }
+            }
+
+            updateIQDisplay() {
+                document.getElementById('iq-score').innerText = this.iqScore;
+                const percentage = ((this.iqScore - 75) / (180 - 75)) * 100;
+                document.getElementById('iq-bar').style.width = `${Math.max(4, Math.min(100, percentage))}%`;
+
+                let title = "Iniciante Curioso";
+                if (this.iqScore >= 110) title = "Mente Brilhante";
+                if (this.iqScore >= 145) title = "Gênio Absoluto (Einstein)";
+                document.getElementById('iq-title').innerText = title;
+            }
+
+            giveHint() {
+                const level = levels[this.currentLevelIndex];
+                for (let conn of level.connections) {
+                    const key = [conn.from, conn.to].sort((a,b)=>a-b).join('-');
+                    if (!this.completedPairs.has(key)) {
+                        this.userPaths[key] = conn.path.slice(0, Math.ceil(conn.path.length / 2));
+                        this.redraw();
+                        break;
+                    }
+                }
+            }
+
+            showSolution() {
+                const level = levels[this.currentLevelIndex];
+                this.userPaths = {};
+                this.completedPairs = new Set();
+
+                let step = 0;
+                const animateStep = () => {
+                    if (step < level.connections.length) {
+                        const conn = level.connections[step];
+                        const key = [conn.from, conn.to].sort((a,b)=>a-b).join('-');
+                        this.userPaths[key] = conn.path;
+                        this.completedPairs.add(key);
+                        this.redraw();
+                        step++;
+                        setTimeout(animateStep, 450);
+                    } else {
+                        setTimeout(() => this.checkWinCondition(), 350);
+                    }
+                };
+                animateStep();
+            }
+
+            restartLevel() {
+                this.loadLevel(this.currentLevelIndex);
+            }
+
+            nextLevel() {
+                if (this.currentLevelIndex + 1 < levels.length) {
+                    this.loadLevel(this.currentLevelIndex + 1);
+                } else {
+                    this.showLevelSelect();
+                }
+            }
+
+            showLevelSelect() {
+                document.getElementById('level-modal').classList.remove('hidden');
+            }
+
+            hideLevelSelect() {
+                document.getElementById('level-modal').classList.add('hidden');
+            }
+
+            renderLevelGrid() {
+                const grid = document.getElementById('level-grid');
+                grid.innerHTML = '';
+                levels.forEach((lvl, idx) => {
+                    const unlocked = this.completedLevels.includes(idx);
+                    const btn = document.createElement('button');
+                    btn.className = `aspect-square rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-md transition-all ${
+                        unlocked 
+                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 cursor-pointer btn-game border border-amber-300' 
+                        : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700/50'
+                    }`;
+                    btn.innerHTML = `
+                        <span class="text-xl">${lvl.id}</span>
+                        <i class="fa-solid ${unlocked ? 'fa-unlock text-xs' : 'fa-lock text-xs'}"></i>
+                    `;
+                    if (unlocked) {
+                        btn.onclick = () => {
+                            this.loadLevel(idx);
+                            this.hideLevelSelect();
+                        };
+                    }
+                    grid.appendChild(btn);
+                });
+            }
+        }
+
+        let app;
+        window.onload = () => {
+            app = new LinkPuzzleGame();
+        };
+    </script>
 </body>
 </html>
