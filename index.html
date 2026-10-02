@@ -271,10 +271,8 @@
         let currentStars = [];
         let collectedStars = {};
         let penaltyCrossCount = 0;
-        let currentSolution = null;
         let particles = [];
         let animationFrame = null;
-        let previousBoards = [];
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -385,25 +383,36 @@
         function generateRandomPuzzle() {
             const shuffled = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
             currentDots = [];
-            let startPositions = [
-                {x: 0, y: 0}, {x: 5, y: 5},
-                {x: 5, y: 0}, {x: 0, y: 5},
-                {x: 2, y: 0}, {x: 3, y: 5},
-                {x: 0, y: 2}, {x: 5, y: 3},
-                {x: 1, y: 1}, {x: 4, y: 4}
-            ];
-            startPositions.sort(() => Math.random() - 0.5);
+            
+            // Posições pré-definidas garantidas para cada quantidade de pares sem sobreposição
+            const templates = {
+                3: [
+                    {x: 0, y: 0}, {x: 5, y: 0},
+                    {x: 0, y: 2}, {x: 5, y: 2},
+                    {x: 0, y: 4}, {x: 5, y: 4}
+                ],
+                4: [
+                    {x: 0, y: 0}, {x: 5, y: 0},
+                    {x: 0, y: 2}, {x: 5, y: 2},
+                    {x: 0, y: 4}, {x: 5, y: 4},
+                    {x: 2, y: 1}, {x: 2, y: 5}
+                ],
+                5: [
+                    {x: 0, y: 0}, {x: 5, y: 0},
+                    {x: 0, y: 1}, {x: 5, y: 1},
+                    {x: 0, y: 2}, {x: 5, y: 2},
+                    {x: 0, y: 3}, {x: 5, y: 3},
+                    {x: 0, y: 4}, {x: 5, y: 4}
+                ]
+            };
 
-            for(let i=0; i<pairsCount; i++) {
-                let p1 = startPositions[i*2];
-                let p2 = startPositions[i*2+1];
-                if (!p1 || !p2) { p1 = {x:0, y:i}; p2 = {x:5, y:i}; }
-                currentDots.push({x: p1.x, y: p1.y, color: shuffled[i]});
-                currentDots.push({x: p2.x, y: p2.y, color: shuffled[i]});
+            let coords = templates[pairsCount] || templates[4];
+            for(let i = 0; i < pairsCount; i++) {
+                currentDots.push({x: coords[i*2].x, y: coords[i*2].y, color: shuffled[i]});
+                currentDots.push({x: coords[i*2+1].x, y: coords[i*2+1].y, color: shuffled[i]});
             }
 
-            currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
-            currentSolution = null;
+            currentStars = [{x: 2, y: 3}, {x: 3, y: 3}];
             initNewGameSession();
         }
 
@@ -522,33 +531,6 @@
             }
             ctx.stroke();
             ctx.restore();
-        }
-
-        function spawnParticles(x, y, colorKey, count = 10) {
-            const palette = COLOR_PALETTE[colorKey] || { hex: '#facc15' };
-            for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-                const speed = 2 + Math.random() * 2;
-                particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1.5, size: 2 + Math.random() * 3, color: palette.hex, life: 1 });
-            }
-            if (!animationFrame) animationFrame = requestAnimationFrame(renderEffects);
-        }
-
-        function renderEffects() {
-            effectCtx.clearRect(0, 0, canvasSize, canvasSize);
-            particles = particles.filter(p => p.life > 0);
-            particles.forEach(p => {
-                effectCtx.save();
-                effectCtx.globalAlpha = p.life;
-                effectCtx.fillStyle = p.color;
-                effectCtx.beginPath();
-                effectCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                effectCtx.fill();
-                effectCtx.restore();
-                p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= 0.03;
-            });
-            if (particles.length > 0) animationFrame = requestAnimationFrame(renderEffects);
-            else animationFrame = null;
         }
 
         function isAdjacent(a, b) {
