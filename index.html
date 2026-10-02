@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots</title>
+    <title>Brain Master: Link the Dots - 6x6 Randômico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -16,7 +16,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* ===== TEMAS ===== */
         body.theme-cyber {
             background: linear-gradient(135deg, #1e1e2e 0%, #11111b 100%);
             color: #cdd6f4;
@@ -29,69 +28,6 @@
             background: #2b1d12;
             border: 10px solid #5c3d2e;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        body.theme-neon {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
-        }
-        body.theme-neon .glass-panel {
-            background: rgba(15, 12, 41, 0.8);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
-        }
-        body.theme-neon .board-frame {
-            background: #090514;
-            border: 8px solid #00f3ff;
-            box-shadow: inset 0 0 20px rgba(0,243,255,0.5), 0 0 25px rgba(0,243,255,0.4);
-        }
-
-        body.theme-light {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            color: #1e293b;
-        }
-        body.theme-light .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
-        body.theme-light .board-frame {
-            background: #cbd5e1;
-            border: 8px solid #94a3b8;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.1);
-        }
-        body.theme-light .text-white { color: #0f172a !important; }
-        body.theme-light .text-gray-300 { color: #334155 !important; }
-        body.theme-light .text-gray-400 { color: #64748b !important; }
-
-        body.theme-sunset {
-            background: linear-gradient(135deg, #2d1b3d 0%, #6b2d5c 50%, #c44569 100%);
-            color: #ffe4e6;
-        }
-        body.theme-sunset .glass-panel {
-            background: rgba(45, 27, 61, 0.7);
-            border: 1px solid rgba(255, 182, 193, 0.3);
-            box-shadow: 0 0 20px rgba(255, 100, 150, 0.2);
-        }
-        body.theme-sunset .board-frame {
-            background: #1a0f24;
-            border: 8px solid #ff6b9d;
-            box-shadow: inset 0 0 20px rgba(255,107,157,0.4), 0 0 30px rgba(255,107,157,0.3);
-        }
-
-        body.theme-forest {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #d1fae5;
-        }
-        body.theme-forest .glass-panel {
-            background: rgba(15, 32, 39, 0.8);
-            border: 1px solid rgba(52, 211, 153, 0.3);
-            box-shadow: 0 0 15px rgba(52, 211, 153, 0.15);
-        }
-        body.theme-forest .board-frame {
-            background: #051015;
-            border: 8px solid #10b981;
-            box-shadow: inset 0 0 20px rgba(16,185,129,0.4), 0 0 25px rgba(16,185,129,0.3);
         }
 
         .glass-panel {
@@ -109,31 +45,6 @@
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
         }
-        .level-btn {
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        .level-btn:hover { transform: translateY(-2px); }
-        .level-btn.locked { opacity: 0.4; cursor: not-allowed; }
-        .level-btn.completed::after {
-            content: '✓';
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #10b981;
-            color: white;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        .level-btn.current {
-            box-shadow: 0 0 0 3px #6366f1, 0 0 15px #6366f1;
-        }
     </style>
 </head>
 <body class="theme-cyber flex flex-col items-center justify-between h-screen p-3 md:p-6 select-none overflow-hidden">
@@ -143,17 +54,13 @@
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
                 <div class="w-9 h-9 bg-indigo-600/30 rounded-xl flex items-center justify-center text-indigo-400 font-bold text-lg border border-indigo-500/30">
-                    <i class="fa-solid fa-puzzle-piece"></i>
+                    <i class="fa-solid fa-dice"></i>
                 </div>
                 <div>
-                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">NÍVEL <span id="level-num" class="text-white text-base">1</span></h1>
-                    <p id="level-name" class="text-[11px] text-indigo-400 font-medium">Grid 4x4 - Iniciante</p>
+                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">MODO <span class="text-white text-base">RANDÔMICO 6x6</span></h1>
+                    <p id="level-mode-desc" class="text-[11px] text-indigo-400 font-medium">4 Pares de Cores</p>
                 </div>
             </div>
-
-            <button id="btn-theme-toggle" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 rounded-xl text-xs font-semibold text-indigo-300 flex items-center gap-1.5 transition active:scale-95">
-                <i class="fa-solid fa-palette"></i> <span id="theme-name">Cyber</span>
-            </button>
 
             <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
                 <i class="fa-solid fa-brain text-white text-base"></i>
@@ -164,20 +71,15 @@
             </div>
         </div>
 
-        <div class="w-full">
-            <div class="flex justify-between text-[10px] font-bold text-gray-400 mb-1 px-1">
-                <span>75</span>
-                <span>130</span>
-                <span>180+</span>
-            </div>
-            <div class="w-full h-3 bg-gray-800/50 rounded-full p-0.5 relative overflow-hidden border border-gray-700/50">
-                <div id="iq-bar" class="iq-progress h-full bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400 rounded-full" style="width: 0%;"></div>
-            </div>
+        <!-- Seletor de Dificuldade/Pares -->
+        <div class="w-full flex items-center justify-between gap-1 bg-gray-900/40 p-1 rounded-xl border border-gray-700/40">
+            <button onclick="setPairsCount(3)" id="btn-pairs-3" class="flex-1 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white">3 Pares</button>
+            <button onclick="setPairsCount(4)" id="btn-pairs-4" class="flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">4 Pares</button>
+            <button onclick="setPairsCount(5)" id="btn-pairs-5" class="flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">5 Pares</button>
         </div>
 
-        <!-- Barra de Progresso de Níveis -->
         <div class="w-full flex justify-between items-center px-1">
-            <span class="text-[10px] text-gray-400 font-semibold">Progresso: <span id="progress-text" class="text-white">1/12</span></span>
+            <span class="text-[10px] text-gray-400 font-semibold">Vitórias: <span id="wins-text" class="text-white">0</span></span>
             <span id="moves-counter" class="text-[10px] text-gray-400 font-semibold">Movimentos: <span class="text-white">0</span></span>
         </div>
     </header>
@@ -208,9 +110,9 @@
             <span class="text-[10px] font-semibold text-indigo-200">Dica</span>
         </button>
 
-        <button id="btn-levels" class="flex-1 py-2 px-2 bg-gray-800/40 hover:bg-gray-700/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700/50">
-            <i class="fa-solid fa-grid-2 text-emerald-400 text-base"></i>
-            <span class="text-[10px] font-semibold text-gray-300">Fases</span>
+        <button id="btn-new-random" class="flex-1 py-2 px-2 bg-emerald-950/40 hover:bg-emerald-900/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-emerald-500/40">
+            <i class="fa-solid fa-shuffle text-emerald-300 text-base"></i>
+            <span class="text-[10px] font-semibold text-emerald-200">Novo Jogo</span>
         </button>
     </footer>
 
@@ -224,75 +126,19 @@
                 <i class="fa-solid fa-trophy"></i>
             </div>
             <div>
-                <h2 class="text-xl font-extrabold text-white">Nível Concluído! 🎉</h2>
-                <p class="text-xs text-gray-300 mt-1" id="win-subtitle">Conexões perfeitas realizadas!</p>
-                <div class="mt-3 flex justify-center gap-4 text-xs">
-                    <div class="bg-gray-800/60 rounded-lg px-3 py-1.5">
-                        <span class="text-gray-400">Movimentos:</span>
-                        <span id="win-moves" class="text-white font-bold ml-1">0</span>
-                    </div>
-                    <div class="bg-gray-800/60 rounded-lg px-3 py-1.5">
-                        <span class="text-gray-400">Dicas:</span>
-                        <span id="win-hints" class="text-white font-bold ml-1">0</span>
-                    </div>
-                </div>
+                <h2 class="text-xl font-extrabold text-white">Incrível! Puzzle Resolvido! 🎉</h2>
+                <p class="text-xs text-gray-300 mt-1" id="win-subtitle">Conexões perfeitas realizadas no 6x6!</p>
             </div>
-            <button id="btn-next-level" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
-                Próximo Nível <i class="fa-solid fa-arrow-right ml-2"></i>
+            <button id="btn-next-random" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
+                Gerar Novo Desafio <i class="fa-solid fa-shuffle ml-2"></i>
             </button>
-            <button id="btn-replay" class="text-xs text-gray-400 hover:text-white transition">
-                <i class="fa-solid fa-redo mr-1"></i> Jogar Novamente
-            </button>
-        </div>
-    </div>
-
-    <!-- Levels Modal -->
-    <div id="levels-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel bg-gray-900/95 border border-gray-700 p-5 rounded-3xl max-w-md w-full shadow-2xl flex flex-col gap-3 max-h-[85vh]">
-            <div class="flex justify-between items-center pb-2 border-b border-gray-800">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-map text-indigo-400"></i> Seleção de Níveis
-                </h2>
-                <button id="btn-close-levels" class="w-7 h-7 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            
-            <div class="flex gap-2 overflow-x-auto pb-1">
-                <button data-filter="all" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">Todas</button>
-                <button data-filter="easy" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Fácil</button>
-                <button data-filter="medium" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Médio</button>
-                <button data-filter="hard" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Difícil</button>
-            </div>
-
-            <div id="levels-grid" class="grid grid-cols-4 gap-2.5 overflow-y-auto p-1 max-h-[55vh]"></div>
-
-            <div class="flex justify-between items-center pt-2 border-t border-gray-800">
-                <span class="text-[10px] text-gray-500">Complete os níveis para desbloquear os próximos</span>
-                <button id="btn-reset-progress" class="text-[10px] text-red-400 hover:text-red-300 font-semibold">
-                    <i class="fa-solid fa-trash mr-1"></i>Resetar Progresso
-                </button>
-            </div>
         </div>
     </div>
 
     <script>
-        // ===== CONFIGURAÇÃO DE TEMAS =====
-        const themes = [
-            { class: 'theme-cyber', name: 'Cyber', icon: 'fa-robot' },
-            { class: 'theme-neon', name: 'Neon', icon: 'fa-bolt' },
-            { class: 'theme-sunset', name: 'Sunset', icon: 'fa-sun' },
-            { class: 'theme-forest', name: 'Forest', icon: 'fa-tree' },
-            { class: 'theme-light', name: 'Clean', icon: 'fa-sun' }
-        ];
-        let currentThemeIdx = 0;
-
-        // ===== ÁUDIO =====
+        // ===== CONFIGURAÇÃO DE ÁUDIO =====
         class SoundEngine {
-            constructor() { 
-                this.ctx = null; 
-                this.enabled = true;
-            }
+            constructor() { this.ctx = null; this.enabled = true; }
             init() { 
                 if (!this.ctx) {
                     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } 
@@ -308,128 +154,34 @@
                     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
                     gain.gain.setValueAtTime(volume, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-                    osc.connect(gain); 
-                    gain.connect(this.ctx.destination);
-                    osc.start(); 
-                    osc.stop(this.ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + duration);
                 } catch(e) {}
             }
             playPop(freq = 440) { this.playTone(freq, 0.08, 'sine', 0.15); }
             playConnect() { this.playTone(600, 0.1, 'triangle', 0.12); }
             playError() { this.playTone(200, 0.15, 'sawtooth', 0.1); }
-            playHint() { 
-                [523, 659, 784].forEach((f, i) => setTimeout(() => this.playTone(f, 0.12, 'sine', 0.12), i * 80));
-            }
-            playWin() {
-                [523, 659, 784, 1046, 1318].forEach((freq, idx) => {
-                    setTimeout(() => this.playTone(freq, 0.15, 'triangle', 0.15), idx * 100);
-                });
-            }
+            playHint() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.playTone(f, 0.12, 'sine', 0.12), i * 80)); }
+            playWin() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.playTone(f, 0.15, 'triangle', 0.15), i * 100)); }
             playUndo() { this.playTone(300, 0.1, 'sine', 0.1); }
-            playLevelUp() {
-                [440, 554, 659, 880, 1108, 1318].forEach((freq, idx) => {
-                    setTimeout(() => this.playTone(freq, 0.12, 'sine', 0.14), idx * 70);
-                });
-            }
         }
         const audio = new SoundEngine();
 
-        // ===== PALETA DE CORES =====
         const COLOR_PALETTE = {
-            red:     { hex: '#ef4444', glow: '#dc2626' },
-            blue:    { hex: '#3b82f6', glow: '#2563eb' },
-            green:   { hex: '#22c55e', glow: '#16a34a' },
-            yellow:  { hex: '#eab308', glow: '#ca8a04' },
-            purple:  { hex: '#a855f7', glow: '#9333ea' },
-            orange:  { hex: '#f97316', glow: '#ea580c' },
-            cyan:    { hex: '#06b6d4', glow: '#0891b2' },
-            pink:    { hex: '#ec4899', glow: '#db2777' },
-            lime:    { hex: '#84cc16', glow: '#65a30d' },
-            teal:    { hex: '#14b8a6', glow: '#0d9488' }
+            red:     { hex: '#ef4444' },
+            blue:    { hex: '#3b82f6' },
+            green:   { hex: '#22c55e' },
+            yellow:  { hex: '#eab308' },
+            purple:  { hex: '#a855f7' },
+            orange:  { hex: '#f97316' },
+            cyan:    { hex: '#06b6d4' },
+            pink:    { hex: '#ec4899' }
         };
-
-        // ===== NÍVEIS (12 fases) =====
-        const LEVELS = [
-            { size: 4, difficulty: 'easy', title: "Aquecimento", dots: [
-                {x:0,y:0,color:'green'},{x:3,y:3,color:'green'},
-                {x:3,y:0,color:'red'},{x:2,y:2,color:'red'},
-                {x:0,y:3,color:'blue'},{x:2,y:1,color:'blue'}
-            ]},
-            { size: 4, difficulty: 'easy', title: "Primeiros Passos", dots: [
-                {x:0,y:0,color:'red'},{x:2,y:3,color:'red'},
-                {x:1,y:0,color:'yellow'},{x:3,y:2,color:'yellow'},
-                {x:0,y:2,color:'blue'},{x:3,y:3,color:'blue'}
-            ]},
-            { size: 4, difficulty: 'easy', title: "Três Cores", dots: [
-                {x:0,y:0,color:'orange'},{x:0,y:3,color:'orange'},
-                {x:3,y:0,color:'purple'},{x:3,y:3,color:'purple'},
-                {x:1,y:1,color:'cyan'},{x:2,y:2,color:'cyan'}
-            ]},
-            { size: 4, difficulty: 'easy', title: "Cruzado", dots: [
-                {x:0,y:1,color:'pink'},{x:3,y:2,color:'pink'},
-                {x:1,y:0,color:'lime'},{x:2,y:3,color:'lime'},
-                {x:0,y:3,color:'red'},{x:3,y:0,color:'red'},
-                {x:1,y:2,color:'blue'},{x:2,y:1,color:'blue'}
-            ]},
-            { size: 5, difficulty: 'medium', title: "Grid 5x5", dots: [
-                {x:0,y:1,color:'red'},{x:4,y:1,color:'red'},
-                {x:1,y:0,color:'blue'},{x:3,y:4,color:'blue'},
-                {x:0,y:4,color:'green'},{x:4,y:3,color:'green'},
-                {x:2,y:2,color:'purple'},{x:4,y:4,color:'purple'}
-            ]},
-            { size: 5, difficulty: 'medium', title: "Caminhos Cruzados", dots: [
-                {x:0,y:0,color:'orange'},{x:4,y:4,color:'orange'},
-                {x:4,y:0,color:'cyan'},{x:0,y:4,color:'cyan'},
-                {x:2,y:1,color:'pink'},{x:2,y:3,color:'pink'},
-                {x:1,y:2,color:'lime'},{x:3,y:2,color:'lime'}
-            ]},
-            { size: 5, difficulty: 'medium', title: "Espiral", dots: [
-                {x:0,y:0,color:'red'},{x:4,y:0,color:'red'},
-                {x:4,y:4,color:'blue'},{x:0,y:4,color:'blue'},
-                {x:2,y:2,color:'yellow'},{x:3,y:2,color:'yellow'},
-                {x:1,y:3,color:'teal'},{x:3,y:3,color:'teal'}
-            ]},
-            { size: 5, difficulty: 'medium', title: "Desafio Cinco", dots: [
-                {x:0,y:2,color:'purple'},{x:4,y:2,color:'purple'},
-                {x:2,y:0,color:'orange'},{x:2,y:4,color:'orange'},
-                {x:0,y:0,color:'green'},{x:4,y:4,color:'green'},
-                {x:4,y:0,color:'red'},{x:0,y:4,color:'red'},
-                {x:3,y:1,color:'cyan'},{x:1,y:3,color:'cyan'}
-            ]},
-            { size: 6, difficulty: 'hard', title: "Grid 6x6", dots: [
-                {x:0,y:0,color:'red'},{x:5,y:5,color:'red'},
-                {x:5,y:0,color:'blue'},{x:0,y:5,color:'blue'},
-                {x:2,y:2,color:'green'},{x:3,y:3,color:'green'},
-                {x:1,y:4,color:'yellow'},{x:4,y:1,color:'yellow'}
-            ]},
-            { size: 6, difficulty: 'hard', title: "Labirinto", dots: [
-                {x:0,y:1,color:'purple'},{x:5,y:4,color:'purple'},
-                {x:1,y:0,color:'orange'},{x:4,y:5,color:'orange'},
-                {x:0,y:4,color:'cyan'},{x:5,y:1,color:'cyan'},
-                {x:2,y:3,color:'pink'},{x:3,y:2,color:'pink'},
-                {x:3,y:0,color:'lime'},{x:2,y:5,color:'lime'}
-            ]},
-            { size: 6, difficulty: 'hard', title: "Complexo", dots: [
-                {x:0,y:0,color:'red'},{x:5,y:0,color:'red'},
-                {x:0,y:5,color:'blue'},{x:5,y:5,color:'blue'},
-                {x:2,y:2,color:'green'},{x:3,y:2,color:'green'},
-                {x:2,y:3,color:'yellow'},{x:3,y:3,color:'yellow'},
-                {x:1,y:1,color:'purple'},{x:4,y:4,color:'purple'},
-                {x:4,y:1,color:'teal'},{x:1,y:4,color:'teal'}
-            ]},
-            { size: 6, difficulty: 'hard', title: "Mestre do QI", dots: [
-                {x:0,y:2,color:'red'},{x:5,y:3,color:'red'},
-                {x:2,y:0,color:'blue'},{x:3,y:5,color:'blue'},
-                {x:0,y:5,color:'green'},{x:5,y:0,color:'green'},
-                {x:1,y:1,color:'yellow'},{x:4,y:4,color:'yellow'},
-                {x:4,y:1,color:'purple'},{x:1,y:4,color:'purple'},
-                {x:2,y:3,color:'cyan'},{x:3,y:2,color:'cyan'}
-            ]}
-        ];
+        const ALL_COLORS = Object.keys(COLOR_PALETTE);
 
         // ===== ESTADO DO JOGO =====
-        let currentLevelIdx = 0;
-        let gridCount = 4;
+        const gridCount = 6;
+        let pairsCount = 4;
         let cellSize = 0;
         let canvasSize = 0;
         let activeColor = null;
@@ -439,469 +191,136 @@
         let pathHistory = [];
         let hintsLeft = 3;
         let movesCount = 0;
-        let hintsUsedCount = 0;
+        let winsCount = 0;
         let IQ = 75;
-        let unlockedLevels = 1;
-        let completedLevels = [];
-        let currentFilter = 'all';
+        let currentDots = [];
+        let currentSolution = null;
         let particles = [];
         let animationFrame = null;
-        let solutionCache = {};
+        let previousBoards = [];
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const effectCanvas = document.getElementById('effectCanvas');
         const effectCtx = effectCanvas.getContext('2d');
 
-        // ===== PERSISTÊNCIA =====
-        function saveProgress() {
-            try {
-                const data = {
-                    unlockedLevels,
-                    completedLevels,
-                    IQ,
-                    hintsLeft,
-                    currentLevelIdx,
-                    currentThemeIdx,
-                    bestMoves: getBestMoves()
-                };
-                localStorage.setItem('brainMaster_save', JSON.stringify(data));
-            } catch(e) {}
-        }
-
-        function loadProgress() {
-            try {
-                const raw = localStorage.getItem('brainMaster_save');
-                if (!raw) return;
-                const data = JSON.parse(raw);
-                if (data.unlockedLevels) unlockedLevels = Math.min(data.unlockedLevels, LEVELS.length);
-                if (data.completedLevels) completedLevels = data.completedLevels;
-                if (data.IQ) IQ = data.IQ;
-                if (data.hintsLeft !== undefined) hintsLeft = data.hintsLeft;
-                if (data.currentLevelIdx !== undefined) currentLevelIdx = data.currentLevelIdx;
-                if (data.currentThemeIdx !== undefined) currentThemeIdx = data.currentThemeIdx;
-                if (data.bestMoves) localStorage.setItem('brainMaster_bestMoves', JSON.stringify(data.bestMoves));
-                updateThemeUI();
-            } catch(e) {}
-        }
-
-        function getBestMoves() {
-            try {
-                return JSON.parse(localStorage.getItem('brainMaster_bestMoves') || '{}');
-            } catch(e) { return {}; }
-        }
-
-        function saveBestMoves(idx, moves) {
-            const best = getBestMoves();
-            if (!best[idx] || moves < best[idx]) {
-                best[idx] = moves;
-                localStorage.setItem('brainMaster_bestMoves', JSON.stringify(best));
-            }
-        }
-
-        function resetProgress() {
-            if (!confirm('Tem certeza que deseja resetar todo o progresso?')) return;
-            localStorage.removeItem('brainMaster_save');
-            localStorage.removeItem('brainMaster_bestMoves');
-            unlockedLevels = 1;
-            completedLevels = [];
-            IQ = 75;
-            hintsLeft = 3;
-            currentLevelIdx = 0;
-            updateIQBar();
-            updateLevelHeader();
-            loadLevel(0);
-            showToast('Progresso resetado!', 'info');
-        }
-
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            const colors = {
-                info: 'bg-indigo-600 text-white',
-                success: 'bg-emerald-600 text-white',
-                error: 'bg-red-600 text-white',
-                warning: 'bg-amber-500 text-white'
-            };
-            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl font-semibold text-sm shadow-2xl transition-all duration-300 pointer-events-none z-[60] ${colors[type] || colors.info}`;
-            toast.innerText = msg;
-            toast.style.opacity = '1';
-            toast.style.transform = 'translate(-50%, 0)';
-            clearTimeout(toast._timeout);
-            toast._timeout = setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translate(-50%, -10px)';
-            }, 1800);
-        }
-
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            const w = rect.width;
-            const h = rect.height;
+            const w = rect.width, h = rect.height;
             canvasSize = Math.min(w, h);
             
-            canvas.width = canvasSize * dpr;
-            canvas.height = canvasSize * dpr;
-            canvas.style.width = canvasSize + 'px';
-            canvas.style.height = canvasSize + 'px';
-            
-            effectCanvas.width = canvasSize * dpr;
-            effectCanvas.height = canvasSize * dpr;
-            effectCanvas.style.width = canvasSize + 'px';
-            effectCanvas.style.height = canvasSize + 'px';
+            canvas.width = canvasSize * dpr; canvas.height = canvasSize * dpr;
+            canvas.style.width = canvasSize + 'px'; canvas.style.height = canvasSize + 'px';
+            effectCanvas.width = canvasSize * dpr; effectCanvas.height = canvasSize * dpr;
+            effectCanvas.style.width = canvasSize + 'px'; effectCanvas.style.height = canvasSize + 'px';
             
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             effectCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            
             cellSize = canvasSize / gridCount;
             render();
-            renderEffects();
         }
 
-        function loadLevel(idx) {
-            if (idx < 0 || idx >= LEVELS.length) return;
-            if (idx >= unlockedLevels) {
-                showToast('🔒 Nível bloqueado!', 'warning');
-                return;
+        // ===== GERADOR RANDÔMICO COM VALIDAÇÃO DE SOLUÇÃO =====
+        function generateRandomPuzzle() {
+            let attempts = 0;
+            while (attempts < 300) {
+                attempts++;
+                const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
+                const availableCells = [];
+                for (let y = 0; y < gridCount; y++) {
+                    for (let x = 0; x < gridCount; x++) {
+                        availableCells.push({ x, y });
+                    }
+                }
+                availableCells.sort(() => Math.random() - 0.5);
+
+                const dots = [];
+                let validPlacement = true;
+                for (let color of shuffledColors) {
+                    if (availableCells.length < 2) { validPlacement = false; break; }
+                    const p1 = availableCells.pop();
+                    const p2 = availableCells.pop();
+                    dots.push({ x: p1.x, y: p1.y, color });
+                    dots.push({ x: p2.x, y: p2.y, color });
+                }
+
+                if (!validPlacement) continue;
+
+                // Evitar repetição exata em relação às jogadas anteriores
+                const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
+                if (previousBoards.includes(boardSignature)) continue;
+
+                // Testar se o tabuleiro gerado possui solução válida respeitando bloqueio de bolinhas
+                const solution = solveLevelForDots(dots);
+                if (solution) {
+                    previousBoards.push(boardSignature);
+                    if (previousBoards.length > 15) previousBoards.shift();
+                    currentDots = dots;
+                    currentSolution = solution;
+                    initNewGameSession();
+                    return;
+                }
             }
-            currentLevelIdx = idx;
-            const lvl = LEVELS[currentLevelIdx];
-            gridCount = lvl.size;
-            
+            // Fallback caso demore
+            generateRandomPuzzleDirectFallback();
+        }
+
+        function generateRandomPuzzleDirectFallback() {
+            const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
+            currentDots = [
+                {x:0, y:0, color: shuffledColors[0]}, {x:5, y:5, color: shuffledColors[0]},
+                {x:5, y:0, color: shuffledColors[1]}, {x:0, y:5, color: shuffledColors[1]},
+                {x:2, y:2, color: shuffledColors[2]}, {x:3, y:3, color: shuffledColors[2]}
+            ];
+            if (pairsCount >= 4) {
+                currentDots.push({x:1, y:4, color: shuffledColors[3]}, {x:4, y:1, color: shuffledColors[3]});
+            }
+            if (pairsCount >= 5) {
+                currentDots.push({x:2, y:4, color: shuffledColors[4]}, {x:4, y:2, color: shuffledColors[4]});
+            }
+            currentSolution = solveLevelForDots(currentDots);
+            initNewGameSession();
+        }
+
+        function initNewGameSession() {
             paths = {};
             currentPath = [];
             pathHistory = [];
             isDrawing = false;
             activeColor = null;
             hintsLeft = 3;
-            hintsUsedCount = 0;
             movesCount = 0;
             particles = [];
-            
-            updateLevelHeader();
-            updateHintBadge();
+            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares de Cores • Matriz 6x6`;
+            document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
+            document.getElementById('wins-text').innerText = winsCount;
+            document.getElementById('hint-badge').innerText = hintsLeft;
+            document.getElementById('hint-badge').style.display = 'flex';
             resizeCanvas();
-            saveProgress();
         }
 
-        function updateLevelHeader() {
-            const lvl = LEVELS[currentLevelIdx];
-            document.getElementById('level-num').innerText = currentLevelIdx + 1;
-            document.getElementById('level-name').innerText = `${lvl.title} • ${lvl.size}x${lvl.size}`;
-            document.getElementById('progress-text').innerText = `${completedLevels.length}/${LEVELS.length}`;
-            document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
-        }
-
-        function updateHintBadge() {
-            const badge = document.getElementById('hint-badge');
-            badge.innerText = hintsLeft;
-            badge.style.display = hintsLeft > 0 ? 'flex' : 'none';
-        }
-
-        function updateIQBar() {
-            const bar = document.getElementById('iq-bar');
-            const valueEl = document.getElementById('iq-value');
-            const percent = Math.min(100, ((IQ - 75) / (180 - 75)) * 100);
-            bar.style.width = Math.max(0, percent) + '%';
-            valueEl.innerText = IQ;
-        }
-
-        function getCellCoords(pos) {
-            return { 
-                x: pos.x * cellSize + cellSize / 2, 
-                y: pos.y * cellSize + cellSize / 2 
-            };
-        }
-
-        function getGridPos(px, py) {
-            const x = Math.floor(px / cellSize);
-            const y = Math.floor(py / cellSize);
-            return (x >= 0 && x < gridCount && y >= 0 && y < gridCount) ? { x, y } : null;
-        }
-
-        function getDotAt(x, y) {
-            return LEVELS[currentLevelIdx].dots.find(d => d.x === x && d.y === y);
-        }
-
-        function render() {
-            ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-            const themeClass = document.body.className;
-            let gridColor = '#3d281a';
-            if (themeClass.includes('theme-neon')) gridColor = '#1e2a5a';
-            else if (themeClass.includes('theme-light')) gridColor = '#94a3b8';
-            else if (themeClass.includes('theme-sunset')) gridColor = '#4a2540';
-            else if (themeClass.includes('theme-forest')) gridColor = '#1e3a3a';
-            
-            ctx.strokeStyle = gridColor;
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i <= gridCount; i++) {
-                ctx.beginPath(); 
-                ctx.moveTo(i * cellSize, 0); 
-                ctx.lineTo(i * cellSize, canvasSize); 
-                ctx.stroke();
-                ctx.beginPath(); 
-                ctx.moveTo(0, i * cellSize); 
-                ctx.lineTo(canvasSize, i * cellSize); 
-                ctx.stroke();
-            }
-
-            Object.keys(paths).forEach(color => {
-                drawPathLine(paths[color], color, false);
-            });
-
-            if (isDrawing && currentPath.length > 1) {
-                drawPathLine(currentPath, activeColor, true);
-            }
-
-            LEVELS[currentLevelIdx].dots.forEach(dot => {
-                const c = getCellCoords(dot);
-                const palette = COLOR_PALETTE[dot.color];
-                
-                ctx.save();
-                ctx.shadowColor = palette.hex;
-                ctx.shadowBlur = 12;
-                ctx.fillStyle = palette.hex;
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-
-                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.beginPath();
-                ctx.arc(c.x - cellSize * 0.08, c.y - cellSize * 0.08, cellSize * 0.06, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        function drawPathLine(pathArr, colorKey, isActive) {
-            if (!pathArr || pathArr.length < 2) return;
-            const palette = COLOR_PALETTE[colorKey] || { hex: '#fff' };
-            ctx.save();
-            ctx.strokeStyle = palette.hex;
-            ctx.lineWidth = cellSize * 0.30;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.shadowColor = palette.hex;
-            ctx.shadowBlur = isActive ? 15 : 8;
-            ctx.beginPath();
-            const start = getCellCoords(pathArr[0]);
-            ctx.moveTo(start.x, start.y);
-            for (let i = 1; i < pathArr.length; i++) {
-                const pt = getCellCoords(pathArr[i]);
-                ctx.lineTo(pt.x, pt.y);
-            }
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        function renderEffects() {
-            effectCtx.clearRect(0, 0, canvasSize, canvasSize);
-            particles = particles.filter(p => p.life > 0);
-            particles.forEach(p => {
-                effectCtx.save();
-                effectCtx.globalAlpha = p.life;
-                effectCtx.fillStyle = p.color;
-                effectCtx.beginPath();
-                effectCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                effectCtx.fill();
-                effectCtx.restore();
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.15;
-                p.life -= 0.02;
-            });
-            if (particles.length > 0) {
-                animationFrame = requestAnimationFrame(renderEffects);
-            } else {
-                animationFrame = null;
-            }
-        }
-
-        function spawnParticles(x, y, colorKey, count = 12) {
-            const palette = COLOR_PALETTE[colorKey];
-            for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-                const speed = 2 + Math.random() * 3;
-                particles.push({
-                    x, y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed - 2,
-                    size: 3 + Math.random() * 4,
-                    color: palette.hex,
-                    life: 1
-                });
-            }
-            if (!animationFrame) animationFrame = requestAnimationFrame(renderEffects);
-        }
-
-        function isAdjacent(a, b) {
-            const dx = Math.abs(a.x - b.x);
-            const dy = Math.abs(a.y - b.y);
-            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
-        }
-
-        function isDotOfOtherColor(x, y, colorKey) {
-            const dot = getDotAt(x, y);
-            if (!dot) return false;
-            return dot.color !== colorKey;
-        }
-
-        function canMoveTo(x, y, colorKey) {
-            if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
-            // CORREÇÃO: Linhas podem cruzar o caminho de outras cores livremente. 
-            // Apenas círculos (bolinhas) de OUTRAS cores bloqueiam o movimento.
-            if (isDotOfOtherColor(x, y, colorKey)) return false;
-            return true;
-        }
-
-        // ===== EVENTOS DE PONTEIRO =====
-        canvas.addEventListener('pointerdown', (e) => {
-            audio.init();
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvasSize / rect.width;
-            const scaleY = canvasSize / rect.height;
-            const pos = { 
-                x: (e.clientX - rect.left) * scaleX, 
-                y: (e.clientY - rect.top) * scaleY 
-            };
-            const gPos = getGridPos(pos.x, pos.y);
-            if (!gPos) return;
-
-            const dot = getDotAt(gPos.x, gPos.y);
-            if (dot) {
-                if (paths[dot.color]) {
-                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]] });
-                    delete paths[dot.color];
-                }
-                activeColor = dot.color;
-                isDrawing = true;
-                currentPath = [{ x: gPos.x, y: gPos.y }];
-                audio.playPop(400);
-                render();
-            }
-        });
-
-        canvas.addEventListener('pointermove', (e) => {
-            if (!isDrawing || !activeColor) return;
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvasSize / rect.width;
-            const scaleY = canvasSize / rect.height;
-            const pos = { 
-                x: (e.clientX - rect.left) * scaleX, 
-                y: (e.clientY - rect.top) * scaleY 
-            };
-            const gPos = getGridPos(pos.x, pos.y);
-            if (!gPos) return;
-
-            const lastPt = currentPath[currentPath.length - 1];
-            if (lastPt.x === gPos.x && lastPt.y === gPos.y) return;
-
-            if (currentPath.length >= 2) {
-                const prev = currentPath[currentPath.length - 2];
-                if (prev.x === gPos.x && prev.y === gPos.y) {
-                    currentPath.pop();
-                    audio.playPop(350);
-                    render();
-                    return;
-                }
-            }
-
-            if (isAdjacent(lastPt, gPos)) {
-                if (canMoveTo(gPos.x, gPos.y, activeColor)) {
-                    const dot = getDotAt(gPos.x, gPos.y);
-                    if (dot && dot.color === activeColor) {
-                        if (currentPath.length > 1 || (gPos.x !== currentPath[0].x || gPos.y !== currentPath[0].y)) {
-                            currentPath.push({ x: gPos.x, y: gPos.y });
-                            audio.playConnect();
-                            finishCurrentPath();
-                            return;
-                        }
-                    } else if (!dot) {
-                        currentPath.push({ x: gPos.x, y: gPos.y });
-                        audio.playPop(500 + currentPath.length * 20);
-                    }
-                    render();
+        function setPairsCount(num) {
+            pairsCount = num;
+            for (let i = 3; i <= 5; i++) {
+                const btn = document.getElementById(`btn-pairs-${i}`);
+                if (i === num) {
+                    btn.className = "flex-1 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white";
                 } else {
-                    audio.playError();
+                    btn.className = "flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white";
                 }
             }
-        });
-
-        canvas.addEventListener('pointerup', () => {
-            if (isDrawing) finishCurrentPath();
-        });
-
-        canvas.addEventListener('pointercancel', () => {
-            if (isDrawing) finishCurrentPath();
-        });
-
-        function finishCurrentPath() {
-            if (!isDrawing) return;
-            isDrawing = false;
-            
-            if (currentPath.length > 1) {
-                const first = currentPath[0];
-                const last = currentPath[currentPath.length - 1];
-                const firstDot = getDotAt(first.x, first.y);
-                const lastDot = getDotAt(last.x, last.y);
-                
-                if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
-                    paths[activeColor] = [...currentPath];
-                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
-                    movesCount++;
-                    updateLevelHeader();
-                    
-                    const endCoords = getCellCoords(last);
-                    spawnParticles(endCoords.x, endCoords.y, activeColor, 15);
-                    audio.playConnect();
-                    setTimeout(checkWin, 200);
-                } else {
-                    audio.playError();
-                }
-            }
-            
-            currentPath = [];
-            activeColor = null;
-            render();
+            generateRandomPuzzle();
         }
 
-        function undo() {
-            if (pathHistory.length === 0) {
-                showToast('Nada para desfazer', 'info');
-                return;
-            }
-            const last = pathHistory.pop();
-            if (last.type === 'add') {
-                delete paths[last.color];
-            } else if (last.type === 'remove') {
-                paths[last.color] = last.path;
-            }
-            audio.playUndo();
-            render();
-            showToast('Desfeito', 'info');
-        }
-
-        // ===== SOLVER / DICAS ROBUSTAS =====
-        function solveLevel() {
-            const lvl = LEVELS[currentLevelIdx];
-            const size = lvl.size;
-            const dots = lvl.dots;
+        // ===== SOLVER / VALIDADOR LÓGICO =====
+        function solveLevelForDots(dots) {
+            const size = gridCount;
             const dotMap = {};
-            
             dots.forEach(d => {
                 if (!dotMap[d.color]) dotMap[d.color] = [];
                 dotMap[d.color].push({ x: d.x, y: d.y });
             });
-
             const colors = Object.keys(dotMap);
             const solution = {};
 
@@ -959,283 +378,306 @@
             return null;
         }
 
-        function getCachedSolution() {
-            if (solutionCache[currentLevelIdx]) return solutionCache[currentLevelIdx];
-            const sol = solveLevel();
-            if (sol) solutionCache[currentLevelIdx] = sol;
-            return sol;
+        // ===== RENDERIZAÇÃO DO TABULEIRO =====
+        function getCellCoords(pos) {
+            return { x: pos.x * cellSize + cellSize / 2, y: pos.y * cellSize + cellSize / 2 };
+        }
+        function getGridPos(px, py) {
+            const x = Math.floor(px / cellSize);
+            const y = Math.floor(py / cellSize);
+            return (x >= 0 && x < gridCount && y >= 0 && y < gridCount) ? { x, y } : null;
+        }
+        function getDotAt(x, y) {
+            return currentDots.find(d => d.x === x && d.y === y);
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+            // Grade 6x6
+            ctx.strokeStyle = '#3d281a';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i <= gridCount; i++) {
+                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvasSize); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvasSize, i * cellSize); ctx.stroke();
+            }
+
+            // Linhas desenhadas
+            Object.keys(paths).forEach(color => {
+                drawPathLine(paths[color], color, false);
+            });
+            if (isDrawing && currentPath.length > 1) {
+                drawPathLine(currentPath, activeColor, true);
+            }
+
+            // Bolinhas (Obstáculos Intransponíveis)
+            currentDots.forEach(dot => {
+                const c = getCellCoords(dot);
+                const palette = COLOR_PALETTE[dot.color];
+                
+                ctx.save();
+                ctx.shadowColor = palette.hex;
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = palette.hex;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.beginPath();
+                ctx.arc(c.x - cellSize * 0.08, c.y - cellSize * 0.08, cellSize * 0.06, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawPathLine(pathArr, colorKey, isActive) {
+            if (!pathArr || pathArr.length < 2) return;
+            const palette = COLOR_PALETTE[colorKey] || { hex: '#fff' };
+            ctx.save();
+            ctx.strokeStyle = palette.hex;
+            ctx.lineWidth = cellSize * 0.30;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = palette.hex;
+            ctx.shadowBlur = isActive ? 15 : 8;
+            ctx.beginPath();
+            const start = getCellCoords(pathArr[0]);
+            ctx.moveTo(start.x, start.y);
+            for (let i = 1; i < pathArr.length; i++) {
+                const pt = getCellCoords(pathArr[i]);
+                ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function spawnParticles(x, y, colorKey, count = 12) {
+            const palette = COLOR_PALETTE[colorKey];
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const speed = 2 + Math.random() * 3;
+                particles.push({
+                    x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+                    size: 3 + Math.random() * 4, color: palette.hex, life: 1
+                });
+            }
+            if (!animationFrame) animationFrame = requestAnimationFrame(renderEffects);
+        }
+
+        function renderEffects() {
+            effectCtx.clearRect(0, 0, canvasSize, canvasSize);
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                effectCtx.save();
+                effectCtx.globalAlpha = p.life;
+                effectCtx.fillStyle = p.color;
+                effectCtx.beginPath();
+                effectCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                effectCtx.fill();
+                effectCtx.restore();
+                p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= 0.02;
+            });
+            if (particles.length > 0) animationFrame = requestAnimationFrame(renderEffects);
+            else animationFrame = null;
+        }
+
+        // ===== REGRAS DE MOVIMENTO RIGOROSAS (Bolinhas Bloqueiam) =====
+        function isAdjacent(a, b) {
+            const dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y);
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        }
+
+        function canMoveTo(x, y, colorKey) {
+            if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
+            
+            // REGRA: QUALQUER BOLINHA BLOQUEIA O CAMINHO (exceto os próprios endpoints da cor ativa no início/fim)
+            const dot = getDotAt(x, y);
+            if (dot && dot.color !== colorKey) return false;
+            
+            return true;
+        }
+
+        // ===== INTERAÇÃO DE TOQUE / MOUSE =====
+        canvas.addEventListener('pointerdown', (e) => {
+            audio.init(); e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const pos = { x: (e.clientX - rect.left) * (canvasSize / rect.width), y: (e.clientY - rect.top) * (canvasSize / rect.height) };
+            const gPos = getGridPos(pos.x, pos.y);
+            if (!gPos) return;
+
+            const dot = getDotAt(gPos.x, gPos.y);
+            if (dot) {
+                if (paths[dot.color]) {
+                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]] });
+                    delete paths[dot.color];
+                }
+                activeColor = dot.color;
+                isDrawing = true;
+                currentPath = [{ x: gPos.x, y: gPos.y }];
+                audio.playPop(400);
+                render();
+            }
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDrawing || !activeColor) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const pos = { x: (e.clientX - rect.left) * (canvasSize / rect.width), y: (e.clientY - rect.top) * (canvasSize / rect.height) };
+            const gPos = getGridPos(pos.x, pos.y);
+            if (!gPos) return;
+
+            const lastPt = currentPath[currentPath.length - 1];
+            if (lastPt.x === gPos.x && lastPt.y === gPos.y) return;
+
+            if (currentPath.length >= 2) {
+                const prev = currentPath[currentPath.length - 2];
+                if (prev.x === gPos.x && prev.y === gPos.y) {
+                    currentPath.pop(); audio.playPop(350); render(); return;
+                }
+            }
+
+            if (isAdjacent(lastPt, gPos)) {
+                if (canMoveTo(gPos.x, gPos.y, activeColor)) {
+                    const dot = getDotAt(gPos.x, gPos.y);
+                    if (dot && dot.color === activeColor) {
+                        if (currentPath.length > 1) {
+                            currentPath.push({ x: gPos.x, y: gPos.y });
+                            audio.playConnect();
+                            finishCurrentPath();
+                            return;
+                        }
+                    } else if (!dot) {
+                        currentPath.push({ x: gPos.x, y: gPos.y });
+                        audio.playPop(500 + currentPath.length * 20);
+                    }
+                    render();
+                } else {
+                    audio.playError();
+                }
+            }
+        });
+
+        canvas.addEventListener('pointerup', () => { if (isDrawing) finishCurrentPath(); });
+        canvas.addEventListener('pointercancel', () => { if (isDrawing) finishCurrentPath(); });
+
+        function finishCurrentPath() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            if (currentPath.length > 1) {
+                const first = currentPath[0], last = currentPath[currentPath.length - 1];
+                const firstDot = getDotAt(first.x, first.y);
+                const lastDot = getDotAt(last.x, last.y);
+                
+                if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
+                    paths[activeColor] = [...currentPath];
+                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
+                    movesCount++;
+                    document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
+                    
+                    const endCoords = getCellCoords(last);
+                    spawnParticles(endCoords.x, endCoords.y, activeColor, 15);
+                    audio.playConnect();
+                    setTimeout(checkWin, 200);
+                } else {
+                    audio.playError();
+                }
+            }
+            currentPath = []; activeColor = null; render();
+        }
+
+        function undo() {
+            if (pathHistory.length === 0) return;
+            const last = pathHistory.pop();
+            if (last.type === 'add') delete paths[last.color];
+            else if (last.type === 'remove') paths[last.color] = last.path;
+            audio.playUndo(); render();
         }
 
         function useHint() {
-            if (hintsLeft <= 0) {
-                showToast('Sem dicas disponíveis!', 'warning');
-                return;
-            }
-            
-            const solution = getCachedSolution();
-            if (!solution) {
-                showToast('Não foi possível encontrar solução', 'error');
-                return;
-            }
-
-            const lvl = LEVELS[currentLevelIdx];
-            const colors = [...new Set(lvl.dots.map(d => d.color))];
-            const unsolved = colors.filter(c => {
-                if (!paths[c]) return true;
-                const path = paths[c];
-                const first = path[0];
-                const last = path[path.length - 1];
-                const firstDot = getDotAt(first.x, first.y);
-                const lastDot = getDotAt(last.x, last.y);
-                return !(firstDot && lastDot && firstDot.color === c && lastDot.color === c);
+            if (hintsLeft <= 0 || !currentSolution) return;
+            const unsolved = currentDots.map(d => d.color).filter(c => {
+                const p = paths[c];
+                if (!p) return true;
+                const f = getDotAt(p[0].x, p[0].y), l = getDotAt(p[p.length-1].x, p[p.length-1].y);
+                return !(f && l && f.color === c && l.color === c);
             });
-
-            if (unsolved.length === 0) {
-                showToast('Você já resolveu todos os pares!', 'success');
-                return;
-            }
+            if (unsolved.length === 0) return;
 
             const color = unsolved[Math.floor(Math.random() * unsolved.length)];
-            const solutionPath = solution[color];
-            
-            if (!solutionPath) {
-                showToast('Solução não disponível', 'error');
-                return;
-            }
+            const solPath = currentSolution[color];
+            if (!solPath) return;
 
-            pathHistory.push({ type: 'hint', color, prev: paths[color] ? [...paths[color]] : null });
             paths[color] = [];
             hintsLeft--;
-            hintsUsedCount++;
-            updateHintBadge();
-            saveProgress();
+            document.getElementById('hint-badge').innerText = hintsLeft;
             audio.playHint();
 
             let i = 0;
-            const animateHint = () => {
-                if (i < solutionPath.length) {
-                    paths[color].push(solutionPath[i]);
-                    render();
-                    i++;
-                    setTimeout(animateHint, 80);
+            const anim = () => {
+                if (i < solPath.length) {
+                    paths[color].push(solPath[i]); render(); i++; setTimeout(anim, 70);
                 } else {
                     movesCount++;
-                    updateLevelHeader();
-                    const end = getCellCoords(solutionPath[solutionPath.length - 1]);
-                    spawnParticles(end.x, end.y, color, 20);
-                    showToast(`💡 Dica usada!`, 'info');
-                    setTimeout(checkWin, 300);
+                    document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
+                    const end = getCellCoords(solPath[solPath.length - 1]);
+                    spawnParticles(end.x, end.y, color, 15);
+                    setTimeout(checkWin, 200);
                 }
             };
-            animateHint();
+            anim();
         }
 
         function checkWin() {
-            const lvl = LEVELS[currentLevelIdx];
-            const colors = [...new Set(lvl.dots.map(d => d.color))];
-            
+            const colors = [...new Set(currentDots.map(d => d.color))];
             let allConnected = true;
             for (const c of colors) {
-                if (!paths[c]) { allConnected = false; break; }
-                const path = paths[c];
-                if (path.length < 2) { allConnected = false; break; }
-                const first = path[0];
-                const last = path[path.length - 1];
-                const firstDot = getDotAt(first.x, first.y);
-                const lastDot = getDotAt(last.x, last.y);
-                if (!firstDot || !lastDot || firstDot.color !== c || lastDot.color !== c) {
-                    allConnected = false;
-                    break;
-                }
+                if (!paths[c] || paths[c].length < 2) { allConnected = false; break; }
+                const f = getDotAt(paths[c][0].x, paths[c][0].y);
+                const l = getDotAt(paths[c][paths[c].length-1].x, paths[c][paths[c].length-1].y);
+                if (!f || !l || f.color !== c || l.color !== c) { allConnected = false; break; }
             }
-
             if (!allConnected) return;
 
-            const totalCells = gridCount * gridCount;
-            const filled = new Set();
-            Object.values(paths).forEach(p => {
-                p.forEach(pt => filled.add(`${pt.x},${pt.y}`));
-            });
-            const isPerfect = filled.size === totalCells;
-
             audio.playWin();
-            
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => {
-                    const x = Math.random() * canvasSize;
-                    const y = Math.random() * canvasSize;
-                    const colorsList = Object.keys(COLOR_PALETTE);
-                    spawnParticles(x, y, colorsList[Math.floor(Math.random() * colorsList.length)], 10);
-                }, i * 100);
-            }
+            winsCount++;
+            IQ = Math.min(180, IQ + 12);
+            document.getElementById('iq-value').innerText = IQ;
+            document.getElementById('iq-progress').style.width = Math.min(100, ((IQ - 75) / (180 - 75)) * 100) + '%';
 
-            if (!completedLevels.includes(currentLevelIdx)) {
-                completedLevels.push(currentLevelIdx);
-            }
-            if (currentLevelIdx + 1 >= unlockedLevels && currentLevelIdx + 1 < LEVELS.length) {
-                unlockedLevels = currentLevelIdx + 2;
-            }
-            
-            saveBestMoves(currentLevelIdx, movesCount);
-            
-            const lvlDifficulty = lvl.difficulty;
-            const iqGain = lvlDifficulty === 'easy' ? 5 : lvlDifficulty === 'medium' ? 10 : 15;
-            const hintPenalty = hintsUsedCount * 2;
-            IQ = Math.min(180, IQ + Math.max(1, iqGain - hintPenalty));
-            
-            updateIQBar();
-            updateLevelHeader();
-            saveProgress();
-
-            document.getElementById('win-moves').innerText = movesCount;
-            document.getElementById('win-hints').innerText = hintsUsedCount;
-            document.getElementById('win-subtitle').innerText = isPerfect 
-                ? '🎯 PERFEITO! Tabuleiro completo!' 
-                : `Nível ${currentLevelIdx + 1} concluído!`;
-            
-            const nextBtn = document.getElementById('btn-next-level');
-            nextBtn.style.display = (currentLevelIdx + 1 < LEVELS.length) ? 'block' : 'none';
-            
             setTimeout(() => {
                 const modal = document.getElementById('win-modal');
                 modal.classList.remove('hidden');
                 setTimeout(() => modal.style.opacity = '1', 10);
-            }, 600);
+            }, 400);
         }
 
-        function renderLevelsGrid() {
-            const grid = document.getElementById('levels-grid');
-            grid.innerHTML = '';
-            LEVELS.forEach((lvl, idx) => {
-                if (currentFilter !== 'all' && lvl.difficulty !== currentFilter) return;
-                
-                const btn = document.createElement('button');
-                const isLocked = idx >= unlockedLevels;
-                const isCompleted = completedLevels.includes(idx);
-                const isCurrent = idx === currentLevelIdx;
-                
-                btn.className = `level-btn p-2 rounded-xl font-bold text-xs border transition ${
-                    isLocked 
-                        ? 'bg-gray-800/50 text-gray-600 border-gray-800 locked' 
-                        : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
-                } ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`;
-                
-                if (isLocked) {
-                    btn.innerHTML = `<i class="fa-solid fa-lock text-gray-600"></i><div class="text-[8px] text-gray-600 mt-0.5">${idx + 1}</div>`;
-                } else {
-                    btn.innerHTML = `
-                        <div class="flex flex-col items-center gap-0.5">
-                            <span class="text-base font-black">${idx + 1}</span>
-                            <span class="text-[8px] text-gray-400">${lvl.size}×${lvl.size}</span>
-                        </div>
-                    `;
-                    btn.onclick = () => {
-                        loadLevel(idx);
-                        closeLevelsModal();
-                    };
-                }
-                grid.appendChild(btn);
-            });
-        }
-
-        function openLevelsModal() {
-            renderLevelsGrid();
-            const modal = document.getElementById('levels-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.style.opacity = '1', 10);
-        }
-
-        function closeLevelsModal() {
-            const modal = document.getElementById('levels-modal');
-            modal.style.opacity = '0';
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        function updateThemeUI() {
-            document.body.classList.remove(...themes.map(t => t.class));
-            document.body.classList.add(themes[currentThemeIdx].class);
-            document.getElementById('theme-name').innerText = themes[currentThemeIdx].name;
-        }
-
-        function cycleTheme() {
-            document.body.classList.remove(themes[currentThemeIdx].class);
-            currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-            updateThemeUI();
-            saveProgress();
-            render();
-        }
-
-        // ===== EVENT LISTENERS UI =====
-        document.getElementById('btn-theme-toggle').addEventListener('click', cycleTheme);
-        document.getElementById('btn-reset').addEventListener('click', () => {
-            loadLevel(currentLevelIdx);
-            showToast('Nível reiniciado', 'info');
-        });
+        // Eventos UI
+        document.getElementById('btn-reset').addEventListener('click', initNewGameSession);
         document.getElementById('btn-undo').addEventListener('click', undo);
         document.getElementById('btn-hint').addEventListener('click', useHint);
-        document.getElementById('btn-levels').addEventListener('click', openLevelsModal);
-        document.getElementById('btn-close-levels').addEventListener('click', closeLevelsModal);
-        document.getElementById('btn-reset-progress').addEventListener('click', resetProgress);
-
-        document.getElementById('btn-next-level').addEventListener('click', () => {
+        document.getElementById('btn-new-random').addEventListener('click', generateRandomPuzzle);
+        document.getElementById('btn-next-random').addEventListener('click', () => {
             const modal = document.getElementById('win-modal');
             modal.style.opacity = '0';
             setTimeout(() => {
                 modal.classList.add('hidden');
-                if (currentLevelIdx + 1 < LEVELS.length) {
-                    loadLevel(currentLevelIdx + 1);
-                    audio.playLevelUp();
-                }
+                generateRandomPuzzle();
             }, 300);
         });
 
-        document.getElementById('btn-replay').addEventListener('click', () => {
-            const modal = document.getElementById('win-modal');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                loadLevel(currentLevelIdx);
-            }, 300);
-        });
+        window.addEventListener('resize', () => resizeCanvas());
 
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => {
-                    b.classList.remove('bg-indigo-600', 'text-white');
-                    b.classList.add('bg-gray-800', 'text-gray-400');
-                });
-                btn.classList.add('bg-indigo-600', 'text-white');
-                btn.classList.remove('bg-gray-800', 'text-gray-400');
-                currentFilter = btn.dataset.filter;
-                renderLevelsGrid();
-            });
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                undo();
-            } else if (e.key === 'h') {
-                useHint();
-            } else if (e.key === 'r') {
-                loadLevel(currentLevelIdx);
-            } else if (e.key === 'Escape') {
-                closeLevelsModal();
-            }
-        });
-
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(resizeCanvas, 150);
-        });
-
-        // ===== INICIALIZAÇÃO =====
-        loadProgress();
-        updateIQBar();
-        updateThemeUI();
-        loadLevel(currentLevelIdx);
-        setTimeout(() => getCachedSolution(), 500);
+        // Iniciar
+        generateRandomPuzzle();
     </script>
 </body>
 </html>
