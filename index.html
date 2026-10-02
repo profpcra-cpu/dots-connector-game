@@ -139,8 +139,8 @@
 
   <!-- SCRIPT DE COMUNICAÇÃO E MECÂNICA DO JOGO -->
   <script>
-    // URL DO SEU WEB APP DO GOOGLE APPS SCRIPT
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUrCNqmCro_lLBUrx3AG2-Aiw34T8NPXhF8-XoC9jhullJG5iXa2ZXe93-EN1Q8kzv/exec";
+    // Cole aqui a URL exata da sua nova implantação do Apps Script
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwI3dHyYhpVLmezFQrkOBTNB2O4pUCwDescRKilfQ9PE2TWkQasJnOuasQbfWbuptI/exec";
 
     let jogadorAtual = null;
     let nivelAtual = 1;
@@ -420,7 +420,8 @@
       }
     }
 
-    async function abrirModalRanking() {
+    // CONSULTA DO RANKING VIA JSONP (Elimina totalmente bloqueios de CORS)
+    function abrirModalRanking() {
       document.getElementById("modalRanking").classList.remove("hidden");
       const container = document.getElementById("listaRanking");
       container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i> A procurar classificação...</p>`;
@@ -430,23 +431,13 @@
         return;
       }
 
-      try {
-        let response;
-        try {
-          // Tenta via POST
-          response = await fetch(WEB_APP_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "OBTER_RANKING" })
-          });
-        } catch (e) {
-          // Fallback seguro via GET se o POST for bloqueado por CORS
-          response = await fetch(`${WEB_APP_URL}?action=OBTER_RANKING`);
-        }
+      // Função global temporária para capturar a resposta
+      const callbackName = "cb_ranking_" + Date.now();
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.getElementById(callbackName)?.remove();
 
-        const data = await response.json();
-
-        if (data.status === "SUCCESS" && data.ranking && data.ranking.length > 0) {
+        if (data && data.status === "SUCCESS" && data.ranking && data.ranking.length > 0) {
           container.innerHTML = data.ranking.map((item, index) => `
             <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
               <div class="flex items-center gap-3">
@@ -462,10 +453,18 @@
         } else {
           container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma pontuação registrada ainda.</p>`;
         }
-      } catch (e) {
-        console.error("Erro ao carregar ranking:", e);
+      };
+
+      // Injeta script dinâmico para ignorar bloqueio de CORS
+      const script = document.createElement("script");
+      script.id = callbackName;
+      script.src = `${WEB_APP_URL}?action=OBTER_RANKING&callback=${callbackName}`;
+      script.onerror = function() {
+        delete window[callbackName];
+        script.remove();
         container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">Erro ao carregar o ranking.</p>`;
-      }
+      };
+      document.body.appendChild(script);
     }
 
     function fecharModalRanking() {
