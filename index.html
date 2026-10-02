@@ -1,46 +1,88 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Flow Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
-        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        body { font-family: 'Outfit', sans-serif; overflow: hidden; }
+        .glass-panel-dark { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-panel-light { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.08); }
         canvas { touch-action: none; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen items-center justify-between p-3 sm:p-6">
+<body class="h-screen w-screen flex flex-col items-center justify-between p-2 sm:p-4 overflow-hidden bg-slate-950 text-slate-100 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300" id="app-body">
 
     <!-- MODAL DE AUTENTICAÇÃO / NOME -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300">
-        <div class="glass-panel p-6 rounded-2xl w-11/12 max-w-sm text-center shadow-2xl border border-indigo-500/30">
+        <div id="auth-panel" class="glass-panel-dark p-6 rounded-2xl w-11/12 max-w-sm text-center shadow-2xl border border-indigo-500/30">
             <h2 class="text-xl font-bold mb-2 text-indigo-400">Brain Flow Master</h2>
             <p class="text-xs text-gray-400 mb-4">Insira o seu nome de jogador para iniciar o desafio e registar a pontuação.</p>
             <input type="text" id="player-nickname" value="Paulo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 mb-4 text-center text-white font-bold focus:outline-none focus:border-indigo-500" placeholder="Seu Nome">
-            <button onclick="registerPlayer()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl transition shadow-lg shadow-indigo-600/30">Entrar no Jogo</button>
+            <button onclick="registerPlayer()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 font-bold text-white rounded-xl transition shadow-lg shadow-indigo-600/30">Entrar no Jogo</button>
         </div>
     </div>
 
     <!-- MODAL DE RANKING -->
     <div id="rank-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel p-6 rounded-2xl w-11/12 max-w-md text-center shadow-2xl border border-amber-500/30">
+        <div id="rank-panel" class="glass-panel-dark p-6 rounded-2xl w-11/12 max-w-md text-center shadow-2xl border border-amber-500/30">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-bold text-amber-400">🏆 Classificação (Ranking)</h2>
                 <button onclick="toggleModal('rank-modal')" class="text-gray-400 hover:text-white font-bold px-2">✕</button>
             </div>
             <div id="ranking-list" class="space-y-2 max-h-60 overflow-y-auto mb-4 text-left">
-                <p class="text-center text-gray-400">Carregando dados...</p>
+                <p class="text-center text-gray-400">A carregar dados...</p>
             </div>
             <button onclick="toggleModal('rank-modal')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold rounded-xl transition">Fechar</button>
         </div>
     </div>
 
-    <!-- MODAL DE VITÓRIA / FECHAMENTO -->
+    <!-- MODAL DE PERSONALIZAÇÃO (TEMAS & CORES) -->
+    <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div id="custom-panel" class="glass-panel-dark p-6 rounded-2xl w-11/12 max-w-sm text-center shadow-2xl border border-indigo-500/30">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-indigo-400">🎨 Personalização</h2>
+                <button onclick="toggleModal('custom-modal')" class="text-gray-400 hover:text-white font-bold px-2">✕</button>
+            </div>
+            
+            <div class="space-y-4 text-left">
+                <!-- Modo Tema -->
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Modo de Exibição</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setTheme('dark')" id="btn-theme-dark" class="py-2 px-3 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-1.5">🌙 Escuro</button>
+                        <button onclick="setTheme('light')" id="btn-theme-light" class="py-2 px-3 rounded-xl border border-slate-700 bg-slate-800/50 text-gray-300 text-xs font-bold transition flex items-center justify-center gap-1.5">☀️ Claro</button>
+                    </div>
+                </div>
+
+                <!-- Paleta de Cores -->
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Paleta de Cores</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setPalette('vibrant')" id="btn-pal-vibrant" class="py-2 px-2 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 text-[11px] font-bold transition text-center">Vibrante</button>
+                        <button onclick="setPalette('pastel')" id="btn-pal-pastel" class="py-2 px-2 rounded-xl border border-slate-700 bg-slate-800/50 text-gray-300 text-[11px] font-bold transition text-center">Pastel</button>
+                        <button onclick="setPalette('neon')" id="btn-pal-neon" class="py-2 px-2 rounded-xl border border-slate-700 bg-slate-800/50 text-gray-300 text-[11px] font-bold transition text-center">Neon</button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="toggleModal('custom-modal')" class="w-full mt-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition shadow-lg shadow-indigo-600/30">Aplicar & Fechar</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE VITÓRIA -->
     <div id="win-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel p-6 rounded-2xl w-11/12 max-w-sm text-center shadow-2xl border border-green-500/30">
+        <div id="win-panel" class="glass-panel-dark p-6 rounded-2xl w-11/12 max-w-sm text-center shadow-2xl border border-green-500/30">
             <div class="text-4xl mb-2">🎉</div>
             <h2 class="text-xl font-bold mb-1 text-green-400">Partida Concluída!</h2>
             <p class="text-xs text-gray-300 mb-4">Pontuação e QI atualizados com sucesso.</p>
@@ -48,62 +90,63 @@
                 <span class="text-xs text-gray-400">Pontos Ganhos:</span>
                 <div id="win-score-display" class="text-2xl font-black text-amber-400">120</div>
             </div>
-            <button id="btn-next-random" class="w-full py-2.5 bg-green-600 hover:bg-green-500 font-bold rounded-xl transition shadow-lg shadow-green-600/30">Próximo Desafio</button>
+            <button id="btn-next-random" class="w-full py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition shadow-lg shadow-green-600/30">Próximo Desafio</button>
         </div>
     </div>
 
     <!-- CABEÇALHO / PLACAR -->
-    <header class="glass-panel w-full max-w-md rounded-2xl p-3 mb-3 flex items-center justify-between shadow-lg">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl">🧠</div>
+    <header id="main-header" class="glass-panel-dark w-full max-w-md rounded-2xl px-3 py-2 flex items-center justify-between shadow-lg shrink-0 transition-colors duration-300">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base">🧠</div>
             <div>
-                <h1 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Brain Flow Master</h1>
-                <span id="player-display" class="text-sm font-extrabold text-amber-400">Paulo</span>
+                <h1 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Brain Flow Master</h1>
+                <span id="player-display" class="text-xs font-extrabold text-amber-400">Paulo</span>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button onclick="openRanking()" class="p-2 rounded-xl bg-slate-800/80 border border-slate-700 hover:border-amber-500 transition text-amber-400" title="Ver Ranking">🏆</button>
-            <div class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5">
-                <span class="text-xs font-bold text-amber-400">QI</span>
-                <span id="iq-value" class="text-sm font-black text-amber-300">75</span>
+        <div class="flex items-center gap-1.5">
+            <button onclick="toggleModal('custom-modal')" class="p-1.5 rounded-xl bg-slate-800/80 border border-slate-700 hover:border-indigo-500 transition text-indigo-400 text-xs" title="Personalização">🎨</button>
+            <button onclick="openRanking()" class="p-1.5 rounded-xl bg-slate-800/80 border border-slate-700 hover:border-amber-500 transition text-amber-400 text-xs" title="Ver Ranking">🏆</button>
+            <div class="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-amber-400">QI</span>
+                <span id="iq-value" class="text-xs font-black text-amber-300">75</span>
             </div>
         </div>
     </header>
 
     <!-- SELETOR DE PARES -->
-    <div class="w-full max-w-md flex gap-2 mb-3 bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
-        <button id="btn-pairs-3" onclick="setPairsCount(3)" class="flex-1 py-1 text-[11px] font-bold rounded-lg transition text-gray-400 hover:text-white">3 Pares</button>
-        <button id="btn-pairs-4" onclick="setPairsCount(4)" class="flex-1 py-1 text-[11px] font-bold rounded-lg transition bg-indigo-600 text-white shadow">4 Pares</button>
-        <button id="btn-pairs-5" onclick="setPairsCount(5)" class="flex-1 py-1 text-[11px] font-bold rounded-lg transition text-gray-400 hover:text-white">5 Pares</button>
+    <div id="pairs-selector" class="w-full max-w-md flex gap-2 bg-slate-900/60 p-1 rounded-xl border border-slate-800 shrink-0 transition-colors duration-300">
+        <button id="btn-pairs-3" onclick="setPairsCount(3)" class="flex-1 py-1 text-[10px] font-bold rounded-lg transition text-gray-400 hover:text-white">3 Pares</button>
+        <button id="btn-pairs-4" onclick="setPairsCount(4)" class="flex-1 py-1 text-[10px] font-bold rounded-lg transition bg-indigo-600 text-white shadow">4 Pares</button>
+        <button id="btn-pairs-5" onclick="setPairsCount(5)" class="flex-1 py-1 text-[10px] font-bold rounded-lg transition text-gray-400 hover:text-white">5 Pares</button>
     </div>
 
-    <!-- ÁREA DO JOGO (CANVAS) -->
-    <main class="relative w-full max-w-md aspect-square glass-panel rounded-3xl p-3 shadow-2xl flex items-center justify-center">
-        <canvas id="gameCanvas" class="w-full h-full rounded-2xl cursor-crosshair"></canvas>
-        <canvas id="effectCanvas" class="absolute inset-0 w-full h-full rounded-2xl pointer-events-none"></canvas>
+    <!-- ÁREA DO JOGO (CANVAS RESPONSIVO) -->
+    <main id="game-container" class="relative w-full max-w-[min(100vw-1.5rem,380px)] aspect-square glass-panel-dark rounded-2xl p-2 shadow-2xl flex items-center justify-center my-auto shrink-0 transition-colors duration-300">
+        <canvas id="gameCanvas" class="w-full h-full rounded-xl cursor-crosshair"></canvas>
+        <canvas id="effectCanvas" class="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)] rounded-xl pointer-events-none"></canvas>
     </main>
 
     <!-- BOTÃO DE ATALHO PARA CONCLUSÃO -->
-    <div class="w-full max-w-md mt-3">
-        <button onclick="triggerDirectWin()" class="w-full py-2 bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600/30 text-emerald-300 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2">
+    <div class="w-full max-w-md shrink-0">
+        <button onclick="triggerDirectWin()" class="w-full py-1.5 bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600/30 text-emerald-300 text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5">
             ⚡ [Atalho] Concluir Partida & Salvar no Firebase
         </button>
     </div>
 
     <!-- BARRA DE FERRAMENTAS / BOTÕES -->
-    <footer class="w-full max-w-md grid grid-cols-4 gap-2 mt-3">
-        <button id="btn-reset" class="flex flex-col items-center justify-center py-2.5 rounded-2xl glass-panel hover:bg-slate-800 transition border border-slate-700/50 text-xs font-bold text-gray-300">
-            <span class="text-base mb-0.5">🔄</span> Reiniciar
+    <footer class="w-full max-w-md grid grid-cols-4 gap-2 shrink-0">
+        <button id="btn-reset" class="flex flex-col items-center justify-center py-2 rounded-xl glass-panel-dark hover:bg-slate-800 transition border border-slate-700/50 text-[11px] font-bold text-gray-300">
+            <span class="text-sm mb-0.5">🔄</span> Reiniciar
         </button>
-        <button id="btn-undo" class="flex flex-col items-center justify-center py-2.5 rounded-2xl glass-panel hover:bg-slate-800 transition border border-slate-700/50 text-xs font-bold text-gray-300">
-            <span class="text-base mb-0.5">↩️</span> Desfazer
+        <button id="btn-undo" class="flex flex-col items-center justify-center py-2 rounded-xl glass-panel-dark hover:bg-slate-800 transition border border-slate-700/50 text-[11px] font-bold text-gray-300">
+            <span class="text-sm mb-0.5">↩️</span> Desfazer
         </button>
-        <button id="btn-hint" class="relative flex flex-col items-center justify-center py-2.5 rounded-2xl glass-panel hover:bg-slate-800 transition border border-slate-700/50 text-xs font-bold text-gray-300">
-            <span class="text-base mb-0.5">💡</span> Dica
-            <span id="hint-badge" class="absolute top-1.5 right-2 bg-amber-500 text-slate-950 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">3</span>
+        <button id="btn-hint" class="relative flex flex-col items-center justify-center py-2 rounded-xl glass-panel-dark hover:bg-slate-800 transition border border-slate-700/50 text-[11px] font-bold text-gray-300">
+            <span class="text-sm mb-0.5">💡</span> Dica
+            <span id="hint-badge" class="absolute top-1 right-2 bg-amber-500 text-slate-950 text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">3</span>
         </button>
-        <button id="btn-new-random" class="flex flex-col items-center justify-center py-2.5 rounded-2xl glass-panel hover:bg-slate-800 transition border border-slate-700/50 text-xs font-bold text-indigo-400">
-            <span class="text-base mb-0.5">🔀</span> Novo Jogo
+        <button id="btn-new-random" class="flex flex-col items-center justify-center py-2 rounded-xl glass-panel-dark hover:bg-slate-800 transition border border-slate-700/50 text-[11px] font-bold text-indigo-400">
+            <span class="text-sm mb-0.5">🔀</span> Novo Jogo
         </button>
     </footer>
 
@@ -139,17 +182,44 @@
         }
         const audio = new SoundEngine();
 
-        const COLOR_PALETTE = {
-            red:     { hex: '#ef4444' },
-            blue:    { hex: '#3b82f6' },
-            green:   { hex: '#22c55e' },
-            yellow:  { hex: '#eab308' },
-            purple:  { hex: '#a855f7' },
-            orange:  { hex: '#f97316' },
-            cyan:    { hex: '#06b6d4' },
-            pink:    { hex: '#ec4899' }
+        // PALETAS DE CORES DIFERENTES
+        const PALETTES = {
+            vibrant: {
+                red:     { hex: '#ef4444' },
+                blue:    { hex: '#3b82f6' },
+                green:   { hex: '#22c55e' },
+                yellow:  { hex: '#eab308' },
+                purple:  { hex: '#a855f7' },
+                orange:  { hex: '#f97316' },
+                cyan:    { hex: '#06b6d4' },
+                pink:    { hex: '#ec4899' }
+            },
+            pastel: {
+                red:     { hex: '#f87171' },
+                blue:    { hex: '#60a5fa' },
+                green:   { hex: '#4ade80' },
+                yellow:  { hex: '#facc15' },
+                purple:  { hex: '#c084fc' },
+                orange:  { hex: '#fb923c' },
+                cyan:    { hex: '#22d3ee' },
+                pink:    { hex: '#f472b6' }
+            },
+            neon: {
+                red:     { hex: '#ff1744' },
+                blue:    { hex: '#00e5ff' },
+                green:   { hex: '#00e676' },
+                yellow:  { hex: '#ffea00' },
+                purple:  { hex: '#d500f9' },
+                orange:  { hex: '#ff9100' },
+                cyan:    { hex: '#18ffff' },
+                pink:    { hex: '#ff4081' }
+            }
         };
-        const ALL_COLORS = Object.keys(COLOR_PALETTE);
+
+        let currentPaletteKey = 'vibrant';
+        let currentTheme = 'dark';
+        let COLOR_PALETTE = PALETTES[currentPaletteKey];
+        let ALL_COLORS = Object.keys(COLOR_PALETTE);
 
         const gridCount = 6;
         let pairsCount = 4;
@@ -165,13 +235,73 @@
         let playerName = "Paulo";
         let playerScore = 0;
         let currentDots = [];
-        let currentStars = [];
-        let collectedStars = {};
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const effectCanvas = document.getElementById('effectCanvas');
         const effectCtx = effectCanvas.getContext('2d');
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            const body = document.getElementById('app-body');
+            const panels = [
+                document.getElementById('auth-panel'),
+                document.getElementById('rank-panel'),
+                document.getElementById('custom-panel'),
+                document.getElementById('win-panel'),
+                document.getElementById('main-header'),
+                document.getElementById('game-container'),
+                ...document.querySelectorAll('footer button'),
+                document.getElementById('pairs-selector')
+            ];
+
+            if (theme === 'light') {
+                body.className = "h-screen w-screen flex flex-col items-center justify-between p-2 sm:p-4 overflow-hidden bg-slate-100 text-slate-900 transition-colors duration-300";
+                document.getElementById('btn-theme-light').className = "py-2 px-3 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-700 text-xs font-bold transition flex items-center justify-center gap-1.5";
+                document.getElementById('btn-theme-dark').className = "py-2 px-3 rounded-xl border border-slate-300 bg-slate-200 text-gray-700 text-xs font-bold transition flex items-center justify-center gap-1.5";
+                
+                panels.forEach(p => {
+                    if(p) {
+                        p.classList.remove('glass-panel-dark', 'bg-slate-900/60', 'bg-slate-800/80');
+                        p.classList.add('glass-panel-light');
+                    }
+                });
+            } else {
+                body.className = "h-screen w-screen flex flex-col items-center justify-between p-2 sm:p-4 overflow-hidden bg-slate-950 text-slate-100 transition-colors duration-300";
+                document.getElementById('btn-theme-dark').className = "py-2 px-3 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-300 text-xs font-bold transition flex items-center justify-center gap-1.5";
+                document.getElementById('btn-theme-light').className = "py-2 px-3 rounded-xl border border-slate-700 bg-slate-800/50 text-gray-300 text-xs font-bold transition flex items-center justify-center gap-1.5";
+                
+                panels.forEach(p => {
+                    if(p) {
+                        p.classList.remove('glass-panel-light');
+                        p.classList.add('glass-panel-dark');
+                    }
+                });
+            }
+            render();
+        }
+
+        function setPalette(palKey) {
+            currentPaletteKey = palKey;
+            COLOR_PALETTE = PALETTES[palKey];
+            ALL_COLORS = Object.keys(COLOR_PALETTE);
+
+            ['vibrant', 'pastel', 'neon'].forEach(k => {
+                const btn = document.getElementById(`btn-pal-${k}`);
+                if (k === palKey) {
+                    btn.className = "py-2 px-2 rounded-xl border border-indigo-500 bg-indigo-600/20 text-indigo-400 text-[11px] font-bold transition text-center shadow";
+                } else {
+                    btn.className = "py-2 px-2 rounded-xl border border-slate-700 bg-slate-800/50 text-gray-300 text-[11px] font-bold transition text-center";
+                }
+            });
+
+            // Reatribuir cores aos pontos existentes
+            currentDots.forEach((dot, index) => {
+                const colorKeys = ALL_COLORS.slice(0, pairsCount);
+                dot.color = colorKeys[Math.floor(index / 2) % colorKeys.length];
+            });
+            render();
+        }
 
         async function registerPlayer() {
             const input = document.getElementById('player-nickname').value.trim();
@@ -191,20 +321,12 @@
                         IQ = data.iq || 75;
                         playerScore = data.score || 0;
                     } else {
-                        await setDoc(playerRef, {
-                            name: playerName,
-                            score: 0,
-                            iq: 75,
-                            updatedAt: new Date()
-                        });
-                        IQ = 75;
-                        playerScore = 0;
+                        await setDoc(playerRef, { name: playerName, score: 0, iq: 75, updatedAt: new Date() });
+                        IQ = 75; playerScore = 0;
                     }
                 }
                 document.getElementById('iq-value').innerText = IQ;
-            } catch (err) {
-                console.error("Erro ao conectar ao Firebase:", err);
-            }
+            } catch (err) { console.error("Erro Firebase:", err); }
 
             const modal = document.getElementById('auth-modal');
             modal.style.opacity = '0';
@@ -226,7 +348,7 @@
         async function openRanking() {
             toggleModal('rank-modal');
             const listEl = document.getElementById('ranking-list');
-            listEl.innerHTML = '<p class="text-center text-gray-400">Carregando dados...</p>';
+            listEl.innerHTML = '<p class="text-center text-gray-400">A carregar dados...</p>';
 
             try {
                 if (!window.fsMethods || !window.db) {
@@ -242,9 +364,9 @@
                 querySnapshot.forEach((doc) => {
                     const item = doc.data();
                     listEl.innerHTML += `
-                        <div class="flex justify-between items-center p-2 rounded-xl bg-gray-800/60 border border-gray-700/50">
+                        <div class="flex justify-between items-center p-2 rounded-xl bg-gray-800/40 border border-gray-700/50">
                             <span class="font-bold text-amber-400">#${rank} ${item.name}</span>
-                            <div class="flex gap-3 text-gray-300">
+                            <div class="flex gap-3 text-gray-300 text-xs">
                                 <span>Pts: <b>${item.score}</b></span>
                                 <span>QI: <b>${item.iq}</b></span>
                             </div>
@@ -253,7 +375,6 @@
                     rank++;
                 });
             } catch (err) {
-                console.error("Erro no ranking:", err);
                 listEl.innerHTML = '<p class="text-center text-red-400">Erro ao carregar ranking.</p>';
             }
         }
@@ -279,24 +400,9 @@
             currentDots = [];
             
             const templates = {
-                3: [
-                    {x: 1, y: 1}, {x: 4, y: 1},
-                    {x: 1, y: 3}, {x: 4, y: 3},
-                    {x: 1, y: 5}, {x: 4, y: 5}
-                ],
-                4: [
-                    {x: 1, y: 0}, {x: 4, y: 0},
-                    {x: 1, y: 2}, {x: 4, y: 2},
-                    {x: 1, y: 4}, {x: 4, y: 4},
-                    {x: 2, y: 1}, {x: 3, y: 5}
-                ],
-                5: [
-                    {x: 0, y: 0}, {x: 5, y: 0},
-                    {x: 0, y: 1}, {x: 5, y: 1},
-                    {x: 0, y: 2}, {x: 5, y: 2},
-                    {x: 0, y: 3}, {x: 5, y: 3},
-                    {x: 0, y: 4}, {x: 5, y: 4}
-                ]
+                3: [{x: 1, y: 1}, {x: 4, y: 1}, {x: 1, y: 3}, {x: 4, y: 3}, {x: 1, y: 5}, {x: 4, y: 5}],
+                4: [{x: 1, y: 0}, {x: 4, y: 0}, {x: 1, y: 2}, {x: 4, y: 2}, {x: 1, y: 4}, {x: 4, y: 4}, {x: 2, y: 1}, {x: 3, y: 5}],
+                5: [{x: 0, y: 0}, {x: 5, y: 0}, {x: 0, y: 1}, {x: 5, y: 1}, {x: 0, y: 2}, {x: 5, y: 2}, {x: 0, y: 3}, {x: 5, y: 3}, {x: 0, y: 4}, {x: 5, y: 4}]
             };
 
             let coords = templates[pairsCount] || templates[4];
@@ -305,19 +411,12 @@
                 currentDots.push({x: coords[i*2+1].x, y: coords[i*2+1].y, color: shuffled[i]});
             }
 
-            currentStars = [{x: 2, y: 3}, {x: 3, y: 3}];
             initNewGameSession();
         }
 
         function initNewGameSession() {
-            paths = {};
-            currentPath = [];
-            pathHistory = [];
-            collectedStars = {};
-            isDrawing = false;
-            activeColor = null;
-            hintsLeft = 3;
-            document.getElementById('hint-badge').innerText = hintsLeft;
+            paths = {}; currentPath = []; pathHistory = []; isDrawing = false; activeColor = null;
+            hintsLeft = 3; document.getElementById('hint-badge').innerText = hintsLeft;
             resizeCanvas();
         }
 
@@ -325,27 +424,24 @@
             pairsCount = num;
             for (let i = 3; i <= 5; i++) {
                 const btn = document.getElementById(`btn-pairs-${i}`);
-                btn.className = (i === num) ? "flex-1 py-1 text-[11px] font-bold rounded-lg transition bg-indigo-600 text-white shadow" : "flex-1 py-1 text-[11px] font-bold rounded-lg transition text-gray-400 hover:text-white";
+                btn.className = (i === num) ? "flex-1 py-1 text-[10px] font-bold rounded-lg transition bg-indigo-600 text-white shadow" : "flex-1 py-1 text-[10px] font-bold rounded-lg transition text-gray-400 hover:text-white";
             }
             generateRandomPuzzle();
         }
 
-        function getCellCoords(pos) {
-            return { x: pos.x * cellSize + cellSize / 2, y: pos.y * cellSize + cellSize / 2 };
-        }
+        function getCellCoords(pos) { return { x: pos.x * cellSize + cellSize / 2, y: pos.y * cellSize + cellSize / 2 }; }
         function getGridPos(px, py) {
             const x = Math.floor(px / cellSize);
             const y = Math.floor(py / cellSize);
             return (x >= 0 && x < gridCount && y >= 0 && y < gridCount) ? { x, y } : null;
         }
-        function getDotAt(x, y) {
-            return currentDots.find(d => d.x === x && d.y === y);
-        }
+        function getDotAt(x, y) { return currentDots.find(d => d.x === x && d.y === y); }
 
         function render() {
             ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-            ctx.strokeStyle = '#3d281a';
+            // Cor da grelha dependente do tema
+            ctx.strokeStyle = currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : '#3d281a';
             ctx.lineWidth = 1.5;
             for (let i = 0; i <= gridCount; i++) {
                 ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvasSize); ctx.stroke();
@@ -357,7 +453,7 @@
 
             currentDots.forEach(dot => {
                 const c = getCellCoords(dot);
-                const palette = COLOR_PALETTE[dot.color];
+                const palette = COLOR_PALETTE[dot.color] || { hex: '#fff' };
                 ctx.save();
                 ctx.shadowColor = palette.hex;
                 ctx.shadowBlur = 12;
@@ -367,7 +463,7 @@
                 ctx.fill();
                 ctx.restore();
 
-                ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                ctx.strokeStyle = currentTheme === 'light' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.6)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(c.x, c.y, cellSize * 0.28, 0, Math.PI * 2);
@@ -471,12 +567,8 @@
                     pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
                     audio.playConnect();
                     setTimeout(checkWin, 200);
-                } else {
-                    audio.playError();
-                }
-            } else {
-                audio.playError();
-            }
+                } else { audio.playError(); }
+            } else { audio.playError(); }
             currentPath = []; activeColor = null; render();
         }
 
@@ -534,15 +626,9 @@
                 if (window.fsMethods && window.db) {
                     const { doc, updateDoc } = window.fsMethods;
                     const playerRef = doc(window.db, "players", playerName);
-                    await updateDoc(playerRef, {
-                        score: playerScore,
-                        iq: IQ,
-                        updatedAt: new Date()
-                    });
+                    await updateDoc(playerRef, { score: playerScore, iq: IQ, updatedAt: new Date() });
                 }
-            } catch (err) {
-                console.error("Erro ao atualizar no Firestore:", err);
-            }
+            } catch (err) { console.error("Erro no update do Firestore:", err); }
 
             document.getElementById('win-score-display').innerText = finalScore;
             setTimeout(() => {
@@ -559,10 +645,7 @@
         document.getElementById('btn-next-random').addEventListener('click', () => {
             const modal = document.getElementById('win-modal');
             modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                generateRandomPuzzle();
-            }, 300);
+            setTimeout(() => { modal.classList.add('hidden'); generateRandomPuzzle(); }, 300);
         });
 
         window.addEventListener('resize', () => resizeCanvas());
