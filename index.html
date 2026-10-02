@@ -39,7 +39,7 @@
 
       <div>
         <h2 class="text-2xl font-bold text-white tracking-wide">Brain Flow Master</h2>
-        <p class="text-xs text-slate-400 mt-1">Registre-se para computar seu desempenho e QI no Ranking Global!</p>
+        <p class="text-xs text-slate-400 mt-1">Registe-se para computar o seu desempenho e QI no Ranking Global!</p>
       </div>
 
       <form id="formCadastro" onsubmit="realizarCadastro(event)" class="space-y-3 text-left">
@@ -132,29 +132,26 @@
       </div>
 
       <div id="listaRanking" class="flex-1 overflow-y-auto space-y-2 pr-1">
-        <p class="text-xs text-slate-500 text-center py-4">Carregando dados da planilha...</p>
+        <p class="text-xs text-slate-500 text-center py-4">A carregar dados da planilha...</p>
       </div>
     </div>
   </div>
 
-  <!-- SCRIPT DE COMUNICAÇÃO E MECÂNICA DE JOGO COMPLETA -->
+  <!-- SCRIPT DE COMUNICAÇÃO E MECÂNICA DO JOGO -->
   <script>
-    // URL do Web App do Google Apps Script
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJGv2PZeOzX6fu0bFH_wMxx6a-WikQhRWb5NwQ1d4A8zWsMgjgbC7yo0f8P3MqC9e7/exec";
+    // URL DO SEU WEB APP DO GOOGLE APPS SCRIPT
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUrCNqmCro_lLBUrx3AG2-Aiw34T8NPXhF8-XoC9jhullJG5iXa2ZXe93-EN1Q8kzv/exec";
 
     let jogadorAtual = null;
     let nivelAtual = 1;
     let pontuacaoTotal = 0;
     let qiEstimado = 100;
 
-    // Canvas e Contexto
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Cores dos Fluxos
     const CORES = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
-    // Configuração dos Níveis do Jogo
     const NIVEIS = [
       {
         tamanho: 3,
@@ -184,10 +181,9 @@
 
     let gridTamanho = 3;
     let pontosAtivos = [];
-    let caminhos = {}; // Armazena os caminhos traçados por cor
+    let caminhos = {};
     let corDesenhando = null;
 
-    // Inicialização
     window.addEventListener("DOMContentLoaded", () => {
       redimensionarCanvas();
       const dadosSalvos = localStorage.getItem("brainFlowMaster_player");
@@ -211,7 +207,7 @@
       e.preventDefault();
       const btn = document.getElementById("btnEntrar");
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> A Conectar...`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> A conectar...`;
 
       const payload = {
         action: "REGISTRAR_JOGADOR",
@@ -222,7 +218,7 @@
 
       try {
         let responseData = null;
-        if (WEB_APP_URL && !WEB_APP_URL.includes("Exemplo")) {
+        if (WEB_APP_URL && !WEB_APP_URL.includes("SUA_URL")) {
           const res = await fetch(WEB_APP_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -269,7 +265,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cellSize = canvas.width / gridTamanho;
 
-      // Desenhar Grade
+      // Grade
       ctx.strokeStyle = "#1e293b";
       ctx.lineWidth = 2;
       for (let i = 0; i <= gridTamanho; i++) {
@@ -284,7 +280,7 @@
         ctx.stroke();
       }
 
-      // Desenhar Caminhos
+      // Caminhos
       Object.keys(caminhos).forEach(corIdx => {
         const path = caminhos[corIdx];
         if (path.length > 1) {
@@ -303,7 +299,7 @@
         }
       });
 
-      // Desenhar Pontos Principais
+      // Pontos
       pontosAtivos.forEach(p => {
         const cx = (p.x + 0.5) * cellSize;
         const cy = (p.y + 0.5) * cellSize;
@@ -318,7 +314,6 @@
       });
     }
 
-    // Interações de Toque e Clique
     function obterPosicaoGrid(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -347,7 +342,6 @@
       const ultimo = path[path.length - 1];
 
       if (pos.x !== ultimo.x || pos.y !== ultimo.y) {
-        // Verifica se é um movimento adjacente
         if (Math.abs(pos.x - ultimo.x) + Math.abs(pos.y - ultimo.y) === 1) {
           path.push({ x: pos.x, y: pos.y });
           desenharJogo();
@@ -406,7 +400,7 @@
     }
 
     async function salvarPontuacao() {
-      if (!jogadorAtual || !WEB_APP_URL || WEB_APP_URL.includes("Exemplo")) return;
+      if (!jogadorAtual || !WEB_APP_URL || WEB_APP_URL.includes("SUA_URL")) return;
 
       const payload = {
         action: "SALVAR_PONTUACAO",
@@ -429,29 +423,37 @@
     async function abrirModalRanking() {
       document.getElementById("modalRanking").classList.remove("hidden");
       const container = document.getElementById("listaRanking");
-      container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i> Buscando classificação...</p>`;
+      container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i> A procurar classificação...</p>`;
 
-      if (!WEB_APP_URL || WEB_APP_URL.includes("Exemplo")) {
+      if (!WEB_APP_URL || WEB_APP_URL.includes("SUA_URL")) {
         container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">URL do Apps Script não configurada.</p>`;
         return;
       }
 
       try {
-        const res = await fetch(WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "OBTER_RANKING" })
-        });
-        const data = await res.json();
+        let response;
+        try {
+          // Tenta via POST
+          response = await fetch(WEB_APP_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "OBTER_RANKING" })
+          });
+        } catch (e) {
+          // Fallback seguro via GET se o POST for bloqueado por CORS
+          response = await fetch(`${WEB_APP_URL}?action=OBTER_RANKING`);
+        }
 
-        if (data.status === "SUCCESS" && data.ranking.length > 0) {
+        const data = await response.json();
+
+        if (data.status === "SUCCESS" && data.ranking && data.ranking.length > 0) {
           container.innerHTML = data.ranking.map((item, index) => `
             <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
               <div class="flex items-center gap-3">
                 <span class="font-extrabold text-sm ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index + 1}</span>
                 <div>
                   <p class="text-xs font-bold text-white">${item.nome}</p>
-                  <p class="text-[10px] text-slate-400">${item.data ? new Date(item.data).toLocaleDateString() : ''}</p>
+                  <p class="text-[10px] text-indigo-400">${item.turma || ''}</p>
                 </div>
               </div>
               <span class="text-xs font-extrabold text-emerald-400">${item.pontos} pts</span>
@@ -461,6 +463,7 @@
           container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma pontuação registrada ainda.</p>`;
         }
       } catch (e) {
+        console.error("Erro ao carregar ranking:", e);
         container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">Erro ao carregar o ranking.</p>`;
       }
     }
