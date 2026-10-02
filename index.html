@@ -90,7 +90,7 @@
             <div class="text-xs text-gray-300 space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 <p>⭐ <b>Conexão Indireta:</b> Não é permitido ligar bolinhas da mesma cor diretamente. O trajeto precisa passar por casas intermediárias do tabuleiro.</p>
                 <p>⭐ <b>Estrelas (+10 pts):</b> Colete estrelas douradas no caminho para aumentar sua pontuação final.</p>
-                <p>⚠️️ <b>Ultrapassagem (-10 pts):</b> Só é permitido passar por cima de bolinhas de outra cor se necessário, mas você perde 10 pontos por cada bola ultrapassada.</p>
+                <p>⚠ <b>Ultrapassagem (-10 pts):</b> Só é permitido passar por cima de bolinhas de outra cor se necessário, mas você perde 10 pontos por cada bola ultrapassada.</p>
                 <p>🚫 <b>Sem Cruzamentos:</b> Linhas de fluxos diferentes não podem se cruzar.</p>
             </div>
             <button onclick="toggleModal('rules-modal')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs">Entendi</button>
@@ -305,23 +305,25 @@
 
             // Lógica do Banco de Dados Firestore
             try {
-                const { doc, getDoc, setDoc } = window.fsMethods;
-                const playerRef = doc(window.db, "players", playerName);
-                const playerSnap = await getDoc(playerRef);
+                if (window.fsMethods && window.db) {
+                    const { doc, getDoc, setDoc } = window.fsMethods;
+                    const playerRef = doc(window.db, "players", playerName);
+                    const playerSnap = await getDoc(playerRef);
 
-                if (playerSnap.exists()) {
-                    const data = playerSnap.data();
-                    IQ = data.iq || 75;
-                    playerScore = data.score || 0;
-                } else {
-                    await setDoc(playerRef, {
-                        name: playerName,
-                        score: 0,
-                        iq: 75,
-                        updatedAt: new Date()
-                    });
-                    IQ = 75;
-                    playerScore = 0;
+                    if (playerSnap.exists()) {
+                        const data = playerSnap.data();
+                        IQ = data.iq || 75;
+                        playerScore = data.score || 0;
+                    } else {
+                        await setDoc(playerRef, {
+                            name: playerName,
+                            score: 0,
+                            iq: 75,
+                            updatedAt: new Date()
+                        });
+                        IQ = 75;
+                        playerScore = 0;
+                    }
                 }
                 document.getElementById('iq-value').innerText = IQ;
             } catch (err) {
@@ -351,6 +353,10 @@
             listEl.innerHTML = '<p class="text-center text-gray-400">A carregar dados...</p>';
 
             try {
+                if (!window.fsMethods || !window.db) {
+                    listEl.innerHTML = '<p class="text-center text-amber-400">Modo offline ativado.</p>';
+                    return;
+                }
                 const { collection, query, orderBy, limit, getDocs } = window.fsMethods;
                 const q = query(collection(window.db, "players"), orderBy("score", "desc"), limit(10));
                 const querySnapshot = await getDocs(q);
@@ -892,13 +898,15 @@
             // Atualizar no Banco de Dados Firestore
             playerScore += finalScore;
             try {
-                const { doc, updateDoc } = window.fsMethods;
-                const playerRef = doc(window.db, "players", playerName);
-                await updateDoc(playerRef, {
-                    score: playerScore,
-                    iq: IQ,
-                    updatedAt: new Date()
-                });
+                if (window.fsMethods && window.db) {
+                    const { doc, updateDoc } = window.fsMethods;
+                    const playerRef = doc(window.db, "players", playerName);
+                    await updateDoc(playerRef, {
+                        score: playerScore,
+                        iq: IQ,
+                        updatedAt: new Date()
+                    });
+                }
             } catch (err) {
                 console.error("Erro ao atualizar o score no Firestore:", err);
             }
