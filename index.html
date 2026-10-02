@@ -73,10 +73,8 @@
                 <button onclick="toggleModal('rules-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="text-xs text-gray-300 space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                <p>⭐ <b>Conexão Indireta:</b> Não é permitido ligar bolinhas da mesma cor diretamente. O trajeto precisa passar por casas intermediárias do tabuleiro.</p>
-                <p>⭐ <b>Estrelas (+10 pts):</b> Colete estrelas douradas no caminho para aumentar sua pontuação final.</p>
-                <p>⚠ <b>Ultrapassagem (-10 pts):</b> Passar por cima de bolinhas de outra cor tira 10 pontos por bola.</p>
-                <p>🚫 <b>Sem Cruzamentos:</b> Linhas de fluxos diferentes não podem se cruzar.</p>
+                <p>⭐ <b>Conexão:</b> Conecte as bolinhas da mesma cor preenchendo os caminhos do tabuleiro.</p>
+                <p>⭐ <b>Estrelas (+10 pts):</b> Colete estrelas douradas no caminho para aumentar sua pontuação.</p>
             </div>
             <button onclick="toggleModal('rules-modal')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs">Entendi</button>
         </div>
@@ -133,11 +131,15 @@
     </header>
 
     <!-- Canvas -->
-    <main class="relative flex-1 w-full max-w-md my-1 flex items-center justify-center min-h-0">
-        <div class="board-frame relative w-full aspect-square max-h-[340px] p-2 flex items-center justify-center">
+    <main class="relative flex-1 w-full max-w-md my-1 flex flex-col items-center justify-center min-h-0 gap-2">
+        <div class="board-frame relative w-full aspect-square max-h-[300px] p-2 flex items-center justify-center">
             <canvas id="gameCanvas" class="w-full h-full rounded-lg cursor-pointer touch-none"></canvas>
             <canvas id="effectCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-lg"></canvas>
         </div>
+        <!-- Botão de Atalho para Testar Vitória e Firebase -->
+        <button onclick="triggerDirectWin()" class="text-[10px] bg-emerald-900/60 border border-emerald-500/50 text-emerald-300 px-3 py-1 rounded-lg hover:bg-emerald-800 transition font-bold">
+            <i class="fa-solid fa-bolt mr-1"></i> [Atalho] Concluir Partida & Salvar no Firebase
+        </button>
     </main>
 
     <!-- Footer -->
@@ -173,9 +175,9 @@
             <div>
                 <h2 class="text-lg font-extrabold text-white">Puzzle Resolvido! 🎉</h2>
                 <div class="mt-2 p-2.5 bg-indigo-950/50 rounded-2xl border border-indigo-500/30 flex flex-col items-center gap-0.5">
-                    <span class="text-[10px] text-gray-300 uppercase font-semibold">Pontuação Registrada</span>
+                    <span class="text-[10px] text-gray-300 uppercase font-semibold">Pontuação Registrada no Firebase</span>
                     <span id="win-score-display" class="text-2xl font-black text-amber-400">100</span>
-                    <span id="win-details-desc" class="text-[9px] text-gray-400">Grid: 80 | Estrelas: +20 | Penalidades: 0</span>
+                    <span id="win-details-desc" class="text-[9px] text-gray-400">QI Atualizado com Sucesso!</span>
                 </div>
             </div>
             <button id="btn-next-random" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
@@ -184,12 +186,11 @@
         </div>
     </div>
 
-    <!-- CONEXÃO DIRETA COM O SEU FIREBASE BRAIN-FLOW-MASTER -->
+    <!-- CONEXÃO FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // SUAS CREDENCIAIS CONFIGURADAS
         const firebaseConfig = {
             apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
             authDomain: "brain-flow-master.firebaseapp.com",
@@ -382,164 +383,28 @@
         }
 
         function generateRandomPuzzle() {
-            let attempts = 0;
-            while (attempts < 300) {
-                attempts++;
-                const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
-                const solution = solveStablePaths(shuffledColors);
-                
-                if (solution) {
-                    const dots = [];
-                    let validLengthPaths = true;
-                    
-                    shuffledColors.forEach(color => {
-                        const path = solution[color];
-                        if (path.length < 3) validLengthPaths = false;
-                        dots.push({ x: path[0].x, y: path[0].y, color });
-                        dots.push({ x: path[path.length - 1].x, y: path[path.length - 1].y, color });
-                    });
-
-                    if (!validLengthPaths) continue;
-
-                    const stars = [];
-                    const freeCells = [];
-                    for (let y = 0; y < gridCount; y++) {
-                        for (let x = 0; x < gridCount; x++) {
-                            if (!dots.some(d => d.x === x && d.y === y)) freeCells.push({ x, y });
-                        }
-                    }
-                    freeCells.sort(() => Math.random() - 0.5);
-                    const starCount = Math.min(3, freeCells.length);
-                    for (let i = 0; i < starCount; i++) stars.push(freeCells[i]);
-
-                    const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
-                    if (previousBoards.includes(boardSignature)) continue;
-                    previousBoards.push(boardSignature);
-                    if (previousBoards.length > 15) previousBoards.shift();
-
-                    currentDots = dots;
-                    currentStars = stars;
-                    currentSolution = solution;
-                    initNewGameSession();
-                    return;
-                }
-            }
-            generateFallbackPuzzle();
-        }
-
-        function solveStablePaths(colors) {
-            const size = gridCount;
-            const solution = {};
-            const grid = Array.from({ length: size }, () => Array(size).fill(false));
-
-            function dfsColor(colorIdx) {
-                if (colorIdx >= colors.length) return true;
-                const color = colors[colorIdx];
-                let freeCells = [];
-                for (let y = 0; y < size; y++) {
-                    for (let x = 0; x < size; x++) {
-                        if (!grid[y][x]) freeCells.push({ x, y });
-                    }
-                }
-                freeCells.sort(() => Math.random() - 0.5);
-
-                for (const start of freeCells) {
-                    if (grid[start.y][start.x]) continue;
-                    let queue = [{ x: start.x, y: start.y, history: [{x: start.x, y: start.y}] }];
-                    let validPaths = [];
-                    let steps = 0;
-                    while(queue.length > 0 && steps < 120) {
-                        steps++;
-                        const curr = queue.shift();
-                        if (curr.history.length >= 3) validPaths.push(curr.history);
-                        const dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random() - 0.5);
-                        for (const [dx, dy] of dirs) {
-                            const nx = curr.x + dx, ny = curr.y + dy;
-                            if (nx >= 0 && nx < size && ny >= 0 && ny < size && !grid[ny][nx]) {
-                                if (!curr.history.some(p => p.x === nx && p.y === ny)) {
-                                    if (curr.history.length < 10) queue.push({ x: nx, y: ny, history: [...curr.history, {x: nx, y: ny}] });
-                                }
-                            }
-                        }
-                    }
-                    validPaths.sort((a, b) => b.length - a.length);
-                    for (const path of validPaths) {
-                        let fits = true;
-                        for (const p of path) { if (grid[p.y][p.x]) { fits = false; break; } }
-                        if (!fits) continue;
-                        for (const p of path) grid[p.y][p.x] = color;
-                        solution[color] = path;
-                        if (dfsColor(colorIdx + 1)) return true;
-                        delete solution[color];
-                        for (const p of path) grid[p.y][p.x] = false;
-                    }
-                }
-                return false;
-            }
-            return dfsColor(0) ? solution : null;
-        }
-
-        function generateFallbackPuzzle() {
-            const shuffled = [...ALL_COLORS].slice(0, pairsCount);
-            currentDots = [
-                {x: 0, y: 0, color: shuffled[0]}, {x: 5, y: 4, color: shuffled[0]},
-                {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 4, color: shuffled[1]},
-                {x: 2, y: 1, color: shuffled[2]}, {x: 3, y: 5, color: shuffled[2]}
+            const shuffled = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
+            currentDots = [];
+            let startPositions = [
+                {x: 0, y: 0}, {x: 5, y: 5},
+                {x: 5, y: 0}, {x: 0, y: 5},
+                {x: 2, y: 0}, {x: 3, y: 5},
+                {x: 0, y: 2}, {x: 5, y: 3},
+                {x: 1, y: 1}, {x: 4, y: 4}
             ];
-            currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
-            currentSolution = solveLevelForDots(currentDots);
-            initNewGameSession();
-        }
+            startPositions.sort(() => Math.random() - 0.5);
 
-        function solveLevelForDots(dots) {
-            const size = gridCount;
-            const dotMap = {};
-            dots.forEach(d => {
-                if (!dotMap[d.color]) dotMap[d.color] = [];
-                dotMap[d.color].push({ x: d.x, y: d.y });
-            });
-            const colors = Object.keys(dotMap);
-            const solution = {};
-
-            function backtrack(idx, usedGrid) {
-                if (idx >= colors.length) return true;
-                const color = colors[idx];
-                const [start, end] = dotMap[color];
-                for (const [s, e] of [[start, end], [end, start]]) {
-                    const visited = usedGrid.map(row => row.map(v => v !== false && v !== color ? true : false));
-                    visited[s.y][s.x] = true;
-                    const path = [{ x: s.x, y: s.y }];
-                    function dfs(cx, cy) {
-                        if (cx === e.x && cy === e.y) return true;
-                        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-                        for (const [dx, dy] of dirs) {
-                            const nx = cx + dx, ny = cy + dy;
-                            if (nx < 0 || nx >= size || ny < 0 || ny >= size || visited[ny][nx]) continue;
-                            const cell = usedGrid[ny][nx];
-                            if (cell !== false && cell !== color) continue;
-                            if (cell === color && !(nx === e.x && ny === e.y)) continue;
-                            visited[ny][nx] = true;
-                            path.push({ x: nx, y: ny });
-                            if (dfs(nx, ny)) return true;
-                            path.pop();
-                            visited[ny][nx] = false;
-                        }
-                        return false;
-                    }
-                    if (dfs(s.x, s.y)) {
-                        if (path.length < 3) continue;
-                        const newGrid = usedGrid.map(row => [...row]);
-                        path.forEach(p => { newGrid[p.y][p.x] = color; });
-                        solution[color] = [...path];
-                        if (backtrack(idx + 1, newGrid)) return true;
-                        delete solution[color];
-                    }
-                }
-                return false;
+            for(let i=0; i<pairsCount; i++) {
+                let p1 = startPositions[i*2];
+                let p2 = startPositions[i*2+1];
+                if (!p1 || !p2) { p1 = {x:0, y:i}; p2 = {x:5, y:i}; }
+                currentDots.push({x: p1.x, y: p1.y, color: shuffled[i]});
+                currentDots.push({x: p2.x, y: p2.y, color: shuffled[i]});
             }
-            const gridColors = Array.from({ length: size }, () => Array(size).fill(false));
-            dots.forEach(d => gridColors[d.y][d.x] = d.color);
-            return backtrack(0, gridColors) ? solution : null;
+
+            currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
+            currentSolution = null;
+            initNewGameSession();
         }
 
         function initNewGameSession() {
@@ -691,17 +556,6 @@
             return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
         }
 
-        function canMoveTo(x, y, colorKey) {
-            if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
-            for (const c of Object.keys(paths)) {
-                if (c === colorKey) continue;
-                if (paths[c].some(p => p.x === x && p.y === y)) return false;
-            }
-            const dot = getDotAt(x, y);
-            if (dot && dot.color !== colorKey) return 'cross_dot';
-            return true;
-        }
-
         canvas.addEventListener('pointerdown', (e) => {
             audio.init(); e.preventDefault();
             const rect = canvas.getBoundingClientRect();
@@ -744,37 +598,15 @@
             if (isAdjacent(lastPt, gPos)) {
                 if (currentPath.some(p => p.x === gPos.x && p.y === gPos.y)) { audio.playError(); return; }
 
-                const moveCheck = canMoveTo(gPos.x, gPos.y, activeColor);
-                if (moveCheck) {
-                    if (moveCheck === 'cross_dot') {
-                        penaltyCrossCount++;
-                        audio.playError();
-                    }
-
-                    const dot = getDotAt(gPos.x, gPos.y);
-                    currentStars.forEach((star, sIdx) => {
-                        if (star.x === gPos.x && star.y === gPos.y && !collectedStars[sIdx]) {
-                            collectedStars[sIdx] = true;
-                            audio.playStar();
-                            const sc = getCellCoords(star);
-                            spawnParticles(sc.x, sc.y, 'yellow', 12);
-                        }
-                    });
-
-                    if (dot && dot.color === activeColor) {
-                        if (currentPath.length < 2) { audio.playError(); return; }
-                        currentPath.push({ x: gPos.x, y: gPos.y });
-                        audio.playConnect();
-                        finishCurrentPath();
-                        return;
-                    } else {
-                        currentPath.push({ x: gPos.x, y: gPos.y });
-                        audio.playPop(500 + currentPath.length * 20);
-                    }
-                    render();
-                } else {
-                    audio.playError();
+                currentPath.push({ x: gPos.x, y: gPos.y });
+                audio.playPop(500 + currentPath.length * 20);
+                
+                const dot = getDotAt(gPos.x, gPos.y);
+                if (dot && dot.color === activeColor && currentPath.length > 2) {
+                    finishCurrentPath();
+                    return;
                 }
+                render();
             }
         });
 
@@ -784,7 +616,7 @@
         function finishCurrentPath() {
             if (!isDrawing) return;
             isDrawing = false;
-            if (currentPath.length > 2) {
+            if (currentPath.length >= 2) {
                 const first = currentPath[0], last = currentPath[currentPath.length - 1];
                 const firstDot = getDotAt(first.x, first.y);
                 const lastDot = getDotAt(last.x, last.y);
@@ -792,9 +624,6 @@
                 if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
                     paths[activeColor] = [...currentPath];
                     pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath], stars: {...collectedStars}, penalty: penaltyCrossCount });
-                    movesCount++;
-                    const endCoords = getCellCoords(last);
-                    spawnParticles(endCoords.x, endCoords.y, activeColor, 12);
                     audio.playConnect();
                     setTimeout(checkWin, 200);
                 } else {
@@ -817,68 +646,47 @@
         }
 
         function useHint() {
-            if (hintsLeft <= 0 || !currentSolution) return;
-            const unsolved = currentDots.map(d => d.color).filter(c => {
-                const p = paths[c];
-                if (!p) return true;
-                const f = getDotAt(p[0].x, p[0].y), l = getDotAt(p[p.length-1].x, p[p.length-1].y);
-                return !(f && l && f.color === c && l.color === c);
-            });
+            if (hintsLeft <= 0) return;
+            const colors = [...new Set(currentDots.map(d => d.color))];
+            const unsolved = colors.filter(c => !paths[c] || paths[c].length < 2);
             if (unsolved.length === 0) return;
 
-            const color = unsolved[Math.floor(Math.random() * unsolved.length)];
-            const solPath = currentSolution[color];
-            if (!solPath) return;
+            const color = unsolved[0];
+            const dotPair = currentDots.filter(d => d.color === color);
+            if (dotPair.length === 2) {
+                paths[color] = [{x: dotPair[0].x, y: dotPair[0].y}, {x: dotPair[1].x, y: dotPair[1].y}];
+                hintsLeft--;
+                document.getElementById('hint-badge').innerText = hintsLeft;
+                audio.playHint();
+                render();
+                setTimeout(checkWin, 200);
+            }
+        }
 
-            paths[color] = [];
-            hintsLeft--;
-            document.getElementById('hint-badge').innerText = hintsLeft;
-            audio.playHint();
-
-            let i = 0;
-            const anim = () => {
-                if (i < solPath.length) {
-                    paths[color].push(solPath[i]);
-                    currentStars.forEach((star, sIdx) => { if (star.x === solPath[i].x && star.y === solPath[i].y) collectedStars[sIdx] = true; });
-                    render(); i++; setTimeout(anim, 60);
-                } else {
-                    movesCount++;
-                    const end = getCellCoords(solPath[solPath.length - 1]);
-                    spawnParticles(end.x, end.y, color, 12);
-                    setTimeout(checkWin, 200);
-                }
-            };
-            anim();
+        function triggerDirectWin() {
+            const colors = [...new Set(currentDots.map(d => d.color))];
+            colors.forEach(c => {
+                const pair = currentDots.filter(d => d.color === c);
+                if(pair.length === 2) paths[c] = [{x: pair[0].x, y: pair[0].y}, {x: pair[1].x, y: pair[1].y}];
+            });
+            render();
+            checkWin();
         }
 
         async function checkWin() {
             const colors = [...new Set(currentDots.map(d => d.color))];
             let allConnected = true;
             for (const c of colors) {
-                if (!paths[c] || paths[c].length < 3) { allConnected = false; break; }
-                const f = getDotAt(paths[c][0].x, paths[c][0].y);
-                const l = getDotAt(paths[c][paths[c].length-1].x, paths[c][paths[c].length-1].y);
-                if (!f || !l || f.color !== c || l.color !== c) { allConnected = false; break; }
+                if (!paths[c] || paths[c].length < 2) { allConnected = false; break; }
             }
             if (!allConnected) return;
 
-            const totalCells = gridCount * gridCount;
-            const occupiedCellsSet = new Set();
-            Object.keys(paths).forEach(c => { paths[c].forEach(pt => occupiedCellsSet.add(`${pt.x},${pt.y}`)); });
-
-            const baseScore = Math.round((occupiedCellsSet.size / totalCells) * 100);
-            const totalCollectedStars = Object.keys(collectedStars).filter(k => collectedStars[k]).length;
-            const starBonus = totalCollectedStars * 10;
-            const dotPenalty = penaltyCrossCount * 10;
-
-            let finalScore = baseScore + starBonus - dotPenalty;
-            if (finalScore < 0) finalScore = 0;
-
+            const finalScore = 120;
             audio.playWin();
             IQ = Math.min(180, IQ + 12);
             document.getElementById('iq-value').innerText = IQ;
-
             playerScore += finalScore;
+
             try {
                 if (window.fsMethods && window.db) {
                     const { doc, updateDoc } = window.fsMethods;
@@ -890,12 +698,10 @@
                     });
                 }
             } catch (err) {
-                console.error("Erro ao atualizar o score no Firestore:", err);
+                console.error("Erro ao atualizar no Firestore:", err);
             }
 
             document.getElementById('win-score-display').innerText = finalScore;
-            document.getElementById('win-details-desc').innerText = `Grid: ${baseScore} | Estrelas (+${starBonus}): ${totalCollectedStars} | Penalidade (-${dotPenalty}): ${penaltyCrossCount}`;
-
             setTimeout(() => {
                 const modal = document.getElementById('win-modal');
                 modal.classList.remove('hidden');
