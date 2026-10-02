@@ -1,20 +1,20 @@
-# 🧠 Brain Flow Master: Estrelas, Ranking & Lógica
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, get, child, onValue } from "firebase/database";
 
-Jogo interativo de conexão de pontos e raciocínio lógico, integrado ao Google Apps Script para registro de jogadores e ranking global.
+// A sua configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
+  authDomain: "brain-flow-master.firebaseapp.com",
+  databaseURL: "https://brain-flow-master-default-rtdb.firebaseio.com",
+  projectId: "brain-flow-master",
+  storageBucket: "brain-flow-master.firebasestorage.app",
+  messagingSenderId: "137353474062",
+  appId: "1:137353474062:web:b53db8e1cde4c341740c5f",
+  measurementId: "G-XHCEYHY37W"
+};
 
-🚀 **Acesse e jogue agora:** [https://dots-connector-game.vercel.app](https://dots-connector-game.vercel.app)
+// Inicializar o Firebase
+const app = initializeApp(firebaseConfig);
 
----
-
-## 🛠️ Tecnologias Utilizadas
-- **Frontend:** HTML5, CSS3 (Tailwind CSS), JavaScript Vanilla
-- **Backend / Banco de Dados:** Google Apps Script + Google Sheets
-- **Hospedagem:** Vercel
-
----
-
-## 📌 Funcionalidades
-- Cadastro e login de jogadores
-- Cálculo dinâmico de pontuação e QI
-- Ranking global em tempo real via Google Sheets
-- Interface responsiva com suporte a toque e mouse
+// Inicializar e exportar a instância do Realtime Database
+export const db = getDatabase(app);
