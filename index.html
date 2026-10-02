@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots - 6x6 Temas & Cores</title>
+    <title>Brain Master: Link the Dots - Estrelas & Cruzamentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -16,7 +16,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* TEMAS DE DISPLAY E LUZES */
         body.theme-cyber {
             background: linear-gradient(135deg, #1e1e2e 0%, #11111b 100%);
             color: #cdd6f4;
@@ -96,17 +95,16 @@
     <header class="w-full max-w-md flex flex-col items-center gap-2 glass-panel p-3 shadow-xl">
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-indigo-600/30 rounded-xl flex items-center justify-center text-indigo-400 font-bold text-lg border border-indigo-500/30">
-                    <i class="fa-solid fa-dice"></i>
+                <div class="w-9 h-9 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 font-bold text-lg border border-amber-500/30">
+                    <i class="fa-solid fa-star"></i>
                 </div>
                 <div>
-                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">RANDÔMICO</span></h1>
-                    <p id="level-mode-desc" class="text-[11px] text-indigo-400 font-medium">4 Pares de Cores</p>
+                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">ESTRELAS & PERMISSÕES</span></h1>
+                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Capture Estrelas para Cruzar Linhas</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <!-- Botão de Temas -->
                 <button onclick="toggleThemeMenu()" class="w-9 h-9 bg-gray-800/60 hover:bg-gray-700/80 rounded-xl flex items-center justify-center text-amber-400 border border-gray-600/40 transition active:scale-95 shadow" title="Mudar Display e Cores">
                     <i class="fa-solid fa-palette text-sm"></i>
                 </button>
@@ -166,7 +164,7 @@
         </button>
     </footer>
 
-    <!-- Modal de Seleção de Temas e Displays -->
+    <!-- Modal de Temas -->
     <div id="theme-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
         <div class="glass-panel bg-gray-900/95 border border-indigo-500/30 p-6 rounded-3xl max-w-sm w-full shadow-2xl flex flex-col items-center gap-4">
             <div class="flex items-center justify-between w-full">
@@ -175,7 +173,7 @@
                 </h3>
                 <button onclick="toggleThemeMenu()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-gray-400 text-left w-full">Escolha o visual do painel e as luzes de neon do tabuleiro:</p>
+            <p class="text-xs text-gray-400 text-left w-full">Escolha o visual do painel e as luzes de neon:</p>
             
             <div class="grid grid-cols-2 gap-2.5 w-full">
                 <button onclick="setTheme('theme-cyber')" class="p-3 rounded-xl border border-gray-700 bg-gradient-to-br from-[#1e1e2e] to-[#11111b] hover:border-indigo-500 text-left transition active:scale-95 flex flex-col gap-1">
@@ -206,7 +204,7 @@
             </div>
             <div>
                 <h2 class="text-xl font-extrabold text-white">Incrível! Puzzle Resolvido! 🎉</h2>
-                <p class="text-xs text-gray-300 mt-1">Conexões perfeitas realizadas no 6x6!</p>
+                <p class="text-xs text-gray-300 mt-1">Estrelas capturadas e cruzamentos liberados!</p>
             </div>
             <button id="btn-next-random" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
                 Gerar Novo Desafio <i class="fa-solid fa-shuffle ml-2"></i>
@@ -238,6 +236,7 @@
             }
             playPop(freq = 440) { this.playTone(freq, 0.08, 'sine', 0.15); }
             playConnect() { this.playTone(600, 0.1, 'triangle', 0.12); }
+            playStar() { [659, 880, 1174].forEach((f, i) => setTimeout(() => this.playTone(f, 0.1, 'sine', 0.15), i * 60)); }
             playError() { this.playTone(200, 0.15, 'sawtooth', 0.1); }
             playHint() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.playTone(f, 0.12, 'sine', 0.12), i * 80)); }
             playWin() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.playTone(f, 0.15, 'triangle', 0.15), i * 100)); }
@@ -271,6 +270,8 @@
         let winsCount = 0;
         let IQ = 75;
         let currentDots = [];
+        let currentStars = [];
+        let collectedStars = {}; // Guarda quais estrelas foram apanhadas por cor
         let currentSolution = null;
         let particles = [];
         let animationFrame = null;
@@ -340,6 +341,16 @@
 
                 if (!validPlacement) continue;
 
+                // Gerar de 1 a 2 estrelas em células livres restantes
+                const stars = [];
+                const starCount = Math.random() > 0.4 ? 2 : 1;
+                for(let i=0; i<starCount; i++) {
+                    if (availableCells.length > 0) {
+                        const sCell = availableCells.pop();
+                        stars.push({ x: sCell.x, y: sCell.y });
+                    }
+                }
+
                 const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
                 if (previousBoards.includes(boardSignature)) continue;
 
@@ -348,6 +359,7 @@
                     previousBoards.push(boardSignature);
                     if (previousBoards.length > 15) previousBoards.shift();
                     currentDots = dots;
+                    currentStars = stars;
                     currentSolution = solution;
                     initNewGameSession();
                     return;
@@ -369,6 +381,7 @@
             if (pairsCount >= 5) {
                 currentDots.push({x:2, y:4, color: shuffledColors[4]}, {x:4, y:2, color: shuffledColors[4]});
             }
+            currentStars = [{x: 2, y: 3}, {x: 3, y: 2}];
             currentSolution = solveLevelForDots(currentDots);
             initNewGameSession();
         }
@@ -377,12 +390,13 @@
             paths = {};
             currentPath = [];
             pathHistory = [];
+            collectedStars = {};
             isDrawing = false;
             activeColor = null;
             hintsLeft = 3;
             movesCount = 0;
             particles = [];
-            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares de Cores • Matriz 6x6`;
+            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • ${currentStars.length} Estrela(s) de Cruzamento`;
             document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
             document.getElementById('wins-text').innerText = winsCount;
             document.getElementById('hint-badge').innerText = hintsLeft;
@@ -478,10 +492,19 @@
         function getDotAt(x, y) {
             return currentDots.find(d => d.x === x && d.y === y);
         }
+        function getStarAt(x, y) {
+            return currentStars.find(s => s.x === x && s.y === y);
+        }
+
+        // Verifica se a cor possui licença de cruzamento por ter pego alguma estrela
+        function hasCrossingPermission(colorKey) {
+            return collectedStars[colorKey] && collectedStars[colorKey].length > 0;
+        }
 
         function render() {
             ctx.clearRect(0, 0, canvasSize, canvasSize);
 
+            // Grade do Tabuleiro
             ctx.strokeStyle = document.body.classList.contains('theme-matrix') ? '#044231' : '#3d281a';
             ctx.lineWidth = 1.5;
             for (let i = 0; i <= gridCount; i++) {
@@ -489,6 +512,7 @@
                 ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvasSize, i * cellSize); ctx.stroke();
             }
 
+            // Desenhar Linhas Salvas
             Object.keys(paths).forEach(color => {
                 drawPathLine(paths[color], color, false);
             });
@@ -496,6 +520,41 @@
                 drawPathLine(currentPath, activeColor, true);
             }
 
+            // Desenhar Estrelas
+            currentStars.forEach(star => {
+                // Verificar se alguma linha já passou por esta estrela
+                let isCollected = false;
+                Object.keys(paths).forEach(c => {
+                    if (paths[c].some(p => p.x === star.x && p.y === star.y)) isCollected = true;
+                });
+                if (isDrawing && currentPath.some(p => p.x === star.x && p.y === star.y)) isCollected = true;
+
+                const c = getCellCoords(star);
+                ctx.save();
+                ctx.shadowColor = '#facc15';
+                ctx.shadowBlur = isCollected ? 5 : 15;
+                ctx.fillStyle = isCollected ? 'rgba(250, 204, 21, 0.4)' : '#facc15';
+                
+                // Desenhar ícone de Estrela via path
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                    const r1 = cellSize * 0.22;
+                    const r2 = cellSize * 0.10;
+                    const x1 = c.x + Math.cos(angle) * r1;
+                    const y1 = c.y + Math.sin(angle) * r1;
+                    const x2 = c.x + Math.cos(angle + Math.PI / 5) * r2;
+                    const y2 = c.y + Math.sin(angle + Math.PI / 5) * r2;
+                    if (i === 0) ctx.moveTo(x1, y1);
+                    else ctx.lineTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Desenhar Bolinhas (Dots)
             currentDots.forEach(dot => {
                 const c = getCellCoords(dot);
                 const palette = COLOR_PALETTE[dot.color];
@@ -580,8 +639,12 @@
 
         function canMoveTo(x, y, colorKey) {
             if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
+            
             const dot = getDotAt(x, y);
-            if (dot && dot.color !== colorKey) return false;
+            if (dot && dot.color !== colorKey) {
+                // Se houver uma bolinha deoutra cor, só é permitido passar por cima SE a linha tiver capturado uma estrela (permissão de cruzamento)
+                if (!hasCrossingPermission(colorKey)) return false;
+            }
             return true;
         }
 
@@ -595,8 +658,9 @@
             const dot = getDotAt(gPos.x, gPos.y);
             if (dot) {
                 if (paths[dot.color]) {
-                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]] });
+                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]], stars: [...(collectedStars[dot.color] || [])] });
                     delete paths[dot.color];
+                    delete collectedStars[dot.color];
                 }
                 activeColor = dot.color;
                 isDrawing = true;
@@ -627,6 +691,19 @@
             if (isAdjacent(lastPt, gPos)) {
                 if (canMoveTo(gPos.x, gPos.y, activeColor)) {
                     const dot = getDotAt(gPos.x, gPos.y);
+                    const star = getStarAt(gPos.x, gPos.y);
+
+                    // Verificar captura de estrela
+                    if (star) {
+                        if (!collectedStars[activeColor]) collectedStars[activeColor] = [];
+                        if (!collectedStars[activeColor].some(s => s.x === star.x && s.y === star.y)) {
+                            collectedStars[activeColor].push(star);
+                            audio.playStar();
+                            const sc = getCellCoords(star);
+                            spawnParticles(sc.x, sc.y, activeColor, 18);
+                        }
+                    }
+
                     if (dot && dot.color === activeColor) {
                         if (currentPath.length > 1) {
                             currentPath.push({ x: gPos.x, y: gPos.y });
@@ -634,7 +711,7 @@
                             finishCurrentPath();
                             return;
                         }
-                    } else if (!dot) {
+                    } else if (!dot || hasCrossingPermission(activeColor)) {
                         currentPath.push({ x: gPos.x, y: gPos.y });
                         audio.playPop(500 + currentPath.length * 20);
                     }
@@ -659,7 +736,7 @@
                 
                 if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
                     paths[activeColor] = [...currentPath];
-                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
+                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath], stars: [...(collectedStars[activeColor] || [])] });
                     movesCount++;
                     document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
                     
@@ -677,8 +754,13 @@
         function undo() {
             if (pathHistory.length === 0) return;
             const last = pathHistory.pop();
-            if (last.type === 'add') delete paths[last.color];
-            else if (last.type === 'remove') paths[last.color] = last.path;
+            if (last.type === 'add') {
+                delete paths[last.color];
+                delete collectedStars[last.color];
+            } else if (last.type === 'remove') {
+                paths[last.color] = last.path;
+                collectedStars[last.color] = last.stars;
+            }
             audio.playUndo(); render();
         }
 
@@ -697,6 +779,15 @@
             if (!solPath) return;
 
             paths[color] = [];
+            collectedStars[color] = [];
+            // Coleta automaticamente estrelas no caminho da dica
+            solPath.forEach(pt => {
+                const s = getStarAt(pt.x, pt.y);
+                if (s && !collectedStars[color].some(st => st.x === s.x && st.y === s.y)) {
+                    collectedStars[color].push(s);
+                }
+            });
+
             hintsLeft--;
             document.getElementById('hint-badge').innerText = hintsLeft;
             audio.playHint();
