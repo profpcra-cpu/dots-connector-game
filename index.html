@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots - Estrelas & Cruzamentos</title>
+    <title>Brain Master: Link the Dots - Distância Máxima & Caminho Único</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -96,11 +96,11 @@
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
                 <div class="w-9 h-9 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 font-bold text-lg border border-amber-500/30">
-                    <i class="fa-solid fa-star"></i>
+                    <i class="fa-solid fa-route"></i>
                 </div>
                 <div>
-                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">ESTRELAS & PERMISSÕES</span></h1>
-                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Capture Estrelas para Cruzar Linhas</p>
+                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">MÁXIMA DISTÂNCIA</span></h1>
+                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Caminhos Únicos & Sem Espaços Livres</p>
                 </div>
             </div>
 
@@ -204,7 +204,7 @@
             </div>
             <div>
                 <h2 class="text-xl font-extrabold text-white">Incrível! Puzzle Resolvido! 🎉</h2>
-                <p class="text-xs text-gray-300 mt-1">Estrelas capturadas e cruzamentos liberados!</p>
+                <p class="text-xs text-gray-300 mt-1">Conexão perfeita de ponta a ponta!</p>
             </div>
             <button id="btn-next-random" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
                 Gerar Novo Desafio <i class="fa-solid fa-shuffle ml-2"></i>
@@ -271,7 +271,7 @@
         let IQ = 75;
         let currentDots = [];
         let currentStars = [];
-        let collectedStars = {}; // Guarda quais estrelas foram apanhadas por cor
+        let collectedStars = {};
         let currentSolution = null;
         let particles = [];
         let animationFrame = null;
@@ -316,107 +316,153 @@
             render();
         }
 
+        // Função para encontrar caminhos únicos cobrindo 100% da matriz (sem espaços livres)
         function generateRandomPuzzle() {
             let attempts = 0;
-            while (attempts < 300) {
+            while (attempts < 500) {
                 attempts++;
                 const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
-                const availableCells = [];
-                for (let y = 0; y < gridCount; y++) {
-                    for (let x = 0; x < gridCount; x++) {
-                        availableCells.push({ x, y });
-                    }
-                }
-                availableCells.sort(() => Math.random() - 0.5);
+                
+                // Tenta gerar um preenchimento total e único da matriz 6x6 (36 células)
+                const gridFullSolution = solveHamiltonianPartition(shuffledColors);
+                if (gridFullSolution) {
+                    const dots = [];
+                    const stars = [];
+                    
+                    // Extrai as pontas das soluções como os pontos (dots) garantindo distância máxima
+                    shuffledColors.forEach(color => {
+                        const path = gridFullSolution[color];
+                        dots.push({ x: path[0].x, y: path[0].y, color });
+                        dots.push({ x: path[path.length - 1].x, y: path[path.length - 1].y, color });
+                    });
 
-                const dots = [];
-                let validPlacement = true;
-                for (let color of shuffledColors) {
-                    if (availableCells.length < 2) { validPlacement = false; break; }
-                    const p1 = availableCells.pop();
-                    const p2 = availableCells.pop();
-                    dots.push({ x: p1.x, y: p1.y, color });
-                    dots.push({ x: p2.x, y: p2.y, color });
-                }
+                    // Insere 1 ou 2 estrelas em pontos estratégicos dos caminhos
+                    shuffledColors.forEach((color, idx) => {
+                        if (idx < 2 && gridFullSolution[color].length > 4) {
+                            const midPt = gridFullSolution[color][Math.floor(gridFullSolution[color].length / 2)];
+                            if (!stars.some(s => s.x === midPt.x && s.y === midPt.y)) {
+                                stars.push({ x: midPt.x, y: midPt.y });
+                            }
+                        }
+                    });
 
-                if (!validPlacement) continue;
-
-                // Gerar de 1 a 2 estrelas em células livres restantes
-                const stars = [];
-                const starCount = Math.random() > 0.4 ? 2 : 1;
-                for(let i=0; i<starCount; i++) {
-                    if (availableCells.length > 0) {
-                        const sCell = availableCells.pop();
-                        stars.push({ x: sCell.x, y: sCell.y });
-                    }
-                }
-
-                const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
-                if (previousBoards.includes(boardSignature)) continue;
-
-                const solution = solveLevelForDots(dots);
-                if (solution) {
+                    const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
+                    if (previousBoards.includes(boardSignature)) continue;
+                    
                     previousBoards.push(boardSignature);
                     if (previousBoards.length > 15) previousBoards.shift();
+
                     currentDots = dots;
                     currentStars = stars;
-                    currentSolution = solution;
+                    currentSolution = gridFullSolution;
                     initNewGameSession();
                     return;
                 }
             }
-            generateRandomPuzzleDirectFallback();
+            generateFallbackPuzzle();
         }
 
-        function generateRandomPuzzleDirectFallback() {
-            const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
+        // Particionador de grade completo para garantir preenchimento total de 36 células sem sobras
+        function solveHamiltonianPartition(colors) {
+            const size = gridCount;
+            const totalCells = size * size;
+            const solution = {};
+            const grid = Array.from({ length: size }, () => Array(size).fill(false));
+
+            function dfsColor(colorIdx, currentPos, path) {
+                if (colorIdx >= colors.length) {
+                    // Verifica se todas as células foram preenchidas
+                    let filled = 0;
+                    for(let y=0; y<size; y++) for(let x=0; x<size; x++) if(grid[y][x]) filled++;
+                    return filled === totalCells;
+                }
+
+                const color = colors[colorIdx];
+                const isLastColor = (colorIdx === colors.length - 1);
+
+                // Se for o primeiro ponto da cor, escolhe uma célula livre que maximize a distância
+                let startCandidates = [];
+                if (path.length === 0) {
+                    for (let y = 0; y < size; y++) {
+                        for (let x = 0; x < size; x++) {
+                            if (!grid[y][x]) startCandidates.push({ x, y });
+                        }
+                    }
+                    startCandidates.sort(() => Math.random() - 0.5);
+                } else {
+                    startCandidates = [currentPos];
+                }
+
+                for (const start of startCandidates) {
+                    if (path.length === 0 && grid[start.y][start.x]) continue;
+                    
+                    // Busca um caminho para esta cor que termine em outra célula livre válida
+                    let queue = [{ x: start.x, y: start.y, history: [{x: start.x, y: start.y}] }];
+                    let validPaths = [];
+
+                    // Limita a busca para manter robustez de caminho único
+                    let steps = 0;
+                    while(queue.length > 0 && steps < 150) {
+                        steps++;
+                        const curr = queue.shift();
+                        
+                        if (curr.history.length >= 4) { // Tamanho mínimo para dar distância
+                            validPaths.push(curr.history);
+                        }
+
+                        const dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random() - 0.5);
+                        for (const [dx, dy] of dirs) {
+                            const nx = curr.x + dx, ny = curr.y + dy;
+                            if (nx >= 0 && nx < size && ny >= 0 && ny < size && !grid[ny][nx]) {
+                                if (!curr.history.some(p => p.x === nx && p.y === ny)) {
+                                    if (curr.history.length < 12) { // Limite de tamanho por linha
+                                        queue.push({ x: nx, y: ny, history: [...curr.history, {x: nx, y: ny}] });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    validPaths.sort((a, b) => b.length - a.length); // Prioriza caminhos longos (máxima distância)
+
+                    for (const candidatePath of validPaths) {
+                        // Ocupa temporariamente a grade
+                        let canUse = true;
+                        for (const p of candidatePath) {
+                            if (grid[p.y][p.x]) { canUse = false; break; }
+                        }
+                        if (!canUse) continue;
+
+                        for (const p of candidatePath) grid[p.y][p.x] = color;
+                        solution[color] = candidatePath;
+
+                        if (dfsColor(colorIdx + 1, null, [])) return solution;
+
+                        delete solution[color];
+                        for (const p of candidatePath) grid[p.y][p.x] = false;
+                    }
+                }
+                return false;
+            }
+
+            return dfsColor(0, null, []) || null;
+        }
+
+        function generateFallbackPuzzle() {
+            const shuffled = [...ALL_COLORS].slice(0, pairsCount);
             currentDots = [
-                {x:0, y:0, color: shuffledColors[0]}, {x:5, y:5, color: shuffledColors[0]},
-                {x:5, y:0, color: shuffledColors[1]}, {x:0, y:5, color: shuffledColors[1]},
-                {x:2, y:2, color: shuffledColors[2]}, {x:3, y:3, color: shuffledColors[2]}
+                {x: 0, y: 0, color: shuffled[0]}, {x: 5, y: 5, color: shuffled[0]},
+                {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 5, color: shuffled[1]},
+                {x: 2, y: 0, color: shuffled[2]}, {x: 3, y: 5, color: shuffled[2]}
             ];
-            if (pairsCount >= 4) {
-                currentDots.push({x:1, y:4, color: shuffledColors[3]}, {x:4, y:1, color: shuffledColors[3]});
-            }
-            if (pairsCount >= 5) {
-                currentDots.push({x:2, y:4, color: shuffledColors[4]}, {x:4, y:2, color: shuffledColors[4]});
-            }
-            currentStars = [{x: 2, y: 3}, {x: 3, y: 2}];
+            if (pairsCount >= 4) currentDots.push({x: 0, y: 2, color: shuffled[3]}, {x: 5, y: 3, color: shuffled[3]});
+            if (pairsCount >= 5) currentDots.push({x: 2, y: 2, color: shuffled[4]}, {x: 3, y: 3, color: shuffled[4]});
+            currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
             currentSolution = solveLevelForDots(currentDots);
             initNewGameSession();
         }
 
-        function initNewGameSession() {
-            paths = {};
-            currentPath = [];
-            pathHistory = [];
-            collectedStars = {};
-            isDrawing = false;
-            activeColor = null;
-            hintsLeft = 3;
-            movesCount = 0;
-            particles = [];
-            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • ${currentStars.length} Estrela(s) de Cruzamento`;
-            document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
-            document.getElementById('wins-text').innerText = winsCount;
-            document.getElementById('hint-badge').innerText = hintsLeft;
-            document.getElementById('hint-badge').style.display = 'flex';
-            resizeCanvas();
-        }
-
-        function setPairsCount(num) {
-            pairsCount = num;
-            for (let i = 3; i <= 5; i++) {
-                const btn = document.getElementById(`btn-pairs-${i}`);
-                if (i === num) {
-                    btn.className = "flex-1 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white";
-                } else {
-                    btn.className = "flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white";
-                }
-            }
-            generateRandomPuzzle();
-        }
-
+        // Solucionador padrão exato para a função de Dica (Caminho Único)
         function solveLevelForDots(dots) {
             const size = gridCount;
             const dotMap = {};
@@ -481,6 +527,37 @@
             return null;
         }
 
+        function initNewGameSession() {
+            paths = {};
+            currentPath = [];
+            pathHistory = [];
+            collectedStars = {};
+            isDrawing = false;
+            activeColor = null;
+            hintsLeft = 3;
+            movesCount = 0;
+            particles = [];
+            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Distância Máxima (Sem Espaços Livres)`;
+            document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
+            document.getElementById('wins-text').innerText = winsCount;
+            document.getElementById('hint-badge').innerText = hintsLeft;
+            document.getElementById('hint-badge').style.display = 'flex';
+            resizeCanvas();
+        }
+
+        function setPairsCount(num) {
+            pairsCount = num;
+            for (let i = 3; i <= 5; i++) {
+                const btn = document.getElementById(`btn-pairs-${i}`);
+                if (i === num) {
+                    btn.className = "flex-1 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white";
+                } else {
+                    btn.className = "flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white";
+                }
+            }
+            generateRandomPuzzle();
+        }
+
         function getCellCoords(pos) {
             return { x: pos.x * cellSize + cellSize / 2, y: pos.y * cellSize + cellSize / 2 };
         }
@@ -496,7 +573,6 @@
             return currentStars.find(s => s.x === x && s.y === y);
         }
 
-        // Verifica se a cor possui licença de cruzamento por ter pego alguma estrela
         function hasCrossingPermission(colorKey) {
             return collectedStars[colorKey] && collectedStars[colorKey].length > 0;
         }
@@ -504,7 +580,6 @@
         function render() {
             ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-            // Grade do Tabuleiro
             ctx.strokeStyle = document.body.classList.contains('theme-matrix') ? '#044231' : '#3d281a';
             ctx.lineWidth = 1.5;
             for (let i = 0; i <= gridCount; i++) {
@@ -512,7 +587,6 @@
                 ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvasSize, i * cellSize); ctx.stroke();
             }
 
-            // Desenhar Linhas Salvas
             Object.keys(paths).forEach(color => {
                 drawPathLine(paths[color], color, false);
             });
@@ -520,9 +594,8 @@
                 drawPathLine(currentPath, activeColor, true);
             }
 
-            // Desenhar Estrelas
+            // Renderizar Estrelas
             currentStars.forEach(star => {
-                // Verificar se alguma linha já passou por esta estrela
                 let isCollected = false;
                 Object.keys(paths).forEach(c => {
                     if (paths[c].some(p => p.x === star.x && p.y === star.y)) isCollected = true;
@@ -535,18 +608,13 @@
                 ctx.shadowBlur = isCollected ? 5 : 15;
                 ctx.fillStyle = isCollected ? 'rgba(250, 204, 21, 0.4)' : '#facc15';
                 
-                // Desenhar ícone de Estrela via path
                 ctx.beginPath();
                 for (let i = 0; i < 5; i++) {
                     const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-                    const r1 = cellSize * 0.22;
-                    const r2 = cellSize * 0.10;
-                    const x1 = c.x + Math.cos(angle) * r1;
-                    const y1 = c.y + Math.sin(angle) * r1;
-                    const x2 = c.x + Math.cos(angle + Math.PI / 5) * r2;
-                    const y2 = c.y + Math.sin(angle + Math.PI / 5) * r2;
-                    if (i === 0) ctx.moveTo(x1, y1);
-                    else ctx.lineTo(x1, y1);
+                    const r1 = cellSize * 0.22, r2 = cellSize * 0.10;
+                    const x1 = c.x + Math.cos(angle) * r1, y1 = c.y + Math.sin(angle) * r1;
+                    const x2 = c.x + Math.cos(angle + Math.PI / 5) * r2, y2 = c.y + Math.sin(angle + Math.PI / 5) * r2;
+                    if (i === 0) ctx.moveTo(x1, y1); else ctx.lineTo(x1, y1);
                     ctx.lineTo(x2, y2);
                 }
                 ctx.closePath();
@@ -554,7 +622,7 @@
                 ctx.restore();
             });
 
-            // Desenhar Bolinhas (Dots)
+            // Renderizar Bolinhas
             currentDots.forEach(dot => {
                 const c = getCellCoords(dot);
                 const palette = COLOR_PALETTE[dot.color];
@@ -639,10 +707,8 @@
 
         function canMoveTo(x, y, colorKey) {
             if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
-            
             const dot = getDotAt(x, y);
             if (dot && dot.color !== colorKey) {
-                // Se houver uma bolinha deoutra cor, só é permitido passar por cima SE a linha tiver capturado uma estrela (permissão de cruzamento)
                 if (!hasCrossingPermission(colorKey)) return false;
             }
             return true;
@@ -693,7 +759,6 @@
                     const dot = getDotAt(gPos.x, gPos.y);
                     const star = getStarAt(gPos.x, gPos.y);
 
-                    // Verificar captura de estrela
                     if (star) {
                         if (!collectedStars[activeColor]) collectedStars[activeColor] = [];
                         if (!collectedStars[activeColor].some(s => s.x === star.x && s.y === star.y)) {
@@ -780,7 +845,6 @@
 
             paths[color] = [];
             collectedStars[color] = [];
-            // Coleta automaticamente estrelas no caminho da dica
             solPath.forEach(pt => {
                 const s = getStarAt(pt.x, pt.y);
                 if (s && !collectedStars[color].some(st => st.x === s.x && st.y === s.y)) {
@@ -820,7 +884,7 @@
 
             audio.playWin();
             winsCount++;
-            IQ = Math.min(180, IQ + 12);
+            IQ = Math.min(180, IQ + 15);
             document.getElementById('iq-value').innerText = IQ;
 
             setTimeout(() => {
