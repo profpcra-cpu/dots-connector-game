@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots - Temas</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Brain Master: Link the Dots</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome CDN for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -16,9 +13,10 @@
             font-family: 'Outfit', sans-serif;
             touch-action: none;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* Temas Dinâmicos via Variáveis / Classes */
+        /* ===== TEMAS ===== */
         body.theme-cyber {
             background: linear-gradient(135deg, #1e1e2e 0%, #11111b 100%);
             color: #cdd6f4;
@@ -32,6 +30,7 @@
             border: 10px solid #5c3d2e;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
         }
+        body.theme-cyber .grid-line { stroke: #3d281a; }
 
         body.theme-neon {
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -47,6 +46,7 @@
             border: 8px solid #00f3ff;
             box-shadow: inset 0 0 20px rgba(0,243,255,0.5), 0 0 25px rgba(0,243,255,0.4);
         }
+        body.theme-neon .grid-line { stroke: #1e2a5a; }
 
         body.theme-light {
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -62,8 +62,42 @@
             border: 8px solid #94a3b8;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.1);
         }
-        body.theme-light text-gray-400 { color: #64748b !important; }
+        body.theme-light .grid-line { stroke: #94a3b8; }
         body.theme-light .text-white { color: #0f172a !important; }
+        body.theme-light .text-gray-300 { color: #334155 !important; }
+        body.theme-light .text-gray-400 { color: #64748b !important; }
+
+        body.theme-sunset {
+            background: linear-gradient(135deg, #2d1b3d 0%, #6b2d5c 50%, #c44569 100%);
+            color: #ffe4e6;
+        }
+        body.theme-sunset .glass-panel {
+            background: rgba(45, 27, 61, 0.7);
+            border: 1px solid rgba(255, 182, 193, 0.3);
+            box-shadow: 0 0 20px rgba(255, 100, 150, 0.2);
+        }
+        body.theme-sunset .board-frame {
+            background: #1a0f24;
+            border: 8px solid #ff6b9d;
+            box-shadow: inset 0 0 20px rgba(255,107,157,0.4), 0 0 30px rgba(255,107,157,0.3);
+        }
+        body.theme-sunset .grid-line { stroke: #4a2540; }
+
+        body.theme-forest {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #d1fae5;
+        }
+        body.theme-forest .glass-panel {
+            background: rgba(15, 32, 39, 0.8);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.15);
+        }
+        body.theme-forest .board-frame {
+            background: #051015;
+            border: 8px solid #10b981;
+            box-shadow: inset 0 0 20px rgba(16,185,129,0.4), 0 0 25px rgba(16,185,129,0.3);
+        }
+        body.theme-forest .grid-line { stroke: #1e3a3a; }
 
         .glass-panel {
             backdrop-filter: blur(12px);
@@ -71,26 +105,63 @@
         }
         .board-frame {
             border-radius: 20px;
+            transition: all 0.4s ease;
         }
         .iq-progress {
-            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         @keyframes pulse-glow {
             0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
             50% { filter: drop-shadow(0 0 18px currentColor); }
         }
-        .glow-effect {
-            animation: pulse-glow 2s infinite;
-        }
+        .glow-effect { animation: pulse-glow 2s infinite; }
         .modal-bg {
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
         }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+
+        @keyframes float-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+        .float-up { animation: float-up 1s ease-out forwards; }
+
+        .level-btn {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .level-btn:hover { transform: translateY(-2px); }
+        .level-btn.locked { opacity: 0.4; cursor: not-allowed; }
+        .level-btn.completed::after {
+            content: '✓';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #10b981;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .level-btn.current {
+            box-shadow: 0 0 0 3px #6366f1, 0 0 15px #6366f1;
+        }
     </style>
 </head>
-<body class="theme-cyber flex flex-col items-center justify-between h-screen p-3 md:p-6 select-none">
+<body class="theme-cyber flex flex-col items-center justify-between h-screen p-3 md:p-6 select-none overflow-hidden">
 
-    <!-- Top Header & IQ Bar Section -->
+    <!-- Header -->
     <header class="w-full max-w-md flex flex-col items-center gap-2.5 glass-panel p-3.5 shadow-xl">
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
@@ -103,12 +174,10 @@
                 </div>
             </div>
 
-            <!-- Botão de Alternar Tema -->
             <button id="btn-theme-toggle" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 rounded-xl text-xs font-semibold text-indigo-300 flex items-center gap-1.5 transition active:scale-95">
                 <i class="fa-solid fa-palette"></i> <span id="theme-name">Cyber</span>
             </button>
 
-            <!-- IQ Badge -->
             <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-2">
                 <i class="fa-solid fa-brain text-white text-base"></i>
                 <div class="flex flex-col">
@@ -118,7 +187,6 @@
             </div>
         </div>
 
-        <!-- IQ Meter Visual -->
         <div class="w-full">
             <div class="flex justify-between text-[10px] font-bold text-gray-400 mb-1 px-1">
                 <span>75</span>
@@ -129,17 +197,23 @@
                 <div id="iq-bar" class="iq-progress h-full bg-gradient-to-r from-pink-500 via-yellow-400 to-cyan-400 rounded-full" style="width: 0%;"></div>
             </div>
         </div>
+
+        <!-- Barra de Progresso de Níveis -->
+        <div class="w-full flex justify-between items-center px-1">
+            <span class="text-[10px] text-gray-400 font-semibold">Progresso: <span id="progress-text" class="text-white">1/12</span></span>
+            <span id="moves-counter" class="text-[10px] text-gray-400 font-semibold">Movimentos: <span class="text-white">0</span></span>
+        </div>
     </header>
 
-    <!-- Canvas Game Container -->
+    <!-- Canvas -->
     <main class="relative flex-1 w-full max-w-md my-2 flex items-center justify-center">
         <div class="board-frame relative w-full aspect-square max-w-[380px] max-h-[380px] p-2.5 flex items-center justify-center">
             <canvas id="gameCanvas" class="w-full h-full rounded-xl cursor-pointer touch-none"></canvas>
-            <canvas id="confettiCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl"></canvas>
+            <canvas id="effectCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-xl"></canvas>
         </div>
     </main>
 
-    <!-- Control Buttons Bottom Bar -->
+    <!-- Footer -->
     <footer class="w-full max-w-md glass-panel p-3 shadow-xl flex items-center justify-around gap-2">
         <button id="btn-reset" class="flex-1 py-2 px-2 bg-gray-800/40 hover:bg-gray-700/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center gap-1 border border-gray-700/50">
             <i class="fa-solid fa-rotate-left text-amber-400 text-base"></i>
@@ -163,25 +237,41 @@
         </button>
     </footer>
 
-    <!-- Level Win Modal -->
+    <!-- Toast de feedback -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl font-semibold text-sm shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[60]"></div>
+
+    <!-- Win Modal -->
     <div id="win-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
         <div class="glass-panel bg-gray-900/90 border border-indigo-500/30 p-6 rounded-3xl max-w-sm w-full text-center shadow-2xl flex flex-col items-center gap-4">
             <div class="w-16 h-16 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center text-3xl text-gray-900 shadow-lg shadow-amber-500/30 animate-bounce">
                 <i class="fa-solid fa-trophy"></i>
             </div>
             <div>
-                <h2 class="text-xl font-extrabold text-white">Nível Concluído!</h2>
-                <p class="text-xs text-gray-300 mt-1">Conexões perfeitas realizadas!</p>
+                <h2 class="text-xl font-extrabold text-white">Nível Concluído! 🎉</h2>
+                <p class="text-xs text-gray-300 mt-1" id="win-subtitle">Conexões perfeitas realizadas!</p>
+                <div class="mt-3 flex justify-center gap-4 text-xs">
+                    <div class="bg-gray-800/60 rounded-lg px-3 py-1.5">
+                        <span class="text-gray-400">Movimentos:</span>
+                        <span id="win-moves" class="text-white font-bold ml-1">0</span>
+                    </div>
+                    <div class="bg-gray-800/60 rounded-lg px-3 py-1.5">
+                        <span class="text-gray-400">Dicas:</span>
+                        <span id="win-hints" class="text-white font-bold ml-1">0</span>
+                    </div>
+                </div>
             </div>
             <button id="btn-next-level" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
                 Próximo Nível <i class="fa-solid fa-arrow-right ml-2"></i>
             </button>
+            <button id="btn-replay" class="text-xs text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-redo mr-1"></i> Jogar Novamente
+            </button>
         </div>
     </div>
 
-    <!-- Level Selection Modal -->
+    <!-- Levels Modal -->
     <div id="levels-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel bg-gray-900/95 border border-gray-700 p-5 rounded-3xl max-w-md w-full shadow-2xl flex flex-col gap-3 max-h-[80vh]">
+        <div class="glass-panel bg-gray-900/95 border border-gray-700 p-5 rounded-3xl max-w-md w-full shadow-2xl flex flex-col gap-3 max-h-[85vh]">
             <div class="flex justify-between items-center pb-2 border-b border-gray-800">
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-map text-indigo-400"></i> Seleção de Níveis
@@ -190,221 +280,296 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
+            
+            <!-- Filtro de dificuldade -->
+            <div class="flex gap-2 overflow-x-auto pb-1">
+                <button data-filter="all" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">Todas</button>
+                <button data-filter="easy" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Fácil</button>
+                <button data-filter="medium" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Médio</button>
+                <button data-filter="hard" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Difícil</button>
+            </div>
+
             <div id="levels-grid" class="grid grid-cols-4 gap-2.5 overflow-y-auto p-1 max-h-[55vh]"></div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-gray-800">
+                <span class="text-[10px] text-gray-500">Complete os níveis para desbloquear os próximos</span>
+                <button id="btn-reset-progress" class="text-[10px] text-red-400 hover:text-red-300 font-semibold">
+                    <i class="fa-solid fa-trash mr-1"></i>Resetar Progresso
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Gerenciamento de Temas Visuais
-        const themes = ['theme-cyber', 'theme-neon', 'theme-light'];
-        const themeNames = ['Cyber', 'Neon', 'Clean'];
+        // ===== CONFIGURAÇÃO DE TEMAS =====
+        const themes = [
+            { class: 'theme-cyber', name: 'Cyber', icon: 'fa-robot' },
+            { class: 'theme-neon', name: 'Neon', icon: 'fa-bolt' },
+            { class: 'theme-sunset', name: 'Sunset', icon: 'fa-sun' },
+            { class: 'theme-forest', name: 'Forest', icon: 'fa-tree' },
+            { class: 'theme-light', name: 'Clean', icon: 'fa-sun' }
+        ];
         let currentThemeIdx = 0;
 
-        const themeBtn = document.getElementById('btn-theme-toggle');
-        const themeLabel = document.getElementById('theme-name');
-
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.remove(themes[currentThemeIdx]);
-            currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-            document.body.classList.add(themes[currentThemeIdx]);
-            themeLabel.innerText = themeNames[currentThemeIdx];
-            render();
-        });
-
-        // Motor de Áudio Simples (Web Audio API)
+        // ===== ÁUDIO =====
         class SoundEngine {
-            constructor() { this.ctx = null; }
-            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-            playPop(freq = 440) {
-                if (!this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+            constructor() { 
+                this.ctx = null; 
+                this.enabled = true;
+            }
+            init() { 
+                if (!this.ctx) {
+                    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } 
+                    catch(e) { this.enabled = false; }
+                }
+            }
+            playTone(freq, duration = 0.08, type = 'sine', volume = 0.15) {
+                if (!this.ctx || !this.enabled) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain); 
+                    gain.connect(this.ctx.destination);
+                    osc.start(); 
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+            playPop(freq = 440) { this.playTone(freq, 0.08, 'sine', 0.15); }
+            playConnect() { this.playTone(600, 0.1, 'triangle', 0.12); }
+            playError() { this.playTone(200, 0.15, 'sawtooth', 0.1); }
+            playHint() { 
+                [523, 659, 784].forEach((f, i) => setTimeout(() => this.playTone(f, 0.12, 'sine', 0.12), i * 80));
             }
             playWin() {
-                if (!this.ctx) return;
-                [440, 554, 659, 880].forEach((freq, idx) => {
-                    setTimeout(() => this.playPop(freq), idx * 80);
+                [523, 659, 784, 1046, 1318].forEach((freq, idx) => {
+                    setTimeout(() => this.playTone(freq, 0.15, 'triangle', 0.15), idx * 100);
+                });
+            }
+            playUndo() { this.playTone(300, 0.1, 'sine', 0.1); }
+            playLevelUp() {
+                [440, 554, 659, 880, 1108, 1318].forEach((freq, idx) => {
+                    setTimeout(() => this.playTone(freq, 0.12, 'sine', 0.14), idx * 70);
                 });
             }
         }
         const audio = new SoundEngine();
 
-        // Estrutura de Fases do Jogo
+        // ===== PALETA DE CORES =====
         const COLOR_PALETTE = {
-            red: { hex: '#ef4444' },
-            blue: { hex: '#3b82f6' },
-            green: { hex: '#22c55e' },
-            yellow: { hex: '#eab308' },
-            purple: { hex: '#a855f7' },
-            orange: { hex: '#f97316' },
-            cyan: { hex: '#06b6d4' }
+            red:     { hex: '#ef4444', glow: '#dc2626' },
+            blue:    { hex: '#3b82f6', glow: '#2563eb' },
+            green:   { hex: '#22c55e', glow: '#16a34a' },
+            yellow:  { hex: '#eab308', glow: '#ca8a04' },
+            purple:  { hex: '#a855f7', glow: '#9333ea' },
+            orange:  { hex: '#f97316', glow: '#ea580c' },
+            cyan:    { hex: '#06b6d4', glow: '#0891b2' },
+            pink:    { hex: '#ec4899', glow: '#db2777' },
+            lime:    { hex: '#84cc16', glow: '#65a30d' },
+            teal:    { hex: '#14b8a6', glow: '#0d9488' }
         };
 
+        // ===== NÍVEIS (12 fases, dificuldade progressiva) =====
         const LEVELS = [
-            { size: 4, title: "Grid 4x4 - Iniciante", dots: [{x:0,y:0,color:'green'},{x:3,y:3,color:'green'},{x:3,y:0,color:'red'},{x:2,y:2,color:'red'},{x:0,y:3,color:'blue'},{x:2,y:1,color:'blue'}] },
-            { size: 4, title: "Grid 4x4 - Desafio Prático", dots: [{x:0,y:0,color:'red'},{x:2,y:3,color:'red'},{x:1,y:0,color:'yellow'},{x:3,y:2,color:'yellow'},{x:0,y:2,color:'blue'},{x:3,y:3,color:'blue'}] },
-            { size: 5, title: "Grid 5x5 - Avançado", dots: [{x:0,y:1,color:'red'},{x:4,y:1,color:'red'},{x:1,y:0,color:'blue'},{x:3,y:4,color:'blue'},{x:0,y:4,color:'green'},{x:4,y:3,color:'green'},{x:2,y:2,color:'purple'},{x:4,y:4,color:'purple'}] }
+            // Fácil (1-4)
+            { size: 4, difficulty: 'easy', title: "Aquecimento", dots: [
+                {x:0,y:0,color:'green'},{x:3,y:3,color:'green'},
+                {x:3,y:0,color:'red'},{x:2,y:2,color:'red'},
+                {x:0,y:3,color:'blue'},{x:2,y:1,color:'blue'}
+            ]},
+            { size: 4, difficulty: 'easy', title: "Primeiros Passos", dots: [
+                {x:0,y:0,color:'red'},{x:2,y:3,color:'red'},
+                {x:1,y:0,color:'yellow'},{x:3,y:2,color:'yellow'},
+                {x:0,y:2,color:'blue'},{x:3,y:3,color:'blue'}
+            ]},
+            { size: 4, difficulty: 'easy', title: "Três Cores", dots: [
+                {x:0,y:0,color:'orange'},{x:0,y:3,color:'orange'},
+                {x:3,y:0,color:'purple'},{x:3,y:3,color:'purple'},
+                {x:1,y:1,color:'cyan'},{x:2,y:2,color:'cyan'}
+            ]},
+            { size: 4, difficulty: 'easy', title: "Cruzado", dots: [
+                {x:0,y:1,color:'pink'},{x:3,y:2,color:'pink'},
+                {x:1,y:0,color:'lime'},{x:2,y:3,color:'lime'},
+                {x:0,y:3,color:'red'},{x:3,y:0,color:'red'},
+                {x:1,y:2,color:'blue'},{x:2,y:1,color:'blue'}
+            ]},
+            
+            // Médio (5-8)
+            { size: 5, difficulty: 'medium', title: "Grid 5x5", dots: [
+                {x:0,y:1,color:'red'},{x:4,y:1,color:'red'},
+                {x:1,y:0,color:'blue'},{x:3,y:4,color:'blue'},
+                {x:0,y:4,color:'green'},{x:4,y:3,color:'green'},
+                {x:2,y:2,color:'purple'},{x:4,y:4,color:'purple'}
+            ]},
+            { size: 5, difficulty: 'medium', title: "Caminhos Cruzados", dots: [
+                {x:0,y:0,color:'orange'},{x:4,y:4,color:'orange'},
+                {x:4,y:0,color:'cyan'},{x:0,y:4,color:'cyan'},
+                {x:2,y:1,color:'pink'},{x:2,y:3,color:'pink'},
+                {x:1,y:2,color:'lime'},{x:3,y:2,color:'lime'}
+            ]},
+            { size: 5, difficulty: 'medium', title: "Espiral", dots: [
+                {x:0,y:0,color:'red'},{x:4,y:0,color:'red'},
+                {x:4,y:4,color:'blue'},{x:0,y:4,color:'blue'},
+                {x:2,y:2,color:'yellow'},{x:3,y:2,color:'yellow'},
+                {x:1,y:3,color:'teal'},{x:3,y:3,color:'teal'}
+            ]},
+            { size: 5, difficulty: 'medium', title: "Desafio Cinco", dots: [
+                {x:0,y:2,color:'purple'},{x:4,y:2,color:'purple'},
+                {x:2,y:0,color:'orange'},{x:2,y:4,color:'orange'},
+                {x:0,y:0,color:'green'},{x:4,y:4,color:'green'},
+                {x:4,y:0,color:'red'},{x:0,y:4,color:'red'},
+                {x:3,y:1,color:'cyan'},{x:1,y:3,color:'cyan'}
+            ]},
+
+            // Difícil (9-12)
+            { size: 6, difficulty: 'hard', title: "Grid 6x6", dots: [
+                {x:0,y:0,color:'red'},{x:5,y:5,color:'red'},
+                {x:5,y:0,color:'blue'},{x:0,y:5,color:'blue'},
+                {x:2,y:2,color:'green'},{x:3,y:3,color:'green'},
+                {x:1,y:4,color:'yellow'},{x:4,y:1,color:'yellow'}
+            ]},
+            { size: 6, difficulty: 'hard', title: "Labirinto", dots: [
+                {x:0,y:1,color:'purple'},{x:5,y:4,color:'purple'},
+                {x:1,y:0,color:'orange'},{x:4,y:5,color:'orange'},
+                {x:0,y:4,color:'cyan'},{x:5,y:1,color:'cyan'},
+                {x:2,y:3,color:'pink'},{x:3,y:2,color:'pink'},
+                {x:3,y:0,color:'lime'},{x:2,y:5,color:'lime'}
+            ]},
+            { size: 6, difficulty: 'hard', title: "Complexo", dots: [
+                {x:0,y:0,color:'red'},{x:5,y:0,color:'red'},
+                {x:0,y:5,color:'blue'},{x:5,y:5,color:'blue'},
+                {x:2,y:2,color:'green'},{x:3,y:2,color:'green'},
+                {x:2,y:3,color:'yellow'},{x:3,y:3,color:'yellow'},
+                {x:1,y:1,color:'purple'},{x:4,y:4,color:'purple'},
+                {x:4,y:1,color:'teal'},{x:1,y:4,color:'teal'}
+            ]},
+            { size: 6, difficulty: 'hard', title: "Mestre do QI", dots: [
+                {x:0,y:2,color:'red'},{x:5,y:3,color:'red'},
+                {x:2,y:0,color:'blue'},{x:3,y:5,color:'blue'},
+                {x:0,y:5,color:'green'},{x:5,y:0,color:'green'},
+                {x:1,y:1,color:'yellow'},{x:4,y:4,color:'yellow'},
+                {x:4,y:1,color:'purple'},{x:1,y:4,color:'purple'},
+                {x:2,y:3,color:'cyan'},{x:3,y:2,color:'cyan'}
+            ]}
         ];
 
-        let currentLevelIdx = 0, gridCount = 4, cellSize = 0;
-        let activeColor = null, isDrawing = false, paths = {}, currentPath = [];
+        // ===== ESTADO DO JOGO =====
+        let currentLevelIdx = 0;
+        let gridCount = 4;
+        let cellSize = 0;
+        let canvasSize = 0;
+        let activeColor = null;
+        let isDrawing = false;
+        let paths = {};          // { colorKey: [{x,y}, ...] }
+        let currentPath = [];
+        let pathHistory = [];    // Para desfazer
+        let hintsLeft = 3;
+        let movesCount = 0;
+        let hintsUsedCount = 0;
         let IQ = 75;
+        let unlockedLevels = 1;
+        let completedLevels = [];
+        let currentFilter = 'all';
+        let particles = [];
+        let animationFrame = null;
+        let solutionCache = {};  // Cache de soluções
 
+        // ===== CANVAS =====
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const effectCanvas = document.getElementById('effectCanvas');
+        const effectCtx = effectCanvas.getContext('2d');
 
+        // ===== PERSISTÊNCIA =====
+        function saveProgress() {
+            try {
+                const data = {
+                    unlockedLevels,
+                    completedLevels,
+                    IQ,
+                    hintsLeft,
+                    currentLevelIdx,
+                    currentThemeIdx,
+                    bestMoves: getBestMoves()
+                };
+                localStorage.setItem('brainMaster_save', JSON.stringify(data));
+            } catch(e) {}
+        }
+
+        function loadProgress() {
+            try {
+                const raw = localStorage.getItem('brainMaster_save');
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (data.unlockedLevels) unlockedLevels = Math.min(data.unlockedLevels, LEVELS.length);
+                if (data.completedLevels) completedLevels = data.completedLevels;
+                if (data.IQ) IQ = data.IQ;
+                if (data.hintsLeft !== undefined) hintsLeft = data.hintsLeft;
+                if (data.currentLevelIdx !== undefined) currentLevelIdx = data.currentLevelIdx;
+                if (data.currentThemeIdx !== undefined) currentThemeIdx = data.currentThemeIdx;
+                if (data.bestMoves) localStorage.setItem('brainMaster_bestMoves', JSON.stringify(data.bestMoves));
+                updateThemeUI();
+            } catch(e) {}
+        }
+
+        function getBestMoves() {
+            try {
+                return JSON.parse(localStorage.getItem('brainMaster_bestMoves') || '{}');
+            } catch(e) { return {}; }
+        }
+
+        function saveBestMoves(idx, moves) {
+            const best = getBestMoves();
+            if (!best[idx] || moves < best[idx]) {
+                best[idx] = moves;
+                localStorage.setItem('brainMaster_bestMoves', JSON.stringify(best));
+            }
+        }
+
+        function resetProgress() {
+            if (!confirm('Tem certeza que deseja resetar todo o progresso?')) return;
+            localStorage.removeItem('brainMaster_save');
+            localStorage.removeItem('brainMaster_bestMoves');
+            unlockedLevels = 1;
+            completedLevels = [];
+            IQ = 75;
+            hintsLeft = 3;
+            currentLevelIdx = 0;
+            updateIQBar();
+            updateLevelHeader();
+            loadLevel(0);
+            showToast('Progresso resetado!', 'info');
+        }
+
+        // ===== TOAST =====
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const colors = {
+                info: 'bg-indigo-600 text-white',
+                success: 'bg-emerald-600 text-white',
+                error: 'bg-red-600 text-white',
+                warning: 'bg-amber-500 text-white'
+            };
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl font-semibold text-sm shadow-2xl transition-all duration-300 pointer-events-none z-[60] ${colors[type] || colors.info}`;
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, 0)';
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -10px)';
+            }, 1800);
+        }
+
+        // ===== CANVAS SETUP =====
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            cellSize = rect.width / gridCount;
-            render();
-        }
-
-        function loadLevel(idx) {
-            currentLevelIdx = idx;
-            const lvl = LEVELS[currentLevelIdx];
-            gridCount = lvl.size;
-            document.getElementById('level-num').innerText = currentLevelIdx + 1;
-            document.getElementById('level-name').innerText = lvl.title;
-            paths = {}; currentPath = []; isDrawing = false; activeColor = null;
-            resizeCanvas();
-        }
-
-        function getCellCoords(pos) {
-            return { x: pos.x * cellSize + cellSize / 2, y: pos.y * cellSize + cellSize / 2 };
-        }
-
-        function getGridPos(px, py) {
-            const x = Math.floor(px / cellSize);
-            const y = Math.floor(py / cellSize);
-            return (x >= 0 && x < gridCount && y >= 0 && y < gridCount) ? { x, y } : null;
-        }
-
-        function render() {
-            const width = canvas.width / (window.devicePixelRatio || 1);
-            const height = canvas.height / (window.devicePixelRatio || 1);
-            ctx.clearRect(0, 0, width, height);
-
-            // Desenhar linhas do grid de fundo conforme o tema atual
-            ctx.strokeStyle = currentThemeIdx === 2 ? '#cbd5e1' : '#3d281a';
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i <= gridCount; i++) {
-                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, height); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(width, i * cellSize); ctx.stroke();
-            }
-
-            // Desenhar caminhos concluídos
-            Object.keys(paths).forEach(color => {
-                drawPathLine(paths[color], color);
-            });
-            if (isDrawing && currentPath.length > 0) {
-                drawPathLine(currentPath, activeColor);
-            }
-
-            // Desenhar Pontos (Bolinhas)
-            LEVELS[currentLevelIdx].dots.forEach(dot => {
-                const c = getCellCoords(dot);
-                const palette = COLOR_PALETTE[dot.color];
-                ctx.fillStyle = palette.hex;
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, cellSize * 0.28, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        function drawPathLine(pathArr, colorKey) {
-            if (!pathArr || pathArr.length < 2) return;
-            const palette = COLOR_PALETTE[colorKey] || { hex: '#fff' };
-            ctx.save();
-            ctx.strokeStyle = palette.hex;
-            ctx.lineWidth = cellSize * 0.28;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            const start = getCellCoords(pathArr[0]);
-            ctx.moveTo(start.x, start.y);
-            for (let i = 1; i < pathArr.length; i++) {
-                const pt = getCellCoords(pathArr[i]);
-                ctx.lineTo(pt.x, pt.y);
-            }
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        // Eventos de Toque e Mouse
-        canvas.addEventListener('pointerdown', (e) => {
-            audio.init();
-            const rect = canvas.getBoundingClientRect();
-            const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            const gPos = getGridPos(pos.x, pos.y);
-            if (!gPos) return;
-
-            const dot = LEVELS[currentLevelIdx].dots.find(d => d.x === gPos.x && d.y === gPos.y);
-            if (dot) {
-                activeColor = dot.color;
-                isDrawing = true;
-                currentPath = [{ x: gPos.x, y: gPos.y }];
-                delete paths[activeColor];
-                audio.playPop(400);
-                render();
-            }
-        });
-
-        canvas.addEventListener('pointermove', (e) => {
-            if (!isDrawing || !activeColor) return;
-            const rect = canvas.getBoundingClientRect();
-            const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            const gPos = getGridPos(pos.x, pos.y);
-            if (!gPos) return;
-
-            const lastPt = currentPath[currentPath.length - 1];
-            if (lastPt.x !== gPos.x || lastPt.y !== gPos.y) {
-                const dx = Math.abs(gPos.x - lastPt.x);
-                const dy = Math.abs(gPos.y - lastPt.y);
-                if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
-                    currentPath.push({ x: gPos.x, y: gPos.y });
-                    audio.playPop(500);
-                    render();
-                }
-            }
-        });
-
-        canvas.addEventListener('pointerup', () => {
-            if (!isDrawing) return;
-            isDrawing = false;
-            if (currentPath.length > 1) {
-                paths[activeColor] = [...currentPath];
-            }
-            currentPath = [];
-            render();
-        });
-
-        // Controles dos botões inferiores
-        document.getElementById('btn-reset').addEventListener('click', () => loadLevel(currentLevelIdx));
-        document.getElementById('btn-levels').addEventListener('click', () => {
-            const grid = document.getElementById('levels-grid');
-            grid.innerHTML = '';
-            LEVELS.forEach((l, idx) => {
-                const btn = document.createElement('button');
-                btn.className = "p-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-bold text-sm border border-gray-700";
-                btn.innerText = `Fase ${idx + 1}`;
-                btn.onclick = () => { loadLevel(idx); document.getElementById('levels-modal').classList.add('hidden'); };
-                grid.appendChild(btn);
-            });
-            document.getElementById('levels-modal').classList.remove('hidden');
-        });
-        document.getElementById('btn-close-levels').addEventListener('click', () => document.getElementById('levels-modal').classList.add('hidden'));
-
-        window.addEventListener('resize', resizeCanvas);
-        loadLevel(0);
-    </script>
-</body>
-</html>
+            const w = rect.width;
+            const h = rect.height;
+            canvasSize = Math.min(w, h);
+            
+            canvas.width =
