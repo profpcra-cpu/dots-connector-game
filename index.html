@@ -90,7 +90,7 @@
             <div class="text-xs text-gray-300 space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 <p>⭐ <b>Conexão Indireta:</b> Não é permitido ligar bolinhas da mesma cor diretamente. O trajeto precisa passar por casas intermediárias do tabuleiro.</p>
                 <p>⭐ <b>Estrelas (+10 pts):</b> Colete estrelas douradas no caminho para aumentar sua pontuação final.</p>
-                <p>⚠️ <b>Ultrapassagem (-10 pts):</b> Só é permitido passar por cima de bolinhas de outra cor se necessário, mas você perde 10 pontos por cada bola ultrapassada.</p>
+                <p>⚠️️ <b>Ultrapassagem (-10 pts):</b> Só é permitido passar por cima de bolinhas de outra cor se necessário, mas você perde 10 pontos por cada bola ultrapassada.</p>
                 <p>🚫 <b>Sem Cruzamentos:</b> Linhas de fluxos diferentes não podem se cruzar.</p>
             </div>
             <button onclick="toggleModal('rules-modal')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs">Entendi</button>
@@ -102,12 +102,12 @@
         <div class="glass-panel bg-gray-900/95 border border-indigo-500/30 p-5 rounded-3xl max-w-sm w-full shadow-2xl flex flex-col gap-3">
             <div class="flex items-center justify-between w-full">
                 <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-trophy text-amber-400"></i> Ranking Global
+                    <i class="fa-solid fa-trophy text-amber-400"></i> Ranking Global (Firestore)
                 </h3>
                 <button onclick="toggleModal('rank-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div id="ranking-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 text-xs">
-                <!-- Preenchido via JS -->
+                <p class="text-center text-gray-400">A carregar ranking...</p>
             </div>
             <button onclick="toggleModal('rank-modal')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs">Fechar</button>
         </div>
@@ -200,6 +200,30 @@
         </div>
     </div>
 
+    <!-- Importação dos SDKs do Firebase v10 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO FIREBASE (Substitua pelas suas credenciais do Firebase Console)
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY_AQUI",
+            authDomain: "SEU_PROJECTO.firebaseapp.com",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_PROJECTO.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Disponibilizar instâncias do Firestore globalmente para os scripts do jogo
+        window.db = db;
+        window.fsMethods = { doc, getDoc, setDoc, updateDoc, collection, query, orderBy, limit, getDocs };
+    </script>
+
     <script>
         class SoundEngine {
             constructor() { this.ctx = null; this.enabled = true; }
@@ -257,6 +281,7 @@
         let movesCount = 0;
         let IQ = 75;
         let playerName = "Convidado";
+        let playerScore = 0;
         let currentDots = [];
         let currentStars = [];
         let collectedStars = {};
@@ -266,21 +291,43 @@
         let animationFrame = null;
         let previousBoards = [];
 
-        let leaderboard = JSON.parse(localStorage.getItem('brain_flow_ranking')) || [
-            { name: "MasterLogic", score: 140, iq: 145 },
-            { name: "FlowQueen", score: 120, iq: 130 },
-            { name: "NeuroGamer", score: 100, iq: 115 }
-        ];
-
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const effectCanvas = document.getElementById('effectCanvas');
         const effectCtx = effectCanvas.getContext('2d');
 
-        function registerPlayer() {
+        async function registerPlayer() {
             const input = document.getElementById('player-nickname').value.trim();
-            if (input) playerName = input;
+            if (!input) return;
+
+            playerName = input;
             document.getElementById('player-display').innerText = playerName;
+
+            // Lógica do Banco de Dados Firestore
+            try {
+                const { doc, getDoc, setDoc } = window.fsMethods;
+                const playerRef = doc(window.db, "players", playerName);
+                const playerSnap = await getDoc(playerRef);
+
+                if (playerSnap.exists()) {
+                    const data = playerSnap.data();
+                    IQ = data.iq || 75;
+                    playerScore = data.score || 0;
+                } else {
+                    await setDoc(playerRef, {
+                        name: playerName,
+                        score: 0,
+                        iq: 75,
+                        updatedAt: new Date()
+                    });
+                    IQ = 75;
+                    playerScore = 0;
+                }
+                document.getElementById('iq-value').innerText = IQ;
+            } catch (err) {
+                console.error("Erro ao conectar com o banco de dados:", err);
+            }
+
             const modal = document.getElementById('auth-modal');
             modal.style.opacity = '0';
             setTimeout(() => modal.classList.add('hidden'), 300);
@@ -298,22 +345,35 @@
             }
         }
 
-        function openRanking() {
-            const listEl = document.getElementById('ranking-list');
-            listEl.innerHTML = '';
-            leaderboard.sort((a,b) => b.score - a.score);
-            leaderboard.forEach((item, index) => {
-                listEl.innerHTML += `
-                    <div class="flex justify-between items-center p-2 rounded-xl bg-gray-800/60 border border-gray-700/50">
-                        <span class="font-bold text-amber-400">#${index+1} ${item.name}</span>
-                        <div class="flex gap-3 text-gray-300">
-                            <span>Pts: <b>${item.score}</b></span>
-                            <span>QI: <b>${item.iq}</b></span>
-                        </div>
-                    </div>
-                `;
-            });
+        async function openRanking() {
             toggleModal('rank-modal');
+            const listEl = document.getElementById('ranking-list');
+            listEl.innerHTML = '<p class="text-center text-gray-400">A carregar dados...</p>';
+
+            try {
+                const { collection, query, orderBy, limit, getDocs } = window.fsMethods;
+                const q = query(collection(window.db, "players"), orderBy("score", "desc"), limit(10));
+                const querySnapshot = await getDocs(q);
+
+                listEl.innerHTML = '';
+                let rank = 1;
+                querySnapshot.forEach((doc) => {
+                    const item = doc.data();
+                    listEl.innerHTML += `
+                        <div class="flex justify-between items-center p-2 rounded-xl bg-gray-800/60 border border-gray-700/50">
+                            <span class="font-bold text-amber-400">#${rank} ${item.name}</span>
+                            <div class="flex gap-3 text-gray-300">
+                                <span>Pts: <b>${item.score}</b></span>
+                                <span>QI: <b>${item.iq}</b></span>
+                            </div>
+                        </div>
+                    `;
+                    rank++;
+                });
+            } catch (err) {
+                console.error("Erro ao carregar ranking:", err);
+                listEl.innerHTML = '<p class="text-center text-red-400">Erro ao carregar o ranking.</p>';
+            }
         }
 
         function resizeCanvas() {
@@ -802,7 +862,7 @@
             anim();
         }
 
-        function checkWin() {
+        async function checkWin() {
             const colors = [...new Set(currentDots.map(d => d.color))];
             let allConnected = true;
             for (const c of colors) {
@@ -829,8 +889,19 @@
             IQ = Math.min(180, IQ + 12);
             document.getElementById('iq-value').innerText = IQ;
 
-            leaderboard.push({ name: playerName, score: finalScore, iq: IQ });
-            localStorage.setItem('brain_flow_ranking', JSON.stringify(leaderboard));
+            // Atualizar no Banco de Dados Firestore
+            playerScore += finalScore;
+            try {
+                const { doc, updateDoc } = window.fsMethods;
+                const playerRef = doc(window.db, "players", playerName);
+                await updateDoc(playerRef, {
+                    score: playerScore,
+                    iq: IQ,
+                    updatedAt: new Date()
+                });
+            } catch (err) {
+                console.error("Erro ao atualizar o score no Firestore:", err);
+            }
 
             document.getElementById('win-score-display').innerText = finalScore;
             document.getElementById('win-details-desc').innerText = `Grid: ${baseScore} | Estrelas (+${starBonus}): ${totalCollectedStars} | Penalidade (-${dotPenalty}): ${penaltyCrossCount}`;
