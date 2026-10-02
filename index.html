@@ -14,26 +14,33 @@
     * {
       font-family: 'Outfit', sans-serif;
       user-select: none;
+      -webkit-user-select: none;
     }
     body {
-      background-color: #0f172a;
+      background-color: #0b0f19;
       color: #f8fafc;
       overflow: hidden;
+      touch-action: none;
+    }
+    canvas {
+      touch-action: none;
     }
   </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-center relative">
+<body class="h-screen w-screen flex flex-col items-center justify-between p-3 relative select-none">
 
-  <!-- MODAL DE CADASTRO REESTRUTURADO -->
-  <div id="modalCadastro" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  <!-- MODAL DE CADASTRO -->
+  <div id="modalCadastro" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
     <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center space-y-4">
       
-      <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-2">
+      <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
         <i class="fa-solid fa-brain"></i>
       </div>
 
-      <h2 class="text-2xl font-bold text-white">Brain Flow Master</h2>
-      <p class="text-xs text-slate-400">Inscreva-se para registrar seu QI e Pontuação no Ranking Global!</p>
+      <div>
+        <h2 class="text-2xl font-bold text-white tracking-wide">Brain Flow Master</h2>
+        <p class="text-xs text-slate-400 mt-1">Registre-se para computar seu desempenho e QI no Ranking Global!</p>
+      </div>
 
       <form id="formCadastro" onsubmit="realizarCadastro(event)" class="space-y-3 text-left">
         <div>
@@ -63,44 +70,145 @@
     </div>
   </div>
 
-  <!-- INTERFACE PRINCIPAL DO JOGO -->
-  <header class="w-full max-w-lg px-4 py-3 flex justify-between items-center bg-slate-900/60 border-b border-slate-800">
-    <div>
-      <h1 id="nomeJogadorDisplay" class="text-sm font-bold text-indigo-400">Visitante</h1>
-      <p id="turmaJogadorDisplay" class="text-xs text-slate-400">Geral</p>
+  <!-- CABEÇALHO SUPERIOR -->
+  <header class="w-full max-w-md px-4 py-2.5 flex justify-between items-center bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md shadow-lg">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center font-bold text-lg border border-indigo-500/30">
+        <i class="fa-solid fa-user-gear"></i>
+      </div>
+      <div>
+        <h1 id="nomeJogadorDisplay" class="text-sm font-bold text-white leading-tight">Jogador</h1>
+        <p id="turmaJogadorDisplay" class="text-xs text-indigo-400">Turma</p>
+      </div>
     </div>
-    <button onclick="abrirRanking()" class="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-600/40 transition flex items-center gap-1.5">
-      <i class="fa-solid fa-trophy text-amber-400"></i>
-      <span>Ranking</span>
-    </button>
+
+    <div class="flex items-center gap-2">
+      <button onclick="abrirModalRanking()" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/20 transition flex items-center gap-1.5 shadow-sm">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Ranking</span>
+      </button>
+    </div>
   </header>
 
-  <main class="flex-1 w-full max-w-lg flex flex-col items-center justify-center p-4">
-    <!-- O Canvas / Tabuleiro do Jogo entra aqui -->
-    <div id="gameContainer" class="w-full aspect-square bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-center text-slate-500 text-sm">
-      <p>Área de Jogo Ativa</p>
+  <!-- PAINEL DE STATUS DO JOGO -->
+  <section class="w-full max-w-md my-2 grid grid-cols-3 gap-2">
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2 text-center">
+      <p class="text-[10px] uppercase font-bold text-slate-400">Nível</p>
+      <p id="nivelDisplay" class="text-lg font-extrabold text-indigo-400">1</p>
     </div>
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2 text-center">
+      <p class="text-[10px] uppercase font-bold text-slate-400">Pontos</p>
+      <p id="pontosDisplay" class="text-lg font-extrabold text-emerald-400">0</p>
+    </div>
+    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2 text-center">
+      <p class="text-[10px] uppercase font-bold text-slate-400">QI Estimado</p>
+      <p id="iqDisplay" class="text-lg font-extrabold text-purple-400">100</p>
+    </div>
+  </section>
+
+  <!-- ÁREA DE JOGO (CANVAS DO TABULEIRO) -->
+  <main id="gameContainer" class="relative w-full max-w-md aspect-square bg-slate-900/90 rounded-3xl border border-slate-800 shadow-2xl flex items-center justify-center p-2">
+    <canvas id="gameCanvas" class="w-full h-full rounded-2xl cursor-pointer"></canvas>
   </main>
 
-  <!-- LÓGICA DE INTEGRAÇÃO COM O GOOGLE APPS SCRIPT -->
+  <!-- RODAPÉ DE CONTROLES -->
+  <footer class="w-full max-w-md flex justify-between items-center gap-2 mt-2">
+    <button onclick="reiniciarNivel()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-700 text-xs transition flex items-center justify-center gap-2">
+      <i class="fa-solid fa-rotate-right"></i>
+      <span>Reiniciar Nível</span>
+    </button>
+  </footer>
+
+  <!-- MODAL DE RANKING -->
+  <div id="modalRanking" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col max-h-[80vh]">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
+        <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-trophy"></i> Ranking Global
+        </h3>
+        <button onclick="fecharModalRanking()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="listaRanking" class="flex-1 overflow-y-auto space-y-2 pr-1">
+        <p class="text-xs text-slate-500 text-center py-4">Carregando dados da planilha...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT DE COMUNICAÇÃO E MECÂNICA DE JOGO COMPLETA -->
   <script>
-    // URL do seu Google Apps Script (Web App)
+    // URL do Web App do Google Apps Script
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwy4Yq6RTLQnQ4Y0sOaM5XG2G8c2h4N_xP_Exemplo/exec";
 
     let jogadorAtual = null;
+    let nivelAtual = 1;
+    let pontuacaoTotal = 0;
+    let qiEstimado = 100;
 
-    // Verificar se já existe cadastro salvo localmente ao carregar a página
-    window.addEventListener('DOMContentLoaded', () => {
-      const dadosSalvos = localStorage.getItem('brainFlowMaster_player');
+    // Canvas e Contexto
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Cores dos Fluxos
+    const CORES = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+
+    // Configuração dos Níveis do Jogo
+    const NIVEIS = [
+      {
+        tamanho: 3,
+        pontos: [
+          { x: 0, y: 0, cor: 0 }, { x: 2, y: 2, cor: 0 },
+          { x: 2, y: 0, cor: 1 }, { x: 0, y: 2, cor: 1 }
+        ]
+      },
+      {
+        tamanho: 4,
+        pontos: [
+          { x: 0, y: 0, cor: 0 }, { x: 3, y: 3, cor: 0 },
+          { x: 3, y: 0, cor: 1 }, { x: 0, y: 3, cor: 1 },
+          { x: 1, y: 1, cor: 2 }, { x: 2, y: 2, cor: 2 }
+        ]
+      },
+      {
+        tamanho: 5,
+        pontos: [
+          { x: 0, y: 0, cor: 0 }, { x: 4, y: 4, cor: 0 },
+          { x: 4, y: 0, cor: 1 }, { x: 0, y: 4, cor: 1 },
+          { x: 2, y: 0, cor: 2 }, { x: 2, y: 4, cor: 2 },
+          { x: 0, y: 2, cor: 3 }, { x: 4, y: 2, cor: 3 }
+        ]
+      }
+    ];
+
+    let gridTamanho = 3;
+    let pontosAtivos = [];
+    let caminhos = {}; // Armazena os caminhos traçados por cor
+    let corDesenhando = null;
+
+    // Inicialização
+    window.addEventListener("DOMContentLoaded", () => {
+      redimensionarCanvas();
+      const dadosSalvos = localStorage.getItem("brainFlowMaster_player");
       if (dadosSalvos) {
         jogadorAtual = JSON.parse(dadosSalvos);
         carregarInterfaceJogador();
       }
     });
 
-    async function realizarCadastro(event) {
-      event.preventDefault();
-      
+    window.addEventListener("resize", redimensionarCanvas);
+
+    function redimensionarCanvas() {
+      const container = document.getElementById("gameContainer");
+      const size = Math.min(container.clientWidth - 16, 400);
+      canvas.width = size;
+      canvas.height = size;
+      desenharJogo();
+    }
+
+    async function realizarCadastro(e) {
+      e.preventDefault();
       const btn = document.getElementById("btnEntrar");
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> A Conectar...`;
@@ -123,26 +231,18 @@
           responseData = await res.json();
         }
 
-        // Define dados do jogador (com ID retornado da planilha ou gerado localmente)
         jogadorAtual = {
           id: responseData?.idJogador || "JOG_" + Date.now(),
           nome: payload.nome,
           turma: payload.turma
         };
 
-        // Salva na sessão local do navegador
-        localStorage.setItem('brainFlowMaster_player', JSON.stringify(jogadorAtual));
+        localStorage.setItem("brainFlowMaster_player", JSON.stringify(jogadorAtual));
         carregarInterfaceJogador();
 
       } catch (err) {
-        console.error("Erro no registro:", err);
-        alert("Erro de ligação com a planilha. O jogo iniciará em modo offline.");
-        
-        jogadorAtual = {
-          id: "JOG_OFF_" + Date.now(),
-          nome: payload.nome,
-          turma: payload.turma
-        };
+        console.error("Erro no cadastro:", err);
+        jogadorAtual = { id: "JOG_OFF_" + Date.now(), nome: payload.nome, turma: payload.turma };
         carregarInterfaceJogador();
       }
     }
@@ -151,18 +251,168 @@
       document.getElementById("nomeJogadorDisplay").innerText = jogadorAtual.nome;
       document.getElementById("turmaJogadorDisplay").innerText = jogadorAtual.turma;
       document.getElementById("modalCadastro").classList.add("hidden");
+      iniciarNivel(0);
     }
 
-    async function salvarPontuacao(pontos, iq) {
+    function iniciarNivel(idx) {
+      const config = NIVEIS[idx % NIVEIS.length];
+      gridTamanho = config.tamanho;
+      pontosAtivos = config.pontos;
+      caminhos = {};
+      corDesenhando = null;
+      document.getElementById("nivelDisplay").innerText = nivelAtual;
+      desenharJogo();
+    }
+
+    function desenharJogo() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cellSize = canvas.width / gridTamanho;
+
+      // Desenhar Grade
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      for (let i = 0; i <= gridTamanho; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * cellSize);
+        ctx.lineTo(canvas.width, i * cellSize);
+        ctx.stroke();
+      }
+
+      // Desenhar Caminhos
+      Object.keys(caminhos).forEach(corIdx => {
+        const path = caminhos[corIdx];
+        if (path.length > 1) {
+          ctx.strokeStyle = CORES[corIdx];
+          ctx.lineWidth = cellSize * 0.35;
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          path.forEach((p, index) => {
+            const cx = (p.x + 0.5) * cellSize;
+            const cy = (p.y + 0.5) * cellSize;
+            if (index === 0) ctx.moveTo(cx, cy);
+            else ctx.lineTo(cx, cy);
+          });
+          ctx.stroke();
+        }
+      });
+
+      // Desenhar Pontos Principais
+      pontosAtivos.forEach(p => {
+        const cx = (p.x + 0.5) * cellSize;
+        const cy = (p.y + 0.5) * cellSize;
+        ctx.fillStyle = CORES[p.cor];
+        ctx.beginPath();
+        ctx.arc(cx, cy, cellSize * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#ffffff";
+        ctx.stroke();
+      });
+    }
+
+    // Interações de Toque e Clique
+    function obterPosicaoGrid(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = Math.floor((clientX - rect.left) / (canvas.width / gridTamanho));
+      const y = Math.floor((clientY - rect.top) / (canvas.height / gridTamanho));
+      return { x: Math.max(0, Math.min(gridTamanho - 1, x)), y: Math.max(0, Math.min(gridTamanho - 1, y)) };
+    }
+
+    function iniciarDesenho(e) {
+      e.preventDefault();
+      const pos = obterPosicaoGrid(e);
+      const ponto = pontosAtivos.find(p => p.x === pos.x && p.y === pos.y);
+      if (ponto) {
+        corDesenhando = ponto.cor;
+        caminhos[corDesenhando] = [{ x: pos.x, y: pos.y }];
+        desenharJogo();
+      }
+    }
+
+    function moverDesenho(e) {
+      if (corDesenhando === null) return;
+      e.preventDefault();
+      const pos = obterPosicaoGrid(e);
+      const path = caminhos[corDesenhando];
+      const ultimo = path[path.length - 1];
+
+      if (pos.x !== ultimo.x || pos.y !== ultimo.y) {
+        // Verifica se é um movimento adjacente
+        if (Math.abs(pos.x - ultimo.x) + Math.abs(pos.y - ultimo.y) === 1) {
+          path.push({ x: pos.x, y: pos.y });
+          desenharJogo();
+          verificarVitoria();
+        }
+      }
+    }
+
+    function pararDesenho() {
+      corDesenhando = null;
+    }
+
+    canvas.addEventListener("mousedown", iniciarDesenho);
+    canvas.addEventListener("mousemove", moverDesenho);
+    window.addEventListener("mouseup", pararDesenho);
+
+    canvas.addEventListener("touchstart", iniciarDesenho);
+    canvas.addEventListener("touchmove", moverDesenho);
+    window.addEventListener("touchend", pararDesenho);
+
+    function verificarVitoria() {
+      let coresConectadas = 0;
+      const numCores = Array.from(new Set(pontosAtivos.map(p => p.cor))).length;
+
+      Object.keys(caminhos).forEach(corIdx => {
+        const path = caminhos[corIdx];
+        if (path.length > 1) {
+          const inicio = path[0];
+          const fim = path[path.length - 1];
+          const pontosCor = pontosAtivos.filter(p => p.cor == corIdx);
+
+          const conectou = (pontosCor[0].x === inicio.x && pontosCor[0].y === inicio.y && pontosCor[1].x === fim.x && pontosCor[1].y === fim.y) ||
+                           (pontosCor[1].x === inicio.x && pontosCor[1].y === inicio.y && pontosCor[0].x === fim.x && pontosCor[0].y === fim.y);
+
+          if (conectou) coresConectadas++;
+        }
+      });
+
+      if (coresConectadas === numCores) {
+        setTimeout(() => {
+          pontuacaoTotal += nivelAtual * 150;
+          qiEstimado += 5;
+          nivelAtual++;
+          document.getElementById("pontosDisplay").innerText = pontuacaoTotal;
+          document.getElementById("iqDisplay").innerText = qiEstimado;
+          salvarPontuacao();
+          alert("🎉 Nível Concluído!");
+          iniciarNivel(nivelAtual - 1);
+        }, 200);
+      }
+    }
+
+    function reiniciarNivel() {
+      caminhos = {};
+      desenharJogo();
+    }
+
+    async function salvarPontuacao() {
       if (!jogadorAtual || !WEB_APP_URL || WEB_APP_URL.includes("Exemplo")) return;
 
       const payload = {
         action: "SALVAR_PONTUACAO",
         idJogador: jogadorAtual.id,
-        nome: jogadorAtual.nome,
-        turma: jogadorAtual.turma,
-        pontos: pontos,
-        iq: iq
+        pontos: pontuacaoTotal,
+        iq: qiEstimado
       };
 
       try {
@@ -172,12 +422,51 @@
           body: JSON.stringify(payload)
         });
       } catch (e) {
-        console.error("Erro ao guardar a pontuação:", e);
+        console.error("Erro ao salvar pontuação:", e);
       }
     }
 
-    function abrirRanking() {
-      alert("Carregando o ranking global...");
+    async function abrirModalRanking() {
+      document.getElementById("modalRanking").classList.remove("hidden");
+      const container = document.getElementById("listaRanking");
+      container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i> Buscando classificação...</p>`;
+
+      if (!WEB_APP_URL || WEB_APP_URL.includes("Exemplo")) {
+        container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">URL do Apps Script não configurada.</p>`;
+        return;
+      }
+
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "OBTER_RANKING" })
+        });
+        const data = await res.json();
+
+        if (data.status === "SUCCESS" && data.ranking.length > 0) {
+          container.innerHTML = data.ranking.map((item, index) => `
+            <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
+              <div class="flex items-center gap-3">
+                <span class="font-extrabold text-sm ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index + 1}</span>
+                <div>
+                  <p class="text-xs font-bold text-white">${item.nome}</p>
+                  <p class="text-[10px] text-slate-400">${item.data ? new Date(item.data).toLocaleDateString() : ''}</p>
+                </div>
+              </div>
+              <span class="text-xs font-extrabold text-emerald-400">${item.pontos} pts</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma pontuação registrada ainda.</p>`;
+        }
+      } catch (e) {
+        container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">Erro ao carregar o ranking.</p>`;
+      }
+    }
+
+    function fecharModalRanking() {
+      document.getElementById("modalRanking").classList.add("hidden");
     }
   </script>
 </body>
