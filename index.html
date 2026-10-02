@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots - Distância Máxima & Caminho Único</title>
+    <title>Brain Master: Link the Dots - Estável & Sem Conflitos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -99,8 +99,8 @@
                     <i class="fa-solid fa-route"></i>
                 </div>
                 <div>
-                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">MÁXIMA DISTÂNCIA</span></h1>
-                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Caminhos Únicos & Sem Espaços Livres</p>
+                    <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">BRAIN MASTER</span></h1>
+                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Caminhos Lógicos & Estáveis</p>
                 </div>
             </div>
 
@@ -121,8 +121,8 @@
 
         <!-- Seletor de Pares -->
         <div class="w-full flex items-center justify-between gap-1 bg-gray-900/40 p-1 rounded-xl border border-gray-700/40">
-            <button onclick="setPairsCount(3)" id="btn-pairs-3" class="flex-1 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white">3 Pares</button>
-            <button onclick="setPairsCount(4)" id="btn-pairs-4" class="flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">4 Pares</button>
+            <button onclick="setPairsCount(3)" id="btn-pairs-3" class="flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">3 Pares</button>
+            <button onclick="setPairsCount(4)" id="btn-pairs-4" class="flex-1 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white">4 Pares</button>
             <button onclick="setPairsCount(5)" id="btn-pairs-5" class="flex-1 py-1 text-xs font-bold rounded-lg transition text-gray-400 hover:text-white">5 Pares</button>
         </div>
 
@@ -316,30 +316,28 @@
             render();
         }
 
-        // Função para encontrar caminhos únicos cobrindo 100% da matriz (sem espaços livres)
+        // Gerador limpo e estável com caminhos garantidos e sem travamentos
         function generateRandomPuzzle() {
             let attempts = 0;
-            while (attempts < 500) {
+            while (attempts < 300) {
                 attempts++;
                 const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
                 
-                // Tenta gerar um preenchimento total e único da matriz 6x6 (36 células)
-                const gridFullSolution = solveHamiltonianPartition(shuffledColors);
-                if (gridFullSolution) {
+                const solution = solveStablePaths(shuffledColors);
+                if (solution) {
                     const dots = [];
                     const stars = [];
                     
-                    // Extrai as pontas das soluções como os pontos (dots) garantindo distância máxima
                     shuffledColors.forEach(color => {
-                        const path = gridFullSolution[color];
+                        const path = solution[color];
                         dots.push({ x: path[0].x, y: path[0].y, color });
                         dots.push({ x: path[path.length - 1].x, y: path[path.length - 1].y, color });
                     });
 
-                    // Insere 1 ou 2 estrelas em pontos estratégicos dos caminhos
+                    // Insere estrelas ao longo dos caminhos para manter a mecânica de cruzamento ativa
                     shuffledColors.forEach((color, idx) => {
-                        if (idx < 2 && gridFullSolution[color].length > 4) {
-                            const midPt = gridFullSolution[color][Math.floor(gridFullSolution[color].length / 2)];
+                        if (solution[color].length > 3) {
+                            const midPt = solution[color][Math.floor(solution[color].length / 2)];
                             if (!stars.some(s => s.x === midPt.x && s.y === midPt.y)) {
                                 stars.push({ x: midPt.x, y: midPt.y });
                             }
@@ -354,7 +352,7 @@
 
                     currentDots = dots;
                     currentStars = stars;
-                    currentSolution = gridFullSolution;
+                    currentSolution = solution;
                     initNewGameSession();
                     return;
                 }
@@ -362,60 +360,44 @@
             generateFallbackPuzzle();
         }
 
-        // Particionador de grade completo para garantir preenchimento total de 36 células sem sobras
-        function solveHamiltonianPartition(colors) {
+        function solveStablePaths(colors) {
             const size = gridCount;
-            const totalCells = size * size;
             const solution = {};
             const grid = Array.from({ length: size }, () => Array(size).fill(false));
 
-            function dfsColor(colorIdx, currentPos, path) {
-                if (colorIdx >= colors.length) {
-                    // Verifica se todas as células foram preenchidas
-                    let filled = 0;
-                    for(let y=0; y<size; y++) for(let x=0; x<size; x++) if(grid[y][x]) filled++;
-                    return filled === totalCells;
-                }
-
+            function dfsColor(colorIdx) {
+                if (colorIdx >= colors.length) return true;
                 const color = colors[colorIdx];
-                const isLastColor = (colorIdx === colors.length - 1);
 
-                // Se for o primeiro ponto da cor, escolhe uma célula livre que maximize a distância
-                let startCandidates = [];
-                if (path.length === 0) {
-                    for (let y = 0; y < size; y++) {
-                        for (let x = 0; x < size; x++) {
-                            if (!grid[y][x]) startCandidates.push({ x, y });
-                        }
+                // Escolhe um ponto inicial aleatório vazio
+                let freeCells = [];
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        if (!grid[y][x]) freeCells.push({ x, y });
                     }
-                    startCandidates.sort(() => Math.random() - 0.5);
-                } else {
-                    startCandidates = [currentPos];
                 }
+                freeCells.sort(() => Math.random() - 0.5);
 
-                for (const start of startCandidates) {
-                    if (path.length === 0 && grid[start.y][start.x]) continue;
-                    
-                    // Busca um caminho para esta cor que termine em outra célula livre válida
+                for (const start of freeCells) {
+                    if (grid[start.y][start.x]) continue;
+
+                    // Tenta achar um caminho válido a partir deste ponto
                     let queue = [{ x: start.x, y: start.y, history: [{x: start.x, y: start.y}] }];
                     let validPaths = [];
 
-                    // Limita a busca para manter robustez de caminho único
                     let steps = 0;
-                    while(queue.length > 0 && steps < 150) {
+                    while(queue.length > 0 && steps < 100) {
                         steps++;
                         const curr = queue.shift();
-                        
-                        if (curr.history.length >= 4) { // Tamanho mínimo para dar distância
+                        if (curr.history.length >= 3) {
                             validPaths.push(curr.history);
                         }
-
                         const dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random() - 0.5);
                         for (const [dx, dy] of dirs) {
                             const nx = curr.x + dx, ny = curr.y + dy;
                             if (nx >= 0 && nx < size && ny >= 0 && ny < size && !grid[ny][nx]) {
                                 if (!curr.history.some(p => p.x === nx && p.y === ny)) {
-                                    if (curr.history.length < 12) { // Limite de tamanho por linha
+                                    if (curr.history.length < 8) {
                                         queue.push({ x: nx, y: ny, history: [...curr.history, {x: nx, y: ny}] });
                                     }
                                 }
@@ -423,46 +405,44 @@
                         }
                     }
 
-                    validPaths.sort((a, b) => b.length - a.length); // Prioriza caminhos longos (máxima distância)
+                    validPaths.sort((a, b) => b.length - a.length);
 
-                    for (const candidatePath of validPaths) {
-                        // Ocupa temporariamente a grade
-                        let canUse = true;
-                        for (const p of candidatePath) {
-                            if (grid[p.y][p.x]) { canUse = false; break; }
+                    for (const path of validPaths) {
+                        let fits = true;
+                        for (const p of path) {
+                            if (grid[p.y][p.x]) { fits = false; break; }
                         }
-                        if (!canUse) continue;
+                        if (!fits) continue;
 
-                        for (const p of candidatePath) grid[p.y][p.x] = color;
-                        solution[color] = candidatePath;
+                        for (const p of path) grid[p.y][p.x] = color;
+                        solution[color] = path;
 
-                        if (dfsColor(colorIdx + 1, null, [])) return solution;
+                        if (dfsColor(colorIdx + 1)) return true;
 
                         delete solution[color];
-                        for (const p of candidatePath) grid[p.y][p.x] = false;
+                        for (const p of path) grid[p.y][p.x] = false;
                     }
                 }
                 return false;
             }
 
-            return dfsColor(0, null, []) || null;
+            return dfsColor(0) ? solution : null;
         }
 
         function generateFallbackPuzzle() {
             const shuffled = [...ALL_COLORS].slice(0, pairsCount);
             currentDots = [
-                {x: 0, y: 0, color: shuffled[0]}, {x: 5, y: 5, color: shuffled[0]},
+                {x: 0, y: 0, color: shuffled[0]}, {x: 4, y: 4, color: shuffled[0]},
                 {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 5, color: shuffled[1]},
-                {x: 2, y: 0, color: shuffled[2]}, {x: 3, y: 5, color: shuffled[2]}
+                {x: 2, y: 1, color: shuffled[2]}, {x: 3, y: 4, color: shuffled[2]}
             ];
-            if (pairsCount >= 4) currentDots.push({x: 0, y: 2, color: shuffled[3]}, {x: 5, y: 3, color: shuffled[3]});
-            if (pairsCount >= 5) currentDots.push({x: 2, y: 2, color: shuffled[4]}, {x: 3, y: 3, color: shuffled[4]});
+            if (pairsCount >= 4) currentDots.push({x: 1, y: 3, color: shuffled[3]}, {x: 4, y: 2, color: shuffled[3]});
+            if (pairsCount >= 5) currentDots.push({x: 2, y: 3, color: shuffled[4]}, {x: 3, y: 2, color: shuffled[4]});
             currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
             currentSolution = solveLevelForDots(currentDots);
             initNewGameSession();
         }
 
-        // Solucionador padrão exato para a função de Dica (Caminho Único)
         function solveLevelForDots(dots) {
             const size = gridCount;
             const dotMap = {};
@@ -480,12 +460,6 @@
                 
                 for (const [s, e] of [[start, end], [end, start]]) {
                     const visited = usedGrid.map(row => row.map(v => v !== false && v !== color ? true : false));
-                    for (let y = 0; y < size; y++) {
-                        for (let x = 0; x < size; x++) {
-                            const c = usedGrid[y][x];
-                            if (c !== false && c !== color) visited[y][x] = true;
-                        }
-                    }
                     visited[s.y][s.x] = true;
                     const path = [{ x: s.x, y: s.y }];
                     
@@ -523,8 +497,7 @@
             const gridColors = Array.from({ length: size }, () => Array(size).fill(false));
             dots.forEach(d => gridColors[d.y][d.x] = d.color);
 
-            if (backtrack(0, gridColors)) return solution;
-            return null;
+            return backtrack(0, gridColors) ? solution : null;
         }
 
         function initNewGameSession() {
@@ -537,7 +510,7 @@
             hintsLeft = 3;
             movesCount = 0;
             particles = [];
-            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Distância Máxima (Sem Espaços Livres)`;
+            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Caminhos Lógicos & Estáveis`;
             document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
             document.getElementById('wins-text').innerText = winsCount;
             document.getElementById('hint-badge').innerText = hintsLeft;
@@ -594,7 +567,6 @@
                 drawPathLine(currentPath, activeColor, true);
             }
 
-            // Renderizar Estrelas
             currentStars.forEach(star => {
                 let isCollected = false;
                 Object.keys(paths).forEach(c => {
@@ -622,7 +594,6 @@
                 ctx.restore();
             });
 
-            // Renderizar Bolinhas
             currentDots.forEach(dot => {
                 const c = getCellCoords(dot);
                 const palette = COLOR_PALETTE[dot.color];
