@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo de Ligar Pontos com Firebase</title>
+    <title>Jogo de Ligar Pontos - Brain Flow Master</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -64,7 +64,6 @@
             font-size: 16px;
             border: 1px solid #334155;
         }
-        /* Tabuleiro do Jogo */
         #game-board {
             position: relative;
             width: 100%;
@@ -138,38 +137,39 @@
             
             <div id="game-board">
                 <svg id="canvas-lines"></svg>
-                <!-- Os pontos serão gerados dinamicamente aqui -->
             </div>
 
             <button id="btn-reiniciar" class="hidden" style="margin-top: 15px; background-color: #10b981;">Jogar Outra Ronda</button>
         </div>
     </div>
 
-    <!-- Lógica do Firebase e do Jogo -->
+    <!-- Script do Firebase e Lógica do Jogo -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-        // ==========================================
-        // CONFIGURAÇÃO DO FIREBASE (Insira os seus dados)
-        // ==========================================
+        // CONFIGURAÇÃO DO FIREBASE (As suas credenciais oficiais)
         const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_AUTH_DOMAIN",
-            projectId: "SEU_PROJECT_ID",
-            storageBucket: "SUA_STORAGE_BUCKET",
-            messagingSenderId: "SUA_MESSAGING_SENDER_ID",
-            appId: "SUA_APP_ID"
+            apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
+            authDomain: "brain-flow-master.firebaseapp.com",
+            databaseURL: "https://brain-flow-master-default-rtdb.firebaseio.com",
+            projectId: "brain-flow-master",
+            storageBucket: "brain-flow-master.firebasestorage.app",
+            messagingSenderId: "137353474062",
+            appId: "1:137353474062:web:b53db8e1cde4c341740c5f",
+            measurementId: "G-XHCEYHY37W"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        try { getAnalytics(app); } catch (e) { /* Ignorar se analytics falhar localmente */ }
 
         // Variáveis de Estado do Jogo
         let idDocAtual = null;
         let pontuacaoAcumulada = 0;
         let proximoNumeroEsperado = 1;
-        let pontosDaRonda = 20; // Pontos ganhos ao concluir com sucesso
+        let pontosDaRonda = 20;
         let coordenadasPontos = [];
         let ligacoesFeitas = [];
 
@@ -194,7 +194,6 @@
                 return;
             }
 
-            // Normaliza o nome para criar um ID de documento único e seguro no Firestore
             idDocAtual = nome.toLowerCase().replace(/\s+/g, '_');
             const docRef = doc(db, "jogadores", idDocAtual);
 
@@ -205,10 +204,8 @@
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    // Se já existe, resgata a pontuação acumulada gravada
                     pontuacaoAcumulada = docSnap.data().pontos || 0;
                 } else {
-                    // Se não existe, cria o documento inicial com 0 pontos
                     await setDoc(docRef, {
                         nome: nome,
                         pontos: 0,
@@ -217,7 +214,6 @@
                     pontuacaoAcumulada = 0;
                 }
 
-                // Atualiza a interface e exibe o jogo
                 displayNome.textContent = nome;
                 displayPontos.textContent = pontuacaoAcumulada;
 
@@ -228,13 +224,13 @@
 
             } catch (error) {
                 console.error("Erro ao ligar ao Firebase:", error);
-                alert("Erro ao aceder à base de dados. Verifique a consola (F12) e as suas credenciais do Firebase.");
+                alert("Erro ao aceder à base de dados. Verifique se ativou o Firestore Database na consola do Firebase.");
                 btnEntrar.disabled = false;
                 btnEntrar.textContent = "Entrar no Jogo";
             }
         });
 
-        // 2. INICIAR / REINICIAR UMA RONDA DE LIGAR PONTOS
+        // 2. INICIAR / REINICIAR RONDA
         function iniciarNovoJogoRonda() {
             proximoNumeroEsperado = 1;
             displayProximo.textContent = proximoNumeroEsperado;
@@ -242,11 +238,9 @@
             btnReiniciar.classList.add('hidden');
             infoInstrucao.textContent = "Clique nos pontos na ordem numérica correta (1 até 5).";
 
-            // Limpa pontos e linhas anteriores do tabuleiro
             document.querySelectorAll('.dot').forEach(el => el.remove());
             canvasLines.innerHTML = '';
 
-            // Definir posições aleatórias mas seguras para 5 pontos numerados
             coordenadasPontos = [
                 { id: 1, x: 50, y: 80 },
                 { id: 2, x: 150, y: 250 },
@@ -255,7 +249,6 @@
                 { id: 5, x: 440, y: 120 }
             ];
 
-            // Renderizar os pontos no tabuleiro
             coordenadasPontos.forEach(p => {
                 const dot = document.createElement('div');
                 dot.className = 'dot';
@@ -269,31 +262,27 @@
             });
         }
 
-        // 3. LÓGICA DE CLIQUE NOS PONTOS
+        // 3. LÓGICA DE CLIQUE
         function lidarComCliquePonto(ponto, elementoDot) {
             if (ponto.id === proximoNumeroEsperado) {
-                // Acertou na sequência correta
                 elementoDot.classList.add('completed');
                 ligacoesFeitas.push(ponto);
 
                 if (proximoNumeroEsperado > 1) {
-                    // Desenhar linha entre o ponto anterior e o atual
                     desenharLinha(ligacoesFeitas[ligacoesFeitas.length - 2], ponto);
                 }
 
                 proximoNumeroEsperado++;
                 displayProximo.textContent = proximoNumeroEsperado <= 5 ? proximoNumeroEsperado : "Fim!";
 
-                // Verificar se completou todos os pontos (ex: 5 pontos)
                 if (proximoNumeroEsperado > 5) {
                     concluirRondaComSucesso();
                 }
             } else if (ponto.id > proximoNumeroEsperado) {
-                alert(`Ops! Esse é o ponto ${ponto.id}. Por favor, clique no ponto ${proximoNumeroEsperado}.`);
+                alert(`Ops! Esse é o ponto ${ponto.id}. Clique no ponto ${proximoNumeroEsperado}.`);
             }
         }
 
-        // Desenhar linha SVG entre dois pontos
         function desenharLinha(p1, p2) {
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', p1.x);
@@ -313,19 +302,15 @@
             const docRef = doc(db, "jogadores", idDocAtual);
 
             try {
-                // Atualiza a pontuação no Firestore de forma atómica
                 await updateDoc(docRef, {
                     pontos: increment(pontosDaRonda),
                     ultimaAtualizacao: new Date()
                 });
 
-                // Atualiza a pontuação acumulada localmente
                 pontuacaoAcumulada += pontosDaRonda;
                 displayPontos.textContent = pontuacaoAcumulada;
 
-                alert(`Parabéns! Ganhou ${pontosDaRonda} pontos nesta ronda.\nPontuação total acumulada guardada no servidor!`);
-
-                // Mostra botão para iniciar outro jogo
+                alert(`Parabéns! Ganhou ${pontosDaRonda} pontos nesta ronda.\nPontuação atualizada no Firebase!`);
                 btnReiniciar.classList.remove('hidden');
 
             } catch (error) {
@@ -335,7 +320,6 @@
             }
         }
 
-        // Botão para iniciar novo jogo mantendo o acumulado
         btnReiniciar.addEventListener('click', () => {
             iniciarNovoJogoRonda();
         });
