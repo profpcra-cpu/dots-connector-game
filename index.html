@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots - Sem Conexão Direta & Sem Cruzamentos</title>
+    <title>Brain Master: Link the Dots - Com Estrelas, Bônus e Penalidades</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -96,16 +96,16 @@
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
                 <div class="w-9 h-9 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 font-bold text-lg border border-amber-500/30">
-                    <i class="fa-solid fa-route"></i>
+                    <i class="fa-solid fa-star"></i>
                 </div>
                 <div>
                     <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">BRAIN MASTER</span></h1>
-                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Sem Conexão Direta • Sem Cruzamentos</p>
+                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Estrelas & Sem Conexão Direta</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="toggleThemeMenu()" class="w-9 h-9 bg-gray-800/60 hover:bg-gray-700/80 rounded-xl flex items-center justify-center text-amber-400 border border-gray-600/40 transition active:scale-95 shadow" title="Mudar Display e Cores">
+                <button onclick="toggleThemeMenu()" class="w-9 h-9 bg-gray-800/60 hover:bg-gray-700/80 rounded-xl flex items-center justify-center text-amber-400 border border-gray-600/40 transition active:scale-95 shadow" title="Mudar Cores">
                     <i class="fa-solid fa-palette text-sm"></i>
                 </button>
 
@@ -173,24 +173,19 @@
                 </h3>
                 <button onclick="toggleThemeMenu()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-gray-400 text-left w-full">Escolha o visual do painel e as luzes de neon:</p>
             
             <div class="grid grid-cols-2 gap-2.5 w-full">
                 <button onclick="setTheme('theme-cyber')" class="p-3 rounded-xl border border-gray-700 bg-gradient-to-br from-[#1e1e2e] to-[#11111b] hover:border-indigo-500 text-left transition active:scale-95 flex flex-col gap-1">
                     <span class="text-xs font-bold text-white">Cyber Wood</span>
-                    <span class="text-[10px] text-gray-400">Clássico Marrom/Cyber</span>
                 </button>
                 <button onclick="setTheme('theme-neon')" class="p-3 rounded-xl border border-purple-500/40 bg-gradient-to-br from-[#140a23] to-[#030008] hover:border-purple-400 text-left transition active:scale-95 flex flex-col gap-1">
                     <span class="text-xs font-bold text-purple-300">Neon Purple</span>
-                    <span class="text-[10px] text-gray-400">Roxo e Luzes Vivas</span>
                 </button>
                 <button onclick="setTheme('theme-midnight')" class="p-3 rounded-xl border border-sky-500/40 bg-gradient-to-br from-[#0f172a] to-[#020617] hover:border-sky-400 text-left transition active:scale-95 flex flex-col gap-1">
                     <span class="text-xs font-bold text-sky-300">Midnight Blue</span>
-                    <span class="text-[10px] text-gray-400">Azul Noturno Neon</span>
                 </button>
                 <button onclick="setTheme('theme-matrix')" class="p-3 rounded-xl border border-emerald-500/40 bg-gradient-to-br from-[#022c22] to-[#020f0c] hover:border-emerald-400 text-left transition active:scale-95 flex flex-col gap-1">
                     <span class="text-xs font-bold text-emerald-300">Matrix Green</span>
-                    <span class="text-[10px] text-gray-400">Verde Esmeralda</span>
                 </button>
             </div>
         </div>
@@ -204,10 +199,10 @@
             </div>
             <div>
                 <h2 class="text-xl font-extrabold text-white">Incrível! Puzzle Resolvido! 🎉</h2>
-                <div class="mt-3 p-3 bg-indigo-950/50 rounded-2xl border border-indigo-500/30 flex flex-col items-center">
-                    <span class="text-[11px] text-gray-300 uppercase tracking-wider font-semibold">Nota por Ocupação do Grid</span>
-                    <span id="win-score-display" class="text-3xl font-black text-amber-400 mt-1">100 / 100</span>
-                    <span id="win-occupancy-desc" class="text-[10px] text-gray-400 mt-0.5">36 de 36 casas preenchidas (100%)</span>
+                <div class="mt-3 p-3 bg-indigo-950/50 rounded-2xl border border-indigo-500/30 flex flex-col items-center gap-1">
+                    <span class="text-[11px] text-gray-300 uppercase tracking-wider font-semibold">Pontuação Final</span>
+                    <span id="win-score-display" class="text-3xl font-black text-amber-400">100 / 100</span>
+                    <span id="win-details-desc" class="text-[10px] text-gray-400">Grid: 80 | Estrelas: +20 | Penalidades: 0</span>
                 </div>
             </div>
             <button id="btn-next-random" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
@@ -274,6 +269,9 @@
         let winsCount = 0;
         let IQ = 75;
         let currentDots = [];
+        let currentStars = [];
+        let collectedStars = {};
+        let penaltyCrossCount = 0;
         let currentSolution = null;
         let particles = [];
         let animationFrame = null;
@@ -331,13 +329,28 @@
                     
                     shuffledColors.forEach(color => {
                         const path = solution[color];
-                        // REQUISITO: Garantir que a solução gerada exija um caminho longo (comprimento >= 3, ou seja, pelo menos 1 casa intermediária)
                         if (path.length < 3) validLengthPaths = false;
                         dots.push({ x: path[0].x, y: path[0].y, color });
                         dots.push({ x: path[path.length - 1].x, y: path[path.length - 1].y, color });
                     });
 
                     if (!validLengthPaths) continue;
+
+                    // Gerar algumas estrelas em células livres ou caminhos
+                    const stars = [];
+                    const freeCells = [];
+                    for (let y = 0; y < gridCount; y++) {
+                        for (let x = 0; x < gridCount; x++) {
+                            if (!dots.some(d => d.x === x && d.y === y)) {
+                                freeCells.push({ x, y });
+                            }
+                        }
+                    }
+                    freeCells.sort(() => Math.random() - 0.5);
+                    const starCount = Math.min(3, freeCells.length);
+                    for (let i = 0; i < starCount; i++) {
+                        stars.push(freeCells[i]);
+                    }
 
                     const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
                     if (previousBoards.includes(boardSignature)) continue;
@@ -346,6 +359,7 @@
                     if (previousBoards.length > 15) previousBoards.shift();
 
                     currentDots = dots;
+                    currentStars = stars;
                     currentSolution = solution;
                     initNewGameSession();
                     return;
@@ -381,7 +395,6 @@
                     while(queue.length > 0 && steps < 120) {
                         steps++;
                         const curr = queue.shift();
-                        // REQUISITO: Caminhos precisam ter no mínimo 3 nós (início + pelo menos 1 intermediário + fim)
                         if (curr.history.length >= 3) {
                             validPaths.push(curr.history);
                         }
@@ -429,8 +442,7 @@
                 {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 4, color: shuffled[1]},
                 {x: 2, y: 1, color: shuffled[2]}, {x: 3, y: 5, color: shuffled[2]}
             ];
-            if (pairsCount >= 4) currentDots.push({x: 1, y: 2, color: shuffled[3]}, {x: 4, y: 3, color: shuffled[3]});
-            if (pairsCount >= 5) currentDots.push({x: 2, y: 3, color: shuffled[4]}, {x: 3, y: 2, color: shuffled[4]});
+            currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
             currentSolution = solveLevelForDots(currentDots);
             initNewGameSession();
         }
@@ -476,7 +488,7 @@
                     }
                     
                     if (dfs(s.x, s.y)) {
-                        if (path.length < 3) continue; // Força não ser conexão direta (precisa ter >= 3 nós)
+                        if (path.length < 3) continue;
                         const newGrid = usedGrid.map(row => [...row]);
                         path.forEach(p => { newGrid[p.y][p.x] = color; });
                         solution[color] = [...path];
@@ -497,12 +509,14 @@
             paths = {};
             currentPath = [];
             pathHistory = [];
+            collectedStars = {};
+            penaltyCrossCount = 0;
             isDrawing = false;
             activeColor = null;
             hintsLeft = 3;
             movesCount = 0;
             particles = [];
-            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Sem Conexão Direta`;
+            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Estrelas & Sem Conexão Direta`;
             document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
             document.getElementById('wins-text').innerText = winsCount;
             document.getElementById('hint-badge').innerText = hintsLeft;
@@ -545,6 +559,22 @@
                 ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvasSize, i * cellSize); ctx.stroke();
             }
 
+            // Desenhar Estrelas
+            currentStars.forEach((star, idx) => {
+                if (!collectedStars[idx]) {
+                    const c = getCellCoords(star);
+                    ctx.save();
+                    ctx.shadowColor = '#facc15';
+                    ctx.shadowBlur = 12;
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath();
+                    // Desenhar ícone de estrela simples em canvas
+                    drawStarIcon(ctx, c.x, c.y, 5, cellSize * 0.22, cellSize * 0.1);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
             Object.keys(paths).forEach(color => {
                 drawPathLine(paths[color], color, false);
             });
@@ -578,6 +608,26 @@
             });
         }
 
+        function drawStarIcon(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx, y = cy;
+            let step = Math.PI / spikes;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
         function drawPathLine(pathArr, colorKey, isActive) {
             if (!pathArr || pathArr.length < 2) return;
             const palette = COLOR_PALETTE[colorKey] || { hex: '#fff' };
@@ -600,7 +650,7 @@
         }
 
         function spawnParticles(x, y, colorKey, count = 12) {
-            const palette = COLOR_PALETTE[colorKey];
+            const palette = COLOR_PALETTE[colorKey] || { hex: '#facc15' };
             for (let i = 0; i < count; i++) {
                 const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
                 const speed = 2 + Math.random() * 3;
@@ -644,7 +694,11 @@
             }
 
             const dot = getDotAt(x, y);
-            if (dot && dot.color !== colorKey) return false; // Bloqueia bater em bolinha de outra cor
+            if (dot && dot.color !== colorKey) {
+                // REGRA: Só é possível passar por cima de bola de outra cor se houver captura de estrela associada ou gera penalidade
+                // Vamos permitir a passagem, mas contabilizar a penalidade de -10 pontos por bolinha ultrapassada!
+                return 'cross_dot';
+            }
 
             return true;
         }
@@ -659,7 +713,7 @@
             const dot = getDotAt(gPos.x, gPos.y);
             if (dot) {
                 if (paths[dot.color]) {
-                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]] });
+                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]], stars: {...collectedStars}, penalty: penaltyCrossCount });
                     delete paths[dot.color];
                 }
                 activeColor = dot.color;
@@ -694,11 +748,26 @@
                     return;
                 }
 
-                if (canMoveTo(gPos.x, gPos.y, activeColor)) {
+                const moveCheck = canMoveTo(gPos.x, gPos.y, activeColor);
+                if (moveCheck) {
+                    if (moveCheck === 'cross_dot') {
+                        penaltyCrossCount++;
+                        audio.playError();
+                    }
+
                     const dot = getDotAt(gPos.x, gPos.y);
 
+                    // Verificar se passou por cima de estrela para coletar
+                    currentStars.forEach((star, sIdx) => {
+                        if (star.x === gPos.x && star.y === gPos.y && !collectedStars[sIdx]) {
+                            collectedStars[sIdx] = true;
+                            audio.playStar();
+                            const sc = getCellCoords(star);
+                            spawnParticles(sc.x, sc.y, 'yellow', 15);
+                        }
+                    });
+
                     if (dot && dot.color === activeColor) {
-                        // REQUISITO CRUCIAL: Bloquear conexão direta (comprimento mínimo de 3 nós: início + 1 nó intermediário + fim)
                         if (currentPath.length < 2) {
                             audio.playError();
                             return;
@@ -728,14 +797,14 @@
             if (!isDrawing) return;
             isDrawing = false;
             
-            if (currentPath.length > 2) { // Garante que tem ao menos uma casa intermediária (início, meio, fim)
+            if (currentPath.length > 2) {
                 const first = currentPath[0], last = currentPath[currentPath.length - 1];
                 const firstDot = getDotAt(first.x, first.y);
                 const lastDot = getDotAt(last.x, last.y);
                 
                 if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
                     paths[activeColor] = [...currentPath];
-                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
+                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath], stars: {...collectedStars}, penalty: penaltyCrossCount });
                     movesCount++;
                     document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
                     
@@ -760,6 +829,8 @@
             } else if (last.type === 'remove') {
                 paths[last.color] = last.path;
             }
+            if (last.stars) collectedStars = {...last.stars};
+            if (last.penalty !== undefined) penaltyCrossCount = last.penalty;
             audio.playUndo(); render();
         }
 
@@ -786,7 +857,12 @@
             let i = 0;
             const anim = () => {
                 if (i < solPath.length) {
-                    paths[color].push(solPath[i]); render(); i++; setTimeout(anim, 70);
+                    paths[color].push(solPath[i]);
+                    // Coletar estrela automaticamente se passar por cima via dica
+                    currentStars.forEach((star, sIdx) => {
+                        if (star.x === solPath[i].x && star.y === solPath[i].y) collectedStars[sIdx] = true;
+                    });
+                    render(); i++; setTimeout(anim, 70);
                 } else {
                     movesCount++;
                     document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
@@ -809,18 +885,24 @@
             }
             if (!allConnected) return;
 
-            const totalCells = gridCount * gridCount; // 36 células
+            const totalCells = gridCount * gridCount;
             const occupiedCellsSet = new Set();
-            
             Object.keys(paths).forEach(c => {
                 paths[c].forEach(pt => occupiedCellsSet.add(`${pt.x},${pt.y}`));
             });
 
             const occupiedCount = occupiedCellsSet.size;
-            const rawPercentage = (occupiedCount / totalCells) * 100;
+            let baseScore = Math.round((occupiedCount / totalCells) * 100);
 
-            let finalScore = Math.ceil(rawPercentage / 5) * 5;
-            if (finalScore > 100) finalScore = 100;
+            // Bônus de Estrelas: +10 pontos para cada estrela coletada
+            let totalCollectedStars = Object.keys(collectedStars).filter(k => collectedStars[k]).length;
+            let starBonus = totalCollectedStars * 10;
+
+            // Penalidade por ultrapassar bola de outra cor: -10 pontos por bolinha
+            let dotPenalty = penaltyCrossCount * 10;
+
+            let finalScore = baseScore + starBonus - dotPenalty;
+            if (finalScore > 150) finalScore = 150;
             if (finalScore < 0) finalScore = 0;
 
             audio.playWin();
@@ -828,8 +910,8 @@
             IQ = Math.min(180, IQ + 15);
             document.getElementById('iq-value').innerText = IQ;
 
-            document.getElementById('win-score-display').innerText = `${finalScore} / 100`;
-            document.getElementById('win-occupancy-desc').innerText = `${occupiedCount} de ${totalCells} casas preenchidas (${Math.round(rawPercentage)}% real)`;
+            document.getElementById('win-score-display').innerText = `${finalScore} / 100+`;
+            document.getElementById('win-details-desc').innerText = `Grid: ${baseScore} | Estrelas (+${starBonus}): ${totalCollectedStars} | Penalidade (-${dotPenalty}): ${penaltyCrossCount}`;
 
             setTimeout(() => {
                 const modal = document.getElementById('win-modal');
