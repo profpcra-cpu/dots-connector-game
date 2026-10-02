@@ -143,10 +143,10 @@
         </div>
     </div>
 
-    <!-- Script do Firebase e Lógica do Jogo -->
+    <!-- Script do Firebase Realtime Database e Lógica do Jogo -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
         // CONFIGURAÇÃO DO FIREBASE (As suas credenciais oficiais)
@@ -162,11 +162,11 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
         try { getAnalytics(app); } catch (e) { /* Ignorar se analytics falhar localmente */ }
 
         // Variáveis de Estado do Jogo
-        let idDocAtual = null;
+        let chaveJogadorAtual = null;
         let pontuacaoAcumulada = 0;
         let proximoNumeroEsperado = 1;
         let pontosDaRonda = 20;
@@ -186,7 +186,7 @@
         const canvasLines = document.getElementById('canvas-lines');
         const btnReiniciar = document.getElementById('btn-reiniciar');
 
-        // 1. LOGIN / VERIFICAÇÃO NO FIREBASE
+        // 1. LOGIN / VERIFICAÇÃO NO REALTIME DATABASE
         btnEntrar.addEventListener('click', async () => {
             const nome = inputNome.value.trim();
             if (!nome) {
@@ -194,22 +194,26 @@
                 return;
             }
 
-            idDocAtual = nome.toLowerCase().replace(/\s+/g, '_');
-            const docRef = doc(db, "jogadores", idDocAtual);
+            // Chave segura para a base de dados
+            chaveJogadorAtual = nome.toLowerCase().replace(/\s+/g, '_').replace(/[.#$\[\]]/g, '');
+            const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
             try {
                 btnEntrar.disabled = true;
                 btnEntrar.textContent = "A verificar base de dados...";
 
-                const docSnap = await getDoc(docRef);
+                const snapshot = await get(jogadorRef);
 
-                if (docSnap.exists()) {
-                    pontuacaoAcumulada = docSnap.data().pontos || 0;
+                if (snapshot.exists()) {
+                    // Jogador existe: resgata a pontuação
+                    const dados = snapshot.val();
+                    pontuacaoAcumulada = dados.pontos || 0;
                 } else {
-                    await setDoc(docRef, {
+                    // Jogador não existe: cria com 0 pontos
+                    await set(jogadorRef, {
                         nome: nome,
                         pontos: 0,
-                        ultimaAtualizacao: new Date()
+                        ultimaAtualizacao: new Date().toISOString()
                     });
                     pontuacaoAcumulada = 0;
                 }
@@ -224,7 +228,7 @@
 
             } catch (error) {
                 console.error("Erro ao ligar ao Firebase:", error);
-                alert("Erro ao aceder à base de dados. Verifique se ativou o Firestore Database na consola do Firebase.");
+                alert("Erro ao aceder à base de dados. Verifique a consola (F12).");
                 btnEntrar.disabled = false;
                 btnEntrar.textContent = "Entrar no Jogo";
             }
@@ -295,22 +299,21 @@
             canvasLines.appendChild(line);
         }
 
-        // 4. CONCLUSÃO DA RONDA E ATUALIZAÇÃO NO FIREBASE
+        // 4. CONCLUSÃO DA RONDA E ATUALIZAÇÃO NO REALTIME DATABASE
         async function concluirRondaComSucesso() {
             infoInstrucao.textContent = "🎉 Parabéns! Ligou todos os pontos com sucesso!";
             
-            const docRef = doc(db, "jogadores", idDocAtual);
+            pontuacaoAcumulada += pontosDaRonda;
+            const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
             try {
-                await updateDoc(docRef, {
-                    pontos: increment(pontosDaRonda),
-                    ultimaAtualizacao: new Date()
+                await update(jogadorRef, {
+                    pontos: pontuacaoAcumulada,
+                    ultimaAtualizacao: new Date().toISOString()
                 });
 
-                pontuacaoAcumulada += pontosDaRonda;
                 displayPontos.textContent = pontuacaoAcumulada;
-
-                alert(`Parabéns! Ganhou ${pontosDaRonda} pontos nesta ronda.\nPontuação atualizada no Firebase!`);
+                alert(`Parabéns! Ganhou ${pontosDaRonda} pontos nesta ronda.\nPontuação atualizada no Realtime Database!`);
                 btnReiniciar.classList.remove('hidden');
 
             } catch (error) {
