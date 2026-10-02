@@ -572,4 +572,813 @@
             const h = rect.height;
             canvasSize = Math.min(w, h);
             
-            canvas.width =
+            canvas.width = canvasSize * dpr;
+            canvas.height = canvasSize * dpr;
+            canvas.style.width = canvasSize + 'px';
+            canvas.style.height = canvasSize + 'px';
+            
+            effectCanvas.width = canvasSize * dpr;
+            effectCanvas.height = canvasSize * dpr;
+            effectCanvas.style.width = canvasSize + 'px';
+            effectCanvas.style.height = canvasSize + 'px';
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            effectCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            
+            cellSize = canvasSize / gridCount;
+            render();
+            renderEffects();
+        }
+
+        // ===== CARREGAR NÍVEL =====
+        function loadLevel(idx) {
+            if (idx < 0 || idx >= LEVELS.length) return;
+            if (idx >= unlockedLevels) {
+                showToast('🔒 Nível bloqueado!', 'warning');
+                return;
+            }
+            currentLevelIdx = idx;
+            const lvl = LEVELS[currentLevelIdx];
+            gridCount = lvl.size;
+            
+            paths = {};
+            currentPath = [];
+            pathHistory = [];
+            isDrawing = false;
+            activeColor = null;
+            hintsLeft = 3;
+            hintsUsedCount = 0;
+            movesCount = 0;
+            particles = [];
+            
+            updateLevelHeader();
+            updateHintBadge();
+            resizeCanvas();
+            saveProgress();
+        }
+
+        function updateLevelHeader() {
+            const lvl = LEVELS[currentLevelIdx];
+            document.getElementById('level-num').innerText = currentLevelIdx + 1;
+            document.getElementById('level-name').innerText = `${lvl.title} • ${lvl.size}x${lvl.size}`;
+            document.getElementById('progress-text').innerText = `${completedLevels.length}/${LEVELS.length}`;
+            document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">${movesCount}</span>`;
+        }
+
+        function updateHintBadge() {
+            const badge = document.getElementById('hint-badge');
+            badge.innerText = hintsLeft;
+            badge.style.display = hintsLeft > 0 ? 'flex' : 'none';
+        }
+
+        function updateIQBar() {
+            const bar = document.getElementById('iq-bar');
+            const valueEl = document.getElementById('iq-value');
+            const percent = Math.min(100, ((IQ - 75) / (180 - 75)) * 100);
+            bar.style.width = Math.max(0, percent) + '%';
+            valueEl.innerText = IQ;
+        }
+
+        // ===== HELPERS DE COORDENADAS =====
+        function getCellCoords(pos) {
+            return { 
+                x: pos.x * cellSize + cellSize / 2, 
+                y: pos.y * cellSize + cellSize / 2 
+            };
+        }
+
+        function getGridPos(px, py) {
+            const x = Math.floor(px / cellSize);
+            const y = Math.floor(py / cellSize);
+            return (x >= 0 && x < gridCount && y >= 0 && y < gridCount) ? { x, y } : null;
+        }
+
+        function getDotAt(x, y) {
+            return LEVELS[currentLevelIdx].dots.find(d => d.x === x && d.y === y);
+        }
+
+        // ===== RENDERIZAÇÃO =====
+        function render() {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+            // Grid de fundo
+            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--grid-color') || '#3d281a';
+            const styles = getComputedStyle(document.body);
+            // Usa a cor do tema via classe
+            const themeClass = document.body.className;
+            let gridColor = '#3d281a';
+            if (themeClass.includes('theme-neon')) gridColor = '#1e2a5a';
+            else if (themeClass.includes('theme-light')) gridColor = '#94a3b8';
+            else if (themeClass.includes('theme-sunset')) gridColor = '#4a2540';
+            else if (themeClass.includes('theme-forest')) gridColor = '#1e3a3a';
+            
+            ctx.strokeStyle = gridColor;
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i <= gridCount; i++) {
+                ctx.beginPath(); 
+                ctx.moveTo(i * cellSize, 0); 
+                ctx.lineTo(i * cellSize, canvasSize); 
+                ctx.stroke();
+                ctx.beginPath(); 
+                ctx.moveTo(0, i * cellSize); 
+                ctx.lineTo(canvasSize, i * cellSize); 
+                ctx.stroke();
+            }
+
+            // Caminhos concluídos
+            Object.keys(paths).forEach(color => {
+                drawPathLine(paths[color], color, false);
+            });
+
+            // Caminho em progresso
+            if (isDrawing && currentPath.length > 1) {
+                drawPathLine(currentPath, activeColor, true);
+            }
+
+            // Pontos
+            LEVELS[currentLevelIdx].dots.forEach(dot => {
+                const c = getCellCoords(dot);
+                const palette = COLOR_PALETTE[dot.color];
+                
+                // Círculo com glow
+                ctx.save();
+                ctx.shadowColor = palette.hex;
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = palette.hex;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Borda interna
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Ponto de destaque
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.beginPath();
+                ctx.arc(c.x - cellSize * 0.08, c.y - cellSize * 0.08, cellSize * 0.06, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawPathLine(pathArr, colorKey, isActive) {
+            if (!pathArr || pathArr.length < 2) return;
+            const palette = COLOR_PALETTE[colorKey] || { hex: '#fff' };
+            ctx.save();
+            ctx.strokeStyle = palette.hex;
+            ctx.lineWidth = cellSize * 0.30;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            if (isActive) {
+                ctx.shadowColor = palette.hex;
+                ctx.shadowBlur = 15;
+            } else {
+                ctx.shadowColor = palette.hex;
+                ctx.shadowBlur = 8;
+            }
+            ctx.beginPath();
+            const start = getCellCoords(pathArr[0]);
+            ctx.moveTo(start.x, start.y);
+            for (let i = 1; i < pathArr.length; i++) {
+                const pt = getCellCoords(pathArr[i]);
+                ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ===== EFEITOS VISUAIS =====
+        function renderEffects() {
+            effectCtx.clearRect(0, 0, canvasSize, canvasSize);
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                effectCtx.save();
+                effectCtx.globalAlpha = p.life;
+                effectCtx.fillStyle = p.color;
+                effectCtx.beginPath();
+                effectCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                effectCtx.fill();
+                effectCtx.restore();
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15;
+                p.life -= 0.02;
+            });
+            if (particles.length > 0) {
+                animationFrame = requestAnimationFrame(renderEffects);
+            } else {
+                animationFrame = null;
+            }
+        }
+
+        function spawnParticles(x, y, colorKey, count = 12) {
+            const palette = COLOR_PALETTE[colorKey];
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const speed = 2 + Math.random() * 3;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2,
+                    size: 3 + Math.random() * 4,
+                    color: palette.hex,
+                    life: 1
+                });
+            }
+            if (!animationFrame) animationFrame = requestAnimationFrame(renderEffects);
+        }
+
+        // ===== LÓGICA DO JOGO =====
+        function isAdjacent(a, b) {
+            const dx = Math.abs(a.x - b.x);
+            const dy = Math.abs(a.y - b.y);
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        }
+
+        function isOccupiedByOther(x, y, colorKey) {
+            // Verifica se a célula está em outro caminho
+            for (const c in paths) {
+                if (c === colorKey) continue;
+                if (paths[c].some(p => p.x === x && p.y === y)) return true;
+            }
+            return false;
+        }
+
+        function isDotOfOtherColor(x, y, colorKey) {
+            const dot = getDotAt(x, y);
+            if (!dot) return false;
+            return dot.color !== colorKey;
+        }
+
+        function canMoveTo(x, y, colorKey) {
+            if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
+            if (isOccupiedByOther(x, y, colorKey)) return false;
+            if (isDotOfOtherColor(x, y, colorKey)) return false;
+            return true;
+        }
+
+        // ===== EVENTOS DE PONTEIRO =====
+        canvas.addEventListener('pointerdown', (e) => {
+            audio.init();
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvasSize / rect.width;
+            const scaleY = canvasSize / rect.height;
+            const pos = { 
+                x: (e.clientX - rect.left) * scaleX, 
+                y: (e.clientY - rect.top) * scaleY 
+            };
+            const gPos = getGridPos(pos.x, pos.y);
+            if (!gPos) return;
+
+            const dot = getDotAt(gPos.x, gPos.y);
+            if (dot) {
+                // Inicia novo caminho (ou reinicia se já existia)
+                if (paths[dot.color]) {
+                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]] });
+                    delete paths[dot.color];
+                }
+                activeColor = dot.color;
+                isDrawing = true;
+                currentPath = [{ x: gPos.x, y: gPos.y }];
+                audio.playPop(400);
+                render();
+            }
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDrawing || !activeColor) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvasSize / rect.width;
+            const scaleY = canvasSize / rect.height;
+            const pos = { 
+                x: (e.clientX - rect.left) * scaleX, 
+                y: (e.clientY - rect.top) * scaleY 
+            };
+            const gPos = getGridPos(pos.x, pos.y);
+            if (!gPos) return;
+
+            const lastPt = currentPath[currentPath.length - 1];
+            if (lastPt.x === gPos.x && lastPt.y === gPos.y) return;
+
+            // Verifica se voltou para o ponto anterior (backtrack)
+            if (currentPath.length >= 2) {
+                const prev = currentPath[currentPath.length - 2];
+                if (prev.x === gPos.x && prev.y === gPos.y) {
+                    currentPath.pop();
+                    audio.playPop(350);
+                    render();
+                    return;
+                }
+            }
+
+            if (isAdjacent(lastPt, gPos)) {
+                if (canMoveTo(gPos.x, gPos.y, activeColor)) {
+                    // Se for ponto da mesma cor, é conexão final válida
+                    const dot = getDotAt(gPos.x, gPos.y);
+                    if (dot && dot.color === activeColor) {
+                        // Não pode ser o próprio ponto inicial
+                        if (currentPath.length > 1 || (gPos.x !== currentPath[0].x || gPos.y !== currentPath[0].y)) {
+                            currentPath.push({ x: gPos.x, y: gPos.y });
+                            audio.playConnect();
+                            // Auto-finaliza
+                            finishCurrentPath();
+                            return;
+                        }
+                    } else if (!dot) {
+                        currentPath.push({ x: gPos.x, y: gPos.y });
+                        audio.playPop(500 + currentPath.length * 20);
+                    }
+                    render();
+                } else {
+                    audio.playError();
+                }
+            }
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            if (!isDrawing) return;
+            finishCurrentPath();
+        });
+
+        canvas.addEventListener('pointercancel', () => {
+            if (isDrawing) finishCurrentPath();
+        });
+
+        function finishCurrentPath() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            if (currentPath.length > 1) {
+                const first = currentPath[0];
+                const last = currentPath[currentPath.length - 1];
+                const firstDot = getDotAt(first.x, first.y);
+                const lastDot = getDotAt(last.x, last.y);
+                
+                // Verifica se conectou dois pontos da mesma cor
+                if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
+                    paths[activeColor] = [...currentPath];
+                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
+                    movesCount++;
+                    updateLevelHeader();
+                    
+                    // Partículas no final
+                    const endCoords = getCellCoords(last);
+                    spawnParticles(endCoords.x, endCoords.y, activeColor, 15);
+                    
+                    audio.playConnect();
+                    
+                    // Verifica vitória
+                    setTimeout(checkWin, 200);
+                } else {
+                    // Caminho inválido — descarta
+                    audio.playError();
+                }
+            }
+            
+            currentPath = [];
+            activeColor = null;
+            render();
+        }
+
+        // ===== DESFAZER =====
+        function undo() {
+            if (pathHistory.length === 0) {
+                showToast('Nada para desfazer', 'info');
+                return;
+            }
+            const last = pathHistory.pop();
+            if (last.type === 'add') {
+                delete paths[last.color];
+            } else if (last.type === 'remove') {
+                paths[last.color] = last.path;
+            }
+            audio.playUndo();
+            render();
+            showToast('Desfeito', 'info');
+        }
+
+        // ===== DICAS =====
+        // Solver: encontra solução via backtracking
+        function solveLevel() {
+            const lvl = LEVELS[currentLevelIdx];
+            const size = lvl.size;
+            const grid = Array.from({ length: size }, () => Array(size).fill(null));
+            const dots = lvl.dots;
+            const dotMap = {};
+            
+            dots.forEach(d => {
+                const key = d.color;
+                if (!dotMap[key]) dotMap[key] = [];
+                dotMap[key].push({ x: d.x, y: d.y });
+            });
+
+            const colors = Object.keys(dotMap);
+            const solution = {};
+            const used = Array.from({ length: size }, () => Array(size).fill(false));
+            
+            // Marca todos os pontos como "usados" por sua cor
+            dots.forEach(d => used[d.y][d.x] = d.color);
+
+            function isValid(x, y, color) {
+                if (x < 0 || x >= size || y < 0 || y >= size) return false;
+                const cell = used[y][x];
+                if (cell === false) return true;
+                return cell === color;
+            }
+
+            function findPath(color, start, end, path, visited) {
+                if (start.x === end.x && start.y === end.y) return true;
+                const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+                for (const [dx, dy] of dirs) {
+                    const nx = start.x + dx, ny = start.y + dy;
+                    if (!isValid(nx, ny, color)) continue;
+                    if (visited[ny][nx]) continue;
+                    // Não pode passar por ponto de outra cor
+                    const cell = used[ny][nx];
+                    if (cell !== false && cell !== color) continue;
+                    // Se for ponto da mesma cor, só pode ser o end
+                    if (cell === color && !(nx === end.x && ny === end.y)) continue;
+                    
+                    visited[ny][nx] = true;
+                    path.push({ x: nx, y: ny });
+                    if (findPath(color, { x: nx, y: ny }, end, path, visited)) return true;
+                    path.pop();
+                    visited[ny][nx] = false;
+                }
+                return false;
+            }
+
+            // Tenta resolver cor por cor
+            const colorList = [...colors];
+            
+            function backtrack(idx, usedGrid) {
+                if (idx >= colorList.length) return true;
+                const color = colorList[idx];
+                const [start, end] = dotMap[color];
+                
+                // Tenta ambos os sentidos
+                for (const [s, e] of [[start, end], [end, start]]) {
+                    const visited = usedGrid.map(row => row.map(v => v !== false && v !== color ? true : false));
+                    // marca pontos de outras cores como visitados (bloqueados)
+                    for (let y = 0; y < size; y++) {
+                        for (let x = 0; x < size; x++) {
+                            const c = usedGrid[y][x];
+                            if (c !== false && c !== color) visited[y][x] = true;
+                        }
+                    }
+                    // marca o start
+                    visited[s.y][s.x] = true;
+                    const path = [{ x: s.x, y: s.y }];
+                    
+                    // Função recursiva local
+                    function dfs(cx, cy) {
+                        if (cx === e.x && cy === e.y) return true;
+                        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+                        for (const [dx, dy] of dirs) {
+                            const nx = cx + dx, ny = cy + dy;
+                            if (nx < 0 || nx >= size || ny < 0 || ny >= size) continue;
+                            if (visited[ny][nx]) continue;
+                            const cell = usedGrid[ny][nx];
+                            if (cell !== false && cell !== color) continue;
+                            if (cell === color && !(nx === e.x && ny === e.y)) continue;
+                            
+                            visited[ny][nx] = true;
+                            path.push({ x: nx, y: ny });
+                            if (dfs(nx, ny)) return true;
+                            path.pop();
+                            visited[ny][nx] = false;
+                        }
+                        return false;
+                    }
+                    
+                    if (dfs(s.x, s.y)) {
+                        // Marca o caminho no grid
+                        const newGrid = usedGrid.map(row => [...row]);
+                        path.forEach(p => { newGrid[p.y][p.x] = color; });
+                        solution[color] = [...path];
+                        if (backtrack(idx + 1, newGrid)) return true;
+                        delete solution[color];
+                    }
+                }
+                return false;
+            }
+
+            // Converte para grid de cores
+            const gridColors = Array.from({ length: size }, () => Array(size).fill(false));
+            dots.forEach(d => gridColors[d.y][d.x] = d.color);
+
+            if (backtrack(0, gridColors)) return solution;
+            return null;
+        }
+
+        function getCachedSolution() {
+            if (solutionCache[currentLevelIdx]) return solutionCache[currentLevelIdx];
+            const sol = solveLevel();
+            if (sol) solutionCache[currentLevelIdx] = sol;
+            return sol;
+        }
+
+        function useHint() {
+            if (hintsLeft <= 0) {
+                showToast('Sem dicas disponíveis!', 'warning');
+                return;
+            }
+            
+            const solution = getCachedSolution();
+            if (!solution) {
+                showToast('Não foi possível encontrar solução', 'error');
+                return;
+            }
+
+            // Encontra uma cor ainda não resolvida corretamente
+            const lvl = LEVELS[currentLevelIdx];
+            const colors = [...new Set(lvl.dots.map(d => d.color))];
+            const unsolved = colors.filter(c => {
+                if (!paths[c]) return true;
+                const path = paths[c];
+                const first = path[0];
+                const last = path[path.length - 1];
+                const firstDot = getDotAt(first.x, first.y);
+                const lastDot = getDotAt(last.x, last.y);
+                return !(firstDot && lastDot && firstDot.color === c && lastDot.color === c);
+            });
+
+            if (unsolved.length === 0) {
+                showToast('Você já resolveu todos os pares!', 'success');
+                return;
+            }
+
+            // Aplica a solução de uma cor aleatória não resolvida
+            const color = unsolved[Math.floor(Math.random() * unsolved.length)];
+            const solutionPath = solution[color];
+            
+            if (!solutionPath) {
+                showToast('Solução não disponível', 'error');
+                return;
+            }
+
+            // Animação: desenha o caminho progressivamente
+            pathHistory.push({ type: 'hint', color, prev: paths[color] ? [...paths[color]] : null });
+            paths[color] = [];
+            hintsLeft--;
+            hintsUsedCount++;
+            updateHintBadge();
+            saveProgress();
+            audio.playHint();
+
+            let i = 0;
+            const animateHint = () => {
+                if (i < solutionPath.length) {
+                    paths[color].push(solutionPath[i]);
+                    render();
+                    i++;
+                    setTimeout(animateHint, 80);
+                } else {
+                    movesCount++;
+                    updateLevelHeader();
+                    const end = getCellCoords(solutionPath[solutionPath.length - 1]);
+                    spawnParticles(end.x, end.y, color, 20);
+                    showToast(`💡 Dica usada!`, 'info');
+                    setTimeout(checkWin, 300);
+                }
+            };
+            animateHint();
+        }
+
+        // ===== VERIFICAÇÃO DE VITÓRIA =====
+        function checkWin() {
+            const lvl = LEVELS[currentLevelIdx];
+            const colors = [...new Set(lvl.dots.map(d => d.color))];
+            
+            let allConnected = true;
+            for (const c of colors) {
+                if (!paths[c]) { allConnected = false; break; }
+                const path = paths[c];
+                if (path.length < 2) { allConnected = false; break; }
+                const first = path[0];
+                const last = path[path.length - 1];
+                const firstDot = getDotAt(first.x, first.y);
+                const lastDot = getDotAt(last.x, last.y);
+                if (!firstDot || !lastDot || firstDot.color !== c || lastDot.color !== c) {
+                    allConnected = false;
+                    break;
+                }
+            }
+
+            if (!allConnected) return;
+
+            // Verifica se todos os caminhos juntos preenchem o grid (bônus)
+            const totalCells = gridCount * gridCount;
+            let filledCells = 0;
+            const filled = new Set();
+            Object.values(paths).forEach(p => {
+                p.forEach(pt => filled.add(`${pt.x},${pt.y}`));
+            });
+            filledCells = filled.size;
+            const isPerfect = filledCells === totalCells;
+
+            // Vitória!
+            audio.playWin();
+            
+            // Confetti
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * canvasSize;
+                    const y = Math.random() * canvasSize;
+                    const colors = Object.keys(COLOR_PALETTE);
+                    spawnParticles(x, y, colors[Math.floor(Math.random() * colors.length)], 10);
+                }, i * 100);
+            }
+
+            // Atualiza progresso
+            if (!completedLevels.includes(currentLevelIdx)) {
+                completedLevels.push(currentLevelIdx);
+            }
+            if (currentLevelIdx + 1 >= unlockedLevels && currentLevelIdx + 1 < LEVELS.length) {
+                unlockedLevels = currentLevelIdx + 2;
+            }
+            
+            // Salva best moves
+            saveBestMoves(currentLevelIdx, movesCount);
+            
+            // Atualiza IQ
+            const lvlDifficulty = lvl.difficulty;
+            const iqGain = lvlDifficulty === 'easy' ? 5 : lvlDifficulty === 'medium' ? 10 : 15;
+            const hintPenalty = hintsUsedCount * 2;
+            IQ = Math.min(180, IQ + Math.max(1, iqGain - hintPenalty));
+            
+            updateIQBar();
+            updateLevelHeader();
+            saveProgress();
+
+            // Mostra modal
+            document.getElementById('win-moves').innerText = movesCount;
+            document.getElementById('win-hints').innerText = hintsUsedCount;
+            document.getElementById('win-subtitle').innerText = isPerfect 
+                ? '🎯 PERFEITO! Tabuleiro completo!' 
+                : `Nível ${currentLevelIdx + 1} concluído!`;
+            
+            const nextBtn = document.getElementById('btn-next-level');
+            if (currentLevelIdx + 1 < LEVELS.length) {
+                nextBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'none';
+            }
+            
+            setTimeout(() => {
+                const modal = document.getElementById('win-modal');
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.style.opacity = '1', 10);
+            }, 600);
+        }
+
+        // ===== UI: SELETOR DE NÍVEIS =====
+        function renderLevelsGrid() {
+            const grid = document.getElementById('levels-grid');
+            grid.innerHTML = '';
+            LEVELS.forEach((lvl, idx) => {
+                if (currentFilter !== 'all' && lvl.difficulty !== currentFilter) return;
+                
+                const btn = document.createElement('button');
+                const isLocked = idx >= unlockedLevels;
+                const isCompleted = completedLevels.includes(idx);
+                const isCurrent = idx === currentLevelIdx;
+                
+                btn.className = `level-btn p-2 rounded-xl font-bold text-xs border transition ${
+                    isLocked 
+                        ? 'bg-gray-800/50 text-gray-600 border-gray-800 locked' 
+                        : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
+                } ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`;
+                
+                btn.innerHTML = `
+                    <div class="flex flex-col items-center gap-0.5">
+                        <span class="text-base font-black">${idx + 1}</span>
+                        <span class="text-[8px] text-gray-400">${lvl.size}×${lvl.size}</span>
+                    </div>
+                `;
+                
+                if (isLocked) {
+                    btn.innerHTML = `<i class="fa-solid fa-lock text-gray-600"></i><div class="text-[8px] text-gray-600 mt-0.5">${idx + 1}</div>`;
+                } else {
+                    btn.onclick = () => {
+                        loadLevel(idx);
+                        closeLevelsModal();
+                    };
+                }
+                grid.appendChild(btn);
+            });
+        }
+
+        function openLevelsModal() {
+            renderLevelsGrid();
+            const modal = document.getElementById('levels-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.style.opacity = '1', 10);
+        }
+
+        function closeLevelsModal() {
+            const modal = document.getElementById('levels-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // ===== TEMAS =====
+        function updateThemeUI() {
+            document.body.classList.remove(...themes.map(t => t.class));
+            document.body.classList.add(themes[currentThemeIdx].class);
+            document.getElementById('theme-name').innerText = themes[currentThemeIdx].name;
+        }
+
+        function cycleTheme() {
+            document.body.classList.remove(themes[currentThemeIdx].class);
+            currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+            updateThemeUI();
+            saveProgress();
+            render();
+        }
+
+        // ===== EVENT LISTENERS =====
+        document.getElementById('btn-theme-toggle').addEventListener('click', cycleTheme);
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            loadLevel(currentLevelIdx);
+            showToast('Nível reiniciado', 'info');
+        });
+        document.getElementById('btn-undo').addEventListener('click', undo);
+        document.getElementById('btn-hint').addEventListener('click', useHint);
+        document.getElementById('btn-levels').addEventListener('click', openLevelsModal);
+        document.getElementById('btn-close-levels').addEventListener('click', closeLevelsModal);
+        document.getElementById('btn-reset-progress').addEventListener('click', resetProgress);
+
+        document.getElementById('btn-next-level').addEventListener('click', () => {
+            const modal = document.getElementById('win-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (currentLevelIdx + 1 < LEVELS.length) {
+                    loadLevel(currentLevelIdx + 1);
+                    audio.playLevelUp();
+                }
+            }, 300);
+        });
+
+        document.getElementById('btn-replay').addEventListener('click', () => {
+            const modal = document.getElementById('win-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                loadLevel(currentLevelIdx);
+            }, 300);
+        });
+
+        // Filtros
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white');
+                    b.classList.add('bg-gray-800', 'text-gray-400');
+                });
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('bg-gray-800', 'text-gray-400');
+                currentFilter = btn.dataset.filter;
+                renderLevelsGrid();
+            });
+        });
+
+        // Teclado
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                undo();
+            } else if (e.key === 'h') {
+                useHint();
+            } else if (e.key === 'r') {
+                loadLevel(currentLevelIdx);
+            } else if (e.key === 'Escape') {
+                closeLevelsModal();
+            }
+        });
+
+        // Resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeCanvas, 150);
+        });
+
+        // ===== INICIALIZAÇÃO =====
+        loadProgress();
+        updateIQBar();
+        updateThemeUI();
+        loadLevel(currentLevelIdx);
+        
+        // Preload da primeira solução (opcional, para dica instantânea)
+        setTimeout(() => getCachedSolution(), 500);
+    </script>
+</body>
+</html>
