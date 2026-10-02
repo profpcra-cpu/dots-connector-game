@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Master: Link the Dots - Sem Cruzamentos & Pontuação por Ocupação</title>
+    <title>Brain Master: Link the Dots - Sem Conexão Direta & Sem Cruzamentos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -96,11 +96,11 @@
         <div class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
                 <div class="w-9 h-9 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 font-bold text-lg border border-amber-500/30">
-                    <i class="fa-solid fa-ban"></i>
+                    <i class="fa-solid fa-route"></i>
                 </div>
                 <div>
                     <h1 class="text-xs text-gray-400 font-semibold tracking-wider">6x6 <span class="text-white text-base">BRAIN MASTER</span></h1>
-                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Sem Cruzamentos • Nota por Ocupação</p>
+                    <p id="level-mode-desc" class="text-[11px] text-amber-400 font-medium">Sem Conexão Direta • Sem Cruzamentos</p>
                 </div>
             </div>
 
@@ -327,11 +327,17 @@
                 
                 if (solution) {
                     const dots = [];
+                    let validLengthPaths = true;
+                    
                     shuffledColors.forEach(color => {
                         const path = solution[color];
+                        // REQUISITO: Garantir que a solução gerada exija um caminho longo (comprimento >= 3, ou seja, pelo menos 1 casa intermediária)
+                        if (path.length < 3) validLengthPaths = false;
                         dots.push({ x: path[0].x, y: path[0].y, color });
                         dots.push({ x: path[path.length - 1].x, y: path[path.length - 1].y, color });
                     });
+
+                    if (!validLengthPaths) continue;
 
                     const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
                     if (previousBoards.includes(boardSignature)) continue;
@@ -372,9 +378,10 @@
                     let validPaths = [];
 
                     let steps = 0;
-                    while(queue.length > 0 && steps < 100) {
+                    while(queue.length > 0 && steps < 120) {
                         steps++;
                         const curr = queue.shift();
+                        // REQUISITO: Caminhos precisam ter no mínimo 3 nós (início + pelo menos 1 intermediário + fim)
                         if (curr.history.length >= 3) {
                             validPaths.push(curr.history);
                         }
@@ -383,7 +390,7 @@
                             const nx = curr.x + dx, ny = curr.y + dy;
                             if (nx >= 0 && nx < size && ny >= 0 && ny < size && !grid[ny][nx]) {
                                 if (!curr.history.some(p => p.x === nx && p.y === ny)) {
-                                    if (curr.history.length < 9) {
+                                    if (curr.history.length < 10) {
                                         queue.push({ x: nx, y: ny, history: [...curr.history, {x: nx, y: ny}] });
                                     }
                                 }
@@ -418,11 +425,11 @@
         function generateFallbackPuzzle() {
             const shuffled = [...ALL_COLORS].slice(0, pairsCount);
             currentDots = [
-                {x: 0, y: 0, color: shuffled[0]}, {x: 5, y: 5, color: shuffled[0]},
-                {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 5, color: shuffled[1]},
-                {x: 2, y: 1, color: shuffled[2]}, {x: 3, y: 4, color: shuffled[2]}
+                {x: 0, y: 0, color: shuffled[0]}, {x: 5, y: 4, color: shuffled[0]},
+                {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 4, color: shuffled[1]},
+                {x: 2, y: 1, color: shuffled[2]}, {x: 3, y: 5, color: shuffled[2]}
             ];
-            if (pairsCount >= 4) currentDots.push({x: 1, y: 3, color: shuffled[3]}, {x: 4, y: 2, color: shuffled[3]});
+            if (pairsCount >= 4) currentDots.push({x: 1, y: 2, color: shuffled[3]}, {x: 4, y: 3, color: shuffled[3]});
             if (pairsCount >= 5) currentDots.push({x: 2, y: 3, color: shuffled[4]}, {x: 3, y: 2, color: shuffled[4]});
             currentSolution = solveLevelForDots(currentDots);
             initNewGameSession();
@@ -469,6 +476,7 @@
                     }
                     
                     if (dfs(s.x, s.y)) {
+                        if (path.length < 3) continue; // Força não ser conexão direta (precisa ter >= 3 nós)
                         const newGrid = usedGrid.map(row => [...row]);
                         path.forEach(p => { newGrid[p.y][p.x] = color; });
                         solution[color] = [...path];
@@ -494,7 +502,7 @@
             hintsLeft = 3;
             movesCount = 0;
             particles = [];
-            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Sem Cruzamentos`;
+            document.getElementById('level-mode-desc').innerText = `${pairsCount} Pares • Sem Conexão Direta`;
             document.getElementById('moves-counter').innerHTML = `Movimentos: <span class="text-white">0</span>`;
             document.getElementById('wins-text').innerText = winsCount;
             document.getElementById('hint-badge').innerText = hintsLeft;
@@ -629,7 +637,7 @@
         function canMoveTo(x, y, colorKey) {
             if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
             
-            // Regra estrita: Bloquear cruzamento com QUALQUER outra linha existente
+            // Bloquear cruzamento com QUALQUER outra linha existente
             for (const c of Object.keys(paths)) {
                 if (c === colorKey) continue;
                 if (paths[c].some(p => p.x === x && p.y === y)) return false;
@@ -681,7 +689,6 @@
             }
 
             if (isAdjacent(lastPt, gPos)) {
-                // Impede cruzar o próprio rastro atual
                 if (currentPath.some(p => p.x === gPos.x && p.y === gPos.y)) {
                     audio.playError();
                     return;
@@ -691,7 +698,13 @@
                     const dot = getDotAt(gPos.x, gPos.y);
 
                     if (dot && dot.color === activeColor) {
-                        if (currentPath.length > 1) {
+                        // REQUISITO CRUCIAL: Bloquear conexão direta (comprimento mínimo de 3 nós: início + 1 nó intermediário + fim)
+                        if (currentPath.length < 2) {
+                            audio.playError();
+                            return;
+                        }
+
+                        if (currentPath.length >= 2) {
                             currentPath.push({ x: gPos.x, y: gPos.y });
                             audio.playConnect();
                             finishCurrentPath();
@@ -715,7 +728,7 @@
             if (!isDrawing) return;
             isDrawing = false;
             
-            if (currentPath.length > 1) {
+            if (currentPath.length > 2) { // Garante que tem ao menos uma casa intermediária (início, meio, fim)
                 const first = currentPath[0], last = currentPath[currentPath.length - 1];
                 const firstDot = getDotAt(first.x, first.y);
                 const lastDot = getDotAt(last.x, last.y);
@@ -733,6 +746,8 @@
                 } else {
                     audio.playError();
                 }
+            } else {
+                audio.playError();
             }
             currentPath = []; activeColor = null; render();
         }
@@ -787,14 +802,13 @@
             const colors = [...new Set(currentDots.map(d => d.color))];
             let allConnected = true;
             for (const c of colors) {
-                if (!paths[c] || paths[c].length < 2) { allConnected = false; break; }
+                if (!paths[c] || paths[c].length < 3) { allConnected = false; break; }
                 const f = getDotAt(paths[c][0].x, paths[c][0].y);
                 const l = getDotAt(paths[c][paths[c].length-1].x, paths[c][paths[c].length-1].y);
                 if (!f || !l || f.color !== c || l.color !== c) { allConnected = false; break; }
             }
             if (!allConnected) return;
 
-            // Cálculo da Ocupação do Grid (Células unicas ocupadas por linhas/bolinhas)
             const totalCells = gridCount * gridCount; // 36 células
             const occupiedCellsSet = new Set();
             
@@ -805,8 +819,6 @@
             const occupiedCount = occupiedCellsSet.size;
             const rawPercentage = (occupiedCount / totalCells) * 100;
 
-            // Arredondamento para a margem superior com múltiplos de 5 ou 10
-            // Exemplo: se der 72%, arredonda para o múltiplo acima (75 ou 80). Vamos usar múltiplos de 5 para maior precisão.
             let finalScore = Math.ceil(rawPercentage / 5) * 5;
             if (finalScore > 100) finalScore = 100;
             if (finalScore < 0) finalScore = 0;
@@ -816,7 +828,6 @@
             IQ = Math.min(180, IQ + 15);
             document.getElementById('iq-value').innerText = IQ;
 
-            // Atualiza os textos do Modal de Vitória
             document.getElementById('win-score-display').innerText = `${finalScore} / 100`;
             document.getElementById('win-occupancy-desc').innerText = `${occupiedCount} de ${totalCells} casas preenchidas (${Math.round(rawPercentage)}% real)`;
 
