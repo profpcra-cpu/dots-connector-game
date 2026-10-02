@@ -30,7 +30,6 @@
             border: 10px solid #5c3d2e;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
         }
-        body.theme-cyber .grid-line { stroke: #3d281a; }
 
         body.theme-neon {
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -46,7 +45,6 @@
             border: 8px solid #00f3ff;
             box-shadow: inset 0 0 20px rgba(0,243,255,0.5), 0 0 25px rgba(0,243,255,0.4);
         }
-        body.theme-neon .grid-line { stroke: #1e2a5a; }
 
         body.theme-light {
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -62,7 +60,6 @@
             border: 8px solid #94a3b8;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.1);
         }
-        body.theme-light .grid-line { stroke: #94a3b8; }
         body.theme-light .text-white { color: #0f172a !important; }
         body.theme-light .text-gray-300 { color: #334155 !important; }
         body.theme-light .text-gray-400 { color: #64748b !important; }
@@ -81,7 +78,6 @@
             border: 8px solid #ff6b9d;
             box-shadow: inset 0 0 20px rgba(255,107,157,0.4), 0 0 30px rgba(255,107,157,0.3);
         }
-        body.theme-sunset .grid-line { stroke: #4a2540; }
 
         body.theme-forest {
             background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
@@ -97,7 +93,6 @@
             border: 8px solid #10b981;
             box-shadow: inset 0 0 20px rgba(16,185,129,0.4), 0 0 25px rgba(16,185,129,0.3);
         }
-        body.theme-forest .grid-line { stroke: #1e3a3a; }
 
         .glass-panel {
             backdrop-filter: blur(12px);
@@ -110,28 +105,10 @@
         .iq-progress {
             transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes pulse-glow {
-            0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
-            50% { filter: drop-shadow(0 0 18px currentColor); }
-        }
-        .glow-effect { animation: pulse-glow 2s infinite; }
         .modal-bg {
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
         }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-6px); }
-            75% { transform: translateX(6px); }
-        }
-        .shake { animation: shake 0.3s ease-in-out; }
-
-        @keyframes float-up {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-40px); opacity: 0; }
-        }
-        .float-up { animation: float-up 1s ease-out forwards; }
-
         .level-btn {
             transition: all 0.2s ease;
             position: relative;
@@ -281,7 +258,6 @@
                 </button>
             </div>
             
-            <!-- Filtro de dificuldade -->
             <div class="flex gap-2 overflow-x-auto pb-1">
                 <button data-filter="all" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">Todas</button>
                 <button data-filter="easy" class="filter-btn flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400">Fácil</button>
@@ -372,9 +348,8 @@
             teal:    { hex: '#14b8a6', glow: '#0d9488' }
         };
 
-        // ===== NÍVEIS (12 fases, dificuldade progressiva) =====
+        // ===== NÍVEIS (12 fases) =====
         const LEVELS = [
-            // Fácil (1-4)
             { size: 4, difficulty: 'easy', title: "Aquecimento", dots: [
                 {x:0,y:0,color:'green'},{x:3,y:3,color:'green'},
                 {x:3,y:0,color:'red'},{x:2,y:2,color:'red'},
@@ -396,8 +371,6 @@
                 {x:0,y:3,color:'red'},{x:3,y:0,color:'red'},
                 {x:1,y:2,color:'blue'},{x:2,y:1,color:'blue'}
             ]},
-            
-            // Médio (5-8)
             { size: 5, difficulty: 'medium', title: "Grid 5x5", dots: [
                 {x:0,y:1,color:'red'},{x:4,y:1,color:'red'},
                 {x:1,y:0,color:'blue'},{x:3,y:4,color:'blue'},
@@ -423,8 +396,6 @@
                 {x:4,y:0,color:'red'},{x:0,y:4,color:'red'},
                 {x:3,y:1,color:'cyan'},{x:1,y:3,color:'cyan'}
             ]},
-
-            // Difícil (9-12)
             { size: 6, difficulty: 'hard', title: "Grid 6x6", dots: [
                 {x:0,y:0,color:'red'},{x:5,y:5,color:'red'},
                 {x:5,y:0,color:'blue'},{x:0,y:5,color:'blue'},
@@ -463,9 +434,9 @@
         let canvasSize = 0;
         let activeColor = null;
         let isDrawing = false;
-        let paths = {};          // { colorKey: [{x,y}, ...] }
+        let paths = {};
         let currentPath = [];
-        let pathHistory = [];    // Para desfazer
+        let pathHistory = [];
         let hintsLeft = 3;
         let movesCount = 0;
         let hintsUsedCount = 0;
@@ -475,9 +446,8 @@
         let currentFilter = 'all';
         let particles = [];
         let animationFrame = null;
-        let solutionCache = {};  // Cache de soluções
+        let solutionCache = {};
 
-        // ===== CANVAS =====
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const effectCanvas = document.getElementById('effectCanvas');
@@ -544,7 +514,6 @@
             showToast('Progresso resetado!', 'info');
         }
 
-        // ===== TOAST =====
         function showToast(msg, type = 'info') {
             const toast = document.getElementById('toast');
             const colors = {
@@ -564,7 +533,6 @@
             }, 1800);
         }
 
-        // ===== CANVAS SETUP =====
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
@@ -590,7 +558,6 @@
             renderEffects();
         }
 
-        // ===== CARREGAR NÍVEL =====
         function loadLevel(idx) {
             if (idx < 0 || idx >= LEVELS.length) return;
             if (idx >= unlockedLevels) {
@@ -639,7 +606,6 @@
             valueEl.innerText = IQ;
         }
 
-        // ===== HELPERS DE COORDENADAS =====
         function getCellCoords(pos) {
             return { 
                 x: pos.x * cellSize + cellSize / 2, 
@@ -657,14 +623,9 @@
             return LEVELS[currentLevelIdx].dots.find(d => d.x === x && d.y === y);
         }
 
-        // ===== RENDERIZAÇÃO =====
         function render() {
             ctx.clearRect(0, 0, canvasSize, canvasSize);
 
-            // Grid de fundo
-            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--grid-color') || '#3d281a';
-            const styles = getComputedStyle(document.body);
-            // Usa a cor do tema via classe
             const themeClass = document.body.className;
             let gridColor = '#3d281a';
             if (themeClass.includes('theme-neon')) gridColor = '#1e2a5a';
@@ -685,22 +646,18 @@
                 ctx.stroke();
             }
 
-            // Caminhos concluídos
             Object.keys(paths).forEach(color => {
                 drawPathLine(paths[color], color, false);
             });
 
-            // Caminho em progresso
             if (isDrawing && currentPath.length > 1) {
                 drawPathLine(currentPath, activeColor, true);
             }
 
-            // Pontos
             LEVELS[currentLevelIdx].dots.forEach(dot => {
                 const c = getCellCoords(dot);
                 const palette = COLOR_PALETTE[dot.color];
                 
-                // Círculo com glow
                 ctx.save();
                 ctx.shadowColor = palette.hex;
                 ctx.shadowBlur = 12;
@@ -710,14 +667,12 @@
                 ctx.fill();
                 ctx.restore();
 
-                // Borda interna
                 ctx.strokeStyle = 'rgba(255,255,255,0.5)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(c.x, c.y, cellSize * 0.30, 0, Math.PI * 2);
                 ctx.stroke();
 
-                // Ponto de destaque
                 ctx.fillStyle = 'rgba(255,255,255,0.7)';
                 ctx.beginPath();
                 ctx.arc(c.x - cellSize * 0.08, c.y - cellSize * 0.08, cellSize * 0.06, 0, Math.PI * 2);
@@ -733,13 +688,8 @@
             ctx.lineWidth = cellSize * 0.30;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            if (isActive) {
-                ctx.shadowColor = palette.hex;
-                ctx.shadowBlur = 15;
-            } else {
-                ctx.shadowColor = palette.hex;
-                ctx.shadowBlur = 8;
-            }
+            ctx.shadowColor = palette.hex;
+            ctx.shadowBlur = isActive ? 15 : 8;
             ctx.beginPath();
             const start = getCellCoords(pathArr[0]);
             ctx.moveTo(start.x, start.y);
@@ -751,7 +701,6 @@
             ctx.restore();
         }
 
-        // ===== EFEITOS VISUAIS =====
         function renderEffects() {
             effectCtx.clearRect(0, 0, canvasSize, canvasSize);
             particles = particles.filter(p => p.life > 0);
@@ -792,7 +741,6 @@
             if (!animationFrame) animationFrame = requestAnimationFrame(renderEffects);
         }
 
-        // ===== LÓGICA DO JOGO =====
         function isAdjacent(a, b) {
             const dx = Math.abs(a.x - b.x);
             const dy = Math.abs(a.y - b.y);
@@ -800,7 +748,6 @@
         }
 
         function isOccupiedByOther(x, y, colorKey) {
-            // Verifica se a célula está em outro caminho
             for (const c in paths) {
                 if (c === colorKey) continue;
                 if (paths[c].some(p => p.x === x && p.y === y)) return true;
@@ -837,7 +784,6 @@
 
             const dot = getDotAt(gPos.x, gPos.y);
             if (dot) {
-                // Inicia novo caminho (ou reinicia se já existia)
                 if (paths[dot.color]) {
                     pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]] });
                     delete paths[dot.color];
@@ -866,7 +812,6 @@
             const lastPt = currentPath[currentPath.length - 1];
             if (lastPt.x === gPos.x && lastPt.y === gPos.y) return;
 
-            // Verifica se voltou para o ponto anterior (backtrack)
             if (currentPath.length >= 2) {
                 const prev = currentPath[currentPath.length - 2];
                 if (prev.x === gPos.x && prev.y === gPos.y) {
@@ -879,14 +824,11 @@
 
             if (isAdjacent(lastPt, gPos)) {
                 if (canMoveTo(gPos.x, gPos.y, activeColor)) {
-                    // Se for ponto da mesma cor, é conexão final válida
                     const dot = getDotAt(gPos.x, gPos.y);
                     if (dot && dot.color === activeColor) {
-                        // Não pode ser o próprio ponto inicial
                         if (currentPath.length > 1 || (gPos.x !== currentPath[0].x || gPos.y !== currentPath[0].y)) {
                             currentPath.push({ x: gPos.x, y: gPos.y });
                             audio.playConnect();
-                            // Auto-finaliza
                             finishCurrentPath();
                             return;
                         }
@@ -901,9 +843,8 @@
             }
         });
 
-        canvas.addEventListener('pointerup', (e) => {
-            if (!isDrawing) return;
-            finishCurrentPath();
+        canvas.addEventListener('pointerup', () => {
+            if (isDrawing) finishCurrentPath();
         });
 
         canvas.addEventListener('pointercancel', () => {
@@ -920,23 +861,17 @@
                 const firstDot = getDotAt(first.x, first.y);
                 const lastDot = getDotAt(last.x, last.y);
                 
-                // Verifica se conectou dois pontos da mesma cor
                 if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
                     paths[activeColor] = [...currentPath];
                     pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath] });
                     movesCount++;
                     updateLevelHeader();
                     
-                    // Partículas no final
                     const endCoords = getCellCoords(last);
                     spawnParticles(endCoords.x, endCoords.y, activeColor, 15);
-                    
                     audio.playConnect();
-                    
-                    // Verifica vitória
                     setTimeout(checkWin, 200);
                 } else {
-                    // Caminho inválido — descarta
                     audio.playError();
                 }
             }
@@ -946,7 +881,6 @@
             render();
         }
 
-        // ===== DESFAZER =====
         function undo() {
             if (pathHistory.length === 0) {
                 showToast('Nada para desfazer', 'info');
@@ -963,80 +897,37 @@
             showToast('Desfeito', 'info');
         }
 
-        // ===== DICAS =====
-        // Solver: encontra solução via backtracking
+        // ===== SOLVER / DICAS ROBUSTAS =====
         function solveLevel() {
             const lvl = LEVELS[currentLevelIdx];
             const size = lvl.size;
-            const grid = Array.from({ length: size }, () => Array(size).fill(null));
             const dots = lvl.dots;
             const dotMap = {};
             
             dots.forEach(d => {
-                const key = d.color;
-                if (!dotMap[key]) dotMap[key] = [];
-                dotMap[key].push({ x: d.x, y: d.y });
+                if (!dotMap[d.color]) dotMap[d.color] = [];
+                dotMap[d.color].push({ x: d.x, y: d.y });
             });
 
             const colors = Object.keys(dotMap);
             const solution = {};
-            const used = Array.from({ length: size }, () => Array(size).fill(false));
-            
-            // Marca todos os pontos como "usados" por sua cor
-            dots.forEach(d => used[d.y][d.x] = d.color);
 
-            function isValid(x, y, color) {
-                if (x < 0 || x >= size || y < 0 || y >= size) return false;
-                const cell = used[y][x];
-                if (cell === false) return true;
-                return cell === color;
-            }
-
-            function findPath(color, start, end, path, visited) {
-                if (start.x === end.x && start.y === end.y) return true;
-                const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
-                for (const [dx, dy] of dirs) {
-                    const nx = start.x + dx, ny = start.y + dy;
-                    if (!isValid(nx, ny, color)) continue;
-                    if (visited[ny][nx]) continue;
-                    // Não pode passar por ponto de outra cor
-                    const cell = used[ny][nx];
-                    if (cell !== false && cell !== color) continue;
-                    // Se for ponto da mesma cor, só pode ser o end
-                    if (cell === color && !(nx === end.x && ny === end.y)) continue;
-                    
-                    visited[ny][nx] = true;
-                    path.push({ x: nx, y: ny });
-                    if (findPath(color, { x: nx, y: ny }, end, path, visited)) return true;
-                    path.pop();
-                    visited[ny][nx] = false;
-                }
-                return false;
-            }
-
-            // Tenta resolver cor por cor
-            const colorList = [...colors];
-            
             function backtrack(idx, usedGrid) {
-                if (idx >= colorList.length) return true;
-                const color = colorList[idx];
+                if (idx >= colors.length) return true;
+                const color = colors[idx];
                 const [start, end] = dotMap[color];
                 
-                // Tenta ambos os sentidos
                 for (const [s, e] of [[start, end], [end, start]]) {
                     const visited = usedGrid.map(row => row.map(v => v !== false && v !== color ? true : false));
-                    // marca pontos de outras cores como visitados (bloqueados)
                     for (let y = 0; y < size; y++) {
                         for (let x = 0; x < size; x++) {
                             const c = usedGrid[y][x];
                             if (c !== false && c !== color) visited[y][x] = true;
                         }
                     }
-                    // marca o start
                     visited[s.y][s.x] = true;
                     const path = [{ x: s.x, y: s.y }];
                     
-                    // Função recursiva local
                     function dfs(cx, cy) {
                         if (cx === e.x && cy === e.y) return true;
                         const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
@@ -1058,7 +949,6 @@
                     }
                     
                     if (dfs(s.x, s.y)) {
-                        // Marca o caminho no grid
                         const newGrid = usedGrid.map(row => [...row]);
                         path.forEach(p => { newGrid[p.y][p.x] = color; });
                         solution[color] = [...path];
@@ -1069,7 +959,6 @@
                 return false;
             }
 
-            // Converte para grid de cores
             const gridColors = Array.from({ length: size }, () => Array(size).fill(false));
             dots.forEach(d => gridColors[d.y][d.x] = d.color);
 
@@ -1096,7 +985,6 @@
                 return;
             }
 
-            // Encontra uma cor ainda não resolvida corretamente
             const lvl = LEVELS[currentLevelIdx];
             const colors = [...new Set(lvl.dots.map(d => d.color))];
             const unsolved = colors.filter(c => {
@@ -1114,7 +1002,6 @@
                 return;
             }
 
-            // Aplica a solução de uma cor aleatória não resolvida
             const color = unsolved[Math.floor(Math.random() * unsolved.length)];
             const solutionPath = solution[color];
             
@@ -1123,7 +1010,6 @@
                 return;
             }
 
-            // Animação: desenha o caminho progressivamente
             pathHistory.push({ type: 'hint', color, prev: paths[color] ? [...paths[color]] : null });
             paths[color] = [];
             hintsLeft--;
@@ -1151,7 +1037,6 @@
             animateHint();
         }
 
-        // ===== VERIFICAÇÃO DE VITÓRIA =====
         function checkWin() {
             const lvl = LEVELS[currentLevelIdx];
             const colors = [...new Set(lvl.dots.map(d => d.color))];
@@ -1173,30 +1058,24 @@
 
             if (!allConnected) return;
 
-            // Verifica se todos os caminhos juntos preenchem o grid (bônus)
             const totalCells = gridCount * gridCount;
-            let filledCells = 0;
             const filled = new Set();
             Object.values(paths).forEach(p => {
                 p.forEach(pt => filled.add(`${pt.x},${pt.y}`));
             });
-            filledCells = filled.size;
-            const isPerfect = filledCells === totalCells;
+            const isPerfect = filled.size === totalCells;
 
-            // Vitória!
             audio.playWin();
             
-            // Confetti
             for (let i = 0; i < 5; i++) {
                 setTimeout(() => {
                     const x = Math.random() * canvasSize;
                     const y = Math.random() * canvasSize;
-                    const colors = Object.keys(COLOR_PALETTE);
-                    spawnParticles(x, y, colors[Math.floor(Math.random() * colors.length)], 10);
+                    const colorsList = Object.keys(COLOR_PALETTE);
+                    spawnParticles(x, y, colorsList[Math.floor(Math.random() * colorsList.length)], 10);
                 }, i * 100);
             }
 
-            // Atualiza progresso
             if (!completedLevels.includes(currentLevelIdx)) {
                 completedLevels.push(currentLevelIdx);
             }
@@ -1204,10 +1083,8 @@
                 unlockedLevels = currentLevelIdx + 2;
             }
             
-            // Salva best moves
             saveBestMoves(currentLevelIdx, movesCount);
             
-            // Atualiza IQ
             const lvlDifficulty = lvl.difficulty;
             const iqGain = lvlDifficulty === 'easy' ? 5 : lvlDifficulty === 'medium' ? 10 : 15;
             const hintPenalty = hintsUsedCount * 2;
@@ -1217,7 +1094,6 @@
             updateLevelHeader();
             saveProgress();
 
-            // Mostra modal
             document.getElementById('win-moves').innerText = movesCount;
             document.getElementById('win-hints').innerText = hintsUsedCount;
             document.getElementById('win-subtitle').innerText = isPerfect 
@@ -1225,11 +1101,7 @@
                 : `Nível ${currentLevelIdx + 1} concluído!`;
             
             const nextBtn = document.getElementById('btn-next-level');
-            if (currentLevelIdx + 1 < LEVELS.length) {
-                nextBtn.style.display = 'block';
-            } else {
-                nextBtn.style.display = 'none';
-            }
+            nextBtn.style.display = (currentLevelIdx + 1 < LEVELS.length) ? 'block' : 'none';
             
             setTimeout(() => {
                 const modal = document.getElementById('win-modal');
@@ -1238,7 +1110,6 @@
             }, 600);
         }
 
-        // ===== UI: SELETOR DE NÍVEIS =====
         function renderLevelsGrid() {
             const grid = document.getElementById('levels-grid');
             grid.innerHTML = '';
@@ -1256,16 +1127,15 @@
                         : 'bg-gray-800 hover:bg-gray-700 text-white border-gray-700'
                 } ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`;
                 
-                btn.innerHTML = `
-                    <div class="flex flex-col items-center gap-0.5">
-                        <span class="text-base font-black">${idx + 1}</span>
-                        <span class="text-[8px] text-gray-400">${lvl.size}×${lvl.size}</span>
-                    </div>
-                `;
-                
                 if (isLocked) {
                     btn.innerHTML = `<i class="fa-solid fa-lock text-gray-600"></i><div class="text-[8px] text-gray-600 mt-0.5">${idx + 1}</div>`;
                 } else {
+                    btn.innerHTML = `
+                        <div class="flex flex-col items-center gap-0.5">
+                            <span class="text-base font-black">${idx + 1}</span>
+                            <span class="text-[8px] text-gray-400">${lvl.size}×${lvl.size}</span>
+                        </div>
+                    `;
                     btn.onclick = () => {
                         loadLevel(idx);
                         closeLevelsModal();
@@ -1288,7 +1158,6 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        // ===== TEMAS =====
         function updateThemeUI() {
             document.body.classList.remove(...themes.map(t => t.class));
             document.body.classList.add(themes[currentThemeIdx].class);
@@ -1303,7 +1172,7 @@
             render();
         }
 
-        // ===== EVENT LISTENERS =====
+        // ===== EVENT LISTENERS UI =====
         document.getElementById('btn-theme-toggle').addEventListener('click', cycleTheme);
         document.getElementById('btn-reset').addEventListener('click', () => {
             loadLevel(currentLevelIdx);
@@ -1336,7 +1205,6 @@
             }, 300);
         });
 
-        // Filtros
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => {
@@ -1350,7 +1218,6 @@
             });
         });
 
-        // Teclado
         window.addEventListener('keydown', (e) => {
             if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
@@ -1364,7 +1231,6 @@
             }
         });
 
-        // Resize
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
@@ -1376,8 +1242,6 @@
         updateIQBar();
         updateThemeUI();
         loadLevel(currentLevelIdx);
-        
-        // Preload da primeira solução (opcional, para dica instantânea)
         setTimeout(() => getCachedSolution(), 500);
     </script>
 </body>
