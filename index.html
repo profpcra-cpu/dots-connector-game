@@ -55,14 +55,16 @@
             display: none !important;
         }
         .score-board {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
             background: #0f172a;
-            padding: 12px 20px;
+            padding: 12px 10px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 16px;
+            font-size: 14px;
             border: 1px solid #334155;
+            text-align: center;
         }
         #game-board {
             position: relative;
@@ -121,7 +123,7 @@
         <!-- TELA DE LOGIN -->
         <div id="login-screen">
             <h2>Ligar Pontos</h2>
-            <p class="instructions">Digite o seu nome para entrar ou recuperar a sua pontuação:</p>
+            <p class="instructions">Digite o seu nome para entrar ou recuperar o seu progresso:</p>
             <input type="text" id="nome-jogador" placeholder="O seu nome..." autocomplete="off">
             <button id="btn-entrar">Entrar no Jogo</button>
         </div>
@@ -130,16 +132,17 @@
         <div id="game-screen" class="hidden">
             <h2>Olá, <span id="display-nome"></span>!</h2>
             <div class="score-board">
-                <span>Total Acumulado: <strong id="display-pontos" style="color: #4ade80;">0</strong> pts</span>
-                <span>Próximo: <strong id="display-proximo" style="color: #60a5fa;">1</strong></span>
+                <div>Nível: <br><strong id="display-nivel" style="color: #38bdf8;">1</strong></div>
+                <div>Pontos: <br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
+                <div>Próximo: <br><strong id="display-proximo" style="color: #60a5fa;">1</strong></div>
             </div>
-            <p class="instructions" id="info-instrucao">Clique nos pontos na ordem numérica correta (1 até 5).</p>
+            <p class="instructions" id="info-instrucao">Clique nos pontos na ordem numérica correta.</p>
             
             <div id="game-board">
                 <svg id="canvas-lines"></svg>
             </div>
 
-            <button id="btn-reiniciar" class="hidden" style="margin-top: 15px; background-color: #10b981;">Jogar Outra Ronda</button>
+            <button id="btn-reiniciar" class="hidden" style="margin-top: 15px; background-color: #10b981;">Avançar de Nível</button>
         </div>
     </div>
 
@@ -149,7 +152,6 @@
         import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-        // CONFIGURAÇÃO DO FIREBASE (As suas credenciais oficiais)
         const firebaseConfig = {
             apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
             authDomain: "brain-flow-master.firebaseapp.com",
@@ -163,22 +165,22 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        try { getAnalytics(app); } catch (e) { /* Ignorar se analytics falhar localmente */ }
+        try { getAnalytics(app); } catch (e) {}
 
-        // Variáveis de Estado do Jogo
         let chaveJogadorAtual = null;
         let pontuacaoAcumulada = 0;
+        let nivelAtual = 1;
+        let totalPontosNivel = 5; // Começa com 5 pontos no Nível 1
         let proximoNumeroEsperado = 1;
-        let pontosDaRonda = 20;
         let coordenadasPontos = [];
         let ligacoesFeitas = [];
 
-        // Elementos UI
         const loginScreen = document.getElementById('login-screen');
         const gameScreen = document.getElementById('game-screen');
         const inputNome = document.getElementById('nome-jogador');
         const btnEntrar = document.getElementById('btn-entrar');
         const displayNome = document.getElementById('display-nome');
+        const displayNivel = document.getElementById('display-nivel');
         const displayPontos = document.getElementById('display-pontos');
         const displayProximo = document.getElementById('display-proximo');
         const infoInstrucao = document.getElementById('info-instrucao');
@@ -186,7 +188,6 @@
         const canvasLines = document.getElementById('canvas-lines');
         const btnReiniciar = document.getElementById('btn-reiniciar');
 
-        // 1. LOGIN / VERIFICAÇÃO NO REALTIME DATABASE
         btnEntrar.addEventListener('click', async () => {
             const nome = inputNome.value.trim();
             if (!nome) {
@@ -194,32 +195,33 @@
                 return;
             }
 
-            // Chave segura para a base de dados
             chaveJogadorAtual = nome.toLowerCase().replace(/\s+/g, '_').replace(/[.#$\[\]]/g, '');
             const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
             try {
                 btnEntrar.disabled = true;
-                btnEntrar.textContent = "A verificar base de dados...";
+                btnEntrar.textContent = "A carregar perfil...";
 
                 const snapshot = await get(jogadorRef);
 
                 if (snapshot.exists()) {
-                    // Jogador existe: resgata a pontuação
                     const dados = snapshot.val();
                     pontuacaoAcumulada = dados.pontos || 0;
+                    nivelAtual = dados.nivel || 1;
                 } else {
-                    // Jogador não existe: cria com 0 pontos
                     await set(jogadorRef, {
                         nome: nome,
                         pontos: 0,
+                        nivel: 1,
                         ultimaAtualizacao: new Date().toISOString()
                     });
                     pontuacaoAcumulada = 0;
+                    nivelAtual = 1;
                 }
 
                 displayNome.textContent = nome;
                 displayPontos.textContent = pontuacaoAcumulada;
+                displayNivel.textContent = nivelAtual;
 
                 loginScreen.classList.add('hidden');
                 gameScreen.classList.remove('hidden');
@@ -234,24 +236,36 @@
             }
         });
 
-        // 2. INICIAR / REINICIAR RONDA
         function iniciarNovoJogoRonda() {
+            // A cada nível, adicionamos mais 2 pontos para aumentar a dificuldade (Nível 1=5 pts, Nível 2=7 pts, etc.)
+            totalPontosNivel = 4 + (nivelAtual * 2);
             proximoNumeroEsperado = 1;
             displayProximo.textContent = proximoNumeroEsperado;
+            displayNivel.textContent = nivelAtual;
             ligacoesFeitas = [];
             btnReiniciar.classList.add('hidden');
-            infoInstrucao.textContent = "Clique nos pontos na ordem numérica correta (1 até 5).";
+            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte de 1 até ${totalPontosNivel} em ordem crescente.`;
 
             document.querySelectorAll('.dot').forEach(el => el.remove());
             canvasLines.innerHTML = '';
 
-            coordenadasPontos = [
-                { id: 1, x: 50, y: 80 },
-                { id: 2, x: 150, y: 250 },
-                { id: 3, x: 280, y: 100 },
-                { id: 4, x: 380, y: 280 },
-                { id: 5, x: 440, y: 120 }
-            ];
+            // Gerar posições aleatórias mas seguras dentro da caixa de jogo
+            coordenadasPontos = [];
+            const larguraMax = 420;
+            const alturaMax = 280;
+
+            for (let i = 1; i <= totalPontosNivel; i++) {
+                let x, y, tentativas = 0;
+                let sobreposto;
+                do {
+                    x = Math.floor(Math.random() * (larguraMax - 60)) + 40;
+                    y = Math.floor(Math.random() * (alturaMax - 60)) + 40;
+                    sobreposto = coordenadasPontos.some(p => Math.hypot(p.x - x, p.y - y) < 55);
+                    tentativas++;
+                } while (sobreposto && tentativas < 50);
+
+                coordenadasPontos.push({ id: i, x, y });
+            }
 
             coordenadasPontos.forEach(p => {
                 const dot = document.createElement('div');
@@ -266,7 +280,6 @@
             });
         }
 
-        // 3. LÓGICA DE CLIQUE
         function lidarComCliquePonto(ponto, elementoDot) {
             if (ponto.id === proximoNumeroEsperado) {
                 elementoDot.classList.add('completed');
@@ -277,10 +290,10 @@
                 }
 
                 proximoNumeroEsperado++;
-                displayProximo.textContent = proximoNumeroEsperado <= 5 ? proximoNumeroEsperado : "Fim!";
+                displayProximo.textContent = proximoNumeroEsperado <= totalPontosNivel ? proximoNumeroEsperado : "Fim!";
 
-                if (proximoNumeroEsperado > 5) {
-                    concluirRondaComSucesso();
+                if (proximoNumeroEsperado > totalPontosNivel) {
+                    concluirNivelComSucesso();
                 }
             } else if (ponto.id > proximoNumeroEsperado) {
                 alert(`Ops! Esse é o ponto ${ponto.id}. Clique no ponto ${proximoNumeroEsperado}.`);
@@ -299,26 +312,32 @@
             canvasLines.appendChild(line);
         }
 
-        // 4. CONCLUSÃO DA RONDA E ATUALIZAÇÃO NO REALTIME DATABASE
-        async function concluirRondaComSucesso() {
-            infoInstrucao.textContent = "🎉 Parabéns! Ligou todos os pontos com sucesso!";
+        async function concluirNivelComSucesso() {
+            infoInstrucao.textContent = `🎉 Nível ${nivelAtual} Concluído com Sucesso!`;
             
-            pontuacaoAcumulada += pontosDaRonda;
+            const pontosGanhos = nivelAtual * 10;
+            pontuacaoAcumulada += pontosGanhos;
+            nivelAtual++; // Avança o nível
+
             const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
             try {
                 await update(jogadorRef, {
                     pontos: pontuacaoAcumulada,
+                    nivel: nivelAtual,
                     ultimaAtualizacao: new Date().toISOString()
                 });
 
                 displayPontos.textContent = pontuacaoAcumulada;
-                alert(`Parabéns! Ganhou ${pontosDaRonda} pontos nesta ronda.\nPontuação atualizada no Realtime Database!`);
+                displayNivel.textContent = nivelAtual;
+                
+                alert(`Parabéns! Passou o nível e ganhou ${pontosGanhos} pontos!\nProgresso guardado no Firebase.`);
+                btnReiniciar.textContent = `Avançar para o Nível ${nivelAtual}`;
                 btnReiniciar.classList.remove('hidden');
 
             } catch (error) {
-                console.error("Erro ao atualizar pontuação no Firebase:", error);
-                alert("Os pontos foram conseguidos, mas ocorreu um erro ao salvar na base de dados.");
+                console.error("Erro ao atualizar progresso no Firebase:", error);
+                alert("Progresso concluído, mas ocorreu um erro ao salvar na base de dados.");
                 btnReiniciar.classList.remove('hidden');
             }
         }
