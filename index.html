@@ -1,475 +1,862 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Brain Flow Master: Estrelas, Ranking & Lógica</title>
-  
-  <!-- CDN Tailwind CSS & FontAwesome -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brain Flow Master: Estrelas, Ranking & Lógica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+            touch-action: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  <style>
-    * {
-      font-family: 'Outfit', sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    body {
-      background-color: #0b0f19;
-      color: #f8fafc;
-      overflow: hidden;
-      touch-action: none;
-    }
-    canvas {
-      touch-action: none;
-    }
-  </style>
+        body.theme-cyber {
+            background: linear-gradient(135deg, #1e1e2e 0%, #11111b 100%);
+            color: #cdd6f4;
+        }
+        body.theme-cyber .glass-panel {
+            background: rgba(30, 30, 46, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body.theme-cyber .board-frame {
+            background: #2b1d12;
+            border: 8px solid #5c3d2e;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        body.theme-neon {
+            background: linear-gradient(135deg, #0f051d 16%, #030008 100%);
+            color: #f3e8ff;
+        }
+        body.theme-neon .glass-panel {
+            background: rgba(20, 10, 35, 0.75);
+            border: 1px solid rgba(217, 70, 239, 0.3);
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.15);
+        }
+        body.theme-neon .board-frame {
+            background: #11071f;
+            border: 8px solid #d946ef;
+            box-shadow: inset 0 0 20px rgba(217,70,239,0.5), 0 0 25px rgba(217,70,239,0.4);
+        }
+
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+        }
+        .board-frame {
+            border-radius: 16px;
+            transition: all 0.4s ease;
+        }
+        .modal-bg {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+        }
+    </style>
 </head>
-<body class="h-screen w-screen flex flex-col items-center justify-between p-3 relative select-none">
+<body class="theme-cyber flex flex-col items-center justify-between h-[100vh] h-dvh p-2 md:p-4 select-none overflow-hidden">
 
-  <!-- MODAL DE CADASTRO -->
-  <div id="modalCadastro" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl text-center space-y-4">
-      
-      <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner">
-        <i class="fa-solid fa-brain"></i>
-      </div>
-
-      <div>
-        <h2 class="text-2xl font-bold text-white tracking-wide">Brain Flow Master</h2>
-        <p class="text-xs text-slate-400 mt-1">Registe-se para computar o seu desempenho e QI no Ranking Global!</p>
-      </div>
-
-      <form id="formCadastro" onsubmit="realizarCadastro(event)" class="space-y-3 text-left">
-        <div>
-          <label class="block text-xs text-slate-300 font-semibold mb-1">Nome / Apelido <span class="text-rose-400">*</span></label>
-          <input type="text" id="inputNome" required placeholder="Digite seu nome ou apelido"
-            class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-xs text-slate-300 font-semibold mb-1">Curso / Turma / Setor <span class="text-rose-400">*</span></label>
-          <input type="text" id="inputTurma" required placeholder="Ex: Enfermagem - Turma A"
-            class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 transition">
-        </div>
-
-        <div>
-          <label class="block text-xs text-slate-300 font-semibold mb-1">Matrícula ou E-mail <span class="text-slate-500">(Opcional)</span></label>
-          <input type="text" id="inputIdentificador" placeholder="Ex: 20261010 ou seu e-mail"
-            class="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 transition">
-        </div>
-
-        <button type="submit" id="btnEntrar"
-          class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
-          <span>Entrar na Partida</span>
-          <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- CABEÇALHO SUPERIOR -->
-  <header class="w-full max-w-md px-4 py-2.5 flex justify-between items-center bg-slate-900/80 border border-slate-800 rounded-2xl backdrop-blur-md shadow-lg">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-indigo-600/20 text-indigo-400 rounded-xl flex items-center justify-center font-bold text-lg border border-indigo-500/30">
-        <i class="fa-solid fa-user-gear"></i>
-      </div>
-      <div>
-        <h1 id="nomeJogadorDisplay" class="text-sm font-bold text-white leading-tight">Jogador</h1>
-        <p id="turmaJogadorDisplay" class="text-xs text-indigo-400">Turma</p>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-      <button onclick="abrirModalRanking()" class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-amber-500/20 transition flex items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-trophy"></i>
-        <span>Ranking</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- PAINEL DE STATUS DO JOGO -->
-  <section class="w-full max-w-md my-2 grid grid-cols-3 gap-2">
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2 text-center">
-      <p class="text-[10px] uppercase font-bold text-slate-400">Nível</p>
-      <p id="nivelDisplay" class="text-lg font-extrabold text-indigo-400">1</p>
-    </div>
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2 text-center">
-      <p class="text-[10px] uppercase font-bold text-slate-400">Pontos</p>
-      <p id="pontosDisplay" class="text-lg font-extrabold text-emerald-400">0</p>
-    </div>
-    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2 text-center">
-      <p class="text-[10px] uppercase font-bold text-slate-400">QI Estimado</p>
-      <p id="iqDisplay" class="text-lg font-extrabold text-purple-400">100</p>
-    </div>
-  </section>
-
-  <!-- ÁREA DE JOGO (CANVAS DO TABULEIRO) -->
-  <main id="gameContainer" class="relative w-full max-w-md aspect-square bg-slate-900/90 rounded-3xl border border-slate-800 shadow-2xl flex items-center justify-center p-2">
-    <canvas id="gameCanvas" class="w-full h-full rounded-2xl cursor-pointer"></canvas>
-  </main>
-
-  <!-- RODAPÉ DE CONTROLES -->
-  <footer class="w-full max-w-md flex justify-between items-center gap-2 mt-2">
-    <button onclick="reiniciarNivel()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-700 text-xs transition flex items-center justify-center gap-2">
-      <i class="fa-solid fa-rotate-right"></i>
-      <span>Reiniciar Nível</span>
-    </button>
-  </footer>
-
-  <!-- MODAL DE RANKING -->
-  <div id="modalRanking" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col max-h-[80vh]">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
-        <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2">
-          <i class="fa-solid fa-trophy"></i> Ranking Global
-        </h3>
-        <button onclick="fecharModalRanking()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <div id="listaRanking" class="flex-1 overflow-y-auto space-y-2 pr-1">
-        <p class="text-xs text-slate-500 text-center py-4">A carregar dados da planilha...</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCRIPT DE COMUNICAÇÃO E MECÂNICA DO JOGO -->
-  <script>
-    // Cole aqui a URL exata da sua nova implantação do Apps Script
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzwI3dHyYhpVLmezFQrkOBTNB2O4pUCwDescRKilfQ9PE2TWkQasJnOuasQbfWbuptI/exec";
-
-    let jogadorAtual = null;
-    let nivelAtual = 1;
-    let pontuacaoTotal = 0;
-    let qiEstimado = 100;
-
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const CORES = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
-
-    const NIVEIS = [
-      {
-        tamanho: 3,
-        pontos: [
-          { x: 0, y: 0, cor: 0 }, { x: 2, y: 2, cor: 0 },
-          { x: 2, y: 0, cor: 1 }, { x: 0, y: 2, cor: 1 }
-        ]
-      },
-      {
-        tamanho: 4,
-        pontos: [
-          { x: 0, y: 0, cor: 0 }, { x: 3, y: 3, cor: 0 },
-          { x: 3, y: 0, cor: 1 }, { x: 0, y: 3, cor: 1 },
-          { x: 1, y: 1, cor: 2 }, { x: 2, y: 2, cor: 2 }
-        ]
-      },
-      {
-        tamanho: 5,
-        pontos: [
-          { x: 0, y: 0, cor: 0 }, { x: 4, y: 4, cor: 0 },
-          { x: 4, y: 0, cor: 1 }, { x: 0, y: 4, cor: 1 },
-          { x: 2, y: 0, cor: 2 }, { x: 2, y: 4, cor: 2 },
-          { x: 0, y: 2, cor: 3 }, { x: 4, y: 2, cor: 3 }
-        ]
-      }
-    ];
-
-    let gridTamanho = 3;
-    let pontosAtivos = [];
-    let caminhos = {};
-    let corDesenhando = null;
-
-    window.addEventListener("DOMContentLoaded", () => {
-      redimensionarCanvas();
-      const dadosSalvos = localStorage.getItem("brainFlowMaster_player");
-      if (dadosSalvos) {
-        jogadorAtual = JSON.parse(dadosSalvos);
-        carregarInterfaceJogador();
-      }
-    });
-
-    window.addEventListener("resize", redimensionarCanvas);
-
-    function redimensionarCanvas() {
-      const container = document.getElementById("gameContainer");
-      const size = Math.min(container.clientWidth - 16, 400);
-      canvas.width = size;
-      canvas.height = size;
-      desenharJogo();
-    }
-
-    async function realizarCadastro(e) {
-      e.preventDefault();
-      const btn = document.getElementById("btnEntrar");
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> A conectar...`;
-
-      const payload = {
-        action: "REGISTRAR_JOGADOR",
-        nome: document.getElementById("inputNome").value.trim(),
-        turma: document.getElementById("inputTurma").value.trim(),
-        identificador: document.getElementById("inputIdentificador").value.trim()
-      };
-
-      try {
-        let responseData = null;
-        if (WEB_APP_URL && !WEB_APP_URL.includes("SUA_URL")) {
-          const res = await fetch(WEB_APP_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-          });
-          responseData = await res.json();
-        }
-
-        jogadorAtual = {
-          id: responseData?.idJogador || "JOG_" + Date.now(),
-          nome: payload.nome,
-          turma: payload.turma
-        };
-
-        localStorage.setItem("brainFlowMaster_player", JSON.stringify(jogadorAtual));
-        carregarInterfaceJogador();
-
-      } catch (err) {
-        console.error("Erro no cadastro:", err);
-        jogadorAtual = { id: "JOG_OFF_" + Date.now(), nome: payload.nome, turma: payload.turma };
-        carregarInterfaceJogador();
-      }
-    }
-
-    function carregarInterfaceJogador() {
-      document.getElementById("nomeJogadorDisplay").innerText = jogadorAtual.nome;
-      document.getElementById("turmaJogadorDisplay").innerText = jogadorAtual.turma;
-      document.getElementById("modalCadastro").classList.add("hidden");
-      iniciarNivel(0);
-    }
-
-    function iniciarNivel(idx) {
-      const config = NIVEIS[idx % NIVEIS.length];
-      gridTamanho = config.tamanho;
-      pontosAtivos = config.pontos;
-      caminhos = {};
-      corDesenhando = null;
-      document.getElementById("nivelDisplay").innerText = nivelAtual;
-      desenharJogo();
-    }
-
-    function desenharJogo() {
-      if (!ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const cellSize = canvas.width / gridTamanho;
-
-      // Grade
-      ctx.strokeStyle = "#1e293b";
-      ctx.lineWidth = 2;
-      for (let i = 0; i <= gridTamanho; i++) {
-        ctx.beginPath();
-        ctx.moveTo(i * cellSize, 0);
-        ctx.lineTo(i * cellSize, canvas.height);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, i * cellSize);
-        ctx.lineTo(canvas.width, i * cellSize);
-        ctx.stroke();
-      }
-
-      // Caminhos
-      Object.keys(caminhos).forEach(corIdx => {
-        const path = caminhos[corIdx];
-        if (path.length > 1) {
-          ctx.strokeStyle = CORES[corIdx];
-          ctx.lineWidth = cellSize * 0.35;
-          ctx.lineCap = "round";
-          ctx.lineJoin = "round";
-          ctx.beginPath();
-          path.forEach((p, index) => {
-            const cx = (p.x + 0.5) * cellSize;
-            const cy = (p.y + 0.5) * cellSize;
-            if (index === 0) ctx.moveTo(cx, cy);
-            else ctx.lineTo(cx, cy);
-          });
-          ctx.stroke();
-        }
-      });
-
-      // Pontos
-      pontosAtivos.forEach(p => {
-        const cx = (p.x + 0.5) * cellSize;
-        const cy = (p.y + 0.5) * cellSize;
-        ctx.fillStyle = CORES[p.cor];
-        ctx.beginPath();
-        ctx.arc(cx, cy, cellSize * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#ffffff";
-        ctx.stroke();
-      });
-    }
-
-    function obterPosicaoGrid(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = Math.floor((clientX - rect.left) / (canvas.width / gridTamanho));
-      const y = Math.floor((clientY - rect.top) / (canvas.height / gridTamanho));
-      return { x: Math.max(0, Math.min(gridTamanho - 1, x)), y: Math.max(0, Math.min(gridTamanho - 1, y)) };
-    }
-
-    function iniciarDesenho(e) {
-      e.preventDefault();
-      const pos = obterPosicaoGrid(e);
-      const ponto = pontosAtivos.find(p => p.x === pos.x && p.y === pos.y);
-      if (ponto) {
-        corDesenhando = ponto.cor;
-        caminhos[corDesenhando] = [{ x: pos.x, y: pos.y }];
-        desenharJogo();
-      }
-    }
-
-    function moverDesenho(e) {
-      if (corDesenhando === null) return;
-      e.preventDefault();
-      const pos = obterPosicaoGrid(e);
-      const path = caminhos[corDesenhando];
-      const ultimo = path[path.length - 1];
-
-      if (pos.x !== ultimo.x || pos.y !== ultimo.y) {
-        if (Math.abs(pos.x - ultimo.x) + Math.abs(pos.y - ultimo.y) === 1) {
-          path.push({ x: pos.x, y: pos.y });
-          desenharJogo();
-          verificarVitoria();
-        }
-      }
-    }
-
-    function pararDesenho() {
-      corDesenhando = null;
-    }
-
-    canvas.addEventListener("mousedown", iniciarDesenho);
-    canvas.addEventListener("mousemove", moverDesenho);
-    window.addEventListener("mouseup", pararDesenho);
-
-    canvas.addEventListener("touchstart", iniciarDesenho);
-    canvas.addEventListener("touchmove", moverDesenho);
-    window.addEventListener("touchend", pararDesenho);
-
-    function verificarVitoria() {
-      let coresConectadas = 0;
-      const numCores = Array.from(new Set(pontosAtivos.map(p => p.cor))).length;
-
-      Object.keys(caminhos).forEach(corIdx => {
-        const path = caminhos[corIdx];
-        if (path.length > 1) {
-          const inicio = path[0];
-          const fim = path[path.length - 1];
-          const pontosCor = pontosAtivos.filter(p => p.cor == corIdx);
-
-          const conectou = (pontosCor[0].x === inicio.x && pontosCor[0].y === inicio.y && pontosCor[1].x === fim.x && pontosCor[1].y === fim.y) ||
-                           (pontosCor[1].x === inicio.x && pontosCor[1].y === inicio.y && pontosCor[0].x === fim.x && pontosCor[0].y === fim.y);
-
-          if (conectou) coresConectadas++;
-        }
-      });
-
-      if (coresConectadas === numCores) {
-        setTimeout(() => {
-          pontuacaoTotal += nivelAtual * 150;
-          qiEstimado += 5;
-          nivelAtual++;
-          document.getElementById("pontosDisplay").innerText = pontuacaoTotal;
-          document.getElementById("iqDisplay").innerText = qiEstimado;
-          salvarPontuacao();
-          alert("🎉 Nível Concluído!");
-          iniciarNivel(nivelAtual - 1);
-        }, 200);
-      }
-    }
-
-    function reiniciarNivel() {
-      caminhos = {};
-      desenharJogo();
-    }
-
-    async function salvarPontuacao() {
-      if (!jogadorAtual || !WEB_APP_URL || WEB_APP_URL.includes("SUA_URL")) return;
-
-      const payload = {
-        action: "SALVAR_PONTUACAO",
-        idJogador: jogadorAtual.id,
-        pontos: pontuacaoTotal,
-        iq: qiEstimado
-      };
-
-      try {
-        await fetch(WEB_APP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
-      } catch (e) {
-        console.error("Erro ao salvar pontuação:", e);
-      }
-    }
-
-    // CONSULTA DO RANKING VIA JSONP (Elimina totalmente bloqueios de CORS)
-    function abrirModalRanking() {
-      document.getElementById("modalRanking").classList.remove("hidden");
-      const container = document.getElementById("listaRanking");
-      container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4"><i class="fa-solid fa-spinner fa-spin"></i> A procurar classificação...</p>`;
-
-      if (!WEB_APP_URL || WEB_APP_URL.includes("SUA_URL")) {
-        container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">URL do Apps Script não configurada.</p>`;
-        return;
-      }
-
-      // Função global temporária para capturar a resposta
-      const callbackName = "cb_ranking_" + Date.now();
-      window[callbackName] = function(data) {
-        delete window[callbackName];
-        document.getElementById(callbackName)?.remove();
-
-        if (data && data.status === "SUCCESS" && data.ranking && data.ranking.length > 0) {
-          container.innerHTML = data.ranking.map((item, index) => `
-            <div class="flex items-center justify-between p-2.5 bg-slate-800/60 rounded-xl border border-slate-700/50">
-              <div class="flex items-center gap-3">
-                <span class="font-extrabold text-sm ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-slate-300' : index === 2 ? 'text-amber-600' : 'text-slate-500'}">#${index + 1}</span>
-                <div>
-                  <p class="text-xs font-bold text-white">${item.nome}</p>
-                  <p class="text-[10px] text-indigo-400">${item.turma || ''}</p>
-                </div>
-              </div>
-              <span class="text-xs font-extrabold text-emerald-400">${item.pontos} pts</span>
+    <!-- Tela de Inscrição / Login Inicial -->
+    <div id="auth-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50">
+        <div class="glass-panel bg-gray-900/95 border border-indigo-500/30 p-6 rounded-3xl max-w-sm w-full shadow-2xl flex flex-col items-center gap-4 text-center">
+            <div class="w-14 h-14 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-2xl text-white shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-route"></i>
             </div>
-          `).join('');
-        } else {
-          container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma pontuação registrada ainda.</p>`;
+            <div>
+                <h2 class="text-xl font-extrabold text-white">Brain Flow Master</h2>
+                <p class="text-xs text-gray-400 mt-1">Inscreva-se para registrar seu QI no Ranking Global!</p>
+            </div>
+            <input type="text" id="player-nickname" placeholder="Digite seu apelido..." maxlength="12" class="w-full bg-gray-800/80 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 text-center font-bold" />
+            <button onclick="registerPlayer()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
+                Entrar na Partida <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Regras -->
+    <div id="rules-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel bg-gray-900/95 border border-indigo-500/30 p-5 rounded-3xl max-w-sm w-full shadow-2xl flex flex-col gap-3">
+            <div class="flex items-center justify-between w-full">
+                <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-amber-400"></i> Regras do Jogo
+                </h3>
+                <button onclick="toggleModal('rules-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="text-xs text-gray-300 space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                <p>⭐ <b>Conexão Indireta:</b> Não é permitido ligar bolinhas da mesma cor diretamente. O trajeto precisa passar por casas intermediárias do tabuleiro.</p>
+                <p>⭐ <b>Estrelas (+10 pts):</b> Colete estrelas douradas no caminho para aumentar sua pontuação final.</p>
+                <p>⚠️ <b>Ultrapassagem (-10 pts):</b> Só é permitido passar por cima de bolinhas de outra cor se necessário, mas você perde 10 pontos por cada bola ultrapassada.</p>
+                <p>🚫 <b>Sem Cruzamentos:</b> Linhas de fluxos diferentes não podem se cruzar.</p>
+            </div>
+            <button onclick="toggleModal('rules-modal')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs">Entendi</button>
+        </div>
+    </div>
+
+    <!-- Modal de Ranking -->
+    <div id="rank-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel bg-gray-900/95 border border-indigo-500/30 p-5 rounded-3xl max-w-sm w-full shadow-2xl flex flex-col gap-3">
+            <div class="flex items-center justify-between w-full">
+                <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i> Ranking Global
+                </h3>
+                <button onclick="toggleModal('rank-modal')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="ranking-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 text-xs">
+                <!-- Preenchido via JS -->
+            </div>
+            <button onclick="toggleModal('rank-modal')" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-xl text-xs">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Header Compacto -->
+    <header class="w-full max-w-md flex flex-col items-center gap-1.5 glass-panel p-2 shadow-xl shrink-0">
+        <div class="flex justify-between items-center w-full">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 font-bold text-base border border-amber-500/30">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div>
+                    <h1 class="text-[10px] text-gray-400 font-semibold tracking-wider">BRAIN FLOW MASTER</h1>
+                    <p id="player-display" class="text-xs text-white font-bold">Convidado</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <button onclick="toggleModal('rules-modal')" class="w-8 h-8 bg-gray-800/60 hover:bg-gray-700 rounded-xl flex items-center justify-center text-amber-400 border border-gray-600/40" title="Regras">
+                    <i class="fa-solid fa-question text-xs"></i>
+                </button>
+                <button onclick="openRanking()" class="w-8 h-8 bg-gray-800/60 hover:bg-gray-700 rounded-xl flex items-center justify-center text-yellow-400 border border-gray-600/40" title="Ranking">
+                    <i class="fa-solid fa-trophy text-xs"></i>
+                </button>
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-2.5 py-1 rounded-xl shadow-lg flex items-center gap-1.5">
+                    <span class="text-[9px] text-amber-100 uppercase font-bold">QI</span>
+                    <span id="iq-value" class="text-sm font-black text-white leading-none">75</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seletor de Pares -->
+        <div class="w-full flex items-center justify-between gap-1 bg-gray-900/40 p-1 rounded-xl border border-gray-700/40">
+            <button onclick="setPairsCount(3)" id="btn-pairs-3" class="flex-1 py-0.5 text-[11px] font-bold rounded-lg transition text-gray-400 hover:text-white">3 Pares</button>
+            <button onclick="setPairsCount(4)" id="btn-pairs-4" class="flex-1 py-0.5 text-[11px] font-bold rounded-lg transition bg-indigo-600 text-white">4 Pares</button>
+            <button onclick="setPairsCount(5)" id="btn-pairs-5" class="flex-1 py-0.5 text-[11px] font-bold rounded-lg transition text-gray-400 hover:text-white">5 Pares</button>
+        </div>
+    </header>
+
+    <!-- Canvas Container -->
+    <main class="relative flex-1 w-full max-w-md my-1 flex items-center justify-center min-h-0">
+        <div class="board-frame relative w-full aspect-square max-h-[340px] p-2 flex items-center justify-center">
+            <canvas id="gameCanvas" class="w-full h-full rounded-lg cursor-pointer touch-none"></canvas>
+            <canvas id="effectCanvas" class="absolute inset-0 w-full h-full pointer-events-none rounded-lg"></canvas>
+        </div>
+    </main>
+
+    <!-- Footer Compacto Visível -->
+    <footer class="w-full max-w-md glass-panel p-2 shadow-xl flex items-center justify-around gap-1.5 shrink-0">
+        <button id="btn-reset" class="flex-1 py-1.5 px-1 bg-gray-800/40 hover:bg-gray-700/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center border border-gray-700/50">
+            <i class="fa-solid fa-rotate-left text-amber-400 text-sm"></i>
+            <span class="text-[9px] font-semibold text-gray-300">Reiniciar</span>
+        </button>
+
+        <button id="btn-undo" class="flex-1 py-1.5 px-1 bg-gray-800/40 hover:bg-gray-700/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center border border-gray-700/50">
+            <i class="fa-solid fa-arrow-rotate-left text-blue-400 text-sm"></i>
+            <span class="text-[9px] font-semibold text-gray-300">Desfazer</span>
+        </button>
+
+        <button id="btn-hint" class="flex-1 py-1.5 px-1 bg-indigo-950/40 hover:bg-indigo-900/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center border border-indigo-500/40 relative">
+            <span id="hint-badge" class="absolute -top-1 -right-1 bg-indigo-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">3</span>
+            <i class="fa-solid fa-lightbulb text-yellow-300 text-sm"></i>
+            <span class="text-[9px] font-semibold text-indigo-200">Dica</span>
+        </button>
+
+        <button id="btn-new-random" class="flex-1 py-1.5 px-1 bg-emerald-950/40 hover:bg-emerald-900/60 active:scale-95 transition rounded-xl flex flex-col items-center justify-center border border-emerald-500/40">
+            <i class="fa-solid fa-shuffle text-emerald-300 text-sm"></i>
+            <span class="text-[9px] font-semibold text-emerald-200">Novo Jogo</span>
+        </button>
+    </footer>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="fixed inset-0 modal-bg flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel bg-gray-900/95 border border-indigo-500/30 p-5 rounded-3xl max-w-sm w-full text-center shadow-2xl flex flex-col items-center gap-3">
+            <div class="w-14 h-14 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-full flex items-center justify-center text-2xl text-gray-900 shadow-lg shadow-amber-500/30 animate-bounce">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-extrabold text-white">Puzzle Resolvido! 🎉</h2>
+                <div class="mt-2 p-2.5 bg-indigo-950/50 rounded-2xl border border-indigo-500/30 flex flex-col items-center gap-0.5">
+                    <span class="text-[10px] text-gray-300 uppercase font-semibold">Pontuação Registrada</span>
+                    <span id="win-score-display" class="text-2xl font-black text-amber-400">100</span>
+                    <span id="win-details-desc" class="text-[9px] text-gray-400">Grid: 80 | Estrelas: +20 | Penalidades: 0</span>
+                </div>
+            </div>
+            <button id="btn-next-random" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white font-bold rounded-xl text-xs shadow-lg active:scale-95 transition">
+                Próximo Desafio <i class="fa-solid fa-shuffle ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() { this.ctx = null; this.enabled = true; }
+            init() { 
+                if (!this.ctx) {
+                    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } 
+                    catch(e) { this.enabled = false; }
+                }
+            }
+            playTone(freq, duration = 0.08, type = 'sine', volume = 0.15) {
+                if (!this.ctx || !this.enabled) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+            playPop(freq = 440) { this.playTone(freq, 0.08, 'sine', 0.15); }
+            playConnect() { this.playTone(600, 0.1, 'triangle', 0.12); }
+            playStar() { [659, 880, 1174].forEach((f, i) => setTimeout(() => this.playTone(f, 0.1, 'sine', 0.15), i * 60)); }
+            playError() { this.playTone(200, 0.15, 'sawtooth', 0.1); }
+            playHint() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.playTone(f, 0.12, 'sine', 0.12), i * 80)); }
+            playWin() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.playTone(f, 0.15, 'triangle', 0.15), i * 100)); }
+            playUndo() { this.playTone(300, 0.1, 'sine', 0.1); }
         }
-      };
+        const audio = new SoundEngine();
 
-      // Injeta script dinâmico para ignorar bloqueio de CORS
-      const script = document.createElement("script");
-      script.id = callbackName;
-      script.src = `${WEB_APP_URL}?action=OBTER_RANKING&callback=${callbackName}`;
-      script.onerror = function() {
-        delete window[callbackName];
-        script.remove();
-        container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">Erro ao carregar o ranking.</p>`;
-      };
-      document.body.appendChild(script);
-    }
+        const COLOR_PALETTE = {
+            red:     { hex: '#ef4444' },
+            blue:    { hex: '#3b82f6' },
+            green:   { hex: '#22c55e' },
+            yellow:  { hex: '#eab308' },
+            purple:  { hex: '#a855f7' },
+            orange:  { hex: '#f97316' },
+            cyan:    { hex: '#06b6d4' },
+            pink:    { hex: '#ec4899' }
+        };
+        const ALL_COLORS = Object.keys(COLOR_PALETTE);
 
-    function fecharModalRanking() {
-      document.getElementById("modalRanking").classList.add("hidden");
-    }
-  </script>
+        const gridCount = 6;
+        let pairsCount = 4;
+        let cellSize = 0;
+        let canvasSize = 0;
+        let activeColor = null;
+        let isDrawing = false;
+        let paths = {};
+        let currentPath = [];
+        let pathHistory = [];
+        let hintsLeft = 3;
+        let movesCount = 0;
+        let IQ = 75;
+        let playerName = "Convidado";
+        let currentDots = [];
+        let currentStars = [];
+        let collectedStars = {};
+        let penaltyCrossCount = 0;
+        let currentSolution = null;
+        let particles = [];
+        let animationFrame = null;
+        let previousBoards = [];
+
+        let leaderboard = JSON.parse(localStorage.getItem('brain_flow_ranking')) || [
+            { name: "MasterLogic", score: 140, iq: 145 },
+            { name: "FlowQueen", score: 120, iq: 130 },
+            { name: "NeuroGamer", score: 100, iq: 115 }
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const effectCanvas = document.getElementById('effectCanvas');
+        const effectCtx = effectCanvas.getContext('2d');
+
+        function registerPlayer() {
+            const input = document.getElementById('player-nickname').value.trim();
+            if (input) playerName = input;
+            document.getElementById('player-display').innerText = playerName;
+            const modal = document.getElementById('auth-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            resizeCanvas();
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.style.opacity = '1', 10);
+            } else {
+                modal.style.opacity = '0';
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function openRanking() {
+            const listEl = document.getElementById('ranking-list');
+            listEl.innerHTML = '';
+            leaderboard.sort((a,b) => b.score - a.score);
+            leaderboard.forEach((item, index) => {
+                listEl.innerHTML += `
+                    <div class="flex justify-between items-center p-2 rounded-xl bg-gray-800/60 border border-gray-700/50">
+                        <span class="font-bold text-amber-400">#${index+1} ${item.name}</span>
+                        <div class="flex gap-3 text-gray-300">
+                            <span>Pts: <b>${item.score}</b></span>
+                            <span>QI: <b>${item.iq}</b></span>
+                        </div>
+                    </div>
+                `;
+            });
+            toggleModal('rank-modal');
+        }
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvasSize = Math.min(rect.width, rect.height);
+            
+            canvas.width = canvasSize * dpr; canvas.height = canvasSize * dpr;
+            canvas.style.width = canvasSize + 'px'; canvas.style.height = canvasSize + 'px';
+            effectCanvas.width = canvasSize * dpr; effectCanvas.height = canvasSize * dpr;
+            effectCanvas.style.width = canvasSize + 'px'; effectCanvas.style.height = canvasSize + 'px';
+            
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            effectCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            cellSize = canvasSize / gridCount;
+            render();
+        }
+
+        function generateRandomPuzzle() {
+            let attempts = 0;
+            while (attempts < 300) {
+                attempts++;
+                const shuffledColors = [...ALL_COLORS].sort(() => Math.random() - 0.5).slice(0, pairsCount);
+                const solution = solveStablePaths(shuffledColors);
+                
+                if (solution) {
+                    const dots = [];
+                    let validLengthPaths = true;
+                    
+                    shuffledColors.forEach(color => {
+                        const path = solution[color];
+                        if (path.length < 3) validLengthPaths = false;
+                        dots.push({ x: path[0].x, y: path[0].y, color });
+                        dots.push({ x: path[path.length - 1].x, y: path[path.length - 1].y, color });
+                    });
+
+                    if (!validLengthPaths) continue;
+
+                    const stars = [];
+                    const freeCells = [];
+                    for (let y = 0; y < gridCount; y++) {
+                        for (let x = 0; x < gridCount; x++) {
+                            if (!dots.some(d => d.x === x && d.y === y)) freeCells.push({ x, y });
+                        }
+                    }
+                    freeCells.sort(() => Math.random() - 0.5);
+                    const starCount = Math.min(3, freeCells.length);
+                    for (let i = 0; i < starCount; i++) stars.push(freeCells[i]);
+
+                    const boardSignature = JSON.stringify(dots.map(d => `${d.x},${d.y}:${d.color}`).sort());
+                    if (previousBoards.includes(boardSignature)) continue;
+                    previousBoards.push(boardSignature);
+                    if (previousBoards.length > 15) previousBoards.shift();
+
+                    currentDots = dots;
+                    currentStars = stars;
+                    currentSolution = solution;
+                    initNewGameSession();
+                    return;
+                }
+            }
+            generateFallbackPuzzle();
+        }
+
+        function solveStablePaths(colors) {
+            const size = gridCount;
+            const solution = {};
+            const grid = Array.from({ length: size }, () => Array(size).fill(false));
+
+            function dfsColor(colorIdx) {
+                if (colorIdx >= colors.length) return true;
+                const color = colors[colorIdx];
+                let freeCells = [];
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        if (!grid[y][x]) freeCells.push({ x, y });
+                    }
+                }
+                freeCells.sort(() => Math.random() - 0.5);
+
+                for (const start of freeCells) {
+                    if (grid[start.y][start.x]) continue;
+                    let queue = [{ x: start.x, y: start.y, history: [{x: start.x, y: start.y}] }];
+                    let validPaths = [];
+                    let steps = 0;
+                    while(queue.length > 0 && steps < 120) {
+                        steps++;
+                        const curr = queue.shift();
+                        if (curr.history.length >= 3) validPaths.push(curr.history);
+                        const dirs = [[1,0],[-1,0],[0,1],[0,-1]].sort(() => Math.random() - 0.5);
+                        for (const [dx, dy] of dirs) {
+                            const nx = curr.x + dx, ny = curr.y + dy;
+                            if (nx >= 0 && nx < size && ny >= 0 && ny < size && !grid[ny][nx]) {
+                                if (!curr.history.some(p => p.x === nx && p.y === ny)) {
+                                    if (curr.history.length < 10) queue.push({ x: nx, y: ny, history: [...curr.history, {x: nx, y: ny}] });
+                                }
+                            }
+                        }
+                    }
+                    validPaths.sort((a, b) => b.length - a.length);
+                    for (const path of validPaths) {
+                        let fits = true;
+                        for (const p of path) { if (grid[p.y][p.x]) { fits = false; break; } }
+                        if (!fits) continue;
+                        for (const p of path) grid[p.y][p.x] = color;
+                        solution[color] = path;
+                        if (dfsColor(colorIdx + 1)) return true;
+                        delete solution[color];
+                        for (const p of path) grid[p.y][p.x] = false;
+                    }
+                }
+                return false;
+            }
+            return dfsColor(0) ? solution : null;
+        }
+
+        function generateFallbackPuzzle() {
+            const shuffled = [...ALL_COLORS].slice(0, pairsCount);
+            currentDots = [
+                {x: 0, y: 0, color: shuffled[0]}, {x: 5, y: 4, color: shuffled[0]},
+                {x: 5, y: 0, color: shuffled[1]}, {x: 0, y: 4, color: shuffled[1]},
+                {x: 2, y: 1, color: shuffled[2]}, {x: 3, y: 5, color: shuffled[2]}
+            ];
+            currentStars = [{x: 2, y: 2}, {x: 3, y: 3}];
+            currentSolution = solveLevelForDots(currentDots);
+            initNewGameSession();
+        }
+
+        function solveLevelForDots(dots) {
+            const size = gridCount;
+            const dotMap = {};
+            dots.forEach(d => {
+                if (!dotMap[d.color]) dotMap[d.color] = [];
+                dotMap[d.color].push({ x: d.x, y: d.y });
+            });
+            const colors = Object.keys(dotMap);
+            const solution = {};
+
+            function backtrack(idx, usedGrid) {
+                if (idx >= colors.length) return true;
+                const color = colors[idx];
+                const [start, end] = dotMap[color];
+                for (const [s, e] of [[start, end], [end, start]]) {
+                    const visited = usedGrid.map(row => row.map(v => v !== false && v !== color ? true : false));
+                    visited[s.y][s.x] = true;
+                    const path = [{ x: s.x, y: s.y }];
+                    function dfs(cx, cy) {
+                        if (cx === e.x && cy === e.y) return true;
+                        const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+                        for (const [dx, dy] of dirs) {
+                            const nx = cx + dx, ny = cy + dy;
+                            if (nx < 0 || nx >= size || ny < 0 || ny >= size || visited[ny][nx]) continue;
+                            const cell = usedGrid[ny][nx];
+                            if (cell !== false && cell !== color) continue;
+                            if (cell === color && !(nx === e.x && ny === e.y)) continue;
+                            visited[ny][nx] = true;
+                            path.push({ x: nx, y: ny });
+                            if (dfs(nx, ny)) return true;
+                            path.pop();
+                            visited[ny][nx] = false;
+                        }
+                        return false;
+                    }
+                    if (dfs(s.x, s.y)) {
+                        if (path.length < 3) continue;
+                        const newGrid = usedGrid.map(row => [...row]);
+                        path.forEach(p => { newGrid[p.y][p.x] = color; });
+                        solution[color] = [...path];
+                        if (backtrack(idx + 1, newGrid)) return true;
+                        delete solution[color];
+                    }
+                }
+                return false;
+            }
+            const gridColors = Array.from({ length: size }, () => Array(size).fill(false));
+            dots.forEach(d => gridColors[d.y][d.x] = d.color);
+            return backtrack(0, gridColors) ? solution : null;
+        }
+
+        function initNewGameSession() {
+            paths = {};
+            currentPath = [];
+            pathHistory = [];
+            collectedStars = {};
+            penaltyCrossCount = 0;
+            isDrawing = false;
+            activeColor = null;
+            hintsLeft = 3;
+            movesCount = 0;
+            particles = [];
+            document.getElementById('hint-badge').innerText = hintsLeft;
+            resizeCanvas();
+        }
+
+        function setPairsCount(num) {
+            pairsCount = num;
+            for (let i = 3; i <= 5; i++) {
+                const btn = document.getElementById(`btn-pairs-${i}`);
+                btn.className = (i === num) ? "flex-1 py-0.5 text-[11px] font-bold rounded-lg transition bg-indigo-600 text-white" : "flex-1 py-0.5 text-[11px] font-bold rounded-lg transition text-gray-400 hover:text-white";
+            }
+            generateRandomPuzzle();
+        }
+
+        function getCellCoords(pos) {
+            return { x: pos.x * cellSize + cellSize / 2, y: pos.y * cellSize + cellSize / 2 };
+        }
+        function getGridPos(px, py) {
+            const x = Math.floor(px / cellSize);
+            const y = Math.floor(py / cellSize);
+            return (x >= 0 && x < gridCount && y >= 0 && y < gridCount) ? { x, y } : null;
+        }
+        function getDotAt(x, y) {
+            return currentDots.find(d => d.x === x && d.y === y);
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+            ctx.strokeStyle = '#3d281a';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i <= gridCount; i++) {
+                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvasSize); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvasSize, i * cellSize); ctx.stroke();
+            }
+
+            currentStars.forEach((star, idx) => {
+                if (!collectedStars[idx]) {
+                    const c = getCellCoords(star);
+                    ctx.save();
+                    ctx.shadowColor = '#facc15';
+                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = '#facc15';
+                    drawStarIcon(ctx, c.x, c.y, 5, cellSize * 0.2, cellSize * 0.09);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            Object.keys(paths).forEach(color => drawPathLine(paths[color], color, false));
+            if (isDrawing && currentPath.length > 1) drawPathLine(currentPath, activeColor, true);
+
+            currentDots.forEach(dot => {
+                const c = getCellCoords(dot);
+                const palette = COLOR_PALETTE[dot.color];
+                ctx.save();
+                ctx.shadowColor = palette.hex;
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = palette.hex;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, cellSize * 0.28, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, cellSize * 0.28, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+        }
+
+        function drawStarIcon(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3, step = Math.PI / spikes;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                ctx.lineTo(cx + Math.cos(rot) * outerRadius, cy + Math.sin(rot) * outerRadius);
+                rot += step;
+                ctx.lineTo(cx + Math.cos(rot) * innerRadius, cy + Math.sin(rot) * innerRadius);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
+        function drawPathLine(pathArr, colorKey, isActive) {
+            if (!pathArr || pathArr.length < 2) return;
+            const palette = COLOR_PALETTE[colorKey] || { hex: '#fff' };
+            ctx.save();
+            ctx.strokeStyle = palette.hex;
+            ctx.lineWidth = cellSize * 0.28;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowColor = palette.hex;
+            ctx.shadowBlur = isActive ? 15 : 8;
+            ctx.beginPath();
+            const start = getCellCoords(pathArr[0]);
+            ctx.moveTo(start.x, start.y);
+            for (let i = 1; i < pathArr.length; i++) {
+                const pt = getCellCoords(pathArr[i]);
+                ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function spawnParticles(x, y, colorKey, count = 10) {
+            const palette = COLOR_PALETTE[colorKey] || { hex: '#facc15' };
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const speed = 2 + Math.random() * 2;
+                particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1.5, size: 2 + Math.random() * 3, color: palette.hex, life: 1 });
+            }
+            if (!animationFrame) animationFrame = requestAnimationFrame(renderEffects);
+        }
+
+        function renderEffects() {
+            effectCtx.clearRect(0, 0, canvasSize, canvasSize);
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => {
+                effectCtx.save();
+                effectCtx.globalAlpha = p.life;
+                effectCtx.fillStyle = p.color;
+                effectCtx.beginPath();
+                effectCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                effectCtx.fill();
+                effectCtx.restore();
+                p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= 0.03;
+            });
+            if (particles.length > 0) animationFrame = requestAnimationFrame(renderEffects);
+            else animationFrame = null;
+        }
+
+        function isAdjacent(a, b) {
+            const dx = Math.abs(a.x - b.x), dy = Math.abs(a.y - b.y);
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        }
+
+        function canMoveTo(x, y, colorKey) {
+            if (x < 0 || x >= gridCount || y < 0 || y >= gridCount) return false;
+            for (const c of Object.keys(paths)) {
+                if (c === colorKey) continue;
+                if (paths[c].some(p => p.x === x && p.y === y)) return false;
+            }
+            const dot = getDotAt(x, y);
+            if (dot && dot.color !== colorKey) return 'cross_dot';
+            return true;
+        }
+
+        canvas.addEventListener('pointerdown', (e) => {
+            audio.init(); e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const pos = { x: (e.clientX - rect.left) * (canvasSize / rect.width), y: (e.clientY - rect.top) * (canvasSize / rect.height) };
+            const gPos = getGridPos(pos.x, pos.y);
+            if (!gPos) return;
+
+            const dot = getDotAt(gPos.x, gPos.y);
+            if (dot) {
+                if (paths[dot.color]) {
+                    pathHistory.push({ type: 'remove', color: dot.color, path: [...paths[dot.color]], stars: {...collectedStars}, penalty: penaltyCrossCount });
+                    delete paths[dot.color];
+                }
+                activeColor = dot.color;
+                isDrawing = true;
+                currentPath = [{ x: gPos.x, y: gPos.y }];
+                audio.playPop(400);
+                render();
+            }
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDrawing || !activeColor) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const pos = { x: (e.clientX - rect.left) * (canvasSize / rect.width), y: (e.clientY - rect.top) * (canvasSize / rect.height) };
+            const gPos = getGridPos(pos.x, pos.y);
+            if (!gPos) return;
+
+            const lastPt = currentPath[currentPath.length - 1];
+            if (lastPt.x === gPos.x && lastPt.y === gPos.y) return;
+
+            if (currentPath.length >= 2) {
+                const prev = currentPath[currentPath.length - 2];
+                if (prev.x === gPos.x && prev.y === gPos.y) {
+                    currentPath.pop(); audio.playPop(350); render(); return;
+                }
+            }
+
+            if (isAdjacent(lastPt, gPos)) {
+                if (currentPath.some(p => p.x === gPos.x && p.y === gPos.y)) { audio.playError(); return; }
+
+                const moveCheck = canMoveTo(gPos.x, gPos.y, activeColor);
+                if (moveCheck) {
+                    if (moveCheck === 'cross_dot') {
+                        penaltyCrossCount++;
+                        audio.playError();
+                    }
+
+                    const dot = getDotAt(gPos.x, gPos.y);
+                    currentStars.forEach((star, sIdx) => {
+                        if (star.x === gPos.x && star.y === gPos.y && !collectedStars[sIdx]) {
+                            collectedStars[sIdx] = true;
+                            audio.playStar();
+                            const sc = getCellCoords(star);
+                            spawnParticles(sc.x, sc.y, 'yellow', 12);
+                        }
+                    });
+
+                    if (dot && dot.color === activeColor) {
+                        if (currentPath.length < 2) { audio.playError(); return; }
+                        currentPath.push({ x: gPos.x, y: gPos.y });
+                        audio.playConnect();
+                        finishCurrentPath();
+                        return;
+                    } else {
+                        currentPath.push({ x: gPos.x, y: gPos.y });
+                        audio.playPop(500 + currentPath.length * 20);
+                    }
+                    render();
+                } else {
+                    audio.playError();
+                }
+            }
+        });
+
+        canvas.addEventListener('pointerup', () => { if (isDrawing) finishCurrentPath(); });
+        canvas.addEventListener('pointercancel', () => { if (isDrawing) finishCurrentPath(); });
+
+        function finishCurrentPath() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (currentPath.length > 2) {
+                const first = currentPath[0], last = currentPath[currentPath.length - 1];
+                const firstDot = getDotAt(first.x, first.y);
+                const lastDot = getDotAt(last.x, last.y);
+                
+                if (firstDot && lastDot && firstDot.color === activeColor && lastDot.color === activeColor) {
+                    paths[activeColor] = [...currentPath];
+                    pathHistory.push({ type: 'add', color: activeColor, path: [...currentPath], stars: {...collectedStars}, penalty: penaltyCrossCount });
+                    movesCount++;
+                    const endCoords = getCellCoords(last);
+                    spawnParticles(endCoords.x, endCoords.y, activeColor, 12);
+                    audio.playConnect();
+                    setTimeout(checkWin, 200);
+                } else {
+                    audio.playError();
+                }
+            } else {
+                audio.playError();
+            }
+            currentPath = []; activeColor = null; render();
+        }
+
+        function undo() {
+            if (pathHistory.length === 0) return;
+            const last = pathHistory.pop();
+            if (last.type === 'add') delete paths[last.color];
+            else if (last.type === 'remove') paths[last.color] = last.path;
+            if (last.stars) collectedStars = {...last.stars};
+            if (last.penalty !== undefined) penaltyCrossCount = last.penalty;
+            audio.playUndo(); render();
+        }
+
+        function useHint() {
+            if (hintsLeft <= 0 || !currentSolution) return;
+            const unsolved = currentDots.map(d => d.color).filter(c => {
+                const p = paths[c];
+                if (!p) return true;
+                const f = getDotAt(p[0].x, p[0].y), l = getDotAt(p[p.length-1].x, p[p.length-1].y);
+                return !(f && l && f.color === c && l.color === c);
+            });
+            if (unsolved.length === 0) return;
+
+            const color = unsolved[Math.floor(Math.random() * unsolved.length)];
+            const solPath = currentSolution[color];
+            if (!solPath) return;
+
+            paths[color] = [];
+            hintsLeft--;
+            document.getElementById('hint-badge').innerText = hintsLeft;
+            audio.playHint();
+
+            let i = 0;
+            const anim = () => {
+                if (i < solPath.length) {
+                    paths[color].push(solPath[i]);
+                    currentStars.forEach((star, sIdx) => { if (star.x === solPath[i].x && star.y === solPath[i].y) collectedStars[sIdx] = true; });
+                    render(); i++; setTimeout(anim, 60);
+                } else {
+                    movesCount++;
+                    const end = getCellCoords(solPath[solPath.length - 1]);
+                    spawnParticles(end.x, end.y, color, 12);
+                    setTimeout(checkWin, 200);
+                }
+            };
+            anim();
+        }
+
+        function checkWin() {
+            const colors = [...new Set(currentDots.map(d => d.color))];
+            let allConnected = true;
+            for (const c of colors) {
+                if (!paths[c] || paths[c].length < 3) { allConnected = false; break; }
+                const f = getDotAt(paths[c][0].x, paths[c][0].y);
+                const l = getDotAt(paths[c][paths[c].length-1].x, paths[c][paths[c].length-1].y);
+                if (!f || !l || f.color !== c || l.color !== c) { allConnected = false; break; }
+            }
+            if (!allConnected) return;
+
+            const totalCells = gridCount * gridCount;
+            const occupiedCellsSet = new Set();
+            Object.keys(paths).forEach(c => { paths[c].forEach(pt => occupiedCellsSet.add(`${pt.x},${pt.y}`)); });
+
+            const baseScore = Math.round((occupiedCellsSet.size / totalCells) * 100);
+            const totalCollectedStars = Object.keys(collectedStars).filter(k => collectedStars[k]).length;
+            const starBonus = totalCollectedStars * 10;
+            const dotPenalty = penaltyCrossCount * 10;
+
+            let finalScore = baseScore + starBonus - dotPenalty;
+            if (finalScore < 0) finalScore = 0;
+
+            audio.playWin();
+            IQ = Math.min(180, IQ + 12);
+            document.getElementById('iq-value').innerText = IQ;
+
+            leaderboard.push({ name: playerName, score: finalScore, iq: IQ });
+            localStorage.setItem('brain_flow_ranking', JSON.stringify(leaderboard));
+
+            document.getElementById('win-score-display').innerText = finalScore;
+            document.getElementById('win-details-desc').innerText = `Grid: ${baseScore} | Estrelas (+${starBonus}): ${totalCollectedStars} | Penalidade (-${dotPenalty}): ${penaltyCrossCount}`;
+
+            setTimeout(() => {
+                const modal = document.getElementById('win-modal');
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.style.opacity = '1', 10);
+            }, 300);
+        }
+
+        document.getElementById('btn-reset').addEventListener('click', initNewGameSession);
+        document.getElementById('btn-undo').addEventListener('click', undo);
+        document.getElementById('btn-hint').addEventListener('click', useHint);
+        document.getElementById('btn-new-random').addEventListener('click', generateRandomPuzzle);
+        document.getElementById('btn-next-random').addEventListener('click', () => {
+            const modal = document.getElementById('win-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                generateRandomPuzzle();
+            }, 300);
+        });
+
+        window.addEventListener('resize', () => resizeCanvas());
+        generateRandomPuzzle();
+    </script>
 </body>
 </html>
