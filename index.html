@@ -159,7 +159,7 @@
         <!-- TELA DE LOGIN / REGISTO -->
         <div id="login-screen">
             <h2>Brain Flow Master</h2>
-            <p class="instructions">Escolha a sua carinha e digite o seu nome e PIN para entrar:</p>
+            <p class="instructions">Escolha a sua carinha, o seu nome e e-mail para entrar:</p>
             
             <div class="avatar-grid" id="avatar-container">
                 <div class="avatar-option selected" data-avatar="😀">😀</div>
@@ -173,7 +173,7 @@
             </div>
 
             <input type="text" id="nome-jogador" placeholder="O seu nome..." autocomplete="off">
-            <input type="password" id="pin-jogador" placeholder="PIN secreto (ex: 1234)" maxlength="6" autocomplete="off">
+            <input type="email" id="email-jogador" placeholder="O seu e-mail..." autocomplete="off">
             <button id="btn-entrar">Entrar no Jogo</button>
         </div>
 
@@ -216,7 +216,7 @@
         const loginScreen = document.getElementById('login-screen');
         const gameScreen = document.getElementById('game-screen');
         const inputNome = document.getElementById('nome-jogador');
-        const inputPin = document.getElementById('pin-jogador');
+        const inputEmail = document.getElementById('email-jogador');
         const btnEntrar = document.getElementById('btn-entrar');
         const displayNome = document.getElementById('display-nome');
         const displayAvatar = document.getElementById('display-avatar');
@@ -238,20 +238,20 @@
 
         btnEntrar.addEventListener('click', async () => {
             const nome = inputNome.value.trim();
-            const pin = inputPin.value.trim();
+            const email = inputEmail.value.trim().toLowerCase();
 
             if (!nome) {
                 alert("Por favor, introduza o seu nome.");
                 return;
             }
-            if (!pin || pin.length < 3) {
-                alert("Por favor, introduza um PIN secreto de pelo menos 3 dígitos.");
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                alert("Por favor, introduza um e-mail válido.");
                 return;
             }
 
-            const nomeLimpo = nome.toLowerCase().replace(/\s+/g, '_').replace(/[.#$\[\]]/g, '');
-            const pinLimpo = pin.replace(/[.#$\[\]]/g, '');
-            chaveJogadorAtual = `${nomeLimpo}_${pinLimpo}`;
+            // O Firebase não aceita pontos '.' nas chaves, por isso substituímos por vírgulas ','
+            const emailSeguro = email.replace(/\./g, ',');
+            chaveJogadorAtual = emailSeguro;
 
             const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
@@ -269,6 +269,7 @@
                 } else {
                     await set(jogadorRef, {
                         nome: nome,
+                        email: email,
                         avatar: avatarSelecionado,
                         pontos: 0,
                         nivel: 1,
