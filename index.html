@@ -199,26 +199,10 @@
         </div>
     </div>
 
-    <!-- Script do Firebase Realtime Database e Lógica do Jogo -->
+    <!-- Lógica do Jogo com importação modular do Firebase -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
-            authDomain: "brain-flow-master.firebaseapp.com",
-            databaseURL: "https://brain-flow-master-default-rtdb.firebaseio.com",
-            projectId: "brain-flow-master",
-            storageBucket: "brain-flow-master.firebasestorage.app",
-            messagingSenderId: "137353474062",
-            appId: "1:137353474062:web:b53db8e1cde4c341740c5f",
-            measurementId: "G-XHCEYHY37W"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        try { getAnalytics(app); } catch (e) {}
+        import { db, analytics } from "./firebase-config.js";
+        import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let chaveJogadorAtual = null;
         let pontuacaoAcumulada = 0;
@@ -229,7 +213,6 @@
         let coordenadasPontos = [];
         let ligacoesFeitas = [];
 
-        // Elementos da UI
         const loginScreen = document.getElementById('login-screen');
         const gameScreen = document.getElementById('game-screen');
         const inputNome = document.getElementById('nome-jogador');
@@ -245,7 +228,6 @@
         const canvasLines = document.getElementById('canvas-lines');
         const btnReiniciar = document.getElementById('btn-reiniciar');
 
-        // Seleção de Avatar por cliques
         document.querySelectorAll('.avatar-option').forEach(item => {
             item.addEventListener('click', () => {
                 document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
@@ -254,7 +236,6 @@
             });
         });
 
-        // 1. LOGIN COM NOME + PIN SEGURO
         btnEntrar.addEventListener('click', async () => {
             const nome = inputNome.value.trim();
             const pin = inputPin.value.trim();
@@ -268,7 +249,6 @@
                 return;
             }
 
-            // Chave única composta por Nome + PIN (evita conflitos se outras pessoas usarem o mesmo nome)
             const nomeLimpo = nome.toLowerCase().replace(/\s+/g, '_').replace(/[.#$\[\]]/g, '');
             const pinLimpo = pin.replace(/[.#$\[\]]/g, '');
             chaveJogadorAtual = `${nomeLimpo}_${pinLimpo}`;
