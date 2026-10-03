@@ -3,15 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Color Flow - Ligar Cores</title>
-
-    <!-- SDK do EmailJS -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            emailjs.init("SEU_PUBLIC_KEY");
-        })();
-    </script>
+    <title>Brain Flow Master - Formas e Conexões</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,11 +29,11 @@
             --btn-primary-hover: #818cf8;
             --btn-accent: #8b5cf6;
 
-            /* Estilo Tabuleiro Madeira/Papel da Imagem */
+            /* Estilo Tabuleiro Madeira */
             --board-bg: #fefae0;
             --board-border: #8b4513; 
 
-            --node-size: 44px;
+            --node-size: 42px;
             --radius-lg: 20px;
             --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
         }
@@ -105,7 +97,7 @@
         }
         .btn-small:hover { color: var(--text-color); }
 
-        /* Estilo da Barra Superior de QI da Imagem (Cérebro / Einstein) */
+        /* Barra de QI */
         .brain-meter {
             display: flex;
             justify-content: space-between;
@@ -148,11 +140,11 @@
             margin-bottom: 10px;
         }
 
-        /* TABULEIRO ESTILO CAIXA DE MADEIRA DA IMAGEM */
+        /* Tabuleiro Estilo Caixa de Madeira */
         #game-board {
             position: relative;
             width: 100%;
-            height: 330px;
+            height: 310px;
             background: var(--board-bg);
             border: 6px solid var(--board-border);
             border-radius: 16px;
@@ -162,7 +154,7 @@
             cursor: crosshair;
         }
 
-        /* BOLAS / PONTOS COLORIDOS (ESTILO ESFERA 3D DA IMAGEM) */
+        /* Esferas 3D */
         .node {
             position: absolute;
             width: var(--node-size);
@@ -184,14 +176,13 @@
             filter: brightness(1.15);
         }
 
-        /* Brilho interno 3D para as bolas */
         .node::after {
             content: "";
             position: absolute;
-            top: 6px;
-            left: 8px;
-            width: 10px;
-            height: 6px;
+            top: 5px;
+            left: 7px;
+            width: 9px;
+            height: 5px;
             background: rgba(255,255,255,0.6);
             border-radius: 50%;
             transform: rotate(-30deg);
@@ -249,7 +240,7 @@
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <!-- MEDIDOR DE QI (Inspirado na imagem do cérebro e Einstein) -->
+        <!-- MEDIDOR DE QI -->
         <div class="brain-meter">
             <div>🧠 <span id="qi-cerebro">75</span></div>
             <div>Albert Einstein 👨‍🔬</div>
@@ -298,7 +289,6 @@
         let timerInterval = null;
         let recordesNivel = {};
 
-        // Cores disponíveis para os pares (estilo imagem de referência)
         const coresPares = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#8b5cf6'];
         let paresDoNivel = [];
         let bolaSelecionada = null;
@@ -355,6 +345,7 @@
                 iniciarNovoJogoRonda();
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
+                iniciarNovoJogoRonda();
             }
         }
 
@@ -385,10 +376,9 @@
             ligacoesCompletas = {};
             bolaSelecionada = null;
 
-            const boardWidth = gameBoard.clientWidth - 60;
-            const boardHeight = gameBoard.clientHeight - 60;
+            const boardWidth = gameBoard.clientWidth - 50;
+            const boardHeight = gameBoard.clientHeight - 50;
 
-            // Quantidade de pares de acordo com o nível
             const qtdPares = Math.min(2 + nivelAtual, 5);
             paresDoNivel = [];
 
@@ -396,15 +386,12 @@
 
             for (let i = 0; i < qtdPares; i++) {
                 let cor = coresPares[i % coresPares.length];
-                
-                // Gerar 2 bolas para cada cor sem sobreposição
                 let p1 = gerarPosicaoUnica(boardWidth, boardHeight, posicoesUsadas);
                 let p2 = gerarPosicaoUnica(boardWidth, boardHeight, posicoesUsadas);
 
                 paresDoNivel.push({ id: i, cor: cor, p1: p1, p2: p2, ligado: false });
             }
 
-            // Renderizar as bolas no tabuleiro
             paresDoNivel.forEach(par => {
                 criarElementoBola(par.p1.x, par.p1.y, par.cor, par.id, 'A');
                 criarElementoBola(par.p2.x, par.p2.y, par.cor, par.id, 'B');
@@ -415,8 +402,8 @@
             let x, y, valido;
             let tentativas = 0;
             do {
-                x = Math.floor(Math.random() * (w - 40)) + 30;
-                y = Math.floor(Math.random() * (h - 40)) + 30;
+                x = Math.floor(Math.random() * (w - 50)) + 30;
+                y = Math.floor(Math.random() * (h - 50)) + 30;
                 valido = true;
                 for (let pos of usadas) {
                     if (Math.hypot(pos.x - x, pos.y - y) < 65) {
@@ -447,14 +434,13 @@
         }
 
         function lidarComCliqueBola(node, parId, cor, x, y) {
-            if (ligacoesCompletas[parId]) return; // Já ligado
+            if (ligacoesCompletas[parId]) return;
 
             if (!bolaSelecionada) {
                 bolaSelecionada = { node, parId, cor, x, y };
                 node.classList.add('selected');
             } else {
                 if (bolaSelecionada.parId === parId && bolaSelecionada.node !== node) {
-                    // Par correto encontrado! Desenhar linha de ligação
                     desenharLinha(bolaSelecionada.x, bolaSelecionada.y, x, y, cor);
                     ligacoesCompletas[parId] = true;
                     bolaSelecionada.node.classList.remove('selected');
@@ -462,7 +448,6 @@
 
                     verificarFimDoNível();
                 } else {
-                    // Selecionou errado ou a mesma bola
                     bolaSelecionada.node.classList.remove('selected');
                     bolaSelecionada = { node, parId, cor, x, y };
                     node.classList.add('selected');
@@ -493,6 +478,7 @@
                 const pontosGanhos = nivelAtual * 15;
                 pontuacaoAcumulada += pontosGanhos;
 
+                if (!recordesNivel) recordesNivel = {};
                 let melhorTempo = recordesNivel[nivelAtual] || 0;
                 if (melhorTempo === 0 || segundos < melhorTempo) {
                     recordesNivel[nivelAtual] = segundos;
@@ -501,11 +487,15 @@
                 nivelAtual++;
 
                 const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
-                await update(jogadorRef, {
-                    pontos: pontuacaoAcumulada,
-                    nivel: nivelAtual,
-                    recordesFlow: recordesNivel
-                });
+                try {
+                    await update(jogadorRef, {
+                        pontos: pontuacaoAcumulada,
+                        nivel: nivelAtual,
+                        recordesFlow: recordesNivel
+                    });
+                } catch (e) {
+                    console.error("Erro ao atualizar Firebase:", e);
+                }
 
                 displayPontos.textContent = pontuacaoAcumulada;
                 displayNível.textContent = nivelAtual;
