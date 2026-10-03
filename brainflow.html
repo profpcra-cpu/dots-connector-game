@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Flow Master - Ligar Pontos</title>
+    
+    <!-- SDK do EmailJS para envio de e-mails -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("SEU_PUBLIC_KEY");
+        })();
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --btn-primary: #3b82f6;
+            --btn-primary-hover: #2563eb;
+            --board-bg: #0f172a;
+            --board-border: #475569;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --input-bg: #f8fafc;
+            --btn-primary: #2563eb;
+            --btn-primary-hover: #1d4ed8;
+            --board-bg: #f8fafc;
+            --board-border: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .btn-small {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            width: auto;
+            margin: 0;
+            transition: background 0.2s;
+        }
+        .btn-small:hover {
+            background: var(--border-color);
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--btn-primary);
+        }
+
+        button {
+            background-color: var(--btn-primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: var(--btn-primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #475569;
+        }
+        .btn-secondary:hover {
+            background-color: #334155;
+        }
+
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: var(--input-bg);
+            padding: 10px 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            background: var(--input-bg);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .user-info-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-avatar-display {
+            font-size: 24px;
+            background: var(--border-color);
+            padding: 2px 6px;
+            border-radius: 50%;
+        }
+
+        #game-board {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: var(--board-bg);
+            border: 2px dashed var(--board-border);
+            border-radius: 12px;
+            margin-top: 10px;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .dot {
+            position: absolute;
+            width: 38px;
+            height: 38px;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 13px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s, filter 0.2s;
+            user-select: none;
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+        .dot:hover {
+            transform: translate(-50%, -50%) scale(1.15);
+            filter: brightness(1.2);
+        }
+        .dot.completed {
+            background: #22c55e !important;
+            border-color: #fff;
+        }
+
+        #canvas-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .instructions {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- BARRA SUPERIOR -->
+        <div class="top-bar">
+            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+
+        <!-- TELA DO JOGO -->
+        <div id="game-screen">
+            <div class="user-header">
+                <div class="user-info-left">
+                    <span id="display-avatar" class="user-avatar-display">😀</span>
+                    <strong id="display-nome" style="font-size: 14px;"></strong>
+                </div>
+                <span style="font-size: 12px; color: var(--text-muted);">Brain Flow Master</span>
+            </div>
+            
+            <div class="score-board">
+                <div>Nível: <br><strong id="display-nivel" style="color: #38bdf8;">1</strong></div>
+                <div>Pontos: <br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
+                <div>Próximo: <br><strong id="display-proximo" style="color: #60a5fa;">1</strong></div>
+            </div>
+            <p class="instructions" id="info-instrucao">Conecte os pontos na ordem correta.</p>
+            
+            <div id="game-board">
+                <svg id="canvas-lines"></svg>
+            </div>
+
+            <!-- OPÇÕES DE CONFIGURAÇÃO DA RONDA -->
+            <div class="controls-grid">
+                <select id="select-tipo-numeracao" style="margin-top:0; cursor:pointer;">
+                    <option value="arabicos">Arábicos (1, 2, 3)</option>
+                    <option value="romanos">Romanos (I, II, III)</option>
+                    <option value="ambos">Misto (Arábicos & Romanos)</option>
+                </select>
+                <select id="select-mudar-nivel" style="margin-top:0; cursor:pointer;">
+                    <option value="" disabled selected>Nível...</option>
+                    <option value="1">Nível 1</option>
+                    <option value="2">Nível 2</option>
+                    <option value="3">Nível 3</option>
+                    <option value="4">Nível 4</option>
+                    <option value="5">Nível 5</option>
+                </select>
+            </div>
+
+            <div class="controls-grid">
+                <button id="btn-reiniciar-nivel" class="btn-secondary">🔄 Reiniciar</button>
+                <button id="btn-avancar" class="hidden" style="margin-top:0; background-color: #10b981;">Avançar 🚀</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica do Jogo -->
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Validar se o jogador veio do Hub principal
+        let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+        if (!jogadorSessao) {
+            window.location.href = 'index.html';
+        }
+
+        let pontuacaoAcumulada = 0;
+        let nivelAtual = 1;
+        let totalPontosNivel = 5;
+        let proximoNumeroEsperado = 1;
+        let coordenadasPontos = [];
+        let ligacoesFeitas = [];
+
+        const paletaCores = ['#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#6366f1', '#06b6d4', '#d946ef'];
+
+        const displayNome = document.getElementById('display-nome');
+        const displayAvatar = document.getElementById('display-avatar');
+        const displayNível = document.getElementById('display-nivel');
+        const displayPontos = document.getElementById('display-pontos');
+        const displayProximo = document.getElementById('display-proximo');
+        const infoInstrucao = document.getElementById('info-instrucao');
+        const gameBoard = document.getElementById('game-board');
+        const canvasLines = document.getElementById('canvas-lines');
+        const btnAvancar = document.getElementById('btn-avancar');
+        const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
+        const selectMudarNivel = document.getElementById('select-mudar-nivel');
+        const selectTipoNumeracao = document.getElementById('select-tipo-numeracao');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        // Gestão de Tema
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        atualizarTextoBotaoTema(savedTheme);
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('brain_flow_theme', newTheme);
+            atualizarTextoBotaoTema(newTheme);
+        });
+
+        function atualizarTextoBotaoTema(theme) {
+            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+        }
+
+        // Carregar dados iniciais do jogador do Firebase
+        async function carregarDadosJogador() {
+            displayNome.textContent = jogadorSessao.nome;
+            displayAvatar.textContent = jogadorSessao.avatar;
+
+            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+            try {
+                const snapshot = await get(jogadorRef);
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    pontuacaoAcumulada = dados.pontos || 0;
+                    nivelAtual = dados.nivel || 1;
+                }
+                displayPontos.textContent = pontuacaoAcumulada;
+                displayNível.textContent = nivelAtual;
+                iniciarNovoJogoRonda();
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+            }
+        }
+
+        carregarDadosJogador();
+
+        btnReiniciarNivel.addEventListener('click', () => {
+            iniciarNovoJogoRonda();
+        });
+
+        selectMudarNivel.addEventListener('change', (e) => {
+            const novoNivel = parseInt(e.target.value);
+            if (novoNivel) {
+                nivelAtual = novoNivel;
+                selectMudarNivel.value = "";
+                iniciarNovoJogoRonda();
+            }
+        });
+
+        selectTipoNumeracao.addEventListener('change', () => {
+            iniciarNovoJogoRonda();
+        });
+
+        function converterParaRomano(num) {
+            const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
+            let roman = "";
+            for (let i in lookup ) {
+                while ( num >= lookup[i] ) {
+                    roman += i;
+                    num -= lookup[i];
+                }
+            }
+            return roman;
+        }
+
+        function obterTextoRotulo(id, modo, total) {
+            if (modo === 'arabicos') return id;
+            if (modo === 'romanos') return converterParaRomano(id);
+            return id <= Math.ceil(total / 2) ? id : converterParaRomano(id);
+        }
+
+        function iniciarNovoJogoRonda() {
+            totalPontosNivel = 4 + (nivelAtual * 2);
+            proximoNumeroEsperado = 1;
+            
+            const modoNumeracao = selectTipoNumeracao.value;
+            const rotuloProximo = obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel);
+
+            displayProximo.textContent = rotuloProximo;
+            displayNível.textContent = nivelAtual;
+            ligacoesFeitas = [];
+            btnAvancar.classList.add('hidden');
+            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte os pontos em ordem crescente.`;
+
+            document.querySelectorAll('.dot').forEach(el => el.remove());
+            canvasLines.innerHTML = '';
+
+            coordenadasPontos = [];
+            const larguraMax = gameBoard.clientWidth - 50;
+            const alturaMax = gameBoard.clientHeight - 50;
+
+            for (let i = 1; i <= totalPontosNivel; i++) {
+                let x, y, tentativas = 0;
+                let sobreposto;
+                do {
+                    x = Math.floor(Math.random() * (larguraMax - 40)) + 30;
+                    y = Math.floor(Math.random() * (alturaMax - 40)) + 30;
+                    sobreposto = coordenadasPontos.some(p => Math.hypot(p.x - x, p.y - y) < 50);
+                    tentativas++;
+                } while (sobreposto && tentativas < 50);
+
+                const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
+                const rotuloPonto = obterTextoRotulo(i, modoNumeracao, totalPontosNivel);
+                coordenadasPontos.push({ id: i, x, y, cor: corAleatoria, rotulo: rotuloPonto });
+            }
+
+            coordenadasPontos.forEach(p => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.textContent = p.rotulo;
+                dot.style.left = `${p.x}px`;
+                dot.style.top = `${p.y}px`;
+                dot.style.backgroundColor = p.cor;
+                dot.dataset.id = p.id;
+
+                dot.addEventListener('click', () => lidarComCliquePonto(p, dot, modoNumeracao));
+                gameBoard.appendChild(dot);
+            });
+        }
+
+        function lidarComCliquePonto(ponto, elementoDot, modoNumeracao) {
+            if (ponto.id === proximoNumeroEsperado) {
+                elementoDot.classList.add('completed');
+                ligacoesFeitas.push(ponto);
+
+                if (proximoNumeroEsperado > 1) {
+                    desenharLinha(ligacoesFeitas[ligacoesFeitas.length - 2], ponto);
+                }
+
+                proximoNumeroEsperado++;
+                const proximoRotulo = obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel);
+                displayProximo.textContent = proximoNumeroEsperado <= totalPontosNivel ? proximoRotulo : "Fim!";
+
+                if (proximoNumeroEsperado > totalPontosNivel) {
+                    concluirNivelComSucesso();
+                }
+            } else if (ponto.id > proximoNumeroEsperado) {
+                alert(`Ops! Clique no ponto correto.`);
+            }
+        }
+
+        function desenharLinha(p1, p2) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', p1.x);
+            line.setAttribute('y1', p1.y);
+            line.setAttribute('x2', p2.x);
+            line.setAttribute('y2', p2.y);
+            line.setAttribute('stroke', '#22c55e');
+            line.setAttribute('stroke-width', '4');
+            line.setAttribute('stroke-linecap', 'round');
+            canvasLines.appendChild(line);
+        }
+
+        async function concluirNivelComSucesso() {
+            infoInstrucao.textContent = `🎉 Nível ${nivelAtual} Concluído com Sucesso!`;
+            
+            const pontosGanhos = nivelAtual * 10;
+            pontuacaoAcumulada += pontosGanhos;
+            nivelAtual++;
+
+            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+
+            try {
+                await update(jogadorRef, {
+                    pontos: pontuacaoAcumulada,
+                    nivel: nivelAtual,
+                    ultimaAtualizacao: new Date().toISOString()
+                });
+
+                displayPontos.textContent = pontuacaoAcumulada;
+                displayNível.textContent = nivelAtual;
+                
+                enviarEmailResumo(jogadorSessao.nome, jogadorSessao.email, nivelAtual, pontuacaoAcumulada, jogadorSessao.avatar);
+
+                btnAvancar.textContent = `Avançar Nível ${nivelAtual} 🚀`;
+                btnAvancar.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Erro Firebase:", error);
+                btnAvancar.classList.remove('hidden');
+            }
+        }
+
+        btnAvancar.addEventListener('click', () => {
+            iniciarNovoJogoRonda();
+        });
+
+        function enviarEmailResumo(nome, email, nivel, pontos, avatar) {
+            const templateParams = {
+                to_name: nome,
+                to_email: email,
+                avatar: avatar,
+                nivel: nivel,
+                pontos: pontos,
+                mensagem: `Parabéns! O seu nível atual é ${nivel} e acumulou ${pontos} pontos.`
+            };
+
+            emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
+                .then((response) => console.log('E-mail enviado com sucesso!'))
+                .catch((error) => console.error('Erro ao enviar e-mail:', error));
+        }
+    </script>
+</body>
+</html>
