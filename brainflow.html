@@ -3,618 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Flow Master - Formas e Conexões</title>
-
-    <!-- SDK do EmailJS -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            emailjs.init("SEU_PUBLIC_KEY");
-        })();
-    </script>
-
-    <!-- Google Fonts -->
+    <title>Brain Flow - Algarismos Arábicos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* ==========================================================
-           1. DESIGN TOKENS
-           ========================================================== */
         :root {
             --bg-color: #0b1020;
             --bg-gradient-1: #1e1b4b;
             --bg-gradient-2: #0b1020;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-bg: rgba(30, 41, 59, 0.85);
             --card-border: rgba(148, 163, 184, 0.15);
-            --card-glow: rgba(99, 102, 241, 0.25);
-
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
-            --text-subtle: #64748b;
-
             --border-color: rgba(148, 163, 184, 0.18);
-            --border-strong: rgba(148, 163, 184, 0.35);
             --input-bg: rgba(15, 23, 42, 0.7);
-
-            --btn-primary: #6366f1;
-            --btn-primary-hover: #818cf8;
-            --btn-accent: #8b5cf6;
-
-            --board-bg: rgba(15, 23, 42, 0.55);
-            --board-border: rgba(148, 163, 184, 0.45);
-
-            --node-size: 42px;
-
-            --c-green: #4ade80;
-            --c-blue: #38bdf8;
-            --c-amber: #f59e0b;
-            --c-red: #ef4444;
-
-            --radius-sm: 8px;
-            --radius-md: 12px;
+            --btn-primary: #3b82f6;
+            --btn-accent: #1d4ed8;
+            --board-bg: #fefae0;
+            --board-border: #8b4513;
+            --node-size: 44px;
             --radius-lg: 20px;
             --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
-            --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
-
-            --t-fast: 0.15s ease;
-            --t-base: 0.25s ease;
-            --t-slow: 0.4s ease;
         }
-
         [data-theme="light"] {
             --bg-color: #eef2ff;
             --bg-gradient-1: #e0e7ff;
             --bg-gradient-2: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.88);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --card-glow: rgba(99, 102, 241, 0.15);
-
+            --card-bg: rgba(255, 255, 255, 0.9);
             --text-color: #0f172a;
             --text-muted: #475569;
-            --text-subtle: #64748b;
-
-            --border-color: rgba(15, 23, 42, 0.1);
-            --border-strong: rgba(15, 23, 42, 0.25);
-            --input-bg: rgba(255, 255, 255, 0.95);
-
-            --board-bg: rgba(248, 250, 252, 0.9);
-            --board-border: rgba(15, 23, 42, 0.25);
-
-            --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+            --board-bg: #fdf5e6;
+            --board-border: #8b4513;
         }
-
-        /* ==========================================================
-           2. RESET E BASE
-           ========================================================== */
         *, *::before, *::after { box-sizing: border-box; }
         html, body { height: 100%; }
-
         body {
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
-            background-attachment: fixed;
-            color: var(--text-color);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            transition: background-color var(--t-slow), color var(--t-base);
-            -webkit-font-smoothing: antialiased;
+            background-attachment: fixed; color: var(--text-color);
+            margin: 0; padding: 16px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
-
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(130px);
-            opacity: 0.3;
-            z-index: -1;
-            pointer-events: none;
-        }
-        body::before {
-            width: 420px; height: 420px;
-            background: #6366f1;
-            top: -140px; left: -120px;
-        }
-        body::after {
-            width: 460px; height: 460px;
-            background: #8b5cf6;
-            bottom: -180px; right: -140px;
-        }
-
-        /* ==========================================================
-           3. CONTAINER
-           ========================================================== */
         .container {
-            position: relative;
-            background: var(--card-bg);
-            backdrop-filter: blur(18px) saturate(160%);
-            -webkit-backdrop-filter: blur(18px) saturate(160%);
-            padding: 20px 20px 22px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-            border: 1px solid var(--card-border);
-            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
+            position: relative; background: var(--card-bg); backdrop-filter: blur(18px);
+            padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+            width: 100%; max-width: 480px; text-align: center; border: 1px solid var(--card-border);
         }
-
-        .container::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 20%; right: 20%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
-            opacity: 0.9;
-        }
-
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0)    scale(1); }
-        }
-
-        /* ==========================================================
-           4. TOP BAR
-           ========================================================== */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            gap: 8px;
-        }
-
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .btn-small {
-            width: auto;
-            margin: 0;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.01em;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all var(--t-base);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;
         }
-        .btn-small:hover {
-            color: var(--text-color);
-            border-color: var(--border-strong);
-            transform: translateY(-1px);
-            background: var(--card-bg);
+        .btn-small:hover { color: var(--text-color); }
+        .brain-meter {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--input-bg); padding: 8px 14px; border-radius: 12px; margin-bottom: 12px;
+            border: 1px solid var(--border-color); font-size: 13px; font-weight: bold;
         }
-
-        /* ==========================================================
-           5. USER HEADER
-           ========================================================== */
-        .user-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            background: var(--input-bg);
-            padding: 10px 14px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            transition: border-color var(--t-base);
-        }
-        .user-header:hover { border-color: var(--border-strong); }
-
-        .user-info-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar-display {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            font-size: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2));
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
-        }
-
-        #display-nome {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-        }
-
-        .user-header .game-name {
-            font-size: 12.5px;
-            color: var(--text-muted);
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(99, 102, 241, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.25);
-        }
-
-        /* ==========================================================
-           6. SCORE BOARD
-           ========================================================== */
         .score-board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            background: var(--input-bg);
-            padding: 10px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-            font-size: 11px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            font-weight: 600;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+            background: var(--input-bg); padding: 8px; border-radius: 12px; margin-bottom: 12px;
+            font-size: 11px; text-transform: uppercase; font-weight: 600; border: 1px solid var(--border-color);
         }
-
-        .score-board > div {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 6px 2px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.02);
-            transition: background var(--t-base), transform var(--t-base);
-        }
-        .score-board > div:hover {
-            background: rgba(99, 102, 241, 0.08);
-            transform: translateY(-1px);
-        }
-
-        .score-board strong {
-            font-size: 15px;
-            font-family: 'JetBrains Mono', 'Segoe UI', monospace;
-            font-weight: 700;
-            letter-spacing: 0;
-            text-transform: none;
-        }
-
-        #display-nivel  { color: var(--c-blue); }
-        #display-pontos { color: var(--c-green); }
-        #display-tempo  { color: #60a5fa; }
-        #display-recorde{ color: var(--c-amber); }
-
-        /* ==========================================================
-           7. INSTRUÇÕES
-           ========================================================== */
-        .instructions {
-            font-size: 12.5px;
-            color: var(--text-muted);
-            margin: 4px 0 12px;
-            line-height: 1.5;
-            min-height: 18px;
-        }
-
-        /* ==========================================================
-           8. TABULEIRO
-           ========================================================== */
+        .score-board strong { font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+        .instructions { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
         #game-board {
-            position: relative;
-            width: 100%;
-            height: 340px;
-            background:
-                radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.10), transparent 60%),
-                var(--board-bg);
-            border: 2px solid transparent;
-            border-radius: 14px;
-            margin-top: 8px;
-            overflow: hidden;
-            cursor: crosshair;
-
-            background-image:
-                linear-gradient(var(--board-bg), var(--board-bg)),
-                linear-gradient(135deg,
-                    rgba(99, 102, 241, 0.55) 0%,
-                    rgba(139, 92, 246, 0.35) 30%,
-                    rgba(56, 189, 248, 0.30) 65%,
-                    rgba(99, 102, 241, 0.45) 100%);
-            background-origin: border-box;
-            background-clip: padding-box, border-box;
-
-            box-shadow:
-                0 12px 40px -14px rgba(0, 0, 0, 0.55),
-                0 0 0 1px var(--card-border),
-                0 0 24px -6px rgba(99, 102, 241, 0.35);
-            animation: gridIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative; width: 100%; height: 310px;
+            background: var(--board-bg); border: 6px solid var(--board-border);
+            border-radius: 16px; margin-top: 8px; overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.25), 0 10px 25px rgba(0,0,0,0.4);
+            touch-action: none; user-select: none;
         }
-
-        #game-board::before {
-            content: "";
-            position: absolute;
-            inset: -6px;
-            border-radius: 18px;
-            background: radial-gradient(
-                ellipse at 50% 0%,
-                rgba(99, 102, 241, 0.28),
-                transparent 70%);
-            z-index: -1;
-            pointer-events: none;
-            filter: blur(6px);
-        }
-
-        @keyframes gridIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ==========================================================
-           9. NÓS (FORMAS)
-           ========================================================== */
         .node {
-            position: absolute;
-            width: var(--node-size);
-            height: var(--node-size);
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-            font-family: 'JetBrains Mono', 'Segoe UI', monospace;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            box-shadow:
-                0 6px 14px -4px rgba(0, 0, 0, 0.55),
-                inset 0 1px 0 rgba(255, 255, 255, 0.35);
-            transition:
-                transform var(--t-fast),
-                filter var(--t-base),
-                box-shadow var(--t-base);
-            user-select: none;
-            border: 2px solid rgba(255, 255, 255, 0.75);
-            animation: nodeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            position: absolute; width: var(--node-size); height: var(--node-size); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            transform: translate(-50%, -50%); box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.8); font-family: 'JetBrains Mono', monospace;
+            font-size: 18px; font-weight: 700; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.6); z-index: 3;
         }
-
-        @keyframes nodeIn {
-            from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #canvas-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        select, button {
+            width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+            background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); cursor: pointer;
         }
-
-        .node:hover {
-            transform: translate(-50%, -50%) scale(1.18);
-            filter: brightness(1.22);
-            box-shadow:
-                0 10px 20px -6px rgba(0, 0, 0, 0.65),
-                0 0 0 4px rgba(255, 255, 255, 0.15);
-            z-index: 5;
-        }
-
-        .node.circle   { border-radius: 50%; }
-        .node.square   { border-radius: 8px; }
-        .node.star     { border-radius: 12px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-        .node.pentagon { border-radius: 10px; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
-
-        .node.completed {
-            background: #22c55e !important;
-            border-color: #ffffff;
-            box-shadow:
-                0 0 0 3px rgba(34, 197, 94, 0.25),
-                0 0 20px rgba(34, 197, 94, 0.65),
-                0 6px 14px -4px rgba(0, 0, 0, 0.55);
-            animation: completedPulse 1.4s ease-in-out infinite;
-        }
-
-        @keyframes completedPulse {
-            0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.25), 0 0 20px rgba(34,197,94,0.65), 0 6px 14px -4px rgba(0,0,0,0.55); }
-            50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0.15), 0 0 26px rgba(34,197,94,0.85), 0 6px 14px -4px rgba(0,0,0,0.55); }
-        }
-
-        /* ==========================================================
-           10. SVG DE LINHAS
-           ========================================================== */
-        #canvas-lines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        #canvas-lines line {
-            filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.7));
-            animation: lineGrow 0.35s ease-out;
-            transform-origin: left center;
-        }
-
-        @keyframes lineGrow {
-            from { opacity: 0; }
-            to   { opacity: 1; }
-        }
-
-        /* ==========================================================
-           11. INPUTS / SELECT / BUTTONS
-           ========================================================== */
-        input, select {
-            width: 100%;
-            padding: 11px 12px;
-            margin-top: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            font-family: inherit;
-            font-weight: 600;
-            box-sizing: border-box;
-            background: var(--input-bg);
-            color: var(--text-color);
-            transition: border-color var(--t-base), box-shadow var(--t-base);
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--btn-primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
-        }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-            padding-right: 36px;
-        }
-
-        button {
-            width: 100%;
-            padding: 13px 18px;
-            margin-top: 10px;
-            border: none;
-            border-radius: var(--radius-md);
-            font-family: inherit;
-            font-size: 14.5px;
-            font-weight: 700;
-            letter-spacing: 0.01em;
-            color: #ffffff;
-            cursor: pointer;
-            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
-            box-shadow: var(--shadow-btn);
-            transition: transform var(--t-fast), box-shadow var(--t-base), filter var(--t-base);
-        }
-        button:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.08);
-            box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.7);
-        }
-        button:active { transform: translateY(0); filter: brightness(0.97); }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #475569, #334155);
-            box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
-        }
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #64748b, #475569);
-        }
-
-        #btn-avancar {
-            background: linear-gradient(135deg, #10b981, #14b8a6);
-            box-shadow: 0 6px 20px -6px rgba(16, 185, 129, 0.55);
-        }
-        #btn-avancar:hover {
-            box-shadow: 0 10px 28px -8px rgba(16, 185, 129, 0.7);
-        }
-
-        /* ==========================================================
-           12. CONTROLES
-           ========================================================== */
-        .controls-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .controls-grid select,
-        .controls-grid button { margin-top: 0; }
-
+        button { background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent)); color: white; border: none; }
+        button:hover { filter: brightness(1.1); }
+        .btn-secondary { background: #475569; }
         .hidden { display: none !important; }
-
-        /* ==========================================================
-           13. RESPONSIVIDADE
-           ========================================================== */
-        @media (max-width: 440px) {
-            body { padding: 10px; }
-            .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
-            #game-board { height: 300px; }
-            .score-board { font-size: 10px; }
-            .score-board strong { font-size: 13px; }
-            .user-header .game-name { display: none; }
-        }
-
-        /* ==========================================================
-           14. ACESSIBILIDADE
-           ========================================================== */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.001ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.001ms !important;
-            }
-        }
-
-        :focus-visible {
-            outline: 2px solid var(--btn-primary);
-            outline-offset: 2px;
-        }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <!-- BARRA SUPERIOR -->
         <div class="top-bar">
             <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
-
-        <!-- TELA DO JOGO -->
-        <div id="game-screen">
-            <div class="user-header">
-                <div class="user-info-left">
-                    <span id="display-avatar" class="user-avatar-display">😀</span>
-                    <strong id="display-nome"></strong>
-                </div>
-                <span class="game-name">Brain Flow Master</span>
-            </div>
-
-            <div class="score-board">
-                <div>Nível<br><strong id="display-nivel">1</strong></div>
-                <div>Pontos<br><strong id="display-pontos">0</strong></div>
-                <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
-                <div>Recorde<br><strong id="display-recorde">--:--</strong></div>
-            </div>
-            <p class="instructions" id="info-instrucao">Conecte as figuras em ordem crescente sem sobreposição.</p>
-
-            <div id="game-board">
-                <svg id="canvas-lines"></svg>
-            </div>
-
-            <!-- OPÇÕES -->
-            <div class="controls-grid">
-                <select id="select-tipo-numeracao">
-                    <option value="arabicos">Arábicos (1, 2, 3)</option>
-                    <option value="romanos">Romanos (I, II, III)</option>
-                    <option value="ambos">Misto (Arábicos & Romanos)</option>
-                </select>
-                <select id="select-mudar-nivel">
-                    <option value="" disabled selected>Nível...</option>
-                    <option value="1">Nível 1</option>
-                    <option value="2">Nível 2</option>
-                    <option value="3">Nível 3</option>
-                    <option value="4">Nível 4</option>
-                    <option value="5">Nível 5</option>
-                    <option value="6">Nível 6</option>
-                </select>
-            </div>
-
-            <div class="controls-grid">
-                <button id="btn-reiniciar-nivel" class="btn-secondary">🔄 Reiniciar</button>
-                <button id="btn-avancar" class="hidden">Avançar 🚀</button>
-            </div>
+        <div class="brain-meter">
+            <div>🧠 <span id="qi-cerebro">75</span></div>
+            <div>Mestre dos Números 🔢</div>
+            <div>⚡ <span id="qi-einstein">180</span></div>
         </div>
+        <div class="score-board">
+            <div>Nível<br><strong id="display-nivel" style="color: #38bdf8;">1</strong></div>
+            <div>Pontos<br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
+            <div>Tempo<br><strong id="display-tempo" style="color: #60a5fa;">00:00</strong></div>
+            <div>Recorde<br><strong id="display-recorde" style="color: #f59e0b;">--:--</strong></div>
+        </div>
+        <p class="instructions" id="info-instrucao">Conecte os algarismos iguais arrastando o dedo/rato!</p>
+        <div id="game-board">
+            <svg id="canvas-lines"></svg>
+        </div>
+        <div class="controls-grid">
+            <select id="select-mudar-nivel">
+                <option value="" disabled selected>Selecionar Nível...</option>
+                <option value="1">Nível 1 (Fácil)</option>
+                <option value="2">Nível 2 (Médio)</option>
+                <option value="3">Nível 3 (Difícil)</option>
+                <option value="4">Nível 4 (Especial)</option>
+            </select>
+            <button id="btn-reiniciar-nivel" class="btn-secondary">🔄 Reiniciar</button>
+        </div>
+        <button id="btn-avancar" class="hidden" style="margin-top: 10px; background-color: #10b981;">Avançar para Próximo Nível 🚀</button>
     </div>
 
-    <!-- Lógica do Jogo -->
     <script type="module">
         import { db } from "./firebase-config.js";
         import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -622,26 +134,21 @@
         let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) { window.location.href = 'index.html'; }
 
-        let pontuacaoAcumulada = 0;
-        let nivelAtual = 1;
-        let totalPontosNivel = 5;
-        let proximoNumeroEsperado = 1;
-        let coordenadasNodes = [];
-        let ligacoesFeitas = [];
-        let segundos = 0;
-        let timerInterval = null;
-        let recordesNivel = {};
+        let pontuacaoAcumulada = 0, nivelAtual = 1, segundos = 0, timerInterval = null, recordesNivel = {};
+        const paletaNumeros = [
+            { num: 1, cor: '#e11d48' },
+            { num: 2, cor: '#2563eb' },
+            { num: 3, cor: '#16a34a' },
+            { num: 4, cor: '#d97706' },
+            { num: 5, cor: '#9333ea' },
+            { num: 6, cor: '#0891b2' }
+        ];
+        let paresDoNivel = [];
+        let trilhosConcluidos = {};
+        let desenhandoId = null;
+        let caminhoAtual = [];
 
-        const paletaCores = ['#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#6366f1', '#06b6d4', '#d946ef'];
-        const formasGeometricas = ['circle', 'square', 'star', 'pentagon'];
-
-        const NODE_DIAMETER = 42;
-        const NODE_PADDING = 10;
-        const BORDER_PADDING = 6;
-
-        const displayNome = document.getElementById('display-nome');
-        const displayAvatar = document.getElementById('display-avatar');
-        const displayNível = document.getElementById('display-nivel');
+        const displayNivel = document.getElementById('display-nivel');
         const displayPontos = document.getElementById('display-pontos');
         const displayTempo = document.getElementById('display-tempo');
         const displayRecorde = document.getElementById('display-recorde');
@@ -651,339 +158,192 @@
         const btnAvancar = document.getElementById('btn-avancar');
         const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
         const selectMudarNivel = document.getElementById('select-mudar-nivel');
-        const selectTipoNumeracao = document.getElementById('select-tipo-numeracao');
         const themeToggleBtn = document.getElementById('theme-toggle');
+        const qiCerebro = document.getElementById('qi-cerebro');
 
-        // Gestão de Tema
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        atualizarTextoBotaoTema(savedTheme);
-
         themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('brain_flow_theme', newTheme);
-            atualizarTextoBotaoTema(newTheme);
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
         });
-
-        function atualizarTextoBotaoTema(theme) {
-            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
-        }
 
         function formatarTempo(seg) {
-            if (!seg || seg === 0) return "--:--";
-            let m = String(Math.floor(seg / 60)).padStart(2, '0');
-            let s = String(seg % 60).padStart(2, '0');
-            return `${m}:${s}`;
+            if (!seg) return "--:--";
+            return `${String(Math.floor(seg / 60)).padStart(2, '0')}:${String(seg % 60).padStart(2, '0')}`;
         }
 
-        function atualizarDisplayRecorde() {
-            const melhorTempo = recordesNivel[nivelAtual] || 0;
-            displayRecorde.textContent = formatarTempo(melhorTempo);
-        }
-
-        async function carregarDadosJogador() {
-            displayNome.textContent = jogadorSessao.nome;
-            displayAvatar.textContent = jogadorSessao.avatar;
-
-            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+        async function carregarDados() {
             try {
-                const snapshot = await get(jogadorRef);
-                if (snapshot.exists()) {
-                    const dados = snapshot.val();
+                const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
+                if (snap.exists()) {
+                    const dados = snap.val();
                     pontuacaoAcumulada = dados.pontos || 0;
                     nivelAtual = dados.nivel || 1;
-                    recordesNivel = dados.recordesFlow || {};
+                    recordesNivel = dados.recordesFlowNumeros || {};
                 }
                 displayPontos.textContent = pontuacaoAcumulada;
-                displayNível.textContent = nivelAtual;
-                iniciarNovoJogoRonda();
-            } catch (error) {
-                console.error("Erro ao carregar dados:", error);
-            }
+                displayNivel.textContent = nivelAtual;
+                qiCerebro.textContent = 70 + (nivelAtual * 5);
+                iniciarRonda();
+            } catch (e) { iniciarRonda(); }
         }
+        carregarDados();
 
-        carregarDadosJogador();
-
-        btnReiniciarNivel.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
-        });
-
+        btnReiniciarNivel.addEventListener('click', () => iniciarRonda());
         selectMudarNivel.addEventListener('change', (e) => {
-            const novoNivel = parseInt(e.target.value);
-            if (novoNivel) {
-                nivelAtual = novoNivel;
-                selectMudarNivel.value = "";
-                iniciarNovoJogoRonda();
-            }
+            nivelAtual = parseInt(e.target.value);
+            selectMudarNivel.value = "";
+            iniciarRonda();
         });
 
-        selectTipoNumeracao.addEventListener('change', () => {
-            iniciarNovoJogoRonda();
-        });
-
-        function converterParaRomano(num) {
-            const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
-            let roman = "";
-            for (let i in lookup ) {
-                while ( num >= lookup[i] ) {
-                    roman += i;
-                    num -= lookup[i];
-                }
-            }
-            return roman;
-        }
-
-        function obterTextoRotulo(id, modo, total) {
-            if (modo === 'arabicos') return id;
-            if (modo === 'romanos') return converterParaRomano(id);
-            return id <= Math.ceil(total / 2) ? id : converterParaRomano(id);
-        }
-
-        /* ==========================================================
-           Algoritmo de distribuição com ocupação máxima
-           e garantia de não-sobreposição (Poisson Disk simplificado)
-           ========================================================== */
-        function gerarPosicoesSemSobreposicao(total, boardWidth, boardHeight) {
-            const nodeRadius = NODE_DIAMETER / 2;
-            const minDistBase = NODE_DIAMETER + NODE_PADDING;
-
-            const usableW = boardWidth - 2 * (nodeRadius + BORDER_PADDING);
-            const usableH = boardHeight - 2 * (nodeRadius + BORDER_PADDING);
-            const offsetX = nodeRadius + BORDER_PADDING;
-            const offsetY = nodeRadius + BORDER_PADDING;
-
-            const areaPerNode = (usableW * usableH) / total;
-            const minDistTeorico = Math.sqrt(areaPerNode) * 0.62;
-            let minDist = Math.max(minDistTeorico, minDistBase * 0.85);
-
-            const passo = Math.max(14, Math.floor(minDist / 2.2));
-            const candidatas = [];
-            for (let y = 0; y <= usableH; y += passo) {
-                for (let x = 0; x <= usableW; x += passo) {
-                    candidatas.push({ x: x + offsetX, y: y + offsetY });
-                }
-            }
-
-            for (let i = candidatas.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [candidatas[i], candidatas[j]] = [candidatas[j], candidatas[i]];
-            }
-
-            const aceitas = [];
-            let tentativa = 0;
-            const MAX_TENTATIVAS = 30;
-
-            while (aceitas.length < total && tentativa < MAX_TENTATIVAS) {
-                tentativa++;
-                for (const c of candidatas) {
-                    if (aceitas.length >= total) break;
-
-                    let ok = true;
-                    for (const a of aceitas) {
-                        const dx = a.x - c.x;
-                        const dy = a.y - c.y;
-                        if (dx * dx + dy * dy < minDist * minDist) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                    if (ok) aceitas.push(c);
-                }
-
-                if (aceitas.length < total) {
-                    minDist *= 0.9;
-                    for (let i = candidatas.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [candidatas[i], candidatas[j]] = [candidatas[j], candidatas[i]];
-                    }
-                }
-            }
-
-            while (aceitas.length < total) {
-                aceitas.push({
-                    x: offsetX + Math.random() * usableW,
-                    y: offsetY + Math.random() * usableH
-                });
-            }
-
-            return aceitas.slice(0, total);
-        }
-
-        function iniciarNovoJogoRonda() {
+        function iniciarRonda() {
             clearInterval(timerInterval);
             segundos = 0;
             displayTempo.textContent = "00:00";
-            atualizarDisplayRecorde();
+            displayRecorde.textContent = formatarTempo(recordesNivel[nivelAtual] || 0);
 
-            timerInterval = setInterval(() => {
-                segundos++;
-                displayTempo.textContent = formatarTempo(segundos);
-            }, 1000);
-
-            totalPontosNivel = 4 + (nivelAtual * 2);
-            proximoNumeroEsperado = 1;
-            
-            const modoNumeracao = selectTipoNumeracao.value;
-            ligacoesFeitas = [];
+            timerInterval = setInterval(() => { segundos++; displayTempo.textContent = formatarTempo(segundos); }, 1000);
             btnAvancar.classList.add('hidden');
-            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte as figuras em ordem crescente.`;
+            infoInstrucao.textContent = `Nível ${nivelAtual}: Ligue os algarismos iguais sem cruzar linhas!`;
 
             document.querySelectorAll('.node').forEach(el => el.remove());
             canvasLines.innerHTML = '';
+            trilhosConcluidos = {};
+            desenhandoId = null;
+            caminhoAtual = [];
 
-            coordenadasNodes = [];
-            
-            const boardWidth = gameBoard.clientWidth - 60;
-            const boardHeight = gameBoard.clientHeight - 60;
-            const raioSeguranca = 50; // Distância mínima estrita entre centros das figuras (px)
-            
-            let posicoesGeradas = [];
-            let tentativasMaximas = 500;
+            const w = gameBoard.clientWidth - 50, h = gameBoard.clientHeight - 50;
+            const qtd = Math.min(2 + nivelAtual, 6);
+            paresDoNivel = [];
+            let usadas = [];
 
-            for (let i = 1; i <= totalPontosNivel; i++) {
-                let x, y;
-                let posicaoValida = false;
-                let tentativas = 0;
-
-                while (!posicaoValida && tentativas < tentativasMaximas) {
-                    // Gerar coordenadas aleatórias dentro dos limites seguros do tabuleiro
-                    x = Math.floor(Math.random() * (boardWidth - 40)) + 30;
-                    y = Math.floor(Math.random() * (boardHeight - 40)) + 30;
-
-                    posicaoValida = true;
-                    // Verificar distância em relação a todos os nós já posicionados
-                    for (let p of posicoesGeradas) {
-                        let distancia = Math.hypot(p.x - x, p.y - y);
-                        if (distancia < raioSeguranca) {
-                            posicaoValida = false;
-                            break;
-                        }
-                    }
-                    tentativas++;
-                }
-
-                // Se por ventura atingir o limite de tentativas, aceita a última gerada para travar loop
-                posicoesGeradas.push({ x, y });
-
-                const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
-                const formaAleatoria = formasGeometricas[Math.floor(Math.random() * formasGeometricas.length)];
-                const rotuloPonto = obterTextoRotulo(i, modoNumeracao, totalPontosNivel);
-                
-                coordenadasNodes.push({ id: i, x, y, cor: corAleatoria, forma: formaAleatoria, rotulo: rotuloPonto });
+            for (let i = 0; i < qtd; i++) {
+                let item = paletaNumeros[i % paletaNumeros.length];
+                let p1 = gerarPos(w, h, usadas), p2 = gerarPos(w, h, usadas);
+                paresDoNivel.push({ id: i, num: item.num, cor: item.cor, p1, p2 });
             }
 
-            coordenadasNodes.forEach(p => {
-                const node = document.createElement('div');
-                node.className = `node ${p.forma}`;
-                node.textContent = p.rotulo;
-                node.style.left = `${p.x}px`;
-                node.style.top = `${p.y}px`;
-                node.style.backgroundColor = p.cor;
-                node.dataset.id = p.id;
-
-                node.addEventListener('click', () => lidarComCliqueNode(p, node, modoNumeracao));
-                gameBoard.appendChild(node);
+            paresDoNivel.forEach(par => {
+                criarBolaNumero(par.p1.x, par.p1.y, par.num, par.cor, par.id);
+                criarBolaNumero(par.p2.x, par.p2.y, par.num, par.cor, par.id);
             });
         }
 
-        function lidarComCliqueNode(nodeObj, elementoNode, modoNumeracao) {
-            if (nodeObj.id === proximoNumeroEsperado) {
-                elementoNode.classList.add('completed');
-                ligacoesFeitas.push(nodeObj);
-
-                if (proximoNumeroEsperado > 1) {
-                    desenharLinha(ligacoesFeitas[ligacoesFeitas.length - 2], nodeObj);
-                }
-
-                proximoNumeroEsperado++;
-
-                if (proximoNumeroEsperado <= totalPontosNivel) {
-                    infoInstrucao.textContent = `✨ Ótimo! Continue a sequência. Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
-                } else {
-                    concluirNivelComSucesso();
-                }
-            } else if (nodeObj.id > proximoNumeroEsperado) {
-                infoInstrucao.textContent = `⚠️ Atenção! Siga a ordem crescente exata.`;
-            }
+        function gerarPos(w, h, usadas) {
+            let x, y, ok, t = 0;
+            do {
+                x = Math.floor(Math.random() * (w - 40)) + 25;
+                y = Math.floor(Math.random() * (h - 40)) + 25;
+                ok = true;
+                for (let u of usadas) if (Math.hypot(u.x - x, u.y - y) < 65) ok = false;
+                t++;
+            } while (!ok && t < 100);
+            usadas.push({ x, y });
+            return { x, y };
         }
 
-        function desenharLinha(p1, p2) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', p1.x);
-            line.setAttribute('y1', p1.y);
-            line.setAttribute('x2', p2.x);
-            line.setAttribute('y2', p2.y);
-            line.setAttribute('stroke', '#22c55e');
-            line.setAttribute('stroke-width', '4');
-            line.setAttribute('stroke-linecap', 'round');
-            canvasLines.appendChild(line);
+        function criarBolaNumero(x, y, num, cor, parId) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = `${x}px`; node.style.top = `${y}px`;
+            node.style.backgroundColor = cor;
+            node.textContent = num;
+            node.dataset.parId = parId;
+            node.dataset.x = x; node.dataset.y = y;
+
+            node.addEventListener('pointerdown', (e) => iniciarDesenho(e, parId, cor, x, y));
+            gameBoard.appendChild(node);
         }
 
-        async function concluirNivelComSucesso() {
-            clearInterval(timerInterval);
-            infoInstrucao.textContent = `🎉 Nível ${nivelAtual} Concluído com Sucesso!`;
-
-            const pontosGanhos = nivelAtual * 10;
-            pontuacaoAcumulada += pontosGanhos;
-
-            let melhorTempo = recordesNivel[nivelAtual] || 0;
-            let novoRecorde = false;
-            if (melhorTempo === 0 || segundos < melhorTempo) {
-                recordesNivel[nivelAtual] = segundos;
-                novoRecorde = true;
-            }
-
-            nivelAtual++;
-
-            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
-
-            try {
-                await update(jogadorRef, {
-                    pontos: pontuacaoAcumulada,
-                    nivel: nivelAtual,
-                    recordesFlow: recordesNivel,
-                    ultimaAtualizacao: new Date().toISOString()
-                });
-
-                displayPontos.textContent = pontuacaoAcumulada;
-                displayNível.textContent = nivelAtual;
-                atualizarDisplayRecorde();
-
-                let msgSucesso = `🏆 Sucesso absoluto! Ganhou ${pontosGanhos} pontos.\nTempo registado: ${formatarTempo(segundos)}`;
-                if (novoRecorde) msgSucesso += `\n🌟 NOVO RECORDE PESSOAL DE TEMPO!`;
-                alert(msgSucesso);
-
-                enviarEmailResumo(jogadorSessao.nome, jogadorSessao.email, nivelAtual, pontuacaoAcumulada, jogadorSessao.avatar);
-
-                btnAvancar.textContent = `Avançar para Nível ${nivelAtual} 🚀`;
-                btnAvancar.classList.remove('hidden');
-
-            } catch (error) {
-                console.error("Erro Firebase:", error);
-                btnAvancar.classList.remove('hidden');
-            }
+        function iniciarDesenho(e, parId, cor, x, y) {
+            e.preventDefault();
+            if (trilhosConcluidos[parId]) delete trilhosConcluidos[parId];
+            desenhandoId = parId;
+            caminhoAtual = [{ x, y }];
+            redesenharTudo();
         }
 
-        btnAvancar.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
+        gameBoard.addEventListener('pointermove', (e) => {
+            if (desenhandoId === null) return;
+            const rect = gameBoard.getBoundingClientRect();
+            let x = Math.max(15, Math.min(gameBoard.clientWidth - 15, e.clientX - rect.left));
+            let y = Math.max(15, Math.min(gameBoard.clientHeight - 15, e.clientY - rect.top));
+
+            caminhoAtual.push({ x, y });
+            redesenharTudo();
         });
 
-        function enviarEmailResumo(nome, email, nivel, pontos, avatar) {
-            const templateParams = {
-                to_name: nome,
-                to_email: email,
-                avatar: avatar,
-                nivel: nivel,
-                pontos: pontos,
-                mensagem: `Parabéns! O seu nível atual é ${nivel} e acumulou ${pontos} pontos no Brain Flow Master.`
-            };
+        gameBoard.addEventListener('pointerup', (e) => {
+            if (desenhandoId === null) return;
+            const elemSob = document.elementFromPoint(e.clientX, e.clientY);
+            if (elemSob && elemSob.classList.contains('node')) {
+                const destinoId = parseInt(elemSob.dataset.parId);
+                if (destinoId === desenhandoId) {
+                    caminhoAtual.push({ x: parseFloat(elemSob.dataset.x), y: parseFloat(elemSob.dataset.y) });
+                    trilhosConcluidos[desenhandoId] = [...caminhoAtual];
+                    verificarVitoria();
+                }
+            }
+            desenhandoId = null;
+            caminhoAtual = [];
+            redesenharTudo();
+        });
 
-            emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
-                .then((response) => console.log('E-mail enviado com sucesso!'))
-                .catch((error) => console.error('Erro ao enviar e-mail:', error));
+        function redesenharTudo() {
+            canvasLines.innerHTML = '';
+            for (let id in trilhosConcluidos) {
+                let pts = trilhosConcluidos[id];
+                let cor = paresDoNivel.find(p => p.id == id).cor;
+                adicionarCaminhoSVG(pts, cor);
+            }
+            if (desenhandoId !== null && caminhoAtual.length > 1) {
+                let cor = paresDoNivel.find(p => p.id == desenhandoId).cor;
+                adicionarCaminhoSVG(caminhoAtual, cor, true);
+            }
         }
+
+        function adicionarCaminhoSVG(pts, cor, tracejado = false) {
+            if (pts.length < 2) return;
+            let d = `M ${pts[0].x} ${pts[0].y}`;
+            for (let i = 1; i < pts.length; i++) d += ` L ${pts[i].x} ${pts[i].y}`;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', d);
+            path.setAttribute('stroke', cor);
+            path.setAttribute('stroke-width', '7');
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+            if (tracejado) path.setAttribute('stroke-dasharray', '6,6');
+            canvasLines.appendChild(path);
+        }
+
+        async function verificarVitoria() {
+            if (Object.keys(trilhosConcluidos).length === paresDoNivel.length) {
+                clearInterval(timerInterval);
+                infoInstrucao.textContent = `🎉 Nível ${nivelAtual} Concluído com Sucesso!`;
+                pontuacaoAcumulada += nivelAtual * 25;
+
+                let melhor = recordesNivel[nivelAtual] || 0;
+                if (!melhor || segundos < melhor) recordesNivel[nivelAtual] = segundos;
+                nivelAtual++;
+
+                try {
+                    await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
+                        pontos: pontuacaoAcumulada, nivel: nivelAtual, recordesFlowNumeros: recordesNivel
+                    });
+                } catch (e) {}
+
+                displayPontos.textContent = pontuacaoAcumulada;
+                displayNivel.textContent = nivelAtual;
+                displayRecorde.textContent = formatarTempo(recordesNivel[nivelAtual - 1]);
+                btnAvancar.classList.remove('hidden');
+            }
+        }
+
+        btnAvancar.addEventListener('click', () => iniciarRonda());
     </script>
 </body>
 </html>
