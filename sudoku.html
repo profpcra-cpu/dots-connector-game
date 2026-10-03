@@ -101,13 +101,13 @@
 
         .score-board {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
             background: var(--input-bg);
             padding: 8px;
             border-radius: 8px;
             margin-bottom: 10px;
-            font-size: 13px;
+            font-size: 12px;
             border: 1px solid var(--border-color);
             text-align: center;
         }
@@ -130,7 +130,6 @@
             cursor: pointer;
         }
 
-        /* TABULEIRO SUDOKU 9x9 COM DIVISÕES 3x3 */
         .sudoku-grid {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
@@ -153,13 +152,6 @@
             outline: none;
             padding: 0;
         }
-
-        /* Linhas grossas para separar as caixas 3x3 */
-        .sudoku-cell:nth-child(9n+3), .sudoku-cell:nth-child(9n+6) {
-            border-right: 2px solid var(--border-color);
-        }
-        
-        .sudoku-grid > div:nth-n(27) ~ div:nth-n(-54) { /* Simplificado via JS nas bordas inferiores */ }
 
         .sudoku-cell:focus {
             background: rgba(99, 102, 241, 0.2);
@@ -192,12 +184,6 @@
         button:hover {
             background-color: var(--btn-primary-hover);
         }
-
-        .instructions {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
     </style>
 </head>
 <body>
@@ -214,16 +200,18 @@
                 <span id="display-avatar" style="font-size: 22px;">😀</span>
                 <strong id="display-nome" style="font-size: 14px;"></strong>
             </div>
-            <span style="font-size: 13px; color: var(--text-muted);">Sudoku Master (9x9)</span>
+            <span style="font-size: 13px; color: var(--text-muted);">Sudoku Master</span>
         </div>
 
+        <!-- PAINEL DE ESTATÍSTICAS E RECORDES -->
         <div class="score-board">
             <div>Pontos: <br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
             <div>Tempo: <br><strong id="display-tempo" style="color: #38bdf8;">00:00</strong></div>
+            <div>Recorde: <br><strong id="display-recorde" style="color: #f59e0b;">--:--</strong></div>
             <div>Erros: <br><strong id="display-erros" style="color: #ef4444;">0</strong></div>
         </div>
 
-        <!-- CONTROLES DE DIFICULDADE -->
+        <!-- CONTROLES -->
         <div class="controls-grid">
             <select id="select-dificuldade">
                 <option value="easy">Fácil</option>
@@ -239,7 +227,7 @@
         <button id="btn-verificar">Validar Resposta ✅</button>
     </div>
 
-    <!-- Lógica do Sudoku Completo -->
+    <!-- Lógica com Recordes por Tempo -->
     <script type="module">
         import { db } from "./firebase-config.js";
         import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -255,6 +243,7 @@
         let segundos = 0;
         let timerInterval = null;
         let totalErros = 0;
+        let dadosJogadorFirebase = { pontos: 0, recordes: {} };
 
         // Gestão de Tema
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
@@ -269,7 +258,21 @@
             document.getElementById('theme-toggle').textContent = next === 'dark' ? '☀️ Claro' : '🌙 Escuro';
         });
 
-        // Gerador e Validador de Sudoku 9x9 Padrão
+        function formatarTempo(seg) {
+            if (!seg || seg === 0) return "--:--";
+            let m = String(Math.floor(seg / 60)).padStart(2, '0');
+            let s = String(seg % 60).padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function atualizarDisplayRecorde() {
+            const diff = document.getElementById('select-dificuldade').value;
+            const recordes = dadosJogadorFirebase.recordes || {};
+            const melhorTempo = recordes[diff] || 0;
+            document.getElementById('display-recorde').textContent = formatarTempo(melhorTempo);
+        }
+
+        // Gerador e Validador de Sudoku 9x9
         function gerarSudokuCompleto() {
             let grid = Array(9).fill(0).map(() => Array(9).fill(0));
             resolverSudoku(grid);
@@ -317,6 +320,8 @@
             segundos = 0;
             totalErros = 0;
             document.getElementById('display-erros').textContent = totalErros;
+            document.getElementById('display-tempo').textContent = "00:00";
+            atualizarDisplayRecorde();
             iniciarTempo();
 
             tabuleiroSolucao = gerarSudokuCompleto();
@@ -352,7 +357,6 @@
                     input.dataset.row = r;
                     input.dataset.col = c;
 
-                    // Bordas grossas para as caixas 3x3
                     if (c === 2 || c === 5) input.style.borderRight = '2px solid var(--border-color)';
                     if (r === 2 || r === 5) input.style.borderBottom = '2px solid var(--border-color)';
 
@@ -375,9 +379,7 @@
         function iniciarTempo() {
             timerInterval = setInterval(() => {
                 segundos++;
-                let m = String(Math.floor(segundos / 60)).padStart(2, '0');
-                let s = String(segundos % 60).padStart(2, '0');
-                document.getElementById('display-tempo').textContent = `${m}:${s}`;
+                document.getElementById('display-tempo').textContent = formatarTempo(segundos);
             }, 1000);
         }
 
@@ -411,24 +413,42 @@
 
             if (correto) {
                 clearInterval(timerInterval);
-                alert("🎉 Parabéns! Completou o Sudoku corretamente!");
                 
-                // Atualizar pontuação no Firebase
                 const diff = document.getElementById('select-dificuldade').value;
-                const pontosGanho = diff === 'easy' ? 50 : diff === 'medium' ? 100 : 200;
+                let pontosBase = diff === 'easy' ? 50 : diff === 'medium' ? 100 : 200;
+                
+                // Verificar recorde
+                let recordes = dadosJogadorFirebase.recordes || {};
+                let melhorTempoAtual = recordes[diff] || 0;
+                let bateuRecorde = false;
 
+                if (melhorTempoAtual === 0 || segundos < melhorTempoAtual) {
+                    recordes[diff] = segundos;
+                    bateuRecorde = true;
+                    pontosBase += 50; // Bónus por recorde batido
+                }
+
+                dadosJogadorFirebase.pontos = (dadosJogadorFirebase.pontos || 0) + pontosBase;
+                dadosJogadorFirebase.recordes = recordes;
+
+                document.getElementById('display-pontos').textContent = dadosJogadorFirebase.pontos;
+                atualizarDisplayRecorde();
+
+                const mensagemRecorde = bateuRecorde ? `🏆 NOVO RECORDE PESSOAL! (${formatarTempo(segundos)}) +50 pontos bónus!` : `Tempo: ${formatarTempo(segundos)}`;
+                alert(`🎉 Parabéns! Completou o Sudoku correto!\n${mensagemRecorde}\nTotal ganho: ${pontosBase} pontos.`);
+
+                // Sincronizar com o Firebase
                 const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
                 try {
-                    const snapshot = await get(jogadorRef);
-                    if (snapshot.exists()) {
-                        const dados = snapshot.val();
-                        const novosPontos = (dados.pontos || 0) + pontosGanho;
-                        await update(jogadorRef, { pontos: novosPontos, ultimaAtualizacao: new Date().toISOString() });
-                        document.getElementById('display-pontos').textContent = novosPontos;
-                    }
+                    await update(jogadorRef, {
+                        pontos: dadosJogadorFirebase.pontos,
+                        recordes: recordes,
+                        ultimaAtualizacao: new Date().toISOString()
+                    });
                 } catch (e) {
-                    console.error("Erro ao atualizar pontos:", e);
+                    console.error("Erro ao salvar no Firebase:", e);
                 }
+
             } else {
                 totalErros++;
                 document.getElementById('display-erros').textContent = totalErros;
@@ -436,18 +456,19 @@
             }
         });
 
-        // Carregar pontos iniciais do Firebase
-        async function carregarPontosIniciais() {
+        // Carregar dados iniciais do Firebase
+        async function carregarDadosIniciais() {
             try {
                 const snapshot = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
                 if (snapshot.exists()) {
-                    document.getElementById('display-pontos').textContent = snapshot.val().pontos || 0;
+                    dadosJogadorFirebase = snapshot.val();
+                    document.getElementById('display-pontos').textContent = dadosJogadorFirebase.pontos || 0;
                 }
             } catch (e) { console.error(e); }
+            criarNovoJogo();
         }
 
-        carregarPontosIniciais();
-        criarNovoJogo();
+        carregarDadosIniciais();
     </script>
 </body>
 </html>
