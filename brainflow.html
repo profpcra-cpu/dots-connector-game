@@ -2,578 +2,739 @@
 <html lang="pt" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Flow Master - Formas e Conexões</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Brain Flow Master — Turbo</title>
     
-    <!-- SDK do EmailJS -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            emailjs.init("SEU_PUBLIC_KEY");
-        })();
-    </script>
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.85);
+            --card-solid: #1e293b;
+            --text: #f8fafc;
             --text-muted: #94a3b8;
-            --border-color: #334155;
-            --input-bg: #0f172a;
-            --btn-primary: #3b82f6;
-            --btn-primary-hover: #2563eb;
-            --board-bg: #0f172a;
-            --board-border: #475569;
+            --border: rgba(51, 65, 85, 0.8);
+            --input-bg: rgba(15, 23, 42, 0.9);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --board-bg: #0a0f1e;
+            --board-border: #334155;
+            --grid-line: rgba(255,255,255,0.04);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         [data-theme="light"] {
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-color: #0f172a;
+            --bg: #f1f5f9;
+            --card: rgba(255, 255, 255, 0.9);
+            --card-solid: #ffffff;
+            --text: #0f172a;
             --text-muted: #64748b;
-            --border-color: #cbd5e1;
-            --input-bg: #f8fafc;
-            --btn-primary: #2563eb;
-            --btn-primary-hover: #1d4ed8;
+            --border: rgba(203, 213, 225, 0.8);
+            --input-bg: rgba(248, 250, 252, 0.9);
             --board-bg: #f8fafc;
-            --board-border: #94a3b8;
+            --board-border: #cbd5e1;
+            --grid-line: rgba(0,0,0,0.05);
+        }
+
+        * { 
+            font-family: 'Outfit', system-ui, sans-serif; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 10px;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            align-items: flex-start;
+            padding: 10px;
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: var(--card);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
         }
 
         .container {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             width: 100%;
-            max-width: 480px;
-            text-align: center;
-            box-sizing: border-box;
-            border: 1px solid var(--border-color);
+            max-width: 500px;
+            padding: 16px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
+        /* ===== TOP BAR ===== */
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
+            gap: 8px;
         }
 
-        .btn-small {
-            background: none;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 6px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            width: auto;
-            margin: 0;
-            transition: background 0.2s;
-        }
-        .btn-small:hover {
-            background: var(--border-color);
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 15px;
-            box-sizing: border-box;
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             background: var(--input-bg);
-            color: var(--text-color);
-            transition: all 0.2s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--btn-primary);
-        }
-
-        button {
-            background-color: var(--btn-primary);
-            color: white;
-            border: none;
+            border: 1px solid var(--border);
+            color: var(--text);
             cursor: pointer;
-            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
         }
-        button:hover {
-            background-color: var(--btn-primary-hover);
-        }
+        .btn-icon:hover { background: var(--border); }
+        .btn-icon:active { transform: scale(0.92); }
 
-        .btn-secondary {
-            background-color: #475569;
-        }
-        .btn-secondary:hover {
-            background-color: #334155;
-        }
-
-        .score-board {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
-            background: var(--input-bg);
-            padding: 8px 4px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 11px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-
+        /* ===== USER HEADER ===== */
         .user-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            padding: 10px 14px;
+            border-radius: 14px;
             background: var(--input-bg);
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
-
-        .user-info-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-avatar-display {
-            font-size: 24px;
-            background: var(--border-color);
-            padding: 2px 6px;
-            border-radius: 50%;
-        }
-
-        #game-board {
-            position: relative;
-            width: 100%;
-            height: 320px;
-            background: var(--board-bg);
-            border: 2px dashed var(--board-border);
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
-            margin-top: 8px;
-            overflow: hidden;
-            cursor: crosshair;
-        }
-
-        /* Formas Geométricas Dinâmicas */
-        .node {
-            position: absolute;
-            width: 42px;
-            height: 42px;
-            color: white;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 13px;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.25);
-            transition: transform 0.1s, filter 0.2s;
-            user-select: none;
-            border: 2px solid rgba(255,255,255,0.6);
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
         }
-        .node:hover {
-            transform: translate(-50%, -50%) scale(1.18);
-            filter: brightness(1.25);
+        .user-name {
+            font-weight: 800;
+            font-size: 14px;
+            line-height: 1.1;
         }
-        .node.circle { border-radius: 50%; }
-        .node.square { border-radius: 8px; }
-        .node.star { border-radius: 12px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
-        .node.pentagon { border-radius: 10px; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+        .user-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
 
-        .node.completed {
-            background: #22c55e !important;
-            border-color: #fff;
-            box-shadow: 0 0 10px #22c55e;
+        /* ===== SCORE BOARD ===== */
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        .stat-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 4px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .stat-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .stat-value {
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== PROGRESS ===== */
+        .progress-wrap {
+            width: 100%;
+            height: 6px;
+            background: var(--input-bg);
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            border-radius: 999px;
+            transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(99,102,241,0.6);
+        }
+
+        /* ===== GAME BOARD ===== */
+        #game-board {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-height: 60vh;
+            background: var(--board-bg);
+            border: 2px solid var(--board-border);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: crosshair;
+            user-select: none;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 40px 40px;
+            touch-action: none;
         }
 
         #canvas-lines {
             position: absolute;
-            top: 0;
-            left: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
+            z-index: 2;
         }
 
-        .instructions {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+        /* ===== NODES ===== */
+        .node {
+            position: absolute;
+            width: 46px;
+            height: 46px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.2);
+            transition: transform 0.15s ease, filter 0.2s;
+            user-select: none;
+            border: 2px solid rgba(255,255,255,0.5);
+            z-index: 3;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
         }
+        .node:hover {
+            transform: translate(-50%, -50%) scale(1.15);
+            filter: brightness(1.2);
+        }
+        .node:active {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        .node.circle { border-radius: 50%; }
+        .node.square { border-radius: 10px; }
+        .node.star { 
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            border: none;
+            box-shadow: none;
+        }
+        .node.pentagon { 
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+            border: none;
+        }
+        .node.hexagon {
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            border: none;
+        }
+
+        .node.completed {
+            animation: node-pulse 1.5s infinite;
+            border-color: #fff;
+        }
+        .node.next-target {
+            animation: target-pulse 1.2s infinite;
+        }
+        .node.wrong {
+            animation: shake 0.35s ease-in-out;
+        }
+
+        @keyframes node-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7), 0 4px 12px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(34,197,94,0), 0 4px 12px rgba(0,0,0,0.4); }
+        }
+        @keyframes target-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.7), 0 4px 12px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 0 0 14px rgba(99,102,241,0), 0 4px 12px rgba(0,0,0,0.4); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+            25% { transform: translate(-50%, -50%) translateX(-8px); }
+            75% { transform: translate(-50%, -50%) translateX(8px); }
+        }
+
+        /* ===== CONTROLS ===== */
+        select, .btn {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        select:focus { outline: none; border-color: var(--primary); }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px rgba(16,185,129,0.4);
+        }
+        .btn-ghost {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-ghost:hover { background: var(--border); }
 
         .controls-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin-top: 8px;
         }
+
+        /* ===== TOAST ===== */
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--card-solid);
+            color: var(--text);
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            z-index: 1000;
+            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 90vw;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ===== MODAL ===== */
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+        .modal-bg.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-panel {
+            background: var(--card-solid);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            transform: scale(0.85);
+            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        .modal-bg.show .modal-panel { transform: scale(1); }
+
+        /* ===== CONFETTI ===== */
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        /* ===== INFO ===== */
+        .instructions {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 600;
+            min-height: 16px;
+            transition: color 0.2s;
+        }
+        .instructions.success { color: var(--success); font-weight: 800; }
+        .instructions.error { color: var(--danger); font-weight: 800; }
+
+        /* ===== HINT BADGE ===== */
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--warning);
+            color: #000;
+            font-size: 9px;
+            font-weight: 900;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .btn-wrapper { position: relative; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- BARRA SUPERIOR -->
+    <!-- Toast -->
+    <div id="toast"><i class="fa-solid fa-check-circle"></i><span id="toast-text"></span></div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-bg show">
+        <div class="modal-panel">
+            <div style="width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 20px; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 24px rgba(99,102,241,0.4);">
+                🧠
+            </div>
+            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 4px;">Brain Flow Master</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Conecte as formas em ordem. Sem tocar nas outras!</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;" id="avatar-grid"></div>
+            
+            <input type="text" id="input-nome" placeholder="Seu nome" maxlength="16" value="Jogador"
+                style="width: 100%; padding: 12px; border-radius: 12px; background: var(--input-bg); border: 2px solid var(--border); color: var(--text); font-weight: 700; font-size: 14px; text-align: center; margin-bottom: 10px; outline: none; font-family: inherit;">
+            
+            <button id="btn-start" class="btn btn-primary" style="padding: 14px; font-size: 14px;">
+                <i class="fa-solid fa-play"></i> Começar a Jogar
+            </button>
+            <p style="font-size: 10px; color: var(--text-muted); margin-top: 10px;">Progresso salvo localmente · Sem registro</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container glass" id="main-container" style="display: none;">
+        
+        <!-- Top Bar -->
         <div class="top-bar">
-            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
-            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+            <div style="display: flex; gap: 6px;">
+                <button class="btn-icon" id="btn-help" title="Ajuda"><i class="fa-solid fa-question"></i></button>
+                <button class="btn-icon" id="btn-theme" title="Tema"><i class="fa-solid fa-moon"></i></button>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <button class="btn-icon" id="btn-sound" title="Som"><i class="fa-solid fa-volume-high"></i></button>
+                <button class="btn-icon" id="btn-logout" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
         </div>
 
-        <!-- TELA DO JOGO -->
-        <div id="game-screen">
-            <div class="user-header">
-                <div class="user-info-left">
-                    <span id="display-avatar" class="user-avatar-display">😀</span>
-                    <strong id="display-nome" style="font-size: 14px;"></strong>
+        <!-- User Header -->
+        <div class="user-header">
+            <div class="user-info">
+                <div class="user-avatar" id="display-avatar">😀</div>
+                <div>
+                    <div class="user-name" id="display-nome">Jogador</div>
+                    <div class="user-sub">Brain Flow Master</div>
                 </div>
-                <span style="font-size: 12px; color: var(--text-muted);">Brain Flow Master</span>
             </div>
-            
-            <div class="score-board">
-                <div>Nível: <br><strong id="display-nivel" style="color: #38bdf8;">1</strong></div>
-                <div>Pontos: <br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
-                <div>Tempo: <br><strong id="display-tempo" style="color: #60a5fa;">00:00</strong></div>
-                <div>Recorde: <br><strong id="display-recorde" style="color: #f59e0b;">--:--</strong></div>
+            <div style="text-align: right;">
+                <div class="stat-label">Sequência</div>
+                <div class="stat-value" id="display-streak" style="color: var(--warning);">0 🔥</div>
             </div>
-            <p class="instructions" id="info-instrucao">Conecte as figuras em ordem crescente sem sobreposição.</p>
+        </div>
+
+        <!-- Score Board -->
+        <div class="score-board">
+            <div class="stat-card">
+                <div class="stat-label">Nível</div>
+                <div class="stat-value" id="display-nivel" style="color: #38bdf8;">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Pontos</div>
+                <div class="stat-value" id="display-pontos" style="color: #4ade80;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tempo</div>
+                <div class="stat-value" id="display-tempo" style="color: #60a5fa;">0:00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Recorde</div>
+                <div class="stat-value" id="display-recorde" style="color: #f59e0b;">--:--</div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-wrap">
+            <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+        </div>
+
+        <p class="instructions" id="info-instrucao">Conecte as formas em ordem crescente.</p>
+
+        <!-- Game Board -->
+        <div id="game-board">
+            <svg id="canvas-lines" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+
+        <!-- Controls Row 1 -->
+        <div class="controls-grid">
+            <select id="select-numeracao">
+                <option value="arabicos">🔢 Arábicos</option>
+                <option value="romanos">🏛️ Romanos</option>
+                <option value="ambos">🎲 Misto</option>
+            </select>
+            <select id="select-nivel">
+                <option value="1">Nível 1</option>
+                <option value="2">Nível 2</option>
+                <option value="3">Nível 3</option>
+                <option value="4">Nível 4</option>
+                <option value="5">Nível 5</option>
+                <option value="6">Nível 6</option>
+                <option value="7">Nível 7</option>
+                <option value="8">Nível 8</option>
+            </select>
+        </div>
+
+        <!-- Controls Row 2 -->
+        <div class="controls-grid">
+            <button class="btn btn-ghost" id="btn-hint">
+                <i class="fa-solid fa-lightbulb" style="color: var(--warning);"></i> Dica
+            </button>
+            <button class="btn btn-ghost" id="btn-reset">
+                <i class="fa-solid fa-rotate-left" style="color: #f87171;"></i> Reiniciar
+            </button>
+        </div>
+
+        <button class="btn btn-ghost" id="btn-undo" style="display: none;">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Desfazer Última
+        </button>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal-bg">
+        <div class="modal-panel">
+            <div style="font-size: 48px; margin-bottom: 8px;">🏆</div>
+            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 4px;">Nível Concluído!</h2>
+            <p id="win-subtitle" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Excelente trabalho!</p>
             
-            <div id="game-board">
-                <svg id="canvas-lines"></svg>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
+                <div class="stat-card">
+                    <div class="stat-label">Tempo</div>
+                    <div class="stat-value" id="win-time">0:00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pontos</div>
+                    <div class="stat-value" style="color: var(--warning);" id="win-points">+0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Recorde</div>
+                    <div class="stat-value" style="color: var(--success);" id="win-record">--</div>
+                </div>
             </div>
 
-            <!-- OPÇÕES -->
+            <button class="btn btn-success" id="btn-next" style="padding: 14px; font-size: 14px; margin-bottom: 8px;">
+                <i class="fa-solid fa-arrow-right"></i> Próximo Nível
+            </button>
             <div class="controls-grid">
-                <select id="select-tipo-numeracao" style="margin-top:0; cursor:pointer;">
-                    <option value="arabicos">Arábicos (1, 2, 3)</option>
-                    <option value="romanos">Romanos (I, II, III)</option>
-                    <option value="ambos">Misto (Arábicos & Romanos)</option>
-                </select>
-                <select id="select-mudar-nivel" style="margin-top:0; cursor:pointer;">
-                    <option value="" disabled selected>Nível...</option>
-                    <option value="1">Nível 1</option>
-                    <option value="2">Nível 2</option>
-                    <option value="3">Nível 3</option>
-                    <option value="4">Nível 4</option>
-                    <option value="5">Nível 5</option>
-                    <option value="6">Nível 6</option>
-                </select>
-            </div>
-
-            <div class="controls-grid">
-                <button id="btn-reiniciar-nivel" class="btn-secondary">🔄 Reiniciar</button>
-                <button id="btn-avancar" class="hidden" style="margin-top:0; background-color: #10b981;">Avançar 🚀</button>
+                <button class="btn btn-ghost" id="btn-replay">🔄 Repetir</button>
+                <button class="btn btn-ghost" id="btn-menu-win">🏠 Menu</button>
             </div>
         </div>
     </div>
 
-    <!-- Lógica do Jogo -->
-    <script type="module">
-        import { db } from "./firebase-config.js";
-        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-bg">
+        <div class="modal-panel" style="text-align: left;">
+            <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 12px; text-align: center;">📖 Como Jogar</h2>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted);">
+                <p style="margin-bottom: 10px;"><b style="color: var(--text);">🎯 Objetivo:</b> Conecte as formas na ordem numérica crescente.</p>
+                <p style="margin-bottom: 10px;"><b style="color: var(--text);">⚡ Regras:</b></p>
+                <ul style="margin: 0 0 10px 20px;">
+                    <li>Clique no número <b>1</b>, depois no <b>2</b>, e assim por diante</li>
+                    <li>Você <b>não pode</b> tocar em outras formas antes da hora</li>
+                    <li>As linhas <b>não podem cruzar</b> outras linhas</li>
+                    <li>Use <b>Dica</b> se ficar preso (custa pontos)</li>
+                </ul>
+                <p style="margin-bottom: 10px;"><b style="color: var(--text);">🏆 Pontuação:</b></p>
+                <ul style="margin: 0 0 10px 20px;">
+                    <li>Complete o nível: <b>+Nível × 10</b> pontos</li>
+                    <li>Sequência (streak): <b>+10%</b> por nível seguido</li>
+                    <li>Recorde de tempo: <b>+50</b> pontos bônus</li>
+                </ul>
+            </div>
+            <button class="btn btn-primary" onclick="closeModal('help-modal')" style="margin-top: 8px;">Entendi!</button>
+        </div>
+    </div>
 
-        let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-        if (!jogadorSessao) { window.location.href = 'index.html'; }
-
-        let pontuacaoAcumulada = 0;
-        let nivelAtual = 1;
-        let totalPontosNivel = 5;
-        let proximoNumeroEsperado = 1;
-        let coordenadasNodes = [];
-        let ligacoesFeitas = [];
-        let segundos = 0;
-        let timerInterval = null;
-        let recordesNivel = {};
-
-        const paletaCores = ['#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#6366f1', '#06b6d4', '#d946ef'];
-        const formasGeometricas = ['circle', 'square', 'star', 'pentagon'];
-
-        const displayNome = document.getElementById('display-nome');
-        const displayAvatar = document.getElementById('display-avatar');
-        const displayNível = document.getElementById('display-nivel');
-        const displayPontos = document.getElementById('display-pontos');
-        const displayTempo = document.getElementById('display-tempo');
-        const displayRecorde = document.getElementById('display-recorde');
-        const infoInstrucao = document.getElementById('info-instrucao');
-        const gameBoard = document.getElementById('game-board');
-        const canvasLines = document.getElementById('canvas-lines');
-        const btnAvancar = document.getElementById('btn-avancar');
-        const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
-        const selectMudarNivel = document.getElementById('select-mudar-nivel');
-        const selectTipoNumeracao = document.getElementById('select-tipo-numeracao');
-        const themeToggleBtn = document.getElementById('theme-toggle');
-
-        // Gestão de Tema
-        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        atualizarTextoBotaoTema(savedTheme);
-
-        themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('brain_flow_theme', newTheme);
-            atualizarTextoBotaoTema(newTheme);
-        });
-
-        function atualizarTextoBotaoTema(theme) {
-            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+    <script>
+    // ============================================================
+    // SOUND ENGINE
+    // ============================================================
+    class SoundEngine {
+        constructor() { 
+            this.ctx = null; 
+            this.enabled = localStorage.getItem('bfm_sound') !== 'off';
         }
-
-        function formatarTempo(seg) {
-            if (!seg || seg === 0) return "--:--";
-            let m = String(Math.floor(seg / 60)).padStart(2, '0');
-            let s = String(seg % 60).padStart(2, '0');
-            return `${m}:${s}`;
+        init() { 
+            if (!this.ctx) {
+                try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } 
+                catch(e) { this.enabled = false; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
         }
-
-        function atualizarDisplayRecorde() {
-            const melhorTempo = recordesNivel[nivelAtual] || 0;
-            displayRecorde.textContent = formatarTempo(melhorTempo);
-        }
-
-        async function carregarDadosJogador() {
-            displayNome.textContent = jogadorSessao.nome;
-            displayAvatar.textContent = jogadorSessao.avatar;
-
-            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+        tone(freq, dur = 0.1, type = 'sine', vol = 0.12) {
+            if (!this.ctx || !this.enabled) return;
             try {
-                const snapshot = await get(jogadorRef);
-                if (snapshot.exists()) {
-                    const dados = snapshot.val();
-                    pontuacaoAcumulada = dados.pontos || 0;
-                    nivelAtual = dados.nivel || 1;
-                    recordesNivel = dados.recordesFlow || {};
-                }
-                displayPontos.textContent = pontuacaoAcumulada;
-                displayNível.textContent = nivelAtual;
-                iniciarNovoJogoRonda();
-            } catch (error) {
-                console.error("Erro ao carregar dados:", error);
-            }
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + dur);
+            } catch(e) {}
         }
-
-        carregarDadosJogador();
-
-        btnReiniciarNivel.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
-        });
-
-        selectMudarNivel.addEventListener('change', (e) => {
-            const novoNivel = parseInt(e.target.value);
-            if (novoNivel) {
-                nivelAtual = novoNivel;
-                selectMudarNivel.value = "";
-                iniciarNovoJogoRonda();
-            }
-        });
-
-        selectTipoNumeracao.addEventListener('change', () => {
-            iniciarNovoJogoRonda();
-        });
-
-        function converterParaRomano(num) {
-            const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
-            let roman = "";
-            for (let i in lookup ) {
-                while ( num >= lookup[i] ) {
-                    roman += i;
-                    num -= lookup[i];
-                }
-            }
-            return roman;
+        click() { this.tone(600, 0.06, 'sine', 0.1); }
+        success() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, 0.1, 'triangle', 0.12), i * 60)); }
+        error() { this.tone(180, 0.18, 'sawtooth', 0.08); }
+        win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.tone(f, 0.15, 'triangle', 0.14), i * 100)); }
+        hint() { [400, 500, 600, 700].forEach((f, i) => setTimeout(() => this.tone(f, 0.08, 'sine', 0.1), i * 50)); }
+        undo() { this.tone(300, 0.1, 'sine', 0.1); }
+        toggle() { 
+            this.enabled = !this.enabled; 
+            localStorage.setItem('bfm_sound', this.enabled ? 'on' : 'off');
+            return this.enabled;
         }
+    }
+    const audio = new SoundEngine();
 
-        function obterTextoRotulo(id, modo, total) {
-            if (modo === 'arabicos') return id;
-            if (modo === 'romanos') return converterParaRomano(id);
-            return id <= Math.ceil(total / 2) ? id : converterParaRomano(id);
-        }
+    // ============================================================
+    // CONFIGURAÇÃO
+    // ============================================================
+    const PALETTE = [
+        '#ef4444', '#f97316', '#eab308', '#22c55e', 
+        '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', 
+        '#ec4899', '#f43f5e', '#a855f7', '#6366f1'
+    ];
+    const SHAPES = ['circle', 'square', 'star', 'pentagon', 'hexagon'];
+    const AVATARS = ['😀','😎','🤓','🧠','🦊','🐼','🐸','🦁','🐯','🦄','🐲','👽'];
+    const NUMERATION_MODES = { arabicos: 'arabicos', romanos: 'romanos', ambos: 'ambos' };
 
-        function iniciarNovoJogoRonda() {
-            clearInterval(timerInterval);
-            segundos = 0;
-            displayTempo.textContent = "00:00";
-            atualizarDisplayRecorde();
+    // ============================================================
+    // ESTADO DO JOGO
+    // ============================================================
+    const state = {
+        player: { name: 'Jogador', avatar: '😀' },
+        level: 1,
+        score: 0,
+        streak: 0,
+        bestStreak: 0,
+        totalPoints: 5,
+        nextExpected: 1,
+        nodes: [],
+        connections: [],
+        history: [],
+        seconds: 0,
+        timerInterval: null,
+        records: {},      // { level: seconds }
+        hintsUsed: 0,
+        maxHints: 3,
+        hintsLeft: 3,
+        numMode: 'arabicos',
+        isPaused: false,
+        hintUsedThisLevel: false,
+        startTime: 0
+    };
 
-            timerInterval = setInterval(() => {
-                segundos++;
-                displayTempo.textContent = formatarTempo(segundos);
-            }, 1000);
+    // ============================================================
+    // PERSISTÊNCIA
+    // ============================================================
+    const STORAGE_KEY = 'bfm_save_v2';
 
-            totalPontosNivel = 4 + (nivelAtual * 2);
-            proximoNumeroEsperado = 1;
-            
-            const modoNumeracao = selectTipoNumeracao.value;
-            ligacoesFeitas = [];
-            btnAvancar.classList.add('hidden');
-            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte as figuras em ordem crescente.`;
+    function save() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                player: state.player,
+                level: state.level,
+                score: state.score,
+                streak: state.streak,
+                bestStreak: state.bestStreak,
+                records: state.records,
+                numMode: state.numMode,
+                theme: document.documentElement.getAttribute('data-theme'),
+                sound: audio.enabled
+            }));
+        } catch(e) {}
+    }
 
-            document.querySelectorAll('.node').forEach(el => el.remove());
-            canvasLines.innerHTML = '';
+    function load() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            state.player = data.player || state.player;
+            state.level = data.level || 1;
+            state.score = data.score || 0;
+            state.streak = data.streak || 0;
+            state.bestStreak = data.bestStreak || 0;
+            state.records = data.records || {};
+            state.numMode = data.numMode || 'arabicos';
+            return true;
+        } catch(e) { return false; }
+    }
 
-            coordenadasNodes = [];
-            
-            // DISTRIBUIÇÃO EQUIDISTANTE POR GRELHA (ELIMINA SOBREPOSIÇÕES)
-            const boardWidth = gameBoard.clientWidth - 70;
-            const boardHeight = gameBoard.clientHeight - 70;
-            
-            const cols = Math.ceil(Math.sqrt(totalPontosNivel * 1.4));
-            const rows = Math.ceil(totalPontosNivel / cols);
-            
-            const cellWidth = boardWidth / cols;
-            const cellHeight = boardHeight / rows;
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function toRoman(num) {
+        const map = { M:1000, CM:900, D:500, CD:400, C:100, XC:90, L:50, XL:40, X:10, IX:9, V:5, IV:4, I:1 };
+        let r = '';
+        for (const k in map) { while (num >= map[k]) { r += k; num -= map[k]; } }
+        return r;
+    }
 
-            let posicoesDisponiveis = [];
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    posicoesDisponiveis.push({
-                        x: Math.floor(c * cellWidth + cellWidth / 2 + 35 + (Math.random() * 16 - 8)),
-                        y: Math.floor(r * cellHeight + cellHeight / 2 + 35 + (Math.random() * 16 - 8))
-                    });
-                }
-            }
+    function getLabel(id, mode, total) {
+        if (mode === 'arabicos') return String(id);
+        if (mode === 'romanos') return toRoman(id);
+        return id <= Math.ceil(total / 2) ? String(id) : toRoman(id);
+    }
 
-            posicoesDisponiveis.sort(() => Math.random() - 0.5);
+    function fmtTime(s) {
+        if (!s || s <= 0) return '--:--';
+        return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    }
 
-            for (let i = 1; i <= totalPontosNivel; i++) {
-                const pos = posicoesDisponiveis[i - 1] || { x: 50, y: 50 };
-                const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
-                const formaAleatoria = formasGeometricas[Math.floor(Math.random() * formasGeometricas.length)];
-                const rotuloPonto = obterTextoRotulo(i, modoNumeracao, totalPontosNivel);
-                
-                coordenadasNodes.push({ id: i, x: pos.x, y: pos.y, cor: corAleatoria, forma: formaAleatoria, rotulo: rotuloPonto });
-            }
-
-            coordenadasNodes.forEach(p => {
-                const node = document.createElement('div');
-                node.className = `node ${p.forma}`;
-                node.textContent = p.rotulo;
-                node.style.left = `${p.x}px`;
-                node.style.top = `${p.y}px`;
-                node.style.backgroundColor = p.cor;
-                node.dataset.id = p.id;
-
-                node.addEventListener('click', () => lidarComCliqueNode(p, node, modoNumeracao));
-                gameBoard.appendChild(node);
-            });
-        }
-
-        function lidarComCliqueNode(nodeObj, elementoNode, modoNumeracao) {
-            if (nodeObj.id === proximoNumeroEsperado) {
-                elementoNode.classList.add('completed');
-                ligacoesFeitas.push(nodeObj);
-
-                if (proximoNumeroEsperado > 1) {
-                    desenharLinha(ligacoesFeitas[ligacoesFeitas.length - 2], nodeObj);
-                }
-
-                proximoNumeroEsperado++;
-
-                if (proximoNumeroEsperado <= totalPontosNivel) {
-                    infoInstrucao.textContent = `✨ Ótimo! Continue a sequência. Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
-                } else {
-                    concluirNivelComSucesso();
-                }
-            } else if (nodeObj.id > proximoNumeroEsperado) {
-                infoInstrucao.textContent = `⚠️ Atenção! Siga a ordem crescente exata.`;
-            }
-        }
-
-        function desenharLinha(p1, p2) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', p1.x);
-            line.setAttribute('y1', p1.y);
-            line.setAttribute('x2', p2.x);
-            line.setAttribute('y2', p2.y);
-            line.setAttribute('stroke', '#22c55e');
-            line.setAttribute('stroke-width', '4');
-            line.setAttribute('stroke-linecap', 'round');
-            canvasLines.appendChild(line);
-        }
-
-        async function concluirNivelComSucesso() {
-            clearInterval(timerInterval);
-            infoInstrucao.textContent = `🎉 Nível ${nivelAtual} Concluído com Sucesso!`;
-            
-            const pontosGanhos = nivelAtual * 10;
-            pontuacaoAcumulada += pontosGanhos;
-
-            let melhorTempo = recordesNivel[nivelAtual] || 0;
-            let novoRecorde = false;
-            if (melhorTempo === 0 || segundos < melhorTempo) {
-                recordesNivel[nivelAtual] = segundos;
-                novoRecorde = true;
-            }
-
-            nivelAtual++;
-
-            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
-
-            try {
-                await update(jogadorRef, {
-                    pontos: pontuacaoAcumulada,
-                    nivel: nivelAtual,
-                    recordesFlow: recordesNivel,
-                    ultimaAtualizacao: new Date().toISOString()
-                });
-
-                displayPontos.textContent = pontuacaoAcumulada;
-                displayNível.textContent = nivelAtual;
-                atualizarDisplayRecorde();
-                
-                let msgSucesso = `🏆 Sucesso absoluto! Ganhou ${pontosGanhos} pontos.\nTempo registado: ${formatarTempo(segundos)}`;
-                if (novoRecorde) msgSucesso += `\n🌟 NOVO RECORDE PESSOAL DE TEMPO!`;
-                alert(msgSucesso);
-
-                enviarEmailResumo(jogadorSessao.nome, jogadorSessao.email, nivelAtual, pontuacaoAcumulada, jogadorSessao.avatar);
-
-                btnAvancar.textContent = `Avançar para Nível ${nivelAtual} 🚀`;
-                btnAvancar.classList.remove('hidden');
-
-            } catch (error) {
-                console.error("Erro Firebase:", error);
-                btnAvancar.classList.remove('hidden');
-            }
-        }
-
-        btnAvancar.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
-        });
-
-        function enviarEmailResumo(nome, email, nivel, pontos, avatar) {
-            const templateParams = {
-                to_name: nome,
-                to_email: email,
-                avatar: avatar,
-                nivel: nivel,
-                pontos: pontos,
-                mensagem: `Parabéns! O seu nível atual é ${nivel} e acumulou ${pontos} pontos no Brain Flow Master.`
-            };
-
-            emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
-                .then((response) => console.log('E-mail enviado com sucesso!'))
-                .catch((error) => console.error('Erro ao enviar e-mail:', error));
-        }
-    </script>
-</body>
-</html>
+    function showToast(msg, type = 'info') {
+        const toast =
