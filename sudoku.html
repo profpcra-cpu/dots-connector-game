@@ -20,10 +20,9 @@
 
     <style>
         /* ==========================================================
-           1. DESIGN TOKENS (mesma linguagem visual do Brain Hub)
+           1. DESIGN TOKENS
            ========================================================== */
         :root {
-            /* Superfícies */
             --bg-color: #0b1020;
             --bg-gradient-1: #1e1b4b;
             --bg-gradient-2: #0b1020;
@@ -31,37 +30,31 @@
             --card-border: rgba(148, 163, 184, 0.15);
             --card-glow: rgba(99, 102, 241, 0.25);
 
-            /* Texto */
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
             --text-subtle: #64748b;
 
-            /* Bordas e inputs */
             --border-color: rgba(148, 163, 184, 0.18);
             --border-strong: rgba(148, 163, 184, 0.35);
             --input-bg: rgba(15, 23, 42, 0.7);
 
-            /* Ações */
             --btn-primary: #6366f1;
             --btn-primary-hover: #818cf8;
             --btn-accent: #8b5cf6;
 
-            /* Células do Sudoku */
             --cell-bg: rgba(15, 23, 42, 0.6);
-            --cell-fixed: rgba(51, 65, 85, 0.85);
-            --cell-fixed-text: #cbd5e1;
-            --cell-focus: rgba(99, 102, 241, 0.25);
+            --cell-fixed: rgba(51, 65, 85, 0.9);
+            --cell-fixed-text: #e2e8f0;
+            --cell-focus: rgba(99, 102, 241, 0.28);
             --cell-error: rgba(239, 68, 68, 0.22);
             --cell-error-text: #fca5a5;
             --cell-border-strong: rgba(148, 163, 184, 0.55);
 
-            /* Cores de status */
             --c-green: #4ade80;
             --c-blue: #38bdf8;
             --c-amber: #f59e0b;
             --c-red: #ef4444;
 
-            /* Sombras e raios */
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 20px;
@@ -69,7 +62,6 @@
             --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
             --shadow-cell: 0 1px 0 rgba(255, 255, 255, 0.02) inset;
 
-            /* Transições */
             --t-fast: 0.15s ease;
             --t-base: 0.25s ease;
             --t-slow: 0.4s ease;
@@ -92,8 +84,8 @@
             --input-bg: rgba(255, 255, 255, 0.95);
 
             --cell-bg: rgba(248, 250, 252, 0.95);
-            --cell-fixed: rgba(226, 232, 240, 0.95);
-            --cell-fixed-text: #475569;
+            --cell-fixed: rgba(203, 213, 225, 0.95);
+            --cell-fixed-text: #1e293b;
             --cell-focus: rgba(99, 102, 241, 0.18);
             --cell-error: rgba(239, 68, 68, 0.15);
             --cell-error-text: #dc2626;
@@ -146,7 +138,7 @@
         }
 
         /* ==========================================================
-           3. CONTAINER (glassmorphism)
+           3. CONTAINER
            ========================================================== */
         .container {
             position: relative;
@@ -227,9 +219,7 @@
             border: 1px solid var(--border-color);
             transition: border-color var(--t-base);
         }
-        .user-header:hover {
-            border-color: var(--border-strong);
-        }
+        .user-header:hover { border-color: var(--border-strong); }
 
         #display-avatar {
             display: inline-flex;
@@ -303,10 +293,10 @@
             text-transform: none;
         }
 
-        #display-pontos { color: var(--c-green); }
-        #display-tempo  { color: var(--c-blue); }
-        #display-recorde{ color: var(--c-amber); }
-        #display-erros  { color: var(--c-red); }
+        #display-pontos  { color: var(--c-green); }
+        #display-tempo   { color: var(--c-blue); }
+        #display-recorde { color: var(--c-amber); }
+        #display-erros   { color: var(--c-red); }
 
         /* ==========================================================
            7. CONTROLES
@@ -359,19 +349,50 @@
         /* ==========================================================
            8. TABULEIRO DE SUDOKU
            ========================================================== */
+
         .sudoku-grid {
+            position: relative;
             display: grid;
             grid-template-columns: repeat(9, 1fr);
             gap: 1px;
             background: var(--border-strong);
-            border: 2px solid var(--border-strong);
-            border-radius: 10px;
+            border: 2px solid transparent;
+            border-radius: 12px;
             overflow: hidden;
             margin-bottom: 14px;
+
+            /* Moldura com destaque gradual (gradiente indigo → violeta → ciano) */
+            background-image:
+                linear-gradient(var(--cell-border-strong), var(--cell-border-strong)),
+                linear-gradient(135deg,
+                    rgba(99, 102, 241, 0.55) 0%,
+                    rgba(139, 92, 246, 0.35) 30%,
+                    rgba(56, 189, 248, 0.30) 65%,
+                    rgba(99, 102, 241, 0.45) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+
             box-shadow:
                 0 12px 40px -14px rgba(0, 0, 0, 0.55),
-                0 0 0 1px var(--card-border);
+                0 0 0 1px var(--card-border),
+                0 0 24px -6px rgba(99, 102, 241, 0.35);
+
             animation: gridIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Halo difuso ao redor do tabuleiro */
+        .sudoku-grid::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 16px;
+            background: radial-gradient(
+                ellipse at 50% 0%,
+                rgba(99, 102, 241, 0.28),
+                transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(6px);
         }
 
         @keyframes gridIn {
@@ -392,10 +413,14 @@
             padding: 0;
             width: 100%;
             box-shadow: var(--shadow-cell);
-            transition: background var(--t-fast), color var(--t-fast), transform var(--t-fast);
-            /* Esconde setinhas do input number (mantém funcionalidade) */
+            transition:
+                background var(--t-fast),
+                color var(--t-fast),
+                transform var(--t-fast),
+                box-shadow var(--t-fast);
             -moz-appearance: textfield;
             appearance: textfield;
+            position: relative;
         }
         .sudoku-cell::-webkit-outer-spin-button,
         .sudoku-cell::-webkit-inner-spin-button {
@@ -403,35 +428,97 @@
             margin: 0;
         }
 
-        .sudoku-cell:hover:not(.fixed):not(:disabled) {
-            background: rgba(99, 102, 241, 0.12);
+        /* ---- CÉLULA VAZIA (editável, ainda sem valor) ---- */
+        .sudoku-cell:not(.fixed):not(.error):not(:focus) {
+            background: var(--cell-bg);
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
-        .sudoku-cell:focus {
-            background: var(--cell-focus);
-            box-shadow: 0 0 0 2px var(--btn-primary) inset;
-            z-index: 1;
-            transform: scale(1.04);
-            border-radius: 4px;
+        .sudoku-cell:not(.fixed):not(.error):hover {
+            background: rgba(99, 102, 241, 0.14);
+            box-shadow:
+                inset 0 0 0 1px rgba(99, 102, 241, 0.35),
+                var(--shadow-cell);
         }
 
+        /* ---- CÉLULA PREENCHIDA PELO JOGADOR ---- */
+        /* Detectada via :placeholder-shown (o input precisa ter placeholder=" ") */
+        .sudoku-cell:not(.fixed):not(:placeholder-shown) {
+            background: linear-gradient(
+                180deg,
+                rgba(99, 102, 241, 0.18),
+                rgba(139, 92, 246, 0.14));
+            color: #e0e7ff;
+            font-weight: 700;
+            box-shadow:
+                inset 0 0 0 1px rgba(139, 92, 246, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            text-shadow: 0 0 8px rgba(139, 92, 246, 0.35);
+        }
+        [data-theme="light"] .sudoku-cell:not(.fixed):not(:placeholder-shown) {
+            background: linear-gradient(
+                180deg,
+                rgba(99, 102, 241, 0.14),
+                rgba(139, 92, 246, 0.10));
+            color: #312e81;
+            text-shadow: none;
+        }
+
+        /* ---- CÉLULA FIXA (dada pelo jogo) ---- */
         .sudoku-cell.fixed {
             background: var(--cell-fixed);
             color: var(--cell-fixed-text);
             cursor: not-allowed;
-            font-weight: 700;
+            font-weight: 800;
+            box-shadow:
+                inset 0 0 0 1px rgba(148, 163, 184, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            letter-spacing: 0.02em;
         }
 
+        /* ---- FOCO (célula selecionada) ---- */
+        .sudoku-cell:focus {
+            background: var(--cell-focus);
+            box-shadow:
+                inset 0 0 0 2px var(--btn-primary),
+                0 0 0 3px rgba(99, 102, 241, 0.25);
+            z-index: 2;
+            transform: scale(1.05);
+            border-radius: 4px;
+            color: var(--text-color);
+        }
+
+        /* ---- ERRO ---- */
         .sudoku-cell.error {
             background: var(--cell-error);
             color: var(--cell-error-text);
+            box-shadow:
+                inset 0 0 0 2px rgba(239, 68, 68, 0.55),
+                0 0 12px -2px rgba(239, 68, 68, 0.45);
             animation: shake 0.3s ease;
+        }
+        .sudoku-cell.error:focus {
+            box-shadow:
+                inset 0 0 0 2px rgba(239, 68, 68, 0.75),
+                0 0 0 3px rgba(239, 68, 68, 0.25);
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25%      { transform: translateX(-2px); }
             75%      { transform: translateX(2px); }
+        }
+
+        /* Halo mais suave no tema claro */
+        [data-theme="light"] .sudoku-grid {
+            box-shadow:
+                0 12px 40px -18px rgba(30, 41, 59, 0.28),
+                0 0 0 1px var(--card-border),
+                0 0 20px -8px rgba(99, 102, 241, 0.22);
+        }
+        [data-theme="light"] .sudoku-grid::before {
+            opacity: 0.55;
         }
 
         /* ==========================================================
@@ -460,9 +547,7 @@
         }
         button:active { transform: translateY(0); filter: brightness(0.97); }
 
-        #btn-verificar {
-            margin-top: 4px;
-        }
+        #btn-verificar { margin-top: 4px; }
 
         /* ==========================================================
            10. RESPONSIVIDADE
@@ -663,6 +748,7 @@
                     input.className = 'sudoku-cell';
                     input.dataset.row = r;
                     input.dataset.col = c;
+                    input.placeholder = " ";   // permite o efeito :placeholder-shown no CSS
 
                     if (c === 2 || c === 5) input.style.borderRight = '2px solid var(--border-color)';
                     if (r === 2 || r === 5) input.style.borderBottom = '2px solid var(--border-color)';
