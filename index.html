@@ -76,7 +76,6 @@
         .game-card:hover {
             border-color: var(--btn-primary);
             transform: translateY(-2px);
-            box-align: center;
         }
         .game-info { text-align: left; }
         .game-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
@@ -128,11 +127,20 @@
                 <button class="play-btn">Jogar</button>
             </a>
 
-            <!-- Sudoku 3x3 - Novo -->
+            <!-- Sudoku 3x3 -->
             <a href="sudoku3x3.html" class="game-card">
                 <div class="game-info">
                     <div class="game-title">🧩 Sudoku 3x3</div>
                     <div class="game-desc">Preencha linhas e colunas com números de 1 a 3.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- Sudoku Tradicional (Já existente) -->
+            <a href="sudoku.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-title">🔢 Sudoku Clássico</div>
+                    <div class="game-desc">O desafio numérico tradicional de lógica e raciocínio.</div>
                 </div>
                 <button class="play-btn">Jogar</button>
             </a>
@@ -154,7 +162,6 @@
             localStorage.setItem('brain_flow_theme', next);
         });
 
-        // Carregar sessão e pontos se houver registo no localStorage
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (jogadorSessao) {
             document.getElementById('nome-jogador').textContent = jogadorSessao.nome || "Utilizador";
