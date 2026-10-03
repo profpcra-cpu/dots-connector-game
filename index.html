@@ -54,6 +54,29 @@
         .hidden {
             display: none !important;
         }
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .avatar-option {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            font-size: 28px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .avatar-option:hover {
+            background: #334155;
+            transform: scale(1.05);
+        }
+        .avatar-option.selected {
+            border-color: #3b82f6;
+            background: #1d4ed8;
+        }
         .score-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -65,6 +88,19 @@
             font-size: 14px;
             border: 1px solid #334155;
             text-align: center;
+        }
+        .user-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .user-avatar-display {
+            font-size: 32px;
+            background: #334155;
+            padding: 5px 12px;
+            border-radius: 50%;
         }
         #game-board {
             position: relative;
@@ -120,17 +156,34 @@
 <body>
 
     <div class="container">
-        <!-- TELA DE LOGIN -->
+        <!-- TELA DE LOGIN / REGISTO -->
         <div id="login-screen">
-            <h2>Ligar Pontos</h2>
-            <p class="instructions">Digite o seu nome para entrar ou recuperar o seu progresso:</p>
+            <h2>Brain Flow Master</h2>
+            <p class="instructions">Escolha a sua carinha e digite o seu nome e PIN para entrar:</p>
+            
+            <div class="avatar-grid" id="avatar-container">
+                <div class="avatar-option selected" data-avatar="😀">😀</div>
+                <div class="avatar-option" data-avatar="😎">😎</div>
+                <div class="avatar-option" data-avatar="🚀">🚀</div>
+                <div class="avatar-option" data-avatar="🦊">🦊</div>
+                <div class="avatar-option" data-avatar="🦄">🦄</div>
+                <div class="avatar-option" data-avatar="🤖">🤖</div>
+                <div class="avatar-option" data-avatar="⭐">⭐</div>
+                <div class="avatar-option" data-avatar="🔥">🔥</div>
+            </div>
+
             <input type="text" id="nome-jogador" placeholder="O seu nome..." autocomplete="off">
+            <input type="password" id="pin-jogador" placeholder="PIN secreto (ex: 1234)" maxlength="6" autocomplete="off">
             <button id="btn-entrar">Entrar no Jogo</button>
         </div>
 
         <!-- TELA DO JOGO -->
         <div id="game-screen" class="hidden">
-            <h2>Olá, <span id="display-nome"></span>!</h2>
+            <div class="user-header">
+                <span id="display-avatar" class="user-avatar-display">😀</span>
+                <h2>Olá, <span id="display-nome"></span>!</h2>
+            </div>
+            
             <div class="score-board">
                 <div>Nível: <br><strong id="display-nivel" style="color: #38bdf8;">1</strong></div>
                 <div>Pontos: <br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
@@ -170,17 +223,21 @@
         let chaveJogadorAtual = null;
         let pontuacaoAcumulada = 0;
         let nivelAtual = 1;
-        let totalPontosNivel = 5; // Começa com 5 pontos no Nível 1
+        let avatarSelecionado = "😀";
+        let totalPontosNivel = 5;
         let proximoNumeroEsperado = 1;
         let coordenadasPontos = [];
         let ligacoesFeitas = [];
 
+        // Elementos da UI
         const loginScreen = document.getElementById('login-screen');
         const gameScreen = document.getElementById('game-screen');
         const inputNome = document.getElementById('nome-jogador');
+        const inputPin = document.getElementById('pin-jogador');
         const btnEntrar = document.getElementById('btn-entrar');
         const displayNome = document.getElementById('display-nome');
-        const displayNivel = document.getElementById('display-nivel');
+        const displayAvatar = document.getElementById('display-avatar');
+        const displayNível = document.getElementById('display-nivel');
         const displayPontos = document.getElementById('display-pontos');
         const displayProximo = document.getElementById('display-proximo');
         const infoInstrucao = document.getElementById('info-instrucao');
@@ -188,19 +245,39 @@
         const canvasLines = document.getElementById('canvas-lines');
         const btnReiniciar = document.getElementById('btn-reiniciar');
 
+        // Seleção de Avatar por cliques
+        document.querySelectorAll('.avatar-option').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+                avatarSelecionado = item.dataset.avatar;
+            });
+        });
+
+        // 1. LOGIN COM NOME + PIN SEGURO
         btnEntrar.addEventListener('click', async () => {
             const nome = inputNome.value.trim();
+            const pin = inputPin.value.trim();
+
             if (!nome) {
                 alert("Por favor, introduza o seu nome.");
                 return;
             }
+            if (!pin || pin.length < 3) {
+                alert("Por favor, introduza um PIN secreto de pelo menos 3 dígitos.");
+                return;
+            }
 
-            chaveJogadorAtual = nome.toLowerCase().replace(/\s+/g, '_').replace(/[.#$\[\]]/g, '');
+            // Chave única composta por Nome + PIN (evita conflitos se outras pessoas usarem o mesmo nome)
+            const nomeLimpo = nome.toLowerCase().replace(/\s+/g, '_').replace(/[.#$\[\]]/g, '');
+            const pinLimpo = pin.replace(/[.#$\[\]]/g, '');
+            chaveJogadorAtual = `${nomeLimpo}_${pinLimpo}`;
+
             const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
             try {
                 btnEntrar.disabled = true;
-                btnEntrar.textContent = "A carregar perfil...";
+                btnEntrar.textContent = "A verificar base de dados...";
 
                 const snapshot = await get(jogadorRef);
 
@@ -208,9 +285,11 @@
                     const dados = snapshot.val();
                     pontuacaoAcumulada = dados.pontos || 0;
                     nivelAtual = dados.nivel || 1;
+                    avatarSelecionado = dados.avatar || avatarSelecionado;
                 } else {
                     await set(jogadorRef, {
                         nome: nome,
+                        avatar: avatarSelecionado,
                         pontos: 0,
                         nivel: 1,
                         ultimaAtualizacao: new Date().toISOString()
@@ -220,8 +299,9 @@
                 }
 
                 displayNome.textContent = nome;
+                displayAvatar.textContent = avatarSelecionado;
                 displayPontos.textContent = pontuacaoAcumulada;
-                displayNivel.textContent = nivelAtual;
+                displayNível.textContent = nivelAtual;
 
                 loginScreen.classList.add('hidden');
                 gameScreen.classList.remove('hidden');
@@ -237,11 +317,10 @@
         });
 
         function iniciarNovoJogoRonda() {
-            // A cada nível, adicionamos mais 2 pontos para aumentar a dificuldade (Nível 1=5 pts, Nível 2=7 pts, etc.)
             totalPontosNivel = 4 + (nivelAtual * 2);
             proximoNumeroEsperado = 1;
             displayProximo.textContent = proximoNumeroEsperado;
-            displayNivel.textContent = nivelAtual;
+            displayNível.textContent = nivelAtual;
             ligacoesFeitas = [];
             btnReiniciar.classList.add('hidden');
             infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte de 1 até ${totalPontosNivel} em ordem crescente.`;
@@ -249,7 +328,6 @@
             document.querySelectorAll('.dot').forEach(el => el.remove());
             canvasLines.innerHTML = '';
 
-            // Gerar posições aleatórias mas seguras dentro da caixa de jogo
             coordenadasPontos = [];
             const larguraMax = 420;
             const alturaMax = 280;
@@ -317,7 +395,7 @@
             
             const pontosGanhos = nivelAtual * 10;
             pontuacaoAcumulada += pontosGanhos;
-            nivelAtual++; // Avança o nível
+            nivelAtual++;
 
             const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
@@ -325,11 +403,12 @@
                 await update(jogadorRef, {
                     pontos: pontuacaoAcumulada,
                     nivel: nivelAtual,
+                    avatar: avatarSelecionado,
                     ultimaAtualizacao: new Date().toISOString()
                 });
 
                 displayPontos.textContent = pontuacaoAcumulada;
-                displayNivel.textContent = nivelAtual;
+                displayNível.textContent = nivelAtual;
                 
                 alert(`Parabéns! Passou o nível e ganhou ${pontosGanhos} pontos!\nProgresso guardado no Firebase.`);
                 btnReiniciar.textContent = `Avançar para o Nível ${nivelAtual}`;
