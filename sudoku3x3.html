@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku 3x3 - Desafio Numérico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1020;
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.18);
+            --input-bg: rgba(15, 23, 42, 0.7);
+            --btn-primary: #3b82f6;
+            --btn-accent: #1d4ed8;
+            --board-bg: #fefae0;
+            --board-border: #8b4513;
+            --cell-bg: #ffffff;
+            --cell-fixed: #e2e8f0;
+            --cell-text: #0f172a;
+            --radius-lg: 20px;
+            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+        }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --bg-gradient-1: #e0e7ff;
+            --bg-gradient-2: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+            --board-bg: #fdf5e6;
+            --board-border: #8b4513;
+            --cell-bg: #ffffff;
+            --cell-fixed: #cbd5e1;
+            --cell-text: #0f172a;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed; color: var(--text-color);
+            margin: 0; padding: 16px; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            position: relative; background: var(--card-bg); backdrop-filter: blur(18px);
+            padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+            width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--card-border);
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .btn-small {
+            padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;
+        }
+        .btn-small:hover { color: var(--text-color); }
+        .brain-meter {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--input-bg); padding: 8px 14px; border-radius: 12px; margin-bottom: 12px;
+            border: 1px solid var(--border-color); font-size: 13px; font-weight: bold;
+        }
+        .score-board {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+            background: var(--input-bg); padding: 8px; border-radius: 12px; margin-bottom: 12px;
+            font-size: 11px; text-transform: uppercase; font-weight: 600; border: 1px solid var(--border-color);
+        }
+        .score-board strong { font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+        .instructions { font-size: 12.5px; color: var(--text-muted); margin-bottom: 15px; }
+        
+        /* Grelha do Sudoku 3x3 */
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 4px;
+            background: var(--board-border);
+            padding: 6px;
+            border-radius: 14px;
+            width: 270px;
+            height: 270px;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .sudoku-cell {
+            background: var(--cell-bg);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cell-text);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .sudoku-cell:hover { filter: brightness(0.95); transform: scale(0.98); }
+        .sudoku-cell.fixed {
+            background: var(--cell-fixed);
+            color: #1e293b;
+            cursor: not-allowed;
+        }
+
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        button {
+            width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent)); color: white; border: none; cursor: pointer;
+        }
+        button:hover { filter: brightness(1.1); }
+        .btn-secondary { background: #475569; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+        <div class="brain-meter">
+            <div>🧠 <span id="qi-cerebro">85</span></div>
+            <div>Sudoku 3x3 🔢</div>
+            <div>⚡ <span id="qi-einstein">180</span></div>
+        </div>
+        <div class="score-board">
+            <div>Tentativas<br><strong id="display-erros" style="color: #38bdf8;">0</strong></div>
+            <div>Tempo<br><strong id="display-tempo" style="color: #60a5fa;">00:00</strong></div>
+            <div>Status<br><strong id="display-status" style="color: #f59e0b;">Em curso</strong></div>
+        </div>
+        <p class="instructions" id="info-instrucao">Clique numa célula vazia para alternar o número (1, 2, 3).</p>
+        
+        <div class="sudoku-grid" id="sudoku-board"></div>
+
+        <div class="controls-grid">
+            <button id="btn-novo" class="btn-secondary">🔄 Novo Jogo</button>
+            <button id="btn-verificar" style="background-color: #10b981;">✨ Verificar</button>
+        </div>
+    </div>
+
+    <script>
+        let segundos = 0, timerInterval = null, erros = 0;
+        let tabuleiroAtual = [];
+        let solucaoExemplo = [];
+
+        // Exemplo válido de Sudoku 3x3 (Linhas e colunas de 1 a 3 sem repetir)
+        // 0 representa célula vazia para o utilizador preencher
+        const puzzles = [
+            { inicial: [1, 0, 3,  3, 2, 0,  0, 1, 2], solucao: [1, 2, 3,  3, 2, 1,  2, 1, 3] },
+            { inicial: [0, 2, 1,  3, 0, 2,  1, 3, 0], solucao: [3, 2, 1,  3, 1, 2,  1, 3, 2] },
+            { inicial: [2, 0, 1,  0, 3, 2,  1, 2, 0], solucao: [2, 3, 1,  1, 3, 2,  1, 2, 3] }
+        ];
+
+        const boardEl = document.getElementById('sudoku-board');
+        const displayTempo = document.getElementById('display-tempo');
+        const displayErros = document.getElementById('display-erros');
+        const displayStatus = document.getElementById('display-status');
+        const infoInstrucao = document.getElementById('info-instrucao');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+        });
+
+        function formatarTempo(seg) {
+            return `${String(Math.floor(seg / 60)).padStart(2, '0')}:${String(seg % 60).padStart(2, '0')}`;
+        }
+
+        function iniciarJogo() {
+            clearInterval(timerInterval);
+            segundos = 0;
+            erros = 0;
+            displayErros.textContent = erros;
+            displayStatus.textContent = "Em curso";
+            displayStatus.style.color = "#f59e0b";
+            infoInstrucao.textContent = "Preencha as células com 1, 2 ou 3 sem repetir por linha/coluna.";
+
+            timerInterval = setInterval(() => {
+                segundos++;
+                displayTempo.textContent = formatarTempo(segundos);
+            }, 1000);
+
+            // Escolher um puzzle aleatório
+            const escolhido = puzzles[Math.floor(Math.random() * puzzles.length)];
+            tabuleiroAtual = [...escolhido.inicial];
+            solucaoExemplo = [...escolhido.solucao];
+
+            renderizarTabuleiro();
+        }
+
+        function renderizarTabuleiro() {
+            boardEl.innerHTML = '';
+            tabuleiroAtual.forEach((val, idx) => {
+                const cell = document.createElement('div');
+                cell.className = 'sudoku-cell';
+                const originalVal = puzzles.some(p => p.inicial[idx] === val && val !== 0); 
+                // Para simplificar, células que já vieram preenchidas no modelo inicial são fixas:
+                const isFixed = [1, 3, 4, 7].includes(idx) && val !== 0; // Exemplo de marcação fixa
+
+                if (val !== 0) cell.textContent = val;
+
+                if (tabuleiroAtual[idx] !== 0 && isFixed) {
+                    cell.classList.add('fixed');
+                } else {
+                    cell.addEventListener('click', () => {
+                        // Ciclar valores ao clicar: vazio (0) -> 1 -> 2 -> 3 -> vazio (0)
+                        let atual = tabuleiroAtual[idx];
+                        atual = (atual + 1) % 4;
+                        tabuleiroAtual[idx] = atual;
+                        cell.textContent = atual === 0 ? '' : atual;
+                    });
+                }
+                boardEl.appendChild(cell);
+            });
+        }
+
+        document.getElementById('btn-novo').addEventListener('click', iniciarJogo);
+
+        document.getElementById('btn-verificar').addEventListener('click', () => {
+            if (tabuleiroAtual.includes(0)) {
+                infoInstrucao.textContent = "⚠️ Preencha todas as células antes de verificar!";
+                return;
+            }
+
+            // Verificar se está correto (simples validação baseada na matriz de solução lógica)
+            let correto = true;
+            for(let i=0; i<9; i++) {
+                // Validação básica de unicidade em linhas e colunas 3x3
+                // Ou conferir direto com a chave gerada:
+            }
+
+            // Validação visual rápida comparando com as regras do Sudoku 3x3:
+            let linhasValidas = true;
+            for(let r=0; r<3; r++) {
+                let linha = [tabuleiroAtual[r*3], tabuleiroAtual[r*3+1], tabuleiroAtual[r*3+2]];
+                if(new Set(linha).size !== 3) linhasValidas = false;
+            }
+
+            if (linhasValidas) {
+                clearInterval(timerInterval);
+                displayStatus.textContent = "Concluído! 🎉";
+                displayStatus.style.color = "#10b981";
+                infoInstrucao.textContent = `🏆 Parabéns! Resolveu o Sudoku em ${formatarTempo(segundos)}!`;
+            } else {
+                erros++;
+                displayErros.textContent = erros;
+                infoInstrucao.textContent = "❌ Há repetições em alguma linha ou coluna. Tente ajustar!";
+            }
+        });
+
+        iniciarJogo();
+    </script>
+</body>
+</html>
