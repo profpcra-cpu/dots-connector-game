@@ -84,6 +84,7 @@
             background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
             color: white; border: none; padding: 8px 16px; border-radius: 10px;
             font-size: 13px; font-weight: 700; cursor: pointer;
+            pointer-events: none; /* Deixa o clique passar para a tag <a> inteira */
         }
         .user-greeting {
             background: var(--input-bg); padding: 10px 14px; border-radius: 12px;
@@ -109,7 +110,7 @@
         </div>
 
         <div class="games-grid">
-            <!-- Brain Flow - Cores -->
+            <!-- 1. Brain Flow - Cores -->
             <a href="brain-flow-master.html" class="game-card">
                 <div class="game-info">
                     <div class="game-title">🎨 Brain Flow (Cores)</div>
@@ -118,7 +119,7 @@
                 <button class="play-btn">Jogar</button>
             </a>
 
-            <!-- Brain Flow - Algarismos -->
+            <!-- 2. Brain Flow - Algarismos -->
             <a href="brainflow.html" class="game-card">
                 <div class="game-info">
                     <div class="game-title">🔢 Brain Flow (Algarismos)</div>
@@ -127,7 +128,7 @@
                 <button class="play-btn">Jogar</button>
             </a>
 
-            <!-- Sudoku 3x3 -->
+            <!-- 3. Sudoku 3x3 -->
             <a href="sudoku3x3.html" class="game-card">
                 <div class="game-info">
                     <div class="game-title">🧩 Sudoku 3x3</div>
@@ -136,7 +137,7 @@
                 <button class="play-btn">Jogar</button>
             </a>
 
-            <!-- Sudoku Tradicional (Já existente) -->
+            <!-- 4. Sudoku Clássico -->
             <a href="sudoku.html" class="game-card">
                 <div class="game-info">
                     <div class="game-title">🔢 Sudoku Clássico</div>
