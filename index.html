@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jogo de Ligar Pontos - Brain Flow Master</title>
+    
+    <!-- SDK do EmailJS para envio de e-mails -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // Substitua 'SEU_PUBLIC_KEY' pela sua chave pública do EmailJS
+            emailjs.init("SEU_PUBLIC_KEY");
+        })();
+    </script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -199,12 +209,14 @@
         </div>
     </div>
 
-    <!-- Lógica do Jogo com importação modular do Firebase -->
+    <!-- Lógica do Jogo com importação modular do Firebase e EmailJS -->
     <script type="module">
         import { db, analytics } from "./firebase-config.js";
         import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let chaveJogadorAtual = null;
+        let nomeJogadorAtual = "";
+        let emailJogadorAtual = "";
         let pontuacaoAcumulada = 0;
         let nivelAtual = 1;
         let avatarSelecionado = "😀";
@@ -248,6 +260,9 @@
                 alert("Por favor, introduza um e-mail válido.");
                 return;
             }
+
+            nomeJogadorAtual = nome;
+            emailJogadorAtual = email;
 
             // O Firebase não aceita pontos '.' nas chaves, por isso substituímos por vírgulas ','
             const emailSeguro = email.replace(/\./g, ',');
@@ -391,7 +406,10 @@
                 displayPontos.textContent = pontuacaoAcumulada;
                 displayNível.textContent = nivelAtual;
                 
-                alert(`Parabéns! Passou o nível e ganhou ${pontosGanhos} pontos!\nProgresso guardado no Firebase.`);
+                // Enviar e-mail de resumo de pontuação através do EmailJS
+                enviarEmailResumo(nomeJogadorAtual, emailJogadorAtual, nivelAtual, pontuacaoAcumulada, avatarSelecionado);
+
+                alert(`Parabéns! Passou o nível e ganhou ${pontosGanhos} pontos!\nProgresso guardado no Firebase e e-mail enviado.`);
                 btnReiniciar.textContent = `Avançar para o Nível ${nivelAtual}`;
                 btnReiniciar.classList.remove('hidden');
 
@@ -400,6 +418,25 @@
                 alert("Progresso concluído, mas ocorreu um erro ao salvar na base de dados.");
                 btnReiniciar.classList.remove('hidden');
             }
+        }
+
+        function enviarEmailResumo(nome, email, nivel, pontos, avatar) {
+            const templateParams = {
+                to_name: nome,
+                to_email: email,
+                avatar: avatar,
+                nivel: nivel,
+                pontos: pontos,
+                mensagem: `Parabéns pelo seu progresso no Brain Flow Master! O seu nível atual é ${nivel} e acumulou um total de ${pontos} pontos.`
+            };
+
+            // Substitua 'SEU_SERVICE_ID' e 'SEU_TEMPLATE_ID' pelos valores gerados no EmailJS
+            emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
+                .then((response) => {
+                    console.log('E-mail enviado com sucesso!', response.status, response.text);
+                }, (error) => {
+                    console.error('Erro ao enviar e-mail:', error);
+                });
         }
 
         btnReiniciar.addEventListener('click', () => {
