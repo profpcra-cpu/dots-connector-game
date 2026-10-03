@@ -35,7 +35,7 @@
             max-width: 500px;
             text-align: center;
         }
-        input, button {
+        input, select, button {
             width: 100%;
             padding: 14px;
             margin-top: 15px;
@@ -46,7 +46,7 @@
             background: #0f172a;
             color: #fff;
         }
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: #3b82f6;
         }
@@ -60,6 +60,18 @@
         }
         button:hover {
             background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #475569;
+        }
+        .btn-secondary:hover {
+            background-color: #334155;
+        }
+        .btn-danger {
+            background-color: #ef4444;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
         }
         .hidden {
             display: none !important;
@@ -94,7 +106,7 @@
             background: #0f172a;
             padding: 12px 10px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-size: 14px;
             border: 1px solid #334155;
             text-align: center;
@@ -102,14 +114,22 @@
         .user-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
+            justify-content: space-between;
             margin-bottom: 15px;
+            background: #0f172a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        .user-info-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .user-avatar-display {
-            font-size: 32px;
+            font-size: 28px;
             background: #334155;
-            padding: 5px 12px;
+            padding: 2px 8px;
             border-radius: 50%;
         }
         #game-board {
@@ -125,28 +145,29 @@
         }
         .dot {
             position: absolute;
-            width: 36px;
-            height: 36px;
-            background: #3b82f6;
+            width: 40px;
+            height: 40px;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             transform: translate(-50%, -50%);
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s, background 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s, filter 0.2s;
             user-select: none;
+            border: 2px solid rgba(255,255,255,0.3);
         }
         .dot:hover {
-            background: #60a5fa;
-            transform: translate(-50%, -50%) scale(1.1);
+            transform: translate(-50%, -50%) scale(1.15);
+            filter: brightness(1.2);
         }
         .dot.completed {
-            background: #22c55e;
+            background: #22c55e !important;
+            border-color: #fff;
         }
         #canvas-lines {
             position: absolute;
@@ -160,6 +181,12 @@
             font-size: 14px;
             color: #94a3b8;
             margin-bottom: 10px;
+        }
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -190,8 +217,11 @@
         <!-- TELA DO JOGO -->
         <div id="game-screen" class="hidden">
             <div class="user-header">
-                <span id="display-avatar" class="user-avatar-display">😀</span>
-                <h2>Olá, <span id="display-nome"></span>!</h2>
+                <div class="user-info-left">
+                    <span id="display-avatar" class="user-avatar-display">😀</span>
+                    <strong id="display-nome" style="font-size: 15px;"></strong>
+                </div>
+                <button id="btn-sair" class="btn-danger" style="width: auto; padding: 6px 12px; margin: 0; font-size: 13px;">Sair</button>
             </div>
             
             <div class="score-board">
@@ -199,17 +229,29 @@
                 <div>Pontos: <br><strong id="display-pontos" style="color: #4ade80;">0</strong></div>
                 <div>Próximo: <br><strong id="display-proximo" style="color: #60a5fa;">1</strong></div>
             </div>
-            <p class="instructions" id="info-instrucao">Clique nos pontos na ordem numérica correta.</p>
+            <p class="instructions" id="info-instrucao">Conecte os pontos na ordem correta.</p>
             
             <div id="game-board">
                 <svg id="canvas-lines"></svg>
             </div>
 
-            <button id="btn-reiniciar" class="hidden" style="margin-top: 15px; background-color: #10b981;">Avançar de Nível</button>
+            <div class="action-buttons">
+                <button id="btn-reiniciar-nivel" class="btn-secondary">Reiniciar Nível</button>
+                <select id="select-mudar-nivel" style="margin-top: 0; background: #334155; cursor: pointer;">
+                    <option value="" disabled selected>Mudar Nível...</option>
+                    <option value="1">Nível 1</option>
+                    <option value="2">Nível 2</option>
+                    <option value="3">Nível 3</option>
+                    <option value="4">Nível 4</option>
+                    <option value="5">Nível 5</option>
+                </select>
+            </div>
+
+            <button id="btn-avancar" class="hidden" style="margin-top: 15px; background-color: #10b981;">Avançar para o Próximo Nível 🚀</button>
         </div>
     </div>
 
-    <!-- Lógica do Jogo com importação modular do Firebase e EmailJS -->
+    <!-- Lógica do Jogo -->
     <script type="module">
         import { db, analytics } from "./firebase-config.js";
         import { ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -225,11 +267,14 @@
         let coordenadasPontos = [];
         let ligacoesFeitas = [];
 
+        const paletaCores = ['#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#6366f1', '#06b6d4', '#d946ef'];
+
         const loginScreen = document.getElementById('login-screen');
         const gameScreen = document.getElementById('game-screen');
         const inputNome = document.getElementById('nome-jogador');
         const inputEmail = document.getElementById('email-jogador');
         const btnEntrar = document.getElementById('btn-entrar');
+        const btnSair = document.getElementById('btn-sair');
         const displayNome = document.getElementById('display-nome');
         const displayAvatar = document.getElementById('display-avatar');
         const displayNível = document.getElementById('display-nivel');
@@ -238,7 +283,9 @@
         const infoInstrucao = document.getElementById('info-instrucao');
         const gameBoard = document.getElementById('game-board');
         const canvasLines = document.getElementById('canvas-lines');
-        const btnReiniciar = document.getElementById('btn-reiniciar');
+        const btnAvancar = document.getElementById('btn-avancar');
+        const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
+        const selectMudarNivel = document.getElementById('select-mudar-nivel');
 
         document.querySelectorAll('.avatar-option').forEach(item => {
             item.addEventListener('click', () => {
@@ -252,27 +299,18 @@
             const nome = inputNome.value.trim();
             const email = inputEmail.value.trim().toLowerCase();
 
-            if (!nome) {
-                alert("Por favor, introduza o seu nome.");
-                return;
-            }
-            if (!email || !email.includes('@') || !email.includes('.')) {
-                alert("Por favor, introduza um e-mail válido.");
-                return;
-            }
+            if (!nome) { alert("Por favor, introduza o seu nome."); return; }
+            if (!email || !email.includes('@') || !email.includes('.')) { alert("Por favor, introduza um e-mail válido."); return; }
 
             nomeJogadorAtual = nome;
             emailJogadorAtual = email;
-
-            // O Firebase não aceita pontos '.' nas chaves, por isso substituímos por vírgulas ','
-            const emailSeguro = email.replace(/\./g, ',');
-            chaveJogadorAtual = emailSeguro;
+            chaveJogadorAtual = email.replace(/\./g, ',');
 
             const jogadorRef = ref(db, 'jogadores/' + chaveJogadorAtual);
 
             try {
                 btnEntrar.disabled = true;
-                btnEntrar.textContent = "A verificar base de dados...";
+                btnEntrar.textContent = "A carregar dados...";
 
                 const snapshot = await get(jogadorRef);
 
@@ -283,12 +321,7 @@
                     avatarSelecionado = dados.avatar || avatarSelecionado;
                 } else {
                     await set(jogadorRef, {
-                        nome: nome,
-                        email: email,
-                        avatar: avatarSelecionado,
-                        pontos: 0,
-                        nivel: 1,
-                        ultimaAtualizacao: new Date().toISOString()
+                        nome, email, avatar: avatarSelecionado, pontos: 0, nivel: 1, ultimaAtualizacao: new Date().toISOString()
                     });
                     pontuacaoAcumulada = 0;
                     nivelAtual = 1;
@@ -305,21 +338,59 @@
                 iniciarNovoJogoRonda();
 
             } catch (error) {
-                console.error("Erro ao ligar ao Firebase:", error);
-                alert("Erro ao aceder à base de dados. Verifique a consola (F12).");
+                console.error("Erro Firebase:", error);
+                alert("Erro ao aceder à base de dados.");
                 btnEntrar.disabled = false;
                 btnEntrar.textContent = "Entrar no Jogo";
             }
         });
 
+        btnSair.addEventListener('click', () => {
+            gameScreen.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+            btnEntrar.disabled = false;
+            btnEntrar.textContent = "Entrar no Jogo";
+            inputPin?.value;
+        });
+
+        btnReiniciarNivel.addEventListener('click', () => {
+            iniciarNovoJogoRonda();
+        });
+
+        selectMudarNivel.addEventListener('change', (e) => {
+            const novoNivel = parseInt(e.target.value);
+            if (novoNivel) {
+                nivelAtual = novoNivel;
+                selectMudarNivel.value = "";
+                iniciarNovoJogoRonda();
+            }
+        });
+
+        function converterParaRomano(num) {
+            const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
+            let roman = "";
+            for (let i in lookup ) {
+                while ( num >= lookup[i] ) {
+                    roman += i;
+                    num -= lookup[i];
+                }
+            }
+            return roman;
+        }
+
         function iniciarNovoJogoRonda() {
             totalPontosNivel = 4 + (nivelAtual * 2);
             proximoNumeroEsperado = 1;
-            displayProximo.textContent = proximoNumeroEsperado;
+            
+            // Alterna entre Algarismos Arábicos (1, 2, 3) e Romanos (I, II, III) dependendo do nível
+            const usarRomanos = nivelAtual % 2 === 0;
+            const rotuloProximo = usarRomanos ? converterParaRomano(proximoNumeroEsperado) : proximoNumeroEsperado;
+
+            displayProximo.textContent = rotuloProximo;
             displayNível.textContent = nivelAtual;
             ligacoesFeitas = [];
-            btnReiniciar.classList.add('hidden');
-            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte de 1 até ${totalPontosNivel} em ordem crescente.`;
+            btnAvancar.classList.add('hidden');
+            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte os pontos (${usarRomanos ? 'Algarismos Romanos' : 'Arábicos'}) em ordem crescente.`;
 
             document.querySelectorAll('.dot').forEach(el => el.remove());
             canvasLines.innerHTML = '';
@@ -338,23 +409,25 @@
                     tentativas++;
                 } while (sobreposto && tentativas < 50);
 
-                coordenadasPontos.push({ id: i, x, y });
+                const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
+                coordenadasPontos.push({ id: i, x, y, cor: corAleatoria, romano: converterParaRomano(i) });
             }
 
             coordenadasPontos.forEach(p => {
                 const dot = document.createElement('div');
                 dot.className = 'dot';
-                dot.textContent = p.id;
+                dot.textContent = usarRomanos ? p.romano : p.id;
                 dot.style.left = `${p.x}px`;
                 dot.style.top = `${p.y}px`;
+                dot.style.backgroundColor = p.cor;
                 dot.dataset.id = p.id;
 
-                dot.addEventListener('click', () => lidarComCliquePonto(p, dot));
+                dot.addEventListener('click', () => lidarComCliquePonto(p, dot, usarRomanos));
                 gameBoard.appendChild(dot);
             });
         }
 
-        function lidarComCliquePonto(ponto, elementoDot) {
+        function lidarComCliquePonto(ponto, elementoDot, usarRomanos) {
             if (ponto.id === proximoNumeroEsperado) {
                 elementoDot.classList.add('completed');
                 ligacoesFeitas.push(ponto);
@@ -364,13 +437,14 @@
                 }
 
                 proximoNumeroEsperado++;
-                displayProximo.textContent = proximoNumeroEsperado <= totalPontosNivel ? proximoNumeroEsperado : "Fim!";
+                const proximoRotulo = usarRomanos ? converterParaRomano(proximoNumeroEsperado) : proximoNumeroEsperado;
+                displayProximo.textContent = proximoNumeroEsperado <= totalPontosNivel ? proximoRotulo : "Fim!";
 
                 if (proximoNumeroEsperado > totalPontosNivel) {
                     concluirNivelComSucesso();
                 }
             } else if (ponto.id > proximoNumeroEsperado) {
-                alert(`Ops! Esse é o ponto ${ponto.id}. Clique no ponto ${proximoNumeroEsperado}.`);
+                alert(`Ops! Clique no ponto correto.`);
             }
         }
 
@@ -406,19 +480,20 @@
                 displayPontos.textContent = pontuacaoAcumulada;
                 displayNível.textContent = nivelAtual;
                 
-                // Enviar e-mail de resumo de pontuação através do EmailJS
                 enviarEmailResumo(nomeJogadorAtual, emailJogadorAtual, nivelAtual, pontuacaoAcumulada, avatarSelecionado);
 
-                alert(`Parabéns! Passou o nível e ganhou ${pontosGanhos} pontos!\nProgresso guardado no Firebase e e-mail enviado.`);
-                btnReiniciar.textContent = `Avançar para o Nível ${nivelAtual}`;
-                btnReiniciar.classList.remove('hidden');
+                btnAvancar.textContent = `Avançar para o Nível ${nivelAtual} 🚀`;
+                btnAvancar.classList.remove('hidden');
 
             } catch (error) {
-                console.error("Erro ao atualizar progresso no Firebase:", error);
-                alert("Progresso concluído, mas ocorreu um erro ao salvar na base de dados.");
-                btnReiniciar.classList.remove('hidden');
+                console.error("Erro Firebase:", error);
+                btnAvancar.classList.remove('hidden');
             }
         }
+
+        btnAvancar.addEventListener('click', () => {
+            iniciarNovoJogoRonda();
+        });
 
         function enviarEmailResumo(nome, email, nivel, pontos, avatar) {
             const templateParams = {
@@ -427,21 +502,13 @@
                 avatar: avatar,
                 nivel: nivel,
                 pontos: pontos,
-                mensagem: `Parabéns pelo seu progresso no Brain Flow Master! O seu nível atual é ${nivel} e acumulou um total de ${pontos} pontos.`
+                mensagem: `Parabéns! O seu nível atual é ${nivel} e acumulou ${pontos} pontos.`
             };
 
-            // Substitua 'SEU_SERVICE_ID' e 'SEU_TEMPLATE_ID' pelos valores gerados no EmailJS
             emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
-                .then((response) => {
-                    console.log('E-mail enviado com sucesso!', response.status, response.text);
-                }, (error) => {
-                    console.error('Erro ao enviar e-mail:', error);
-                });
+                .then((response) => console.log('E-mail enviado!'))
+                .catch((error) => console.error('Erro e-mail:', error));
         }
-
-        btnReiniciar.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
-        });
     </script>
 </body>
 </html>
