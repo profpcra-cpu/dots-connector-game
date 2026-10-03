@@ -9,7 +9,6 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            // Substitua 'SEU_PUBLIC_KEY' pela sua chave pública do EmailJS
             emailjs.init("SEU_PUBLIC_KEY");
         })();
     </script>
@@ -65,7 +64,6 @@
             text-align: center;
             box-sizing: border-box;
             border: 1px solid var(--border-color);
-            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .top-bar {
@@ -198,11 +196,10 @@
             border-radius: 50%;
         }
 
-        /* TABULEIRO RESPONSIVO */
         #game-board {
             position: relative;
             width: 100%;
-            height: 320px;
+            height: 300px;
             background: var(--board-bg);
             border: 2px dashed var(--board-border);
             border-radius: 12px;
@@ -213,8 +210,8 @@
 
         .dot {
             position: absolute;
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             color: white;
             border-radius: 50%;
             display: flex;
@@ -253,33 +250,20 @@
             margin-bottom: 8px;
         }
 
-        .action-buttons {
+        .controls-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin-top: 12px;
-        }
-
-        /* Adaptação para telas muito pequenas (smartphones compactos) */
-        @media (max-width: 400px) {
-            .container {
-                padding: 12px;
-            }
-            #game-board {
-                height: 280px;
-            }
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- BARRA SUPERIOR COM BOTÃO DE TEMA -->
+        <!-- BARRA SUPERIOR (TEMA) -->
         <div class="top-bar">
-            <button id="theme-toggle" class="theme-toggle-btn" title="Alternar Modo Claro/Escuro">🌙 Tema</button>
+            <button id="theme-toggle" class="theme-toggle-btn">🌙 Tema</button>
         </div>
 
         <!-- TELA DE LOGIN / REGISTO -->
@@ -324,10 +308,15 @@
                 <svg id="canvas-lines"></svg>
             </div>
 
-            <div class="action-buttons">
-                <button id="btn-reiniciar-nivel" class="btn-secondary" style="margin-top:0;">Reiniciar Nível</button>
-                <select id="select-mudar-nivel" style="margin-top: 0; cursor: pointer;">
-                    <option value="" disabled selected>Mudar Nível...</option>
+            <!-- OPÇÕES DE CONFIGURAÇÃO DA RONDA -->
+            <div class="controls-grid">
+                <select id="select-tipo-numeracao" style="margin-top:0; cursor:pointer;">
+                    <option value="arabicos">Números Arábicos (1, 2, 3)</option>
+                    <option value="romanos">Algarismos Romanos (I, II, III)</option>
+                    <option value="ambos">Misto (Arábicos & Romanos)</option>
+                </select>
+                <select id="select-mudar-nivel" style="margin-top:0; cursor:pointer;">
+                    <option value="" disabled selected>Selecionar Nível...</option>
                     <option value="1">Nível 1</option>
                     <option value="2">Nível 2</option>
                     <option value="3">Nível 3</option>
@@ -336,7 +325,10 @@
                 </select>
             </div>
 
-            <button id="btn-avancar" class="hidden" style="margin-top: 10px; background-color: #10b981;">Avançar para o Próximo Nível 🚀</button>
+            <div class="controls-grid">
+                <button id="btn-reiniciar-nivel" class="btn-secondary">🔄 Reiniciar Ronda</button>
+                <button id="btn-avancar" class="hidden" style="margin-top:0; background-color: #10b981;">Avançar Nível 🚀</button>
+            </div>
         </div>
     </div>
 
@@ -375,9 +367,10 @@
         const btnAvancar = document.getElementById('btn-avancar');
         const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
         const selectMudarNivel = document.getElementById('select-mudar-nivel');
+        const selectTipoNumeracao = document.getElementById('select-tipo-numeracao');
         const themeToggleBtn = document.getElementById('theme-toggle');
 
-        // Gestão do Tema Claro / Escuro
+        // Gestão de Tema
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         atualizarTextoBotaoTema(savedTheme);
@@ -391,7 +384,7 @@
         });
 
         function atualizarTextoBotaoTema(theme) {
-            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
         }
 
         document.querySelectorAll('.avatar-option').forEach(item => {
@@ -406,8 +399,8 @@
             const nome = inputNome.value.trim();
             const email = inputEmail.value.trim().toLowerCase();
 
-            if (!nome) { alert("Por favor, introduza o seu nome."); return; }
-            if (!email || !email.includes('@') || !email.includes('.')) { alert("Por favor, introduza um e-mail válido."); return; }
+            if (!nome) { alert("Introduza o seu nome."); return; }
+            if (!email || !email.includes('@') || !email.includes('.')) { alert("Introduza um e-mail válido."); return; }
 
             nomeJogadorAtual = nome;
             emailJogadorAtual = email;
@@ -417,8 +410,7 @@
 
             try {
                 btnEntrar.disabled = true;
-                btnEntrar.textContent = "A carregar dados...";
-
+                btnEntrar.textContent = "A carregar...";
                 const snapshot = await get(jogadorRef);
 
                 if (snapshot.exists()) {
@@ -427,9 +419,7 @@
                     nivelAtual = dados.nivel || 1;
                     avatarSelecionado = dados.avatar || avatarSelecionado;
                 } else {
-                    await set(jogadorRef, {
-                        nome, email, avatar: avatarSelecionado, pontos: 0, nivel: 1, ultimaAtualizacao: new Date().toISOString()
-                    });
+                    await set(jogadorRef, { nome, email, avatar: avatarSelecionado, pontos: 0, nivel: 1, ultimaAtualizacao: new Date().toISOString() });
                     pontuacaoAcumulada = 0;
                     nivelAtual = 1;
                 }
@@ -441,7 +431,6 @@
 
                 loginScreen.classList.add('hidden');
                 gameScreen.classList.remove('hidden');
-
                 iniciarNovoJogoRonda();
 
             } catch (error) {
@@ -472,6 +461,10 @@
             }
         });
 
+        selectTipoNumeracao.addEventListener('change', () => {
+            iniciarNovoJogoRonda();
+        });
+
         function converterParaRomano(num) {
             const lookup = {M:1000,CM:900,D:500,CD:400,C:100,XC:90,L:50,XL:40,X:10,IX:9,V:5,IV:4,I:1};
             let roman = "";
@@ -484,18 +477,25 @@
             return roman;
         }
 
+        function obterTextoRotulo(id, modo, total) {
+            if (modo === 'arabicos') return id;
+            if (modo === 'romanos') return converterParaRomano(id);
+            // Modo 'ambos' (Misto): metade arábicos, metade romanos
+            return id <= Math.ceil(total / 2) ? id : converterParaRomano(id);
+        }
+
         function iniciarNovoJogoRonda() {
             totalPontosNivel = 4 + (nivelAtual * 2);
             proximoNumeroEsperado = 1;
             
-            const usarRomanos = nivelAtual % 2 === 0;
-            const rotuloProximo = usarRomanos ? converterParaRomano(proximoNumeroEsperado) : proximoNumeroEsperado;
+            const modoNumeracao = selectTipoNumeracao.value;
+            const rotuloProximo = obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel);
 
             displayProximo.textContent = rotuloProximo;
             displayNível.textContent = nivelAtual;
             ligacoesFeitas = [];
             btnAvancar.classList.add('hidden');
-            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte os pontos (${usarRomanos ? 'Algarismos Romanos' : 'Arábicos'}) em ordem crescente.`;
+            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte os pontos em ordem crescente.`;
 
             document.querySelectorAll('.dot').forEach(el => el.remove());
             canvasLines.innerHTML = '';
@@ -515,24 +515,25 @@
                 } while (sobreposto && tentativas < 50);
 
                 const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
-                coordenadasPontos.push({ id: i, x, y, cor: corAleatoria, romano: converterParaRomano(i) });
+                const rotuloPonto = obterTextoRotulo(i, modoNumeracao, totalPontosNivel);
+                coordenadasPontos.push({ id: i, x, y, cor: corAleatoria, rotulo: rotuloPonto });
             }
 
             coordenadasPontos.forEach(p => {
                 const dot = document.createElement('div');
                 dot.className = 'dot';
-                dot.textContent = usarRomanos ? p.romano : p.id;
+                dot.textContent = p.rotulo;
                 dot.style.left = `${p.x}px`;
                 dot.style.top = `${p.y}px`;
                 dot.style.backgroundColor = p.cor;
                 dot.dataset.id = p.id;
 
-                dot.addEventListener('click', () => lidarComCliquePonto(p, dot, usarRomanos));
+                dot.addEventListener('click', () => lidarComCliquePonto(p, dot, modoNumeracao));
                 gameBoard.appendChild(dot);
             });
         }
 
-        function lidarComCliquePonto(ponto, elementoDot, usarRomanos) {
+        function lidarComCliquePonto(ponto, elementoDot, modoNumeracao) {
             if (ponto.id === proximoNumeroEsperado) {
                 elementoDot.classList.add('completed');
                 ligacoesFeitas.push(ponto);
@@ -542,7 +543,7 @@
                 }
 
                 proximoNumeroEsperado++;
-                const proximoRotulo = usarRomanos ? converterParaRomano(proximoNumeroEsperado) : proximoNumeroEsperado;
+                const proximoRotulo = obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel);
                 displayProximo.textContent = proximoNumeroEsperado <= totalPontosNivel ? proximoRotulo : "Fim!";
 
                 if (proximoNumeroEsperado > totalPontosNivel) {
@@ -587,7 +588,7 @@
                 
                 enviarEmailResumo(nomeJogadorAtual, emailJogadorAtual, nivelAtual, pontuacaoAcumulada, avatarSelecionado);
 
-                btnAvancar.textContent = `Avançar para o Nível ${nivelAtual} 🚀`;
+                btnAvancar.textContent = `Avançar para Nível ${nivelAtual} 🚀`;
                 btnAvancar.classList.remove('hidden');
 
             } catch (error) {
