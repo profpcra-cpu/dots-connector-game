@@ -165,7 +165,7 @@
         #game-board {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 320px;
             background: var(--board-bg);
             border: 2px dashed var(--board-border);
             border-radius: 12px;
@@ -275,6 +275,7 @@
                     <option value="3">Nível 3</option>
                     <option value="4">Nível 4</option>
                     <option value="5">Nível 5</option>
+                    <option value="6">Nível 6</option>
                 </select>
             </div>
 
@@ -431,25 +432,36 @@
             canvasLines.innerHTML = '';
 
             coordenadasNodes = [];
-            const larguraMax = gameBoard.clientWidth - 60;
-            const alturaMax = gameBoard.clientHeight - 60;
-            const distanciaMinima = 55; // Garante sem sobreposição
+            
+            // DISTRIBUIÇÃO EQUIDISTANTE POR GRELHA (ELIMINA SOBREPOSIÇÕES)
+            const boardWidth = gameBoard.clientWidth - 70;
+            const boardHeight = gameBoard.clientHeight - 70;
+            
+            const cols = Math.ceil(Math.sqrt(totalPontosNivel * 1.4));
+            const rows = Math.ceil(totalPontosNivel / cols);
+            
+            const cellWidth = boardWidth / cols;
+            const cellHeight = boardHeight / rows;
+
+            let posicoesDisponiveis = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    posicoesDisponiveis.push({
+                        x: Math.floor(c * cellWidth + cellWidth / 2 + 35 + (Math.random() * 16 - 8)),
+                        y: Math.floor(r * cellHeight + cellHeight / 2 + 35 + (Math.random() * 16 - 8))
+                    });
+                }
+            }
+
+            posicoesDisponiveis.sort(() => Math.random() - 0.5);
 
             for (let i = 1; i <= totalPontosNivel; i++) {
-                let x, y, tentativas = 0;
-                let sobreposto;
-                do {
-                    x = Math.floor(Math.random() * (larguraMax - 50)) + 35;
-                    y = Math.floor(Math.random() * (alturaMax - 50)) + 35;
-                    sobreposto = coordenadasNodes.some(p => Math.hypot(p.x - x, p.y - y) < distanciaMinima);
-                    tentativas++;
-                } while (sobreposto && tentativas < 100);
-
+                const pos = posicoesDisponiveis[i - 1] || { x: 50, y: 50 };
                 const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
                 const formaAleatoria = formasGeometricas[Math.floor(Math.random() * formasGeometricas.length)];
                 const rotuloPonto = obterTextoRotulo(i, modoNumeracao, totalPontosNivel);
                 
-                coordenadasNodes.push({ id: i, x, y, cor: corAleatoria, forma: formaAleatoria, rotulo: rotuloPonto });
+                coordenadasNodes.push({ id: i, x: pos.x, y: pos.y, cor: corAleatoria, forma: formaAleatoria, rotulo: rotuloPonto });
             }
 
             coordenadasNodes.forEach(p => {
@@ -506,7 +518,6 @@
             const pontosGanhos = nivelAtual * 10;
             pontuacaoAcumulada += pontosGanhos;
 
-            // Verificar recorde de tempo
             let melhorTempo = recordesNivel[nivelAtual] || 0;
             let novoRecorde = false;
             if (melhorTempo === 0 || segundos < melhorTempo) {
