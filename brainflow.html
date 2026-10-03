@@ -824,7 +824,7 @@
 
             totalPontosNivel = 4 + (nivelAtual * 2);
             proximoNumeroEsperado = 1;
-
+            
             const modoNumeracao = selectTipoNumeracao.value;
             ligacoesFeitas = [];
             btnAvancar.classList.add('hidden');
@@ -834,29 +834,47 @@
             canvasLines.innerHTML = '';
 
             coordenadasNodes = [];
-
-            const boardWidth = gameBoard.clientWidth;
-            const boardHeight = gameBoard.clientHeight;
-
-            const posicoes = gerarPosicoesSemSobreposicao(totalPontosNivel, boardWidth, boardHeight);
+            
+            const boardWidth = gameBoard.clientWidth - 60;
+            const boardHeight = gameBoard.clientHeight - 60;
+            const raioSeguranca = 50; // Distância mínima estrita entre centros das figuras (px)
+            
+            let posicoesGeradas = [];
+            let tentativasMaximas = 500;
 
             for (let i = 1; i <= totalPontosNivel; i++) {
-                const pos = posicoes[i - 1];
+                let x, y;
+                let posicaoValida = false;
+                let tentativas = 0;
+
+                while (!posicaoValida && tentativas < tentativasMaximas) {
+                    // Gerar coordenadas aleatórias dentro dos limites seguros do tabuleiro
+                    x = Math.floor(Math.random() * (boardWidth - 40)) + 30;
+                    y = Math.floor(Math.random() * (boardHeight - 40)) + 30;
+
+                    posicaoValida = true;
+                    // Verificar distância em relação a todos os nós já posicionados
+                    for (let p of posicoesGeradas) {
+                        let distancia = Math.hypot(p.x - x, p.y - y);
+                        if (distancia < raioSeguranca) {
+                            posicaoValida = false;
+                            break;
+                        }
+                    }
+                    tentativas++;
+                }
+
+                // Se por ventura atingir o limite de tentativas, aceita a última gerada para travar loop
+                posicoesGeradas.push({ x, y });
+
                 const corAleatoria = paletaCores[Math.floor(Math.random() * paletaCores.length)];
                 const formaAleatoria = formasGeometricas[Math.floor(Math.random() * formasGeometricas.length)];
                 const rotuloPonto = obterTextoRotulo(i, modoNumeracao, totalPontosNivel);
-
-                coordenadasNodes.push({
-                    id: i,
-                    x: pos.x,
-                    y: pos.y,
-                    cor: corAleatoria,
-                    forma: formaAleatoria,
-                    rotulo: rotuloPonto
-                });
+                
+                coordenadasNodes.push({ id: i, x, y, cor: corAleatoria, forma: formaAleatoria, rotulo: rotuloPonto });
             }
 
-            coordenadasNodes.forEach((p, idx) => {
+            coordenadasNodes.forEach(p => {
                 const node = document.createElement('div');
                 node.className = `node ${p.forma}`;
                 node.textContent = p.rotulo;
@@ -864,7 +882,6 @@
                 node.style.top = `${p.y}px`;
                 node.style.backgroundColor = p.cor;
                 node.dataset.id = p.id;
-                node.style.animationDelay = `${idx * 40}ms`;
 
                 node.addEventListener('click', () => lidarComCliqueNode(p, node, modoNumeracao));
                 gameBoard.appendChild(node);
