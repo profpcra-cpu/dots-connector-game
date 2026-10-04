@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Hub - Jogos de Raciocínio</title>
+    <title>Brain Hub - Ecossistema de Jogos Cognitivos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,10 @@
             --input-bg: rgba(15, 23, 42, 0.7);
             --btn-primary: #6366f1;
             --btn-accent: #8b5cf6;
-            --radius-lg: 20px;
+            --badge-infantil: #38bdf8;
+            --badge-juvenil: #34d399;
+            --badge-avancado: #f43f5e;
+            --radius-lg: 24px;
             --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
         }
         [data-theme="light"] {
@@ -30,6 +33,7 @@
             --card-bg: rgba(255, 255, 255, 0.9);
             --text-color: #0f172a;
             --text-muted: #475569;
+            --input-bg: rgba(241, 245, 249, 0.8);
         }
         *, *::before, *::after { box-sizing: border-box; }
         html, body { height: 100%; }
@@ -44,25 +48,35 @@
         .container {
             position: relative; background: var(--card-bg); backdrop-filter: blur(18px);
             padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
-            width: 100%; max-width: 520px; text-align: center; border: 1px solid var(--card-border);
+            width: 100%; max-width: 560px; text-align: center; border: 1px solid var(--card-border);
         }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .btn-small {
-            padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+            padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
             background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;
+            transition: all 0.2s;
         }
-        .btn-small:hover { color: var(--text-color); }
-        h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px 0; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 13.5px; color: var(--text-muted); margin-bottom: 20px; }
+        .btn-small:hover { color: var(--text-color); border-color: var(--btn-primary); }
         
+        h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px 0; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+
+        .user-greeting {
+            background: var(--input-bg); padding: 10px 16px; border-radius: 14px;
+            margin-bottom: 16px; font-size: 13px; border: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .user-greeting strong { color: #38bdf8; font-family: 'JetBrains Mono', monospace; }
+
+        /* Lista de Jogos com Scroll Suave */
         .games-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 12px;
-            margin-bottom: 20px;
-            max-height: 420px;
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 4px;
+            margin-bottom: 8px;
         }
         .games-grid::-webkit-scrollbar { width: 6px; }
         .games-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
@@ -71,92 +85,126 @@
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 14px;
-            padding: 16px;
+            padding: 14px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             text-decoration: none;
             color: var(--text-color);
             transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
         }
         .game-card:hover {
             border-color: var(--btn-primary);
             transform: translateY(-2px);
+            background: rgba(99, 102, 241, 0.05);
         }
-        .game-info { text-align: left; }
-        .game-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
-        .game-desc { font-size: 12.5px; color: var(--text-muted); }
+        .game-info { text-align: left; flex: 1; padding-right: 12px; }
+        .game-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+        .game-title { font-size: 15px; font-weight: 700; }
+        .game-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        
+        /* Badges de Faixa Etária */
+        .badge {
+            font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-infantil { background: rgba(56, 189, 248, 0.15); color: var(--badge-infantil); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-juvenil { background: rgba(52, 211, 153, 0.15); color: var(--badge-juvenil); border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge-avancado { background: rgba(244, 63, 94, 0.15); color: var(--badge-avancado); border: 1px solid rgba(244, 63, 94, 0.3); }
+
         .play-btn {
             background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
-            color: white; border: none; padding: 8px 16px; border-radius: 10px;
-            font-size: 13px; font-weight: 700; cursor: pointer;
-            pointer-events: none;
+            color: white; border: none; padding: 7px 14px; border-radius: 10px;
+            font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
         }
-        .user-greeting {
-            background: var(--input-bg); padding: 10px 14px; border-radius: 12px;
-            margin-bottom: 16px; font-size: 13px; border: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .user-greeting strong { color: #38bdf8; font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="top-bar">
-            <span style="font-weight: 700; font-size: 15px;">🧠 Brain Hub</span>
+            <span style="font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 6px;">🧠 Brain Hub</span>
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
         <h1>Centro de Jogos Cognitivos</h1>
-        <p class="subtitle">Escolha o seu desafio de lógica e estimulação mental</p>
+        <p class="subtitle">Estímulo mental, lógica e raciocínio para todas as idades</p>
 
         <div class="user-greeting">
-            <span>Jogador: <strong id="nome-jogador">Convidado</strong></span>
+            <span>Perfil: <strong id="nome-jogador">Convidado</strong></span>
             <span>Pontos: <strong id="pontos-jogador" style="color: #4ade80;">0</strong></span>
         </div>
 
         <div class="games-grid">
-            <!-- 1. Brain Flow - Cores -->
-            <a href="brain-flow-master.html" class="game-card">
-                <div class="game-info">
-                    <div class="game-title">🎨 Brain Flow (Cores)</div>
-                    <div class="game-desc">Conecte esferas coloridas sem cruzar os caminhos.</div>
-                </div>
-                <button class="play-btn">Jogar</button>
-            </a>
-
-            <!-- 2. Brain Flow - Algarismos -->
-            <a href="brainflow.html" class="game-card">
-                <div class="game-info">
-                    <div class="game-title">🔢 Brain Flow (Algarismos)</div>
-                    <div class="game-desc">Ligue números iguais desenhando linhas fluidas.</div>
-                </div>
-                <button class="play-btn">Jogar</button>
-            </a>
-
-            <!-- 3. Sudoku 3x3 -->
-            <a href="sudoku3x3.html" class="game-card">
-                <div class="game-info">
-                    <div class="game-title">🧩 Sudoku 3x3</div>
-                    <div class="game-desc">Preencha linhas e colunas com números de 1 a 3.</div>
-                </div>
-                <button class="play-btn">Jogar</button>
-            </a>
-
-            <!-- 4. Sudoku Clássico -->
-            <a href="sudoku.html" class="game-card">
-                <div class="game-info">
-                    <div class="game-title">🔢 Sudoku Clássico</div>
-                    <div class="game-desc">O desafio numérico tradicional de lógica e raciocínio.</div>
-                </div>
-                <button class="play-btn">Jogar</button>
-            </a>
-
-            <!-- 5. Jogo da Memória 4x4 -->
+            <!-- 1. Jogo da Memória 4x4 -->
             <a href="memoria4x4.html" class="game-card">
                 <div class="game-info">
-                    <div class="game-title">🧠 Jogo da Memória 4x4</div>
-                    <div class="game-desc">Encontre os pares ocultos na matriz e teste o seu foco.</div>
+                    <div class="game-header-row">
+                        <span class="game-title">🧠 Jogo da Memória 4x4</span>
+                        <span class="badge badge-infantil">Infantil / Todos</span>
+                    </div>
+                    <div class="game-desc">Encontre os pares ocultos na matriz e estimule o foco visual.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- 2. Brain Flow - Cores -->
+            <a href="brain-flow-master.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-header-row">
+                        <span class="game-title">🎨 Brain Flow (Cores)</span>
+                        <span class="badge badge-infantil">Infantil / Juvenil</span>
+                    </div>
+                    <div class="game-desc">Conecte esferas coloridas correspondentes sem cruzar caminhos.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- 3. Brain Flow - Algarismos -->
+            <a href="brainflow.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-header-row">
+                        <span class="game-title">🔢 Brain Flow (Algarismos)</span>
+                        <span class="badge badge-juvenil">Juvenil</span>
+                    </div>
+                    <div class="game-desc">Ligue números em sequência desenhando traços lógicos fluidos.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- 4. Sudoku 3x3 -->
+            <a href="sudoku3x3.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-header-row">
+                        <span class="game-title">🧩 Sudoku 3x3</span>
+                        <span class="badge badge-juvenil">Juvenil</span>
+                    </div>
+                    <div class="game-desc">Introdução leve à matriz numérica preenchendo linhas e colunas.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- 5. Torre de Hanói -->
+            <a href="hanoi.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-header-row">
+                        <span class="game-title">🗼 Torre de Hanói</span>
+                        <span class="badge badge-avancado">Avançado</span>
+                    </div>
+                    <div class="game-desc">Planeamento estratégico e recursivo de discos entre hastes.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- 6. Sudoku Clássico -->
+            <a href="sudoku.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-header-row">
+                        <span class="game-title">🔢 Sudoku Clássico</span>
+                        <span class="badge badge-avancado">Avançado</span>
+                    </div>
+                    <div class="game-desc">O desafio numérico tradicional de alta exigência lógica.</div>
                 </div>
                 <button class="play-btn">Jogar</button>
             </a>
