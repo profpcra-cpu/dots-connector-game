@@ -60,7 +60,13 @@
             grid-template-columns: 1fr;
             gap: 12px;
             margin-bottom: 20px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
+        .games-grid::-webkit-scrollbar { width: 6px; }
+        .games-grid::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
         .game-card {
             background: var(--input-bg);
             border: 1px solid var(--border-color);
@@ -84,7 +90,7 @@
             background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
             color: white; border: none; padding: 8px 16px; border-radius: 10px;
             font-size: 13px; font-weight: 700; cursor: pointer;
-            pointer-events: none; /* Deixa o clique passar para a tag <a> inteira */
+            pointer-events: none;
         }
         .user-greeting {
             background: var(--input-bg); padding: 10px 14px; border-radius: 12px;
@@ -142,6 +148,15 @@
                 <div class="game-info">
                     <div class="game-title">🔢 Sudoku Clássico</div>
                     <div class="game-desc">O desafio numérico tradicional de lógica e raciocínio.</div>
+                </div>
+                <button class="play-btn">Jogar</button>
+            </a>
+
+            <!-- 5. Jogo da Memória 4x4 -->
+            <a href="memoria4x4.html" class="game-card">
+                <div class="game-info">
+                    <div class="game-title">🧠 Jogo da Memória 4x4</div>
+                    <div class="game-desc">Encontre os pares ocultos na matriz e teste o seu foco.</div>
                 </div>
                 <button class="play-btn">Jogar</button>
             </a>
