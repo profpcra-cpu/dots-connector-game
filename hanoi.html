@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torre de Hanói - Brain Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1020;
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.18);
+            --input-bg: rgba(15, 23, 42, 0.7);
+            --btn-primary: #6366f1;
+            --btn-accent: #8b5cf6;
+            --radius-lg: 20px;
+            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+        }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --bg-gradient-1: #e0e7ff;
+            --bg-gradient-2: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0; padding: 16px;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            position: relative; background: var(--card-bg); backdrop-filter: blur(18px);
+            padding: 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+            width: 100%; max-width: 520px; text-align: center; border: 1px solid var(--card-border);
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .btn-small {
+            padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-small:hover { color: var(--text-color); border-color: var(--btn-primary); }
+        h1 { font-size: 22px; font-weight: 800; margin: 0 0 4px 0; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; }
+
+        .stats-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--input-bg); padding: 8px 14px; border-radius: 12px;
+            margin-bottom: 14px; font-size: 13px; border: 1px solid var(--border-color);
+        }
+        .stats-bar strong { font-family: 'JetBrains Mono', monospace; color: #38bdf8; }
+
+        .controls-row {
+            display: flex; gap: 8px; justify-content: center; align-items: center; margin-bottom: 14px;
+        }
+        .controls-row select {
+            background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);
+            padding: 6px 10px; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            color: white; border: none; padding: 7px 14px; border-radius: 8px;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+        }
+        .action-btn:hover { opacity: 0.9; }
+
+        /* Área do Jogo - Torres */
+        .towers-container {
+            display: flex; justify-content: space-around; align-items: flex-end;
+            height: 200px; background: var(--input-bg); border: 1px solid var(--border-color);
+            border-radius: 14px; padding: 15px 10px 0 10px; margin-bottom: 16px; position: relative;
+        }
+        .tower {
+            flex: 1; height: 100%; display: flex; flex-direction: column-reverse; align-items: center;
+            position: relative; cursor: pointer; transition: background 0.2s; border-radius: 8px; padding-bottom: 4px;
+        }
+        .tower:hover { background: rgba(255, 255, 255, 0.03); }
+        .tower.selected { background: rgba(99, 102, 241, 0.12); border: 1px dashed var(--btn-primary); }
+        
+        /* Haste vertical */
+        .tower::before {
+            content: ''; position: absolute; bottom: 0; width: 8px; height: 150px;
+            background: var(--border-color); border-radius: 4px 4px 0 0; z-index: 1;
+        }
+        /* Base horizontal da haste */
+        .tower::after {
+            content: ''; position: absolute; bottom: 0; width: 80%; height: 6px;
+            background: var(--text-muted); border-radius: 3px; z-index: 1;
+        }
+
+        .disk {
+            height: 20px; border-radius: 6px; z-index: 2; margin-bottom: 2px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.15s;
+        }
+        .disk:hover { transform: scale(1.03); }
+
+        /* Cores distintas para os discos */
+        .disk-1 { width: 45px; background: #f43f5e; }
+        .disk-2 { width: 65px; background: #fb923c; }
+        .disk-3 { width: 85px; background: #facc15; color: #0f172a; }
+        .disk-4 { width: 105px; background: #34d399; color: #0f172a; }
+        .disk-5 { width: 125px; background: #38bdf8; color: #0f172a; }
+
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-content {
+            background: var(--card-bg); padding: 24px; border-radius: var(--radius-lg);
+            border: 1px solid var(--card-border); text-align: center; max-width: 340px; width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <a href="index.html" class="btn-small">← Voltar</a>
+            <span style="font-weight: 700; font-size: 14px;">🗼 Torre de Hanói</span>
+            <button id="theme-toggle" class="btn-small">🌙</button>
+        </div>
+
+        <h1>Torre de Hanói</h1>
+        <p class="subtitle">Mude todos os discos para a última haste. Maior nunca sobre menor!</p>
+
+        <div class="stats-bar">
+            <span>Movimentos: <strong id="move-count">0</strong></span>
+            <span>Mínimo ideal: <strong id="min-moves">7</strong></span>
+        </div>
+
+        <div class="controls-row">
+            <label style="font-size: 13px; color: var(--text-muted);">Discos:</label>
+            <select id="disk-select">
+                <option value="3">3 Discos</option>
+                <option value="4" selected>4 Discos</option>
+                <option value="5">5 Discos</option>
+            </select>
+            <button class="action-btn" id="reset-btn">Reiniciar</button>
+        </div>
+
+        <!-- Tabuleiros / Hastes -->
+        <div class="towers-container">
+            <div class="tower" data-tower="0" title="Haste 1"></div>
+            <div class="tower" data-tower="1" title="Haste 2"></div>
+            <div class="tower" data-tower="2" title="Haste 3"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Vitória -->
+    <div class="modal" id="win-modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0; color:#34d399;">Parabéns! 🎉</h2>
+            <p id="win-text" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;"></p>
+            <button class="action-btn" id="play-again-btn">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+        });
+
+        let numDisks = 4;
+        let towers = [[], [], []];
+        let selectedTower = null;
+        let moves = 0;
+        let gameFinished = false;
+
+        const towersEl = document.querySelectorAll('.tower');
+        const moveCountEl = document.getElementById('move-count');
+        const minMovesEl = document.getElementById('min-moves');
+        const diskSelect = document.getElementById('disk-select');
+        const resetBtn = document.getElementById('reset-btn');
+        const winModal = document.getElementById('win-modal');
+        const winText = document.getElementById('win-text');
+        const playAgainBtn = document.getElementById('play-again-btn');
+
+        function initGame() {
+            numDisks = parseInt(diskSelect.value);
+            minMovesEl.textContent = Math.pow(2, numDisks) - 1;
+            towers = [[], [], []];
+            // Empilha na haste 0 (do maior para o menor)
+            for (let i = numDisks; i >= 1; i--) {
+                towers[0].push(i);
+            }
+            selectedTower = null;
+            moves = 0;
+            gameFinished = false;
+            moveCountEl.textContent = moves;
+            winModal.style.display = 'none';
+            render();
+        }
+
+        function render() {
+            towersEl.forEach((towerEl, index) => {
+                towerEl.innerHTML = '';
+                if (selectedTower === index) {
+                    towerEl.classList.add('selected');
+                } else {
+                    towerEl.classList.remove('selected');
+                }
+
+                towers[index].forEach(diskSize => {
+                    const diskEl = document.createElement('div');
+                    diskEl.className = `disk disk-${diskSize}`;
+                    diskEl.textContent = diskSize;
+                    towerEl.appendChild(diskEl);
+                });
+            });
+        }
+
+        function handleTowerClick(index) {
+            if (gameFinished) return;
+
+            if (selectedTower === null) {
+                // Seleciona a haste se ela tiver discos
+                if (towers[index].length > 0) {
+                    selectedTower = index;
+                    render();
+                }
+            } else {
+                if (selectedTower === index) {
+                    // Deseleciona se clicar na mesma
+                    selectedTower = null;
+                    render();
+                } else {
+                    // Tenta mover o disco da selectedTower para a haste index
+                    const sourceDisk = towers[selectedTower][towers[selectedTower].length - 1];
+                    const targetTopDisk = towers[index][towers[index].length - 1];
+
+                    if (targetTopDisk === undefined || sourceDisk < targetTopDisk) {
+                        // Movimento válido
+                        towers[index].push(towers[selectedTower].pop());
+                        moves++;
+                        moveCountEl.textContent = moves;
+                        selectedTower = null;
+                        render();
+                        checkWin();
+                    } else {
+                        // Movimento inválido (disco maior sobre menor)
+                        selectedTower = index; // Alterna a seleção para a nova torre
+                        render();
+                    }
+                }
+            }
+        }
+
+        function checkWin() {
+            // Vitória se todos os discos estiverem na última haste (índice 2)
+            if (towers[2].length === numDisks) {
+                gameFinished = true;
+                const minMoves = Math.pow(2, numDisks) - 1;
+                winText.textContent = `Completaste o desafio em ${moves} movimentos! O mínimo ideal era ${minMoves}.`;
+                winModal.style.display = 'flex';
+                atribuirPontos(moves, minMoves);
+            }
+        }
+
+        async function atribuirPontos(movs, min) {
+            const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+            if (jogadorSessao && jogadorSessao.chave) {
+                // Atribui pontos extras se completou no mínimo ou próximo
+                const bonus = movs === min ? 50 : 25;
+                const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+                try {
+                    const snap = await get(jogadorRef);
+                    if (snap.exists()) {
+                        const atual = snap.val().pontos || 0;
+                        await update(jogadorRef, { pontos: atual + bonus });
+                    }
+                } catch (e) {}
+            }
+        }
+
+        towersEl.forEach((towerEl, index) => {
+            towerEl.addEventListener('click', () => handleTowerClick(index));
+        });
+
+        diskSelect.addEventListener('change', initGame);
+        resetBtn.addEventListener('click', initGame);
+        playAgainBtn.addEventListener('click', initGame);
+
+        initGame();
+    </script>
+</body>
+</html>
