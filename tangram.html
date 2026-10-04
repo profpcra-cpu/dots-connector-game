@@ -859,4 +859,139 @@
         });
 
         window.addEventListener('mouseup', () => {
-            if (
+            if (isDragging && selectedPieceId !== null) {
+                const piece = getPieceById(selectedPieceId);
+                if (piece && checkPiecePlacement(piece)) {
+                    snapPiece(piece);
+                    piece.placed = true;
+                }
+                verificarEncaixes();
+                requestDraw();
+            }
+            isDragging = false;
+        });
+
+        /* ============================================================
+           INTERAÇÃO — TOUCH
+           ============================================================ */
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const { x, y } = getCanvasCoords(touch.clientX, touch.clientY);
+
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const p = pieces[i];
+                if (p.placed && p.id !== selectedPieceId) continue;
+                const half = p.size / 2 + 6;
+                if (Math.abs(x - p.x) < half && Math.abs(y - p.y) < half) {
+                    selectedPieceId = p.id;
+                    isDragging = true;
+                    dragOffsetX = x - p.x;
+                    dragOffsetY = y - p.y;
+                    pieces.splice(i, 1);
+                    pieces.push(p);
+                    requestDraw();
+                    return;
+                }
+            }
+            selectedPieceId = null;
+            requestDraw();
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!isDragging || selectedPieceId === null || e.touches.length !== 1) return;
+            const piece = getPieceById(selectedPieceId);
+            if (!piece) return;
+
+            const touch = e.touches[0];
+            const { x, y } = getCanvasCoords(touch.clientX, touch.clientY);
+            piece.x = x - dragOffsetX;
+            piece.y = y - dragOffsetY;
+
+            if (piece.placed && !checkPiecePlacement(piece)) {
+                piece.placed = false;
+                updateScore();
+            }
+
+            requestDraw();
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (isDragging && selectedPieceId !== null) {
+                const piece = getPieceById(selectedPieceId);
+                if (piece && checkPiecePlacement(piece)) {
+                    snapPiece(piece);
+                    piece.placed = true;
+                }
+                verificarEncaixes();
+                requestDraw();
+            }
+            isDragging = false;
+        }, { passive: false });
+
+        /* ============================================================
+           ROTAÇÃO
+           ============================================================ */
+        function rodarPecaSelecionada() {
+            if (selectedPieceId === null) return;
+            const piece = getPieceById(selectedPieceId);
+            if (!piece) return;
+
+            piece.rot = (piece.rot + 90) % 360;
+
+            // Verifica se agora encaixa
+            if (checkPiecePlacement(piece)) {
+                snapPiece(piece);
+                piece.placed = true;
+            } else {
+                piece.placed = false;
+            }
+
+            verificarEncaixes();
+            requestDraw();
+        }
+
+        btnRotate.addEventListener('click', rodarPecaSelecionada);
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                rodarPecaSelecionada();
+            }
+        });
+
+        /* ============================================================
+           FIREBASE — PONTUAÇÃO
+           ============================================================ */
+        async function atribuirPontos() {
+            try {
+                const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+                if (!jogadorSessao || !jogadorSessao.chave) return;
+
+                const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+                const snap = await get(jogadorRef);
+                if (snap.exists()) {
+                    const atual = snap.val().pontos || 0;
+                    await update(jogadorRef, { pontos: atual + 40 });
+                }
+            } catch (err) {
+                console.warn('Não foi possível registar pontos:', err);
+            }
+        }
+
+        /* ============================================================
+           BOTÕES
+           ============================================================ */
+        btnNovo.addEventListener('click', initGame);
+        nextGameBtn.addEventListener('click', initGame);
+
+        /* ============================================================
+           ARRANQUE
+           ============================================================ */
+        initTheme();
+        initGame();
+    </script>
+</body>
+</html>
