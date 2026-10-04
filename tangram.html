@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tangram Geométrico - Brain Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1020;
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.18);
+            --input-bg: rgba(15, 23, 42, 0.7);
+            --btn-primary: #6366f1;
+            --btn-accent: #8b5cf6;
+            --radius-lg: 20px;
+            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+        }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --bg-gradient-1: #e0e7ff;
+            --bg-gradient-2: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0; padding: 12px;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        }
+        .container {
+            position: relative; background: var(--card-bg); backdrop-filter: blur(18px);
+            padding: 18px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+            width: 100%; max-width: 500px; text-align: center; border: 1px solid var(--card-border);
+        }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn-small {
+            padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-small:hover { color: var(--text-color); border-color: var(--btn-primary); }
+        h1 { font-size: 20px; font-weight: 800; margin: 0 0 2px 0; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { font-size: 11.5px; color: var(--text-muted); margin-bottom: 10px; }
+
+        .stats-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--input-bg); padding: 6px 12px; border-radius: 10px;
+            margin-bottom: 10px; font-size: 12px; border: 1px solid var(--border-color);
+        }
+        .stats-bar strong { font-family: 'JetBrains Mono', monospace; color: #38bdf8; }
+
+        /* Área de Jogo Canvas */
+        .canvas-wrapper {
+            position: relative; width: 100%; aspect-ratio: 4 / 3;
+            background: var(--input-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; margin-bottom: 10px; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+        .controls-row {
+            display: flex; gap: 6px; justify-content: center; align-items: center; margin-bottom: 10px;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            color: white; border: none; padding: 6px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
+        }
+        .action-btn:hover { opacity: 0.9; }
+        .btn-secondary { background: #475569; }
+
+        .piece-tools {
+            display: flex; justify-content: center; gap: 8px; font-size: 12px; color: var(--text-muted);
+            background: var(--input-bg); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color);
+        }
+
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-content {
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius-lg);
+            border: 1px solid var(--card-border); text-align: center; max-width: 320px; width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <a href="index.html" class="btn-small">← Voltar</a>
+            <span style="font-weight: 700; font-size: 13px;">📐 Tangram Geométrico</span>
+            <button id="theme-toggle" class="btn-small">🌙</button>
+        </div>
+
+        <h1>Tangram Geométrico</h1>
+        <p class="subtitle">Arraste e ajuste as peças para preencher o modelo silhueta proposto!</p>
+
+        <div class="stats-bar">
+            <span>Desafio: <strong id="model-name">Casa Estilizada</strong></span>
+            <span>Encaixes: <strong id="score-count">0 / 7</strong></span>
+        </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="tangramCanvas" width="400" height="300"></canvas>
+        </div>
+
+        <div class="piece-tools">
+            <span>💡 Clique numa peça para selecioná-la • Use <strong>R</strong> para rodar</span>
+        </div>
+
+        <div class="controls-row" style="margin-top: 10px;">
+            <button class="action-btn btn-secondary" id="btn-rotate">🔄 Rodar Peça (90°)</button>
+            <button class="action-btn" id="btn-novo">🎲 Novo Modelo</button>
+        </div>
+    </div>
+
+    <!-- Modal de Vitória -->
+    <div class="modal" id="win-modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0; color:#34d399;">Excelente! 🎉</h2>
+            <p id="win-text" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;"></p>
+            <button class="action-btn" id="next-game-btn">Próximo Desafio</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggleBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+        });
+
+        const canvas = document.getElementById('tangramCanvas');
+        const ctx = canvas.getContext('2d');
+        const modelNameEl = document.getElementById('model-name');
+        const scoreCountEl = document.getElementById('score-count');
+        const winModal = document.getElementById('win-modal');
+        const winText = document.getElementById('win-text');
+
+        // Modelos de silhuetas aleatórias compostas por pontos alvo (x, y, rotação ideal)
+        const modelos = [
+            { name: "Casa Estilizada", targetPieces: [
+                { x: 200, y: 150, rot: 0, color: '#f43f5e' },
+                { x: 150, y: 180, rot: 90, color: '#fb923c' },
+                { x: 250, y: 180, rot: 180, color: '#facc15' },
+                { x: 200, y: 220, rot: 270, color: '#34d399' },
+                { x: 170, y: 120, rot: 45, color: '#38bdf8' },
+                { x: 230, y: 120, rot: 135, color: '#818cf8' },
+                { x: 200, y: 90, rot: 0, color: '#c084fc' }
+            ]},
+            { name: "Pinheiro Clássico", targetPieces: [
+                { x: 200, y: 240, rot: 0, color: '#f43f5e' },
+                { x: 200, y: 190, rot: 90, color: '#fb923c' },
+                { x: 200, y: 140, rot: 0, color: '#facc15' },
+                { x: 170, y: 210, rot: 180, color: '#34d399' },
+                { x: 230, y: 210, rot: 270, color: '#38bdf8' },
+                { x: 170, y: 160, rot: 45, color: '#818cf8' },
+                { x: 230, y: 160, rot: 135, color: '#c084fc' }
+            ]},
+            { name: "Barco à Vela", targetPieces: [
+                { x: 200, y: 210, rot: 0, color: '#f43f5e' },
+                { x: 140, y: 210, rot: 90, color: '#fb923c' },
+                { x: 260, y: 210, rot: 180, color: '#facc15' },
+                { x: 200, y: 140, rot: 0, color: '#34d399' },
+                { x: 180, y: 170, rot: 90, color: '#38bdf8' },
+                { x: 220, y: 170, rot: 270, color: '#818cf8' },
+                { x: 200, y: 100, rot: 45, color: '#c084fc' }
+            ]}
+        ];
+
+        let currentModel = null;
+        let pieces = [];
+        let selectedPiece = null;
+        let isDragging = false;
+        let startX = 0, startY = 0;
+
+        function initGame() {
+            const randIndex = Math.floor(Math.random() * modelos.length);
+            currentModel = modelos[randIndex];
+            modelNameEl.textContent = currentModel.name;
+
+            // Embaralha as peças numa área lateral ou superior inicial para o utilizador remodelar
+            pieces = currentModel.targetPieces.map((tp, idx) => ({
+                id: idx,
+                x: 50 + (idx * 45) % 350,
+                y: 40 + Math.floor(idx / 8) * 45,
+                rot: (Math.floor(Math.random() * 4)) * 90,
+                color: tp.color,
+                targetX: tp.x,
+                targetY: tp.y,
+                targetRot: tp.rot,
+                size: 35
+            }));
+
+            selectedPiece = null;
+            winModal.style.display = 'none';
+            atualizarPontuacao();
+            desenhar();
+        }
+
+        function desenhar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Desenhar a silhueta de sombra alvo no fundo
+            ctx.save();
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            currentModel.targetPieces.forEach(tp => {
+                ctx.beginPath();
+                ctx.arc(tp.x, tp.y, 25, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+            ctx.restore();
+
+            // Desenhar as peças interativas
+            pieces.forEach(p => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rot * Math.PI) / 180);
+
+                ctx.fillStyle = p.color;
+                ctx.strokeStyle = (selectedPiece === p) ? '#ffffff' : 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = (selectedPiece === p) ? 3 : 1.5;
+
+                ctx.beginPath();
+                ctx.rect(-p.size/2, -p.size/2, p.size, p.size);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            });
+        }
+
+        function verificarEncaixes() {
+            let encaixadas = 0;
+            pieces.forEach(p => {
+                const dist = Math.hypot(p.x - p.targetX, p.y - p.targetY);
+                if (dist < 22 && (p.rot - p.targetRot) % 360 === 0) {
+                    encaixadas++;
+                }
+            });
+            scoreCountEl.textContent = `${encaixadas} / 7`;
+
+            if (encaixadas === 7) {
+                winText.textContent = `Completou o modelo "${currentModel.name}" com precisão geométrica perfeita!`;
+                winModal.style.display = 'flex';
+                atribuirPontos();
+            }
+        }
+
+        async function atribuirPontos() {
+            const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+            if (jogadorSessao && jogadorSessao.chave) {
+                const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+                try {
+                    const snap = await get(jogadorRef);
+                    if (snap.exists()) {
+                        const atual = snap.val().pontos || 0;
+                        await update(jogadorRef, { pontos: atual + 40 });
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function atualizarPontuacao() {
+            let encaixadas = 0;
+            pieces.forEach(p => {
+                const dist = Math.hypot(p.x - p.targetX, p.y - p.targetY);
+                if (dist < 22) encaixadas++;
+            });
+            scoreCountEl.textContent = `${encaixadas} / 7`;
+        }
+
+        // Controlos de Mouse e Touch
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            selectedPiece = null;
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                const p = pieces[i];
+                if (Math.abs(mouseX - p.x) < p.size && Math.abs(mouseY - p.y) < p.size) {
+                    selectedPiece = p;
+                    isDragging = true;
+                    startX = mouseX - p.x;
+                    startY = mouseY - p.y;
+                    // Traz para a frente
+                    pieces.splice(i, 1);
+                    pieces.push(p);
+                    break;
+                }
+            }
+            desenhar();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !selectedPiece) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+            selectedPiece.x = mouseX - startX;
+            selectedPiece.y = mouseY - startY;
+            desenhar();
+            verificarEncaixes();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Rotação por botão ou tecla 'R'
+        function rodarPecaSelecionada() {
+            if (selectedPiece) {
+                selectedPiece.rot = (selectedPiece.rot + 90) % 360;
+                desenhar();
+                verificarEncaixes();
+            }
+        }
+
+        document.getElementById('btn-rotate').addEventListener('click', rodarPecaSelecionada);
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'r') rodarPecaSelecionada();
+        });
+
+        document.getElementById('btn-novo').addEventListener('click', initGame);
+        document.getElementById('next-game-btn').addEventListener('click', initGame);
+
+        initGame();
+    </script>
+</body>
+</html>
