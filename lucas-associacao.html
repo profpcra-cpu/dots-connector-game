@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Hub - Evangelho de Lucas: Associação de Conceitos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.8);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --btn-primary: #6366f1;
+            --success-color: #4ade80;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+        }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            width: 100%;
+            max-width: 680px;
+            box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+        }
+        .back-link {
+            color: var(--btn-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        h1 { font-size: 20px; margin: 0 0 6px 0; }
+        p.subtitle { font-size: 13px; color: var(--text-muted); margin: 0 0 20px 0; }
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .game-grid { grid-template-columns: 1fr; }
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .item-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .item-card:hover { border-color: var(--btn-primary); }
+        .item-card.selected {
+            border-color: var(--btn-primary);
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .item-card.matched {
+            border-color: var(--success-color);
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success-color);
+            cursor: default;
+        }
+        .score-board {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Voltar ao Brain Hub</a>
+        <h1>📜 Evangelho de Lucas: Associação de Conceitos</h1>
+        <p class="subtitle">Clique em um pilar teológico à esquerda e depois na definição correspondente à direita.</p>
+
+        <div class="game-grid">
+            <div class="column" id="terms-column">
+                <h3 style="font-size: 14px; margin: 0 0 4px 0; color: var(--btn-primary);">Pilares</h3>
+            </div>
+            <div class="column" id="defs-column">
+                <h3 style="font-size: 14px; margin: 0 0 4px 0; color: var(--btn-primary);">Definições</h3>
+            </div>
+        </div>
+
+        <div class="score-board" id="score-text">Associações corretas: 0 / 4</div>
+    </div>
+
+    <script>
+        const dados = [
+            { id: 1, term: "Universalismo da Salvação", def: "O alcance da mensagem divina estende-se a toda a humanidade, sem distinções sociais ou raciais." },
+            { id: 2, term: "A Misericórdia Divina", def: "Foco intenso no perdão, acolhimento aos arrependidos e parábolas exclusivas da graça." },
+            { id: 3, term: "Atenção aos Vulneráveis", def: "Valorização proeminente dos marginalizados, pobres, samaritanos e mulheres." },
+            { id: 4, term: "Oração e Espírito Santo", def: "Ênfase na vida de oração de Cristo e na atuação dinâmica na história." }
+        ];
+
+        let selectedTerm = null;
+        let matchedCount = 0;
+
+        const termsCol = document.getElementById('terms-column');
+        const defsCol = document.getElementById('defs-column');
+        const scoreText = document.getElementById('score-text');
+
+        function initGame() {
+            const shuffledTerms = [...dados].sort(() => Math.random() - 0.5);
+            const shuffledDefs = [...dados].sort(() => Math.random() - 0.5);
+
+            shuffledTerms.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-card';
+                div.textContent = item.term;
+                div.dataset.id = item.id;
+                div.addEventListener('click', () => selectTermCard(div));
+                termsCol.appendChild(div);
+            });
+
+            shuffledDefs.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-card';
+                div.textContent = item.def;
+                div.dataset.id = item.id;
+                div.addEventListener('click', () => selectDefCard(div));
+                defsCol.appendChild(div);
+            });
+        }
+
+        function selectTermCard(card) {
+            if (card.classList.contains('matched')) return;
+            document.querySelectorAll('#terms-column .item-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedTerm = card;
+        }
+
+        function selectDefCard(card) {
+            if (card.classList.contains('matched') || !selectedTerm) return;
+            
+            const termId = selectedTerm.dataset.id;
+            const defId = card.dataset.id;
+
+            if (termId === defId) {
+                selectedTerm.classList.remove('selected');
+                selectedTerm.classList.add('matched');
+                card.classList.add('matched');
+                selectedTerm = null;
+                matchedCount++;
+                scoreText.textContent = `Associações corretas: ${matchedCount} / 4`;
+
+                if (matchedCount === 4) {
+                    setTimeout(() => alert('Parabéns! Completou todas as associações do Evangelho de Lucas com sucesso!'), 300);
+                }
+            } else {
+                card.style.borderColor = '#ef4444';
+                setTimeout(() => card.style.borderColor = '', 400);
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
