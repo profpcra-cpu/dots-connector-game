@@ -52,7 +52,7 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyBiP8g18Ev_7yv05-etUcKRLa-P6xOsh8I",
   authDomain: "brain-flow-master.firebaseapp.com",
-  databaseURL: "[https://brain-flow-master-default-rtdb.firebaseio.com](https://brain-flow-master-default-rtdb.firebaseio.com)",
+  databaseURL: "https://brain-flow-master-default-rtdb.firebaseio.com",
   projectId: "brain-flow-master",
   storageBucket: "brain-flow-master.firebasestorage.app",
   messagingSenderId: "137353474062",
