@@ -147,6 +147,37 @@
             background: var(--card-bg);
         }
 
+        /* Botão Flutuante Exclusivo para Mobile */
+        .floating-theme-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-strong);
+            color: var(--text-color);
+            font-size: 20px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: transform var(--t-fast);
+        }
+        .floating-theme-btn:active {
+            transform: scale(0.92);
+        }
+
+        @media (max-width: 768px) {
+            /* Oculta o botão da barra superior em telas pequenas e mostra o flutuante */
+            #theme-toggle-desktop { display: none; }
+            .floating-theme-btn { display: flex; }
+        }
+
         h1 {
             font-size: 24px;
             font-weight: 800;
@@ -197,7 +228,7 @@
             border-color: var(--btn-primary);
         }
 
-        /* LISTA DE JOGOS DO HUB (Com scroll se necessário) */
+        /* LISTA DE JOGOS DO HUB (Com scroll) */
         .hub-grid {
             display: flex;
             flex-direction: column;
@@ -262,13 +293,13 @@
 <body>
 
     <div class="container">
-        <!-- BARRA SUPERIOR -->
+        <!-- BARRA SUPERIOR (Desktop) -->
         <div class="top-bar">
             <div>
                 <h1>Brain Hub</h1>
                 <p class="subtitle">Central de Desafios e Jogos Multiplayer</p>
             </div>
-            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+            <button id="theme-toggle-desktop" class="btn-small">🌙 Tema</button>
         </div>
 
         <!-- CONFIGURAÇÃO DE PERFIL -->
@@ -365,23 +396,36 @@
         </div>
     </div>
 
+    <!-- Botão Flutuante (Exclusivo Mobile) -->
+    <button id="theme-toggle-mobile" class="floating-theme-btn" title="Alternar Tema">🌙</button>
+
     <script>
-        // Gerenciamento de Tema
-        const themeToggleBtn = document.getElementById('theme-toggle');
+        // Gerenciamento de Tema Unificado (Computador e Celular)
+        const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
+        const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+        
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        atualizarTextoBotaoTema(savedTheme);
+        atualizarBotoesTema(savedTheme);
 
-        themeToggleBtn.addEventListener('click', () => {
+        function alternarTema() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('brain_flow_theme', newTheme);
-            atualizarTextoBotaoTema(newTheme);
-        });
+            atualizarBotoesTema(newTheme);
+        }
 
-        function atualizarTextoBotaoTema(theme) {
-            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+        if (themeToggleDesktop) themeToggleDesktop.addEventListener('click', alternarTema);
+        if (themeToggleMobile) themeToggleMobile.addEventListener('click', alternarTema);
+
+        function atualizarBotoesTema(theme) {
+            if (themeToggleDesktop) {
+                themeToggleDesktop.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+            }
+            if (themeToggleMobile) {
+                themeToggleMobile.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
         }
 
         // Gerenciamento de Perfil local
