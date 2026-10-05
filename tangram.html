@@ -1,1160 +1,965 @@
 <!DOCTYPE html>
 <html lang="pt" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tangram Tradicional · Brain Hub</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #070b14;
-            --bg-gradient-1: #1a1f3a;
-            --bg-gradient-2: #070b14;
-            --card-bg: rgba(18, 24, 40, 0.92);
-            --card-border: rgba(148, 163, 184, 0.12);
-            --text-color: #f1f5f9;
-            --text-muted: #94a3b8;
-            --text-dim: #64748b;
-            --border-color: rgba(148, 163, 184, 0.15);
-            --input-bg: rgba(10, 15, 28, 0.7);
-            --accent-1: #38bdf8;
-            --accent-2: #818cf8;
-            --accent-3: #c084fc;
-            --success: #34d399;
-            --warning: #fbbf24;
-            --danger: #f43f5e;
-            --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 22px;
-            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.75);
-            --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        [data-theme="light"] {
-            --bg-color: #eef2ff;
-            --bg-gradient-1: #e0e7ff;
-            --bg-gradient-2: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.92);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --text-color: #0f172a;
-            --text-muted: #475569;
-            --text-dim: #94a3b8;
-            --border-color: rgba(15, 23, 42, 0.1);
-            --input-bg: rgba(241, 245, 249, 0.8);
-            --shadow-card: 0 20px 60px -20px rgba(15, 23, 42, 0.15);
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; overflow: hidden; }
-        body {
-            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-            background: radial-gradient(ellipse at 50% -20%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 60%);
-            background-attachment: fixed;
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 10px;
-            -webkit-font-smoothing: antialiased;
-            transition: background var(--transition-smooth), color var(--transition-smooth);
-        }
-        .game-container {
-            position: relative;
-            background: var(--card-bg);
-            backdrop-filter: blur(24px) saturate(1.5);
-            -webkit-backdrop-filter: blur(24px) saturate(1.5);
-            padding: 16px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card);
-            width: 100%;
-            max-width: 560px;
-            border: 1px solid var(--card-border);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 98vh;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-        .game-container::-webkit-scrollbar { width: 4px; }
-        .game-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .top-bar .title-group {
-            display: flex; align-items: center; gap: 6px;
-            font-weight: 700; font-size: 13px;
-        }
-        .btn-icon {
-            width: 32px; height: 32px;
-            border-radius: var(--radius-sm);
-            display: inline-flex; align-items: center; justify-content: center;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            cursor: pointer; font-size: 14px;
-            transition: all var(--transition-smooth);
-            text-decoration: none; flex-shrink: 0; user-select: none;
-        }
-        .btn-icon:hover {
-            color: var(--text-color);
-            border-color: var(--accent-1);
-            transform: translateY(-1px);
-        }
-        .btn-icon:active { transform: scale(0.96); }
-        .header { text-align: center; }
-        .header h1 {
-            font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
-            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text; margin-bottom: 2px;
-        }
-        .header .subtitle {
-            font-size: 11.5px; color: var(--text-muted); line-height: 1.4;
-        }
-        .hud { display: flex; gap: 8px; }
-        .hud-card {
-            flex: 1; background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            padding: 8px 10px;
-            display: flex; flex-direction: column; gap: 2px;
-        }
-        .hud-card .label {
-            font-size: 9.5px; text-transform: uppercase;
-            letter-spacing: 0.08em; font-weight: 700; color: var(--text-dim);
-        }
-        .hud-card .value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px; font-weight: 700; color: var(--accent-1);
-        }
-        .hud-card .value.success { color: var(--success); }
-        .canvas-wrapper {
-            position: relative; width: 100%;
-            aspect-ratio: 4 / 3;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: inset 0 0 40px -20px rgba(0, 0, 0, 0.5);
-        }
-        canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
-        canvas:active { cursor: grabbing; }
-        .toolbar { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            gap: 6px; padding: 9px 16px;
-            border-radius: var(--radius-sm);
-            font-size: 12.5px; font-weight: 700;
-            font-family: inherit; border: none;
-            cursor: pointer;
-            transition: all var(--transition-smooth);
-            user-select: none; white-space: nowrap;
-        }
-        .btn:active { transform: scale(0.97); }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
-            color: white;
-            box-shadow: 0 4px 16px -4px rgba(129, 140, 248, 0.5);
-        }
-        .btn-primary:hover {
-            box-shadow: 0 6px 24px -4px rgba(129, 140, 248, 0.7);
-            transform: translateY(-1px);
-        }
-        .btn-secondary {
-            background: var(--input-bg); color: var(--text-color);
-            border: 1px solid var(--border-color);
-        }
-        .btn-secondary:hover { border-color: var(--accent-1); color: var(--accent-1); }
-        .hint {
-            text-align: center; font-size: 11px; color: var(--text-dim);
-            padding: 6px 10px; background: var(--input-bg);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color); line-height: 1.5;
-        }
-        .hint kbd {
-            display: inline-block; padding: 1px 5px;
-            border-radius: 4px; background: var(--border-color);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; font-weight: 700; color: var(--text-muted);
-        }
-        .modal {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            justify-content: center; align-items: center;
-            z-index: 1000; padding: 20px;
-            animation: fadeIn 0.25s ease;
-        }
-        .modal.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px) scale(0.96); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .modal-content {
-            background: var(--card-bg);
-            backdrop-filter: blur(24px);
-            padding: 28px 24px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--card-border);
-            text-align: center; max-width: 340px; width: 100%;
-            box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
-            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .modal-content .emoji {
-            font-size: 48px; margin-bottom: 8px; display: block;
-            animation: bounce 0.6s ease;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-        .modal-content h2 {
-            font-size: 20px; font-weight: 800;
-            color: var(--success); margin-bottom: 8px;
-        }
-        .modal-content p {
-            font-size: 13px; color: var(--text-muted);
-            line-height: 1.6; margin-bottom: 20px;
-        }
-        .modal-content .btn { width: 100%; }
-        /* Legenda das peças */
-        .piece-legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-            gap: 6px;
-            font-size: 10.5px;
-            color: var(--text-muted);
-        }
-        .legend-item {
-            display: flex; align-items: center; gap: 6px;
-            padding: 5px 8px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            transition: all var(--transition-smooth);
-            cursor: default;
-        }
-        .legend-item.active {
-            border-color: var(--accent-1);
-            background: rgba(56, 189, 248, 0.1);
-        }
-        .legend-item .swatch {
-            width: 12px; height: 12px;
-            border-radius: 3px; flex-shrink: 0;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2);
-        }
-        .legend-item .name { font-weight: 600; color: var(--text-color); font-size: 10px; }
-        @media (max-width: 420px) {
-            .game-container { padding: 12px; gap: 8px; }
-            .header h1 { font-size: 18px; }
-            .header .subtitle { font-size: 10.5px; }
-            .btn { padding: 8px 12px; font-size: 11.5px; }
-            .hud-card .value { font-size: 12px; }
-        }
-        @media (max-height: 700px) {
-            .header .subtitle { display: none; }
-            .game-container { gap: 7px; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tangram Tradicional · Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-1:#1a1f3a; --bg-2:#070b14;
+    --card-bg:rgba(18,24,40,.92); --card-border:rgba(148,163,184,.12);
+    --text:#f1f5f9; --text-muted:#94a3b8; --text-dim:#64748b;
+    --border:rgba(148,163,184,.15); --input-bg:rgba(10,15,28,.7);
+    --accent-1:#38bdf8; --accent-2:#818cf8; --accent-3:#c084fc;
+    --success:#34d399; --warning:#fbbf24;
+    --r-sm:8px; --r-md:14px; --r-lg:22px;
+    --shadow:0 20px 60px -20px rgba(0,0,0,.75);
+    --ease:.25s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"]{
+    --bg-1:#e0e7ff; --bg-2:#f8fafc;
+    --card-bg:rgba(255,255,255,.92); --card-border:rgba(15,23,42,.08);
+    --text:#0f172a; --text-muted:#475569; --text-dim:#94a3b8;
+    --border:rgba(15,23,42,.1); --input-bg:rgba(241,245,249,.8);
+    --shadow:0 20px 60px -20px rgba(15,23,42,.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    background:radial-gradient(ellipse at 50% -20%,var(--bg-1) 0%,var(--bg-2) 60%);
+    background-attachment:fixed;
+    color:var(--text);
+    display:flex;justify-content:center;align-items:center;
+    min-height:100vh;padding:10px;
+    -webkit-font-smoothing:antialiased;
+    transition:background var(--ease),color var(--ease);
+}
+.game{
+    background:var(--card-bg);
+    backdrop-filter:blur(24px) saturate(1.5);
+    -webkit-backdrop-filter:blur(24px) saturate(1.5);
+    padding:16px;border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    width:100%;max-width:560px;
+    border:1px solid var(--card-border);
+    display:flex;flex-direction:column;gap:10px;
+    max-height:98vh;overflow-y:auto;scrollbar-width:thin;
+}
+.game::-webkit-scrollbar{width:4px}
+.game::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.brand{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.icon-btn{
+    width:32px;height:32px;border-radius:var(--r-sm);
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--input-bg);border:1px solid var(--border);
+    color:var(--text-muted);cursor:pointer;font-size:14px;
+    transition:all var(--ease);text-decoration:none;flex-shrink:0;
+    user-select:none;font-family:inherit;
+}
+.icon-btn:hover{color:var(--text);border-color:var(--accent-1);transform:translateY(-1px)}
+.icon-btn:active{transform:scale(.96)}
+.header{text-align:center}
+.header h1{
+    font-size:22px;font-weight:800;letter-spacing:-.02em;
+    background:linear-gradient(135deg,var(--accent-1),var(--accent-2),var(--accent-3));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;margin-bottom:2px;
+}
+.header p{font-size:11.5px;color:var(--text-muted);line-height:1.4}
+.hud{display:flex;gap:8px}
+.hud-card{
+    flex:1;background:var(--input-bg);border:1px solid var(--border);
+    border-radius:var(--r-sm);padding:8px 10px;
+    display:flex;flex-direction:column;gap:2px;
+}
+.hud-card .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-dim)}
+.hud-card .val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent-1)}
+.hud-card .val.ok{color:var(--success)}
+.canvas-wrap{
+    position:relative;width:100%;aspect-ratio:4/3;
+    background:var(--input-bg);border:1px solid var(--border);
+    border-radius:var(--r-md);overflow:hidden;
+    display:flex;justify-content:center;align-items:center;
+    box-shadow:inset 0 0 40px -20px rgba(0,0,0,.5);
+}
+canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+canvas:active{cursor:grabbing}
+.toolbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:5px;
+    padding:9px 14px;border-radius:var(--r-sm);
+    font-size:12px;font-weight:700;font-family:inherit;border:none;
+    cursor:pointer;transition:all var(--ease);user-select:none;white-space:nowrap;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{
+    background:linear-gradient(135deg,var(--accent-2),var(--accent-3));
+    color:#fff;box-shadow:0 4px 16px -4px rgba(129,140,248,.5);
+}
+.btn-primary:hover{box-shadow:0 6px 24px -4px rgba(129,140,248,.7);transform:translateY(-1px)}
+.btn-ghost{background:var(--input-bg);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent-1);color:var(--accent-1)}
+.hint{
+    text-align:center;font-size:11px;color:var(--text-dim);
+    padding:6px 10px;background:var(--input-bg);
+    border-radius:var(--r-sm);border:1px solid var(--border);line-height:1.5;
+}
+.hint kbd{
+    display:inline-block;padding:1px 5px;border-radius:4px;
+    background:var(--border);font-family:'JetBrains Mono',monospace;
+    font-size:10px;font-weight:700;color:var(--text-muted);
+}
+.legend{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:5px;
+    font-size:10px;
+}
+.legend-item{
+    display:flex;align-items:center;gap:5px;
+    padding:5px 6px;background:var(--input-bg);
+    border:1px solid var(--border);border-radius:var(--r-sm);
+    transition:all var(--ease);cursor:pointer;
+}
+.legend-item:hover{border-color:var(--accent-1)}
+.legend-item.active{border-color:var(--accent-1);background:rgba(56,189,248,.12)}
+.legend-item .sw{width:10px;height:10px;border-radius:2px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.legend-item .nm{font-weight:600;color:var(--text);font-size:9.5px;line-height:1.1}
+.modal{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.75);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    justify-content:center;align-items:center;z-index:1000;padding:20px;
+    animation:fadeIn .25s ease;
+}
+.modal.active{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-content{
+    background:var(--card-bg);backdrop-filter:blur(24px);
+    padding:28px 24px;border-radius:var(--r-lg);
+    border:1px solid var(--card-border);text-align:center;
+    max-width:340px;width:100%;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.8);
+    animation:slideUp .35s cubic-bezier(.16,1,.3,1);
+}
+.modal-content .emo{font-size:48px;display:block;margin-bottom:8px;animation:bounce .6s ease}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.modal-content h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
+.modal-content p{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:20px}
+.modal-content .btn{width:100%}
+@media (max-width:420px){
+    .game{padding:12px;gap:8px}
+    .header h1{font-size:18px}
+    .header p{font-size:10.5px}
+    .btn{padding:8px 11px;font-size:11px}
+    .legend{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-height:720px){
+    .header p{display:none}
+    .game{gap:7px}
+}
+@media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
 </head>
 <body>
-    <main class="game-container" role="main">
-        <div class="top-bar">
-            <a href="index.html" class="btn-icon" title="Voltar ao início" aria-label="Voltar">←</a>
-            <div class="title-group">
-                <span>📐</span>
-                <span>Tangram Tradicional</span>
-            </div>
-            <button id="theme-toggle" class="btn-icon" title="Alternar tema" aria-label="Alternar tema">🌙</button>
-        </div>
-
-        <header class="header">
-            <h1>Tangram Tradicional</h1>
-            <p class="subtitle">Monte a silhueta usando as 7 peças clássicas chinesas</p>
-        </header>
-
-        <div class="hud">
-            <div class="hud-card">
-                <span class="label">Desafio</span>
-                <span class="value" id="model-name">—</span>
-            </div>
-            <div class="hud-card">
-                <span class="label">Encaixes</span>
-                <span class="value" id="score-count">0 / 7</span>
-            </div>
-        </div>
-
-        <div class="canvas-wrapper">
-            <canvas id="tangramCanvas" width="800" height="600" aria-label="Área de jogo do tangram"></canvas>
-        </div>
-
-        <div class="toolbar">
-            <button class="btn btn-secondary" id="btn-rotate" title="Rodar peça 15°">
-                🔄 Rodar
-            </button>
-            <button class="btn btn-secondary" id="btn-flip" title="Espelhar paralelogramo">
-                ↔️ Espelhar
-            </button>
-            <button class="btn btn-primary" id="btn-novo" title="Novo modelo">
-                🎲 Novo Modelo
-            </button>
-        </div>
-
-        <div class="hint">
-            💡 Clique para selecionar · Arraste para mover · <kbd>R</kbd> rodar · <kbd>F</kbd> espelhar
-        </div>
-
-        <div class="piece-legend" id="piece-legend"></div>
-    </main>
-
-    <div class="modal" id="win-modal" role="dialog" aria-modal="true" aria-labelledby="win-title">
-        <div class="modal-content">
-            <span class="emoji">🎉</span>
-            <h2 id="win-title">Excelente!</h2>
-            <p id="win-text"></p>
-            <button class="btn btn-primary" id="next-game-btn">Próximo Desafio →</button>
-        </div>
+<main class="game" role="main">
+    <div class="topbar">
+        <a href="index.html" class="icon-btn" title="Voltar" aria-label="Voltar">←</a>
+        <div class="brand"><span>📐</span><span>Tangram Tradicional</span></div>
+        <button id="theme-toggle" class="icon-btn" title="Tema" aria-label="Alternar tema">🌙</button>
     </div>
 
-    <script type="module">
-        import { db } from "./firebase-config.js";
-        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <header class="header">
+        <h1>Tangram Tradicional</h1>
+        <p>Reconstrua a silhueta usando as 7 peças clássicas chinesas</p>
+    </header>
 
-        /* ============================================================
-           CONFIGURAÇÃO DO TANGRAM TRADICIONAL
-           ------------------------------------------------------------
-           O tangram é formado a partir de um quadrado de lado L.
-           As 7 peças são:
-             - 2 triângulos grandes  (hipotenusa L, cateto L/√2)
-             - 1 triângulo médio     (cateto L/2, hipotenusa L/√2)
-             - 2 triângulos pequenos (cateto L/(2√2), hipotenusa L/2)
-             - 1 quadrado            (lado L/(2√2))
-             - 1 paralelogramo       (lados L/2 e L/(2√2))
-           ============================================================ */
-        const CANVAS_W = 800;
-        const CANVAS_H = 600;
-        const SQ_SIDE = 360;                 // lado do quadrado que originou o tangram
-        const U = SQ_SIDE / 4;               // unidade base (L/4) => facilita medidas
-        const SNAP_DISTANCE = 28;
-        const SNAP_ANGLE_TOLERANCE = 12;
-        const TOTAL_PIECES = 7;
+    <div class="hud">
+        <div class="hud-card"><span class="lbl">Desafio</span><span class="val" id="model-name">—</span></div>
+        <div class="hud-card"><span class="lbl">Encaixes</span><span class="val" id="score-count">0 / 7</span></div>
+    </div>
 
-        // Cores distintas por tipo de peça (mantendo identidade visual)
-        const PIECE_COLORS = {
-            bigTriangle1: '#f43f5e',
-            bigTriangle2: '#fb923c',
-            mediumTriangle: '#facc15',
-            smallTriangle1: '#34d399',
-            smallTriangle2: '#22d3ee',
-            square: '#818cf8',
-            parallelogram: '#c084fc'
+    <div class="canvas-wrap">
+        <canvas id="cv" width="800" height="600" aria-label="Área de jogo do tangram"></canvas>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn btn-ghost" id="btn-rot-l" title="Rodar 15° anti-horário">↺ 15°</button>
+        <button class="btn btn-ghost" id="btn-rot-r" title="Rodar 15° horário">↻ 15°</button>
+        <button class="btn btn-ghost" id="btn-flip" title="Espelhar peça">↔ Espelhar</button>
+        <button class="btn btn-primary" id="btn-new" title="Novo modelo">🎲 Novo</button>
+    </div>
+
+    <div class="hint">
+        💡 Clique para selecionar · Arraste para mover · <kbd>R</kbd>/<kbd>Shift+R</kbd> rodar · <kbd>F</kbd> espelhar · <kbd>D</kbd> debug
+    </div>
+
+    <div class="legend" id="legend"></div>
+</main>
+
+<div class="modal" id="win" role="dialog" aria-modal="true" aria-labelledby="win-title">
+    <div class="modal-content">
+        <span class="emo">🎉</span>
+        <h2 id="win-title">Excelente!</h2>
+        <p id="win-text"></p>
+        <button class="btn btn-primary" id="next">Próximo Desafio →</button>
+    </div>
+</div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+/* ============================================================================
+   SISTEMA DE COORDENADAS DO TANGRAM
+   ----------------------------------------------------------------------------
+   O tangram é derivado de um quadrado de lado L.
+   Definimos uma unidade base u = L/4 para tornar todas as medidas
+   expressáveis como múltiplos simples de u ou u√2.
+   ----------------------------------------------------------------------------
+   Vértices das peças em coordenadas LOCAIS (origem = centro do quadrado
+   que contém a peça quando decomposta do quadrado original).
+============================================================================ */
+const CANVAS_W = 800;
+const CANVAS_H = 600;
+
+// Tamanho do quadrado de referência do tangram (em px)
+// Ajustado para caber confortavelmente no canvas
+const L = 320;
+const U = L / 4;                     // unidade base
+const H = L / Math.SQRT2;            // altura de triângulo retângulo isósceles com hipotenusa L
+const S = L / (2 * Math.SQRT2);      // lado do quadrado pequeno / cateto do triângulo pequeno
+
+// Centro da área de jogo (onde desenhamos a silhueta)
+const CX = CANVAS_W / 2;
+const CY = CANVAS_H / 2 - 30;   // ligeiramente acima para dar espaço à bandeja
+
+// Tolerância de snap: baseada na geometria, não em pixels fixos
+const SNAP_DIST = 26;                 // px
+const SNAP_ANGLE_TOL = 14;            // graus
+
+/* ============================================================================
+   DEFINIÇÃO DAS 7 PEÇAS (vértices em coordenadas locais, centrados)
+   ----------------------------------------------------------------------------
+   Cada peça tem os seus vértices definidos em torno do seu próprio centro
+   geométrico. Isto garante que a rotação funciona corretamente.
+============================================================================ */
+function definePieces() {
+    // ---- Triângulo Grande (hipotenusa = L, catetos = H = L/√2) ----
+    // Vértices originais num sistema onde o triângulo está apoiado:
+    //   (0,0), (L,0), (L/2, -H)
+    // Centro geométrico: (L/2, -H/3)
+    const bigTri = (() => {
+        const pts = [[0,0],[L,0],[L/2,-H]];
+        const c = centroid(pts);
+        return pts.map(([x,y]) => [x - c[0], y - c[1]]);
+    })();
+
+    // ---- Triângulo Médio (catetos = L/2, hipotenusa = L/√2 = H) ----
+    // Vértices: (0,0), (L/2,0), (0,-L/2)
+    const medTri = (() => {
+        const pts = [[0,0],[L/2,0],[0,-L/2]];
+        const c = centroid(pts);
+        return pts.map(([x,y]) => [x - c[0], y - c[1]]);
+    })();
+
+    // ---- Triângulo Pequeno (catetos = L/(2√2), hipotenusa = L/2) ----
+    // Vértices: (0,0), (S,0), (0,-S) com S = L/(2√2)
+    const smallTri = (() => {
+        const pts = [[0,0],[S,0],[0,-S]];
+        const c = centroid(pts);
+        return pts.map(([x,y]) => [x - c[0], y - c[1]]);
+    })();
+
+    // ---- Quadrado (lado = S = L/(2√2)) ----
+    const square = (() => {
+        const pts = [[-S/2,-S/2],[S/2,-S/2],[S/2,S/2],[-S/2,S/2]];
+        return pts; // já centrado
+    })();
+
+    // ---- Paralelogramo (lados L/2 e S, ângulo interno 45°) ----
+    // Vértices: (0,0), (L/2,0), (L/2 + S/√2, -S/√2), (S/√2, -S/√2)
+    const para = (() => {
+        const dx = S * Math.SQRT1_2;
+        const dy = S * Math.SQRT1_2;
+        const pts = [[0,0],[L/2,0],[L/2 + dx,-dy],[dx,-dy]];
+        const c = centroid(pts);
+        return pts.map(([x,y]) => [x - c[0], y - c[1]]);
+    })();
+
+    return [
+        { id:'bigA',  name:'Triângulo Grande',   color:'#f43f5e', verts:bigTri },
+        { id:'bigB',  name:'Triângulo Grande',   color:'#fb923c', verts:bigTri.map(([x,y])=>[-x,y]) },
+        { id:'med',   name:'Triângulo Médio',    color:'#facc15', verts:medTri },
+        { id:'smlA',  name:'Triângulo Pequeno',  color:'#34d399', verts:smallTri },
+        { id:'smlB',  name:'Triângulo Pequeno',  color:'#22d3ee', verts:smallTri.map(([x,y])=>[-x,y]) },
+        { id:'sq',    name:'Quadrado',           color:'#818cf8', verts:square },
+        { id:'par',   name:'Paralelogramo',      color:'#c084fc', verts:para }
+    ];
+}
+
+function centroid(pts) {
+    let x = 0, y = 0;
+    pts.forEach(([px,py]) => { x += px; y += py; });
+    return [x/pts.length, y/pts.length];
+}
+
+/* ============================================================================
+   FIGURAS ALVO
+   ----------------------------------------------------------------------------
+   Cada figura é descrita como { peçaId: {x, y, rot, flip} }.
+   As posições foram construídas somando vetores de peças encaixadas
+   geometricamente — todas as figuras formam silhuetas coerentes.
+   ----------------------------------------------------------------------------
+   Coordenadas relativas ao centro da silhueta (0,0). Convertidas para
+   o canvas no momento do desenho.
+============================================================================ */
+function defineModels() {
+    // Para facilitar, vamos usar uma grelha mental em que:
+    //   u = L/4 (unidade base)
+    //   H = L/√2 ≈ 1.414u * 2 = ~2.83u  (altura do triângulo grande)
+    //   S = L/(2√2) ≈ 0.707u * 2 = ~1.41u (lado do quadrado pequeno)
+
+    // Nota: Os valores abaixo foram escolhidos para que as peças
+    // se toquem sem sobreposição excessiva e formem a silhueta.
+
+    return [
+        /* ---------------------------------------------------------------
+           QUADRADO — a decomposição canónica do tangram
+           O quadrado de lado L decomposto nas 7 peças.
+           Coordenadas relativas ao centro do quadrado.
+        --------------------------------------------------------------- */
+        {
+            name:'Quadrado', icon:'⬛',
+            targets: {
+                // Metade superior: dois triângulos grandes
+                bigA: { x:-L/4, y:-L/4, rot:180, flip:false },
+                bigB: { x: L/4, y:-L/4, rot:180, flip:false },
+                // Metade inferior esquerda: triângulo médio + quadrado pequeno
+                med:  { x:-L/4, y: L/4, rot:180, flip:false },
+                sq:   { x: 0,   y: L/2, rot: 0,  flip:false },
+                // Metade inferior direita: dois triângulos pequenos + paralelogramo
+                smlA: { x: L/4, y: L/4, rot:180, flip:false },
+                smlB: { x: 3*L/8, y: L/4, rot:90, flip:false },
+                par:  { x:-3*L/8, y: L/4, rot:0,   flip:false }
+            }
+        },
+
+        /* ---------------------------------------------------------------
+           CASA — telhado de triângulos grandes, corpo de médio+quadrado+par,
+           chaminé de triângulos pequenos.
+        --------------------------------------------------------------- */
+        {
+            name:'Casa', icon:'🏠',
+            targets: {
+                // Telhado: dois triângulos grandes lado a lado, apontando para cima
+                // (rotação 0 = hipotenusa em baixo)
+                bigA: { x:-L/4, y:-L/2 + H/3, rot:0, flip:false },
+                bigB: { x: L/4, y:-L/2 + H/3, rot:0, flip:false },
+                // Corpo: quadrado no centro-baixo
+                sq:   { x: 0,   y: L/4, rot:0, flip:false },
+                // Parede esquerda: triângulo médio virado
+                med:  { x:-L/2 + L/8, y: L/4 + L/8, rot:45, flip:false },
+                // Parede direita: paralelogramo
+                par:  { x: L/2 - L/8, y: L/4 + L/8, rot:-45, flip:false },
+                // Chaminé e base: triângulos pequenos
+                smlA: { x:-L/4, y: L/2 + L/8, rot:0, flip:false },
+                smlB: { x: L/4, y: L/2 + L/8, rot:0, flip:false }
+            }
+        },
+
+        /* ---------------------------------------------------------------
+           PEIXE — corpo horizontal, cauda triangular, cabeça pontiaguda
+        --------------------------------------------------------------- */
+        {
+            name:'Peixe', icon:'🐟',
+            targets: {
+                // Corpo central: paralelogramo (formato alongado)
+                par:  { x: 0, y: 0, rot:0, flip:false },
+                // Cauda: dois triângulos grandes espelhados à esquerda
+                bigA: { x:-L/2 - L/8, y:0, rot:90, flip:false },
+                bigB: { x:-L/2 - L/8, y:0, rot:270, flip:false },
+                // Cabeça: triângulo médio à direita
+                med:  { x: L/2, y:0, rot:-90, flip:false },
+                // Barbatanas: triângulos pequenos acima e abaixo
+                smlA: { x:-L/8, y:-L/4, rot:180, flip:false },
+                smlB: { x:-L/8, y: L/4, rot:0, flip:false },
+                // Olho: quadrado pequeno à direita
+                sq:   { x: L/2 + L/4, y:-L/8, rot:0, flip:false }
+            }
+        },
+
+        /* ---------------------------------------------------------------
+           CISNE — pescoço erguido, corpo largo, cabeça alta
+        --------------------------------------------------------------- */
+        {
+            name:'Cisne', icon:'🦢',
+            targets: {
+                // Corpo: dois triângulos grandes formando base
+                bigA: { x:-L/4, y: L/4, rot:0, flip:false },
+                bigB: { x: L/4, y: L/4, rot:0, flip:false },
+                // Peito: paralelogramo
+                par:  { x:-L/4, y:-L/8, rot:-30, flip:false },
+                // Pescoço: triângulo médio
+                med:  { x: L/8, y:-L/4, rot:-45, flip:false },
+                // Cabeça: quadrado pequeno
+                sq:   { x: L/4 + L/8, y:-L/2, rot:30, flip:false },
+                // Asas: triângulos pequenos
+                smlA: { x: L/4, y: L/8, rot:0, flip:false },
+                smlB: { x:-L/8, y: L/8, rot:180, flip:false }
+            }
+        },
+
+        /* ---------------------------------------------------------------
+           VELA — casco plano, mastro vertical, vela triangular
+        --------------------------------------------------------------- */
+        {
+            name:'Barco à Vela', icon:'⛵',
+            targets: {
+                // Casco: dois triângulos grandes espelhados a formar trapézio
+                bigA: { x:-L/4, y: L/3, rot:0, flip:false },
+                bigB: { x: L/4, y: L/3, rot:0, flip:false },
+                // Mastro: quadrado
+                sq:   { x: 0, y: 0, rot:0, flip:false },
+                // Vela principal: triângulo médio
+                med:  { x:-L/8, y:-L/4, rot:45, flip:false },
+                // Vela secundária: paralelogramo
+                par:  { x: L/8, y:-L/4, rot:-45, flip:false },
+                // Detalhes: triângulos pequenos
+                smlA: { x:-L/3, y: L/6, rot:180, flip:false },
+                smlB: { x: L/3, y: L/6, rot:0, flip:false }
+            }
+        }
+    ];
+}
+
+/* ============================================================================
+   ESTADO
+============================================================================ */
+let pieceDefs = definePieces();
+let models = defineModels();
+let currentModel = null;
+let pieces = [];
+let selectedId = null;
+let dragging = false;
+let dragOffX = 0, dragOffY = 0;
+let won = false;
+let rafPending = false;
+let debugMode = false;
+
+/* ============================================================================
+   DOM
+============================================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const modelNameEl = document.getElementById('model-name');
+const scoreEl = document.getElementById('score-count');
+const winModal = document.getElementById('win');
+const winText = document.getElementById('win-text');
+const themeBtn = document.getElementById('theme-toggle');
+const legendEl = document.getElementById('legend');
+
+/* ============================================================================
+   GEOMETRIA — TRANSFORMAÇÕES
+============================================================================ */
+function transformPoint([x,y], rot, flip, tx, ty) {
+    if (flip) x = -x;
+    const rad = rot * Math.PI / 180;
+    const c = Math.cos(rad), s = Math.sin(rad);
+    return [tx + x*c - y*s, ty + x*s + y*c];
+}
+
+function pieceWorldVerts(p) {
+    const def = pieceDefs.find(d => d.id === p.id);
+    if (!def) return [];
+    return def.verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
+}
+
+function bbox(verts) {
+    let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+    for (const [x,y] of verts) {
+        if (x < a) a = x; if (y < b) b = y;
+        if (x > c) c = x; if (y > d) d = y;
+    }
+    return { minX:a, minY:b, maxX:c, maxY:d, w:c-a, h:d-b };
+}
+
+function pointInPoly(px, py, verts) {
+    let inside = false;
+    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
+        const [xi, yi] = verts[i];
+        const [xj, yj] = verts[j];
+        if (((yi > py) !== (yj > py)) &&
+            (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
+const normDeg = a => ((a % 360) + 360) % 360;
+function angDiff(a, b) {
+    const d = Math.abs(normDeg(a) - normDeg(b));
+    return Math.min(d, 360 - d);
+}
+
+/* ============================================================================
+   ALVO — CONVERSÃO PARA COORDENADAS DO CANVAS
+============================================================================ */
+function modelTargetWorld(pieceId) {
+    const t = currentModel.targets[pieceId];
+    if (!t) return null;
+    return {
+        x: CX + t.x,
+        y: CY + t.y,
+        rot: t.rot,
+        flip: !!t.flip
+    };
+}
+
+/* ============================================================================
+   ESTADO DAS PEÇAS
+============================================================================ */
+function initGame() {
+    currentModel = models[Math.floor(Math.random() * models.length)];
+    modelNameEl.textContent = `${currentModel.icon} ${currentModel.name}`;
+
+    // Cria as peças na bandeja inferior
+    const trayY = CANVAS_H - 70;
+    const cols = 4;
+    const spacing = CANVAS_W / (cols + 1);
+
+    pieces = pieceDefs.map((def, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        return {
+            id: def.id,
+            x: spacing * (col + 1),
+            y: trayY + row * 55,
+            rot: (Math.floor(Math.random() * 8)) * 45,
+            flip: false,
+            placed: false
         };
+    });
 
-        const PIECE_NAMES = {
-            bigTriangle1: 'Triângulo Grande',
-            bigTriangle2: 'Triângulo Grande',
-            mediumTriangle: 'Triângulo Médio',
-            smallTriangle1: 'Triângulo Pequeno',
-            smallTriangle2: 'Triângulo Pequeno',
-            square: 'Quadrado',
-            parallelogram: 'Paralelogramo'
-        };
+    selectedId = null;
+    dragging = false;
+    won = false;
+    winModal.classList.remove('active');
+    buildLegend();
+    updateScore();
+    requestDraw();
+}
 
-        /* ============================================================
-           DEFINIÇÃO DAS PEÇAS — VÉRTICES EM COORDENADAS LOCAIS
-           ------------------------------------------------------------
-           Todas as peças têm origem no seu CENTRO (0,0).
-           Cada vértice é um par [x, y].
-           O "raio" aproximado é usado para hit-test.
-           ============================================================ */
-        function buildPieces() {
-            const L = SQ_SIDE;
-            const half = L / 2;
-            const q = L / 4;                    // quarto
-            const smallLeg = L / (2 * Math.SQRT2);   // cateto do triângulo pequeno
-            const medLeg = L / 2;                    // cateto do triângulo médio
-            const bigLeg = L / Math.SQRT2;           // cateto do triângulo grande
-            const squareSide = L / (2 * Math.SQRT2); // lado do quadrado
-            const paraLong = L / 2;                  // lado longo do paralelogramo
-            const paraShort = L / (2 * Math.SQRT2);  // lado curto do paralelogramo
-
-            // --- Triângulo Grande 1 (hipotenusa = L, virado para cima) ---
-            // Coordenadas locais centralizadas no centróide
-            const bigTri1Vertices = (() => {
-                const h = L / Math.SQRT2;         // altura (L/√2)
-                // Vértices originais: (0,0), (L,0), (L/2, h) → centro em (L/2, h/3)
-                const cx = L / 2, cy = h / 3;
-                return [
-                    [0 - cx, 0 - cy],
-                    [L - cx, 0 - cy],
-                    [L / 2 - cx, h - cy]
-                ];
-            })();
-
-            // --- Triângulo Grande 2 (hipotenusa = L, virado para baixo) ---
-            const bigTri2Vertices = (() => {
-                const h = L / Math.SQRT2;
-                const cx = L / 2, cy = 2 * h / 3;
-                return [
-                    [0 - cx, h - cy],
-                    [L - cx, h - cy],
-                    [L / 2 - cx, 0 - cy]
-                ];
-            })();
-
-            // --- Triângulo Médio (cateto = L/2, isósceles retângulo) ---
-            const medTriVertices = (() => {
-                const s = medLeg;
-                const h = s;                       // altura igual ao cateto
-                const cx = s / 2, cy = h / 3;
-                return [
-                    [0 - cx, 0 - cy],
-                    [s - cx, 0 - cy],
-                    [0 - cx, h - cy]
-                ];
-            })();
-
-            // --- Triângulo Pequeno 1 ---
-            const smallTri1Vertices = (() => {
-                const s = smallLeg;
-                const h = s;
-                const cx = s / 2, cy = h / 3;
-                return [
-                    [0 - cx, 0 - cy],
-                    [s - cx, 0 - cy],
-                    [0 - cx, h - cy]
-                ];
-            })();
-
-            // --- Triângulo Pequeno 2 (espelhado) ---
-            const smallTri2Vertices = (() => {
-                const s = smallLeg;
-                const h = s;
-                const cx = s / 2, cy = h / 3;
-                return [
-                    [s - cx, 0 - cy],
-                    [0 - cx, 0 - cy],
-                    [s - cx, h - cy]
-                ];
-            })();
-
-            // --- Quadrado (lado = L/(2√2)) ---
-            const squareVertices = (() => {
-                const s = squareSide;
-                const half = s / 2;
-                return [
-                    [-half, -half],
-                    [half, -half],
-                    [half, half],
-                    [-half, half]
-                ];
-            })();
-
-            // --- Paralelogramo (lados L/2 e L/(2√2), ângulo 45°) ---
-            const paraVertices = (() => {
-                const a = paraLong;
-                const b = paraShort;
-                const h = b * Math.SQRT1_2;        // altura
-                // Vértices: (0,0), (a,0), (a+b/√2, h), (b/√2, h)
-                // Simplificando com ângulo de 45°
-                const dx = b * Math.SQRT1_2;
-                const pts = [
-                    [0, 0],
-                    [a, 0],
-                    [a + dx, h],
-                    [dx, h]
-                ];
-                // Centralizar no centróide
-                const cx = (pts[0][0] + pts[1][0] + pts[2][0] + pts[3][0]) / 4;
-                const cy = (pts[0][1] + pts[1][1] + pts[2][1] + pts[3][1]) / 4;
-                return pts.map(([x, y]) => [x - cx, y - cy]);
-            })();
-
-            return [
-                { id: 'bigTriangle1', type: 'triangle', vertices: bigTri1Vertices, color: PIECE_COLORS.bigTriangle1 },
-                { id: 'bigTriangle2', type: 'triangle', vertices: bigTri2Vertices, color: PIECE_COLORS.bigTriangle2 },
-                { id: 'mediumTriangle', type: 'triangle', vertices: medTriVertices, color: PIECE_COLORS.mediumTriangle },
-                { id: 'smallTriangle1', type: 'triangle', vertices: smallTri1Vertices, color: PIECE_COLORS.smallTriangle1 },
-                { id: 'smallTriangle2', type: 'triangle', vertices: smallTri2Vertices, color: PIECE_COLORS.smallTriangle2 },
-                { id: 'square', type: 'square', vertices: squareVertices, color: PIECE_COLORS.square },
-                { id: 'parallelogram', type: 'parallelogram', vertices: paraVertices, color: PIECE_COLORS.parallelogram }
-            ];
-        }
-
-        /* ============================================================
-           FIGURAS ALVO — silhuetas famosas do tangram tradicional
-           Cada figura é um conjunto de posições-alvo (x, y, rot) para
-           cada peça, respeitando a geometria exata das peças.
-           ============================================================ */
-        function buildModels() {
-            const L = SQ_SIDE;
-            const q = L / 4;
-            const h = L / Math.SQRT2;      // altura de triângulo com hipotenusa L
-            const bigLeg = L / Math.SQRT2;
-
-            // Utilitário para centralizar silhuetas no canvas
-            const cx = CANVAS_W / 2;
-            const cy = CANVAS_H / 2;
-
-            return [
-                // ---------- QUADRADO ORIGINAL ----------
-                {
-                    name: "Quadrado Original",
-                    icon: "⬛",
-                    targets: {
-                        bigTriangle1:  { x: cx - q, y: cy - q, rot: 0, flip: false },
-                        bigTriangle2:  { x: cx + q, y: cy - q, rot: 90, flip: false },
-                        mediumTriangle:{ x: cx + q, y: cy,    rot: 180, flip: false },
-                        smallTriangle1:{ x: cx - q + 90, y: cy + 90, rot: 270, flip: false },
-                        smallTriangle2:{ x: cx - q + 90, y: cy + 90, rot: 0, flip: false },
-                        square:        { x: cx + 90, y: cy + 90, rot: 0, flip: false },
-                        parallelogram: { x: cx - q - 90, y: cy + 90, rot: 0, flip: false }
-                    }
-                },
-                // ---------- CASA ----------
-                {
-                    name: "Casa",
-                    icon: "🏠",
-                    targets: {
-                        // Triângulos grandes formam o telhado
-                        bigTriangle1:  { x: cx - L/2 + 30, y: cy - h/2 - 30, rot: 0, flip: false },
-                        bigTriangle2:  { x: cx + L/2 - 30, y: cy - h/2 - 30, rot: 0, flip: true },
-                        // Corpo da casa
-                        square:        { x: cx, y: cy + 20, rot: 0, flip: false },
-                        parallelogram: { x: cx - L/2 + 20, y: cy + 20, rot: 90, flip: false },
-                        // Triângulo médio + pequenos formam a chaminé e detalhes
-                        mediumTriangle:{ x: cx + L/2 - 30, y: cy + 20, rot: 45, flip: false },
-                        smallTriangle1:{ x: cx - 40, y: cy + 100, rot: 180, flip: false },
-                        smallTriangle2:{ x: cx + 40, y: cy + 100, rot: 180, flip: false }
-                    }
-                },
-                // ---------- PEIXE ----------
-                {
-                    name: "Peixe",
-                    icon: "🐟",
-                    targets: {
-                        // Corpo — paralelogramo central
-                        parallelogram: { x: cx, y: cy + 20, rot: 0, flip: false },
-                        // Cauda — triângulos grandes
-                        bigTriangle1:  { x: cx - 130, y: cy + 20, rot: 0, flip: false },
-                        bigTriangle2:  { x: cx - 130, y: cy + 20, rot: 0, flip: true },
-                        // Cabeça — triângulo médio
-                        mediumTriangle:{ x: cx + 110, y: cy + 20, rot: 270, flip: false },
-                        // Nadadeiras
-                        smallTriangle1:{ x: cx - 30, y: cy - 60, rot: 90, flip: false },
-                        smallTriangle2:{ x: cx + 30, y: cy + 100, rot: 270, flip: false },
-                        // Olho/bolha — quadrado
-                        square:        { x: cx + 150, y: cy - 50, rot: 0, flip: false }
-                    }
-                },
-                // ---------- CISNE ----------
-                {
-                    name: "Cisne",
-                    icon: "🦢",
-                    targets: {
-                        bigTriangle1:  { x: cx - 80, y: cy + 60, rot: 0, flip: false },
-                        bigTriangle2:  { x: cx + 80, y: cy + 60, rot: 0, flip: true },
-                        mediumTriangle:{ x: cx, y: cy - 30, rot: 45, flip: false },
-                        smallTriangle1:{ x: cx - 30, y: cy - 90, rot: 0, flip: false },
-                        smallTriangle2:{ x: cx + 30, y: cy - 90, rot: 0, flip: true },
-                        square:        { x: cx + 60, y: cy + 10, rot: 45, flip: false },
-                        parallelogram: { x: cx - 60, y: cy + 10, rot: -45, flip: false }
-                    }
-                },
-                // ---------- VELA ----------
-                {
-                    name: "Barco à Vela",
-                    icon: "⛵",
-                    targets: {
-                        // Casco — triângulos grandes
-                        bigTriangle1:  { x: cx - 70, y: cy + 120, rot: 0, flip: false },
-                        bigTriangle2:  { x: cx + 70, y: cy + 120, rot: 0, flip: true },
-                        // Vela principal — triângulo médio
-                        mediumTriangle:{ x: cx, y: cy - 40, rot: 270, flip: false },
-                        // Mastro — quadrado
-                        square:        { x: cx + 60, y: cy + 20, rot: 45, flip: false },
-                        // Vela pequena — triângulos pequenos
-                        smallTriangle1:{ x: cx - 20, y: cy - 40, rot: 0, flip: false },
-                        smallTriangle2:{ x: cx + 100, y: cy - 40, rot: 90, flip: false },
-                        // Detalhe — paralelogramo
-                        parallelogram: { x: cx - 100, y: cy + 20, rot: -45, flip: false }
-                    }
-                }
-            ];
-        }
-
-        /* ============================================================
-           ESTADO GLOBAL
-           ============================================================ */
-        let currentModel = null;
-        let pieceDefs = [];
-        let pieces = [];              // instâncias com x, y, rot, flip
-        let selectedPieceId = null;
-        let isDragging = false;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
-        let gameWon = false;
-        let rafPending = false;
-
-        /* ============================================================
-           DOM
-           ============================================================ */
-        const canvas = document.getElementById('tangramCanvas');
-        const ctx = canvas.getContext('2d');
-        const modelNameEl = document.getElementById('model-name');
-        const scoreCountEl = document.getElementById('score-count');
-        const winModal = document.getElementById('win-modal');
-        const winText = document.getElementById('win-text');
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const btnRotate = document.getElementById('btn-rotate');
-        const btnFlip = document.getElementById('btn-flip');
-        const btnNovo = document.getElementById('btn-novo');
-        const nextGameBtn = document.getElementById('next-game-btn');
-        const legendEl = document.getElementById('piece-legend');
-
-        /* ============================================================
-           UTILITÁRIOS GEOMÉTRICOS
-           ============================================================ */
-        const normalizeAngle = (a) => ((a % 360) + 360) % 360;
-        const angleDiff = (a, b) => {
-            const d = Math.abs(normalizeAngle(a) - normalizeAngle(b));
-            return Math.min(d, 360 - d);
-        };
-
-        // Aplica rotação + flip + translação a um vértice
-        function transformVertex(v, rot, flip, tx, ty) {
-            let [x, y] = v;
-            if (flip) x = -x;
-            const rad = rot * Math.PI / 180;
-            const cos = Math.cos(rad), sin = Math.sin(rad);
-            return [
-                tx + x * cos - y * sin,
-                ty + x * sin + y * cos
-            ];
-        }
-
-        // Obtém todos os vértices transformados de uma peça
-        function getPieceWorldVertices(piece) {
-            const def = pieceDefs.find(d => d.id === piece.id);
-            return def.vertices.map(v =>
-                transformVertex(v, piece.rot, piece.flip, piece.x, piece.y)
-            );
-        }
-
-        // Verifica se um ponto (px, py) está dentro do polígono da peça
-        function pointInPolygon(px, py, vertices) {
-            let inside = false;
-            for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-                const [xi, yi] = vertices[i];
-                const [xj, yj] = vertices[j];
-                const intersect = ((yi > py) !== (yj > py)) &&
-                    (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
-                if (intersect) inside = !inside;
-            }
-            return inside;
-        }
-
-        // Bounding box do polígono
-        function getBBox(vertices) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            vertices.forEach(([x, y]) => {
-                if (x < minX) minX = x;
-                if (y < minY) minY = y;
-                if (x > maxX) maxX = x;
-                if (y > maxY) maxY = y;
-            });
-            return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY };
-        }
-
-        // Centro do bounding box transformado (usado para snap)
-        function getPieceCenter(piece) {
-            const verts = getPieceWorldVertices(piece);
-            const bb = getBBox(verts);
-            return { x: (bb.minX + bb.maxX) / 2, y: (bb.minY + bb.maxY) / 2 };
-        }
-
-        /* ============================================================
-           INICIALIZAÇÃO
-           ============================================================ */
-        function initTheme() {
-            const saved = localStorage.getItem('brain_flow_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', saved);
-            themeToggleBtn.textContent = saved === 'dark' ? '🌙' : '☀️';
-        }
-        themeToggleBtn.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            themeToggleBtn.textContent = next === 'dark' ? '🌙' : '☀️';
-            localStorage.setItem('brain_flow_theme', next);
-        });
-
-        // Espalha peças numa bandeja lateral para não sobrepor a silhueta
-        function scatterPieces() {
-            const shuffled = [...pieces].sort(() => Math.random() - 0.5);
-            // Bandeja inferior (parte de baixo do canvas)
-            const trayY = CANVAS_H - 100;
-            const cols = 4;
-            const spacing = CANVAS_W / (cols + 1);
-            shuffled.forEach((p, i) => {
-                const col = i % cols;
-                const row = Math.floor(i / cols);
-                p.x = spacing * (col + 1);
-                p.y = trayY + row * 60;
-                p.rot = (Math.floor(Math.random() * 8)) * 45;
-                p.flip = false;
-                p.placed = false;
-            });
-        }
-
-        function initGame() {
-            pieceDefs = buildPieces();
-            const models = buildModels();
-            currentModel = models[Math.floor(Math.random() * models.length)];
-            modelNameEl.textContent = `${currentModel.icon} ${currentModel.name}`;
-
-            pieces = pieceDefs.map(def => ({
-                id: def.id,
-                x: 0, y: 0,
-                rot: 0,
-                flip: false,
-                placed: false,
-                target: currentModel.targets[def.id] || { x: CANVAS_W/2, y: CANVAS_H/2, rot: 0, flip: false }
-            }));
-
-            scatterPieces();
-            selectedPieceId = null;
-            isDragging = false;
-            gameWon = false;
-            winModal.classList.remove('active');
-            updateScore();
-            renderLegend();
-            requestDraw();
-        }
-
-        function renderLegend() {
-            legendEl.innerHTML = '';
-            pieceDefs.forEach(def => {
-                const item = document.createElement('div');
-                item.className = 'legend-item';
-                item.dataset.pieceId = def.id;
-                item.innerHTML = `
-                    <span class="swatch" style="background:${def.color}"></span>
-                    <span class="name">${PIECE_NAMES[def.id]}</span>
-                `;
-                legendEl.appendChild(item);
-            });
-        }
-
-        function updateLegendActive() {
-            document.querySelectorAll('.legend-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.pieceId === selectedPieceId);
-            });
-        }
-
-        /* ============================================================
-           LÓGICA DE ENCAIXE
-           ============================================================ */
-        function checkPiecePlacement(piece) {
-            const t = piece.target;
-            const dist = Math.hypot(piece.x - t.x, piece.y - t.y);
-            const angleOk = angleDiff(piece.rot, t.rot) <= SNAP_ANGLE_TOLERANCE;
-            const flipOk = (piece.flip === !!t.flip);
-            return dist < SNAP_DISTANCE && angleOk && flipOk;
-        }
-
-        function snapPiece(piece) {
-            piece.x = piece.target.x;
-            piece.y = piece.target.y;
-            piece.rot = normalizeAngle(piece.target.rot);
-            piece.flip = !!piece.target.flip;
-        }
-
-        function updateScore() {
-            let placed = 0;
-            pieces.forEach(p => {
-                if (checkPiecePlacement(p)) placed++;
-            });
-            scoreCountEl.textContent = `${placed} / ${TOTAL_PIECES}`;
-            scoreCountEl.classList.toggle('success', placed === TOTAL_PIECES);
-            return placed;
-        }
-
-        function verificarEncaixes() {
-            pieces.forEach(p => {
-                if (checkPiecePlacement(p)) {
-                    if (!p.placed) snapPiece(p);
-                    p.placed = true;
-                } else {
-                    p.placed = false;
-                }
-            });
-            const placed = updateScore();
-            if (placed === TOTAL_PIECES && !gameWon) {
-                gameWon = true;
-                setTimeout(mostrarVitoria, 400);
-            }
-        }
-
-        function mostrarVitoria() {
-            winText.textContent = `Completou a figura "${currentModel.name}" com as 7 peças tradicionais do tangram!`;
-            winModal.classList.add('active');
-            atribuirPontos();
-        }
-
-        /* ============================================================
-           RENDERIZAÇÃO
-           ============================================================ */
-        function requestDraw() {
-            if (rafPending) return;
-            rafPending = true;
-            requestAnimationFrame(() => {
-                rafPending = false;
-                desenhar();
-            });
-        }
-
-        function desenhar() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBackground();
-            drawTargetSilhouette();
-
-            // Ordem de desenho: peças colocadas primeiro, selecionada por último
-            const sorted = [...pieces].sort((a, b) => {
-                if (a.placed !== b.placed) return a.placed ? -1 : 1;
-                if (selectedPieceId === a.id) return 1;
-                if (selectedPieceId === b.id) return -1;
-                return 0;
-            });
-
-            sorted.forEach(p => drawPiece(p));
-        }
-
-        function drawBackground() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            ctx.save();
-            ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.04)' : 'rgba(15, 23, 42, 0.04)';
-            ctx.lineWidth = 1;
-            const gridSize = 40;
-            for (let x = 0; x <= canvas.width; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-            for (let y = 0; y <= canvas.height; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-
-        // Desenha a silhueta alvo: para cada peça-alvo, desenha a forma pontilhada
-        function drawTargetSilhouette() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            ctx.save();
-            pieceDefs.forEach(def => {
-                const t = currentModel.targets[def.id];
-                if (!t) return;
-
-                // Constrói vértice transformado com os parâmetros do alvo
-                const verts = def.vertices.map(v => {
-                    let [x, y] = v;
-                    if (t.flip) x = -x;
-                    const rad = t.rot * Math.PI / 180;
-                    const cos = Math.cos(rad), sin = Math.sin(rad);
-                    return [
-                        t.x + x * cos - y * sin,
-                        t.y + x * sin + y * cos
-                    ];
-                });
-
-                ctx.beginPath();
-                verts.forEach(([vx, vy], i) => {
-                    if (i === 0) ctx.moveTo(vx, vy);
-                    else ctx.lineTo(vx, vy);
-                });
-                ctx.closePath();
-
-                ctx.fillStyle = isDark ? 'rgba(56, 189, 248, 0.05)' : 'rgba(56, 189, 248, 0.07)';
-                ctx.fill();
-
-                ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(100, 116, 139, 0.4)';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 6]);
-                ctx.stroke();
-            });
-            ctx.restore();
-        }
-
-        function drawPiece(piece) {
-            const def = pieceDefs.find(d => d.id === piece.id);
-            if (!def) return;
-
-            const isSelected = selectedPieceId === piece.id;
-            const verts = getPieceWorldVertices(piece);
-
-            ctx.save();
-
-            // Sombra
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-            ctx.shadowBlur = isSelected ? 18 : 8;
-            ctx.shadowOffsetY = isSelected ? 4 : 2;
-
-            // Corpo
-            ctx.beginPath();
-            verts.forEach(([vx, vy], i) => {
-                if (i === 0) ctx.moveTo(vx, vy);
-                else ctx.lineTo(vx, vy);
-            });
-            ctx.closePath();
-            ctx.fillStyle = def.color;
-            ctx.fill();
-
-            // Reset sombra
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-
-            // Gradiente interno subtil
-            const bb = getBBox(verts);
-            const grad = ctx.createLinearGradient(bb.minX, bb.minY, bb.maxX, bb.maxY);
-            grad.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
-            grad.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // Borda
-            if (isSelected) {
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                // Glow
-                ctx.strokeStyle = def.color;
-                ctx.lineWidth = 8;
-                ctx.globalAlpha = 0.35;
-                ctx.stroke();
-                ctx.globalAlpha = 1;
-            } else if (piece.placed) {
-                ctx.strokeStyle = 'rgba(52, 211, 153, 0.95)';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
-            } else {
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        }
-
-        /* ============================================================
-           INTERAÇÃO — MOUSE
-           ============================================================ */
-        function findPieceAt(x, y) {
-            // Percorre de trás para a frente (topo primeiro)
-            for (let i = pieces.length - 1; i >= 0; i--) {
-                const p = pieces[i];
-                const verts = getPieceWorldVertices(p);
-                if (pointInPolygon(x, y, verts)) return p;
-            }
-            return null;
-        }
-
-        canvas.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-            const hit = findPieceAt(x, y);
-            if (hit) {
-                selectedPieceId = hit.id;
-                isDragging = true;
-                dragOffsetX = x - hit.x;
-                dragOffsetY = y - hit.y;
-                // Trazer para frente
-                const idx = pieces.indexOf(hit);
-                pieces.splice(idx, 1);
-                pieces.push(hit);
-                updateLegendActive();
-                requestDraw();
-            } else {
-                selectedPieceId = null;
-                updateLegendActive();
-                requestDraw();
-            }
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDragging || !selectedPieceId) return;
-            const piece = pieces.find(p => p.id === selectedPieceId);
-            if (!piece) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-            piece.x = x - dragOffsetX;
-            piece.y = y - dragOffsetY;
-            piece.placed = false;
+function buildLegend() {
+    legendEl.innerHTML = '';
+    pieceDefs.forEach(def => {
+        const el = document.createElement('div');
+        el.className = 'legend-item';
+        el.dataset.id = def.id;
+        el.innerHTML = `<span class="sw" style="background:${def.color}"></span><span class="nm">${def.name}</span>`;
+        el.addEventListener('click', () => {
+            selectedId = def.id;
+            updateLegendActive();
             requestDraw();
         });
+        legendEl.appendChild(el);
+    });
+    updateLegendActive();
+}
 
-        window.addEventListener('mouseup', () => {
-            if (isDragging) {
-                verificarEncaixes();
-                requestDraw();
-            }
-            isDragging = false;
-        });
+function updateLegendActive() {
+    legendEl.querySelectorAll('.legend-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === selectedId);
+    });
+}
 
-        /* ============================================================
-           INTERAÇÃO — TOUCH
-           ============================================================ */
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (e.touches.length !== 1) return;
-            const t = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const x = (t.clientX - rect.left) * (canvas.width / rect.width);
-            const y = (t.clientY - rect.top) * (canvas.height / rect.height);
+/* ============================================================================
+   ENCAIXE
+============================================================================ */
+function isPlaced(p) {
+    const t = modelTargetWorld(p.id);
+    if (!t) return false;
+    const d = Math.hypot(p.x - t.x, p.y - t.y);
+    const aOk = angDiff(p.rot, t.rot) <= SNAP_ANGLE_TOL;
+    const fOk = p.flip === t.flip;
+    return d < SNAP_DIST && aOk && fOk;
+}
 
-            const hit = findPieceAt(x, y);
-            if (hit) {
-                selectedPieceId = hit.id;
-                isDragging = true;
-                dragOffsetX = x - hit.x;
-                dragOffsetY = y - hit.y;
-                const idx = pieces.indexOf(hit);
-                pieces.splice(idx, 1);
-                pieces.push(hit);
-                updateLegendActive();
-                requestDraw();
-            } else {
-                selectedPieceId = null;
-                updateLegendActive();
-                requestDraw();
-            }
-        }, { passive: false });
+function snapToTarget(p) {
+    const t = modelTargetWorld(p.id);
+    p.x = t.x; p.y = t.y; p.rot = normDeg(t.rot); p.flip = t.flip;
+}
 
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (!isDragging || !selectedPieceId || e.touches.length !== 1) return;
-            const piece = pieces.find(p => p.id === selectedPieceId);
-            if (!piece) return;
-            const t = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const x = (t.clientX - rect.left) * (canvas.width / rect.width);
-            const y = (t.clientY - rect.top) * (canvas.height / rect.height);
+function updateScore() {
+    let n = 0;
+    pieces.forEach(p => {
+        if (isPlaced(p)) { p.placed = true; n++; }
+        else p.placed = false;
+    });
+    scoreEl.textContent = `${n} / 7`;
+    scoreEl.classList.toggle('ok', n === 7);
+    if (n === 7 && !won) {
+        won = true;
+        setTimeout(showWin, 400);
+    }
+    return n;
+}
 
-            piece.x = x - dragOffsetX;
-            piece.y = y - dragOffsetY;
-            piece.placed = false;
-            requestDraw();
-        }, { passive: false });
+function showWin() {
+    winText.textContent = `Completou a figura "${currentModel.name}" com as 7 peças tradicionais do tangram!`;
+    winModal.classList.add('active');
+    awardPoints();
+}
 
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (isDragging) {
-                verificarEncaixes();
-                requestDraw();
-            }
-            isDragging = false;
-        }, { passive: false });
+/* ============================================================================
+   RENDER
+============================================================================ */
+function requestDraw() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => { rafPending = false; draw(); });
+}
 
-        /* ============================================================
-           ROTAÇÃO / FLIP / AÇÕES
-           ============================================================ */
-        function getSelectedPiece() {
-            return pieces.find(p => p.id === selectedPieceId) || null;
+function draw() {
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    drawGrid();
+    drawSilhouette();
+    drawTrayDivider();
+
+    // Ordem: alvos (já desenhados), peças não colocadas, peças colocadas, selecionada
+    const sorted = [...pieces].sort((a, b) => {
+        const ap = a.placed ? 1 : 0, bp = b.placed ? 1 : 0;
+        if (ap !== bp) return ap - bp;
+        if (a.id === selectedId) return 1;
+        if (b.id === selectedId) return -1;
+        return 0;
+    });
+    sorted.forEach(drawPiece);
+
+    if (debugMode) drawDebug();
+}
+
+function drawGrid() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    ctx.save();
+    ctx.strokeStyle = dark ? 'rgba(148,163,184,.05)' : 'rgba(15,23,42,.05)';
+    ctx.lineWidth = 1;
+    const g = 40;
+    for (let x = 0; x <= CANVAS_W; x += g) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_H); ctx.stroke();
+    }
+    for (let y = 0; y <= CANVAS_H; y += g) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_W, y); ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawTrayDivider() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    ctx.save();
+    ctx.strokeStyle = dark ? 'rgba(148,163,184,.15)' : 'rgba(15,23,42,.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(0, CANVAS_H - 110);
+    ctx.lineTo(CANVAS_W, CANVAS_H - 110);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawSilhouette() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    pieceDefs.forEach(def => {
+        const t = modelTargetWorld(def.id);
+        if (!t) return;
+        const verts = def.verts.map(v => transformPoint(v, t.rot, t.flip, t.x, t.y));
+
+        ctx.beginPath();
+        verts.forEach(([x,y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+        ctx.closePath();
+
+        ctx.fillStyle = dark ? 'rgba(56,189,248,.05)' : 'rgba(56,189,248,.08)';
+        ctx.fill();
+
+        ctx.strokeStyle = dark ? 'rgba(148,163,184,.35)' : 'rgba(100,116,139,.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+    });
+}
+
+function drawPiece(p) {
+    const def = pieceDefs.find(d => d.id === p.id);
+    if (!def) return;
+    const verts = pieceWorldVerts(p);
+    const sel = p.id === selectedId;
+
+    ctx.save();
+
+    // Sombra
+    ctx.shadowColor = 'rgba(0,0,0,.4)';
+    ctx.shadowBlur = sel ? 18 : 8;
+    ctx.shadowOffsetY = sel ? 4 : 2;
+
+    // Preenchimento base
+    ctx.beginPath();
+    verts.forEach(([x,y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+    ctx.closePath();
+    ctx.fillStyle = def.color;
+    ctx.fill();
+
+    // Reset sombra
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+    // Gradiente interno
+    const bb = bbox(verts);
+    const grad = ctx.createLinearGradient(bb.minX, bb.minY, bb.maxX, bb.maxY);
+    grad.addColorStop(0, 'rgba(255,255,255,.28)');
+    grad.addColorStop(1, 'rgba(0,0,0,.18)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Borda
+    if (sel) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.globalAlpha = .4;
+        ctx.strokeStyle = def.color;
+        ctx.lineWidth = 8;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+    } else if (p.placed) {
+        ctx.strokeStyle = 'rgba(52,211,153,.95)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+    } else {
+        ctx.strokeStyle = 'rgba(0,0,0,.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function drawDebug() {
+    ctx.save();
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 11px JetBrains Mono, monospace';
+    pieceDefs.forEach(def => {
+        const t = modelTargetWorld(def.id);
+        if (!t) return;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.restore();
+}
+
+/* ============================================================================
+   INTERAÇÃO
+============================================================================ */
+function getCanvasPos(clientX, clientY) {
+    const r = cv.getBoundingClientRect();
+    return {
+        x: (clientX - r.left) * (CANVAS_W / r.width),
+        y: (clientY - r.top) * (CANVAS_H / r.height)
+    };
+}
+
+function findPieceAt(x, y) {
+    // Procura de cima para baixo (último desenhado primeiro)
+    for (let i = pieces.length - 1; i >= 0; i--) {
+        const p = pieces[i];
+        if (pointInPoly(x, y, pieceWorldVerts(p))) return p;
+    }
+    return null;
+}
+
+function selectPiece(p) {
+    selectedId = p ? p.id : null;
+    updateLegendActive();
+}
+
+function bringToFront(p) {
+    const i = pieces.indexOf(p);
+    if (i >= 0) { pieces.splice(i, 1); pieces.push(p); }
+}
+
+// --- Mouse ---
+cv.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const { x, y } = getCanvasPos(e.clientX, e.clientY);
+    const p = findPieceAt(x, y);
+    if (p) {
+        selectPiece(p);
+        dragging = true;
+        dragOffX = x - p.x;
+        dragOffY = y - p.y;
+        bringToFront(p);
+        requestDraw();
+    } else {
+        selectPiece(null);
+        requestDraw();
+    }
+});
+
+cv.addEventListener('mousemove', e => {
+    if (!dragging || !selectedId) return;
+    const p = pieces.find(q => q.id === selectedId);
+    if (!p) return;
+    const { x, y } = getCanvasPos(e.clientX, e.clientY);
+    p.x = x - dragOffX;
+    p.y = y - dragOffY;
+    p.placed = false;
+    requestDraw();
+});
+
+window.addEventListener('mouseup', () => {
+    if (dragging) { updateScore(); requestDraw(); }
+    dragging = false;
+});
+
+// --- Touch ---
+cv.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const { x, y } = getCanvasPos(t.clientX, t.clientY);
+    const p = findPieceAt(x, y);
+    if (p) {
+        selectPiece(p);
+        dragging = true;
+        dragOffX = x - p.x;
+        dragOffY = y - p.y;
+        bringToFront(p);
+        requestDraw();
+    } else {
+        selectPiece(null);
+        requestDraw();
+    }
+}, { passive: false });
+
+cv.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!dragging || !selectedId || e.touches.length !== 1) return;
+    const p = pieces.find(q => q.id === selectedId);
+    if (!p) return;
+    const t = e.touches[0];
+    const { x, y } = getCanvasPos(t.clientX, t.clientY);
+    p.x = x - dragOffX;
+    p.y = y - dragOffY;
+    p.placed = false;
+    requestDraw();
+}, { passive: false });
+
+cv.addEventListener('touchend', e => {
+    e.preventDefault();
+    if (dragging) { updateScore(); requestDraw(); }
+    dragging = false;
+}, { passive: false });
+
+/* ============================================================================
+   ROTAÇÃO / FLIP
+============================================================================ */
+function rotateSelected(delta) {
+    if (!selectedId) return;
+    const p = pieces.find(q => q.id === selectedId);
+    if (!p) return;
+    p.rot = normDeg(p.rot + delta);
+    p.placed = false;
+    updateScore();
+    requestDraw();
+}
+
+function flipSelected() {
+    if (!selectedId) return;
+    const p = pieces.find(q => q.id === selectedId);
+    if (!p) return;
+    p.flip = !p.flip;
+    p.placed = false;
+    updateScore();
+    requestDraw();
+}
+
+document.getElementById('btn-rot-l').addEventListener('click', () => rotateSelected(-15));
+document.getElementById('btn-rot-r').addEventListener('click', () => rotateSelected(15));
+document.getElementById('btn-flip').addEventListener('click', flipSelected);
+
+window.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')) return;
+    const k = e.key.toLowerCase();
+    if (k === 'r') { e.preventDefault(); rotateSelected(e.shiftKey ? -15 : 15); }
+    else if (k === 'f') { e.preventDefault(); flipSelected(); }
+    else if (k === 'd') { e.preventDefault(); debugMode = !debugMode; requestDraw(); }
+    else if (k.startsWith('arrow') && selectedId) {
+        const p = pieces.find(q => q.id === selectedId);
+        if (!p) return;
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 2;
+        if (k === 'arrowleft') p.x -= step;
+        if (k === 'arrowright') p.x += step;
+        if (k === 'arrowup') p.y -= step;
+        if (k === 'arrowdown') p.y += step;
+        p.placed = false;
+        updateScore();
+        requestDraw();
+    }
+});
+
+/* ============================================================================
+   FIREBASE
+============================================================================ */
+async function awardPoints() {
+    try {
+        const s = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+        if (!s || !s.chave) return;
+        const r = ref(db, 'jogadores/' + s.chave);
+        const snap = await get(r);
+        if (snap.exists()) {
+            await update(r, { pontos: (snap.val().pontos || 0) + 40 });
         }
+    } catch (err) {
+        console.warn('Falha ao registar pontos:', err);
+    }
+}
 
-        function rodarPecaSelecionada(deltaDeg = 15) {
-            const piece = getSelectedPiece();
-            if (!piece) return;
-            piece.rot = normalizeAngle(piece.rot + deltaDeg);
-            piece.placed = false;
-            verificarEncaixes();
-            requestDraw();
-        }
+/* ============================================================================
+   TEMA
+============================================================================ */
+function initTheme() {
+    const saved = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    themeBtn.textContent = saved === 'dark' ? '🌙' : '☀️';
+}
+themeBtn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    themeBtn.textContent = next === 'dark' ? '🌙' : '☀️';
+    localStorage.setItem('brain_flow_theme', next);
+    requestDraw();
+});
 
-        function flipPecaSelecionada() {
-            const piece = getSelectedPiece();
-            if (!piece) return;
-            // Só o paralelogramo tem flip significativo (mas permitimos todos)
-            piece.flip = !piece.flip;
-            piece.placed = false;
-            verificarEncaixes();
-            requestDraw();
-        }
+/* ============================================================================
+   BOTÕES PRINCIPAIS
+============================================================================ */
+document.getElementById('btn-new').addEventListener('click', initGame);
+document.getElementById('next').addEventListener('click', initGame);
 
-        btnRotate.addEventListener('click', () => rodarPecaSelecionada(15));
-        btnFlip.addEventListener('click', flipPecaSelecionada);
-
-        window.addEventListener('keydown', (e) => {
-            if (e.target.matches('input, textarea')) return;
-            const k = e.key.toLowerCase();
-            if (k === 'r') {
-                e.preventDefault();
-                rodarPecaSelecionada(e.shiftKey ? -15 : 15);
-            } else if (k === 'f') {
-                e.preventDefault();
-                flipPecaSelecionada();
-            } else if (k === 'arrowleft' || k === 'arrowright' || k === 'arrowup' || k === 'arrowdown') {
-                const piece = getSelectedPiece();
-                if (!piece) return;
-                e.preventDefault();
-                const step = e.shiftKey ? 10 : 2;
-                if (k === 'arrowleft') piece.x -= step;
-                if (k === 'arrowright') piece.x += step;
-                if (k === 'arrowup') piece.y -= step;
-                if (k === 'arrowdown') piece.y += step;
-                piece.placed = false;
-                verificarEncaixes();
-                requestDraw();
-            }
-        });
-
-        /* ============================================================
-           FIREBASE — PONTUAÇÃO
-           ============================================================ */
-        async function atribuirPontos() {
-            try {
-                const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-                if (!jogadorSessao || !jogadorSessao.chave) return;
-                const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
-                const snap = await get(jogadorRef);
-                if (snap.exists()) {
-                    const atual = snap.val().pontos || 0;
-                    await update(jogadorRef, { pontos: atual + 40 });
-                }
-            } catch (err) {
-                console.warn('Não foi possível registar pontos:', err);
-            }
-        }
-
-        /* ============================================================
-           BOTÕES PRINCIPAIS
-           ============================================================ */
-        btnNovo.addEventListener('click', initGame);
-        nextGameBtn.addEventListener('click', initGame);
-
-        /* ============================================================
-           ARRANQUE
-           ============================================================ */
-        initTheme();
-        initGame();
-    </script>
+/* ============================================================================
+   ARRANQUE
+============================================================================ */
+initTheme();
+initGame();
+</script>
 </body>
 </html>
