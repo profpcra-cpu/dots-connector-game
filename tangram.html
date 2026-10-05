@@ -1,1137 +1,4382 @@
+```html
 <!DOCTYPE html>
-<html lang="pt" data-theme="dark">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tangram Tradicional · Brain Hub</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+
 <style>
 :root{
-    --bg-1:#1a1f3a; --bg-2:#070b14;
-    --card-bg:rgba(18,24,40,.92); --card-border:rgba(148,163,184,.12);
-    --text:#f1f5f9; --text-muted:#94a3b8; --text-dim:#64748b;
-    --border:rgba(148,163,184,.15); --input-bg:rgba(10,15,28,.7);
-    --accent-1:#38bdf8; --accent-2:#818cf8; --accent-3:#c084fc;
-    --success:#34d399; --warning:#fbbf24;
-    --r-sm:8px; --r-md:14px; --r-lg:22px;
+    --bg-1:#1a1f3a;
+    --bg-2:#070b14;
+    --card-bg:rgba(18,24,40,.94);
+    --card-border:rgba(148,163,184,.12);
+    --text:#f1f5f9;
+    --text-muted:#94a3b8;
+    --text-dim:#64748b;
+    --border:rgba(148,163,184,.15);
+    --input-bg:rgba(10,15,28,.72);
+
+    --accent-1:#38bdf8;
+    --accent-2:#818cf8;
+    --accent-3:#c084fc;
+
+    --success:#34d399;
+    --warning:#fbbf24;
+    --danger:#fb7185;
+
+    --r-sm:8px;
+    --r-md:14px;
+    --r-lg:22px;
+
     --shadow:0 20px 60px -20px rgba(0,0,0,.75);
-    --ease:.25s cubic-bezier(.4,0,.2,1);
+    --ease:.22s cubic-bezier(.4,0,.2,1);
 }
+
 [data-theme="light"]{
-    --bg-1:#e0e7ff; --bg-2:#f8fafc;
-    --card-bg:rgba(255,255,255,.92); --card-border:rgba(15,23,42,.08);
-    --text:#0f172a; --text-muted:#475569; --text-dim:#94a3b8;
-    --border:rgba(15,23,42,.1); --input-bg:rgba(241,245,249,.8);
+    --bg-1:#e0e7ff;
+    --bg-2:#f8fafc;
+    --card-bg:rgba(255,255,255,.95);
+    --card-border:rgba(15,23,42,.08);
+    --text:#0f172a;
+    --text-muted:#475569;
+    --text-dim:#94a3b8;
+    --border:rgba(15,23,42,.1);
+    --input-bg:rgba(241,245,249,.86);
     --shadow:0 20px 60px -20px rgba(15,23,42,.15);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
+
+*,*::before,*::after{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html,
+body{
+    min-height:100%;
+    overflow:hidden;
+}
+
 body{
     font-family:'Plus Jakarta Sans',system-ui,sans-serif;
-    background:radial-gradient(ellipse at 50% -20%,var(--bg-1) 0%,var(--bg-2) 60%);
-    background-attachment:fixed;color:var(--text);
-    display:flex;justify-content:center;align-items:center;
-    min-height:100vh;padding:10px;-webkit-font-smoothing:antialiased;
-    transition:background var(--ease),color var(--ease);
+    background:
+        radial-gradient(
+            ellipse at 50% -20%,
+            var(--bg-1) 0%,
+            var(--bg-2) 62%
+        );
+    color:var(--text);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    min-height:100vh;
+    padding:10px;
+
+    -webkit-font-smoothing:antialiased;
 }
+
+button,
+a{
+    font:inherit;
+}
+
 .game{
+    width:100%;
+    max-width:720px;
+    max-height:98vh;
+
+    overflow-y:auto;
+
+    padding:16px;
+
+    border-radius:var(--r-lg);
+
     background:var(--card-bg);
-    backdrop-filter:blur(24px) saturate(1.5);
-    -webkit-backdrop-filter:blur(24px) saturate(1.5);
-    padding:16px;border-radius:var(--r-lg);box-shadow:var(--shadow);
-    width:100%;max-width:560px;border:1px solid var(--card-border);
-    display:flex;flex-direction:column;gap:10px;
-    max-height:98vh;overflow-y:auto;scrollbar-width:thin;
+
+    backdrop-filter:blur(24px) saturate(1.4);
+    -webkit-backdrop-filter:blur(24px) saturate(1.4);
+
+    border:1px solid var(--card-border);
+
+    box-shadow:var(--shadow);
+
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+
+    scrollbar-width:thin;
 }
-.game::-webkit-scrollbar{width:4px}
-.game::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.brand{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+
+.game::-webkit-scrollbar{
+    width:4px;
+}
+
+.game::-webkit-scrollbar-thumb{
+    background:var(--border);
+    border-radius:4px;
+}
+
+.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    font-size:13px;
+    font-weight:800;
+}
+
 .icon-btn{
-    width:32px;height:32px;border-radius:var(--r-sm);
-    display:inline-flex;align-items:center;justify-content:center;
-    background:var(--input-bg);border:1px solid var(--border);
-    color:var(--text-muted);cursor:pointer;font-size:14px;
-    transition:all var(--ease);text-decoration:none;flex-shrink:0;
-    user-select:none;font-family:inherit;
+    width:34px;
+    height:34px;
+
+    border-radius:var(--r-sm);
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    background:var(--input-bg);
+    border:1px solid var(--border);
+
+    color:var(--text-muted);
+
+    cursor:pointer;
+
+    transition:all var(--ease);
+
+    text-decoration:none;
+    user-select:none;
 }
-.icon-btn:hover{color:var(--text);border-color:var(--accent-1);transform:translateY(-1px)}
-.icon-btn:active{transform:scale(.96)}
-.header{text-align:center}
+
+.icon-btn:hover{
+    color:var(--text);
+    border-color:var(--accent-1);
+    transform:translateY(-1px);
+}
+
+.icon-btn:active{
+    transform:scale(.96);
+}
+
+.header{
+    text-align:center;
+}
+
 .header h1{
-    font-size:22px;font-weight:800;letter-spacing:-.02em;
-    background:linear-gradient(135deg,var(--accent-1),var(--accent-2),var(--accent-3));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    background-clip:text;margin-bottom:2px;
+    font-size:24px;
+    font-weight:800;
+    letter-spacing:-.03em;
+    margin-bottom:2px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--accent-1),
+            var(--accent-2),
+            var(--accent-3)
+        );
+
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
-.header p{font-size:11.5px;color:var(--text-muted);line-height:1.4}
-.hud{display:flex;gap:8px}
+
+.header p{
+    font-size:11.5px;
+    color:var(--text-muted);
+    line-height:1.45;
+}
+
+.hud{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:7px;
+}
+
 .hud-card{
-    flex:1;background:var(--input-bg);border:1px solid var(--border);
-    border-radius:var(--r-sm);padding:8px 10px;
-    display:flex;flex-direction:column;gap:2px;
+    background:var(--input-bg);
+    border:1px solid var(--border);
+    border-radius:var(--r-sm);
+
+    padding:8px 9px;
+
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+
+    min-width:0;
 }
-.hud-card .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--text-dim)}
-.hud-card .val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent-1)}
-.hud-card .val.ok{color:var(--success)}
+
+.hud-card .lbl{
+    font-size:8.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:800;
+    color:var(--text-dim);
+}
+
+.hud-card .val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    font-weight:700;
+
+    color:var(--accent-1);
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.hud-card .val.ok{
+    color:var(--success);
+}
+
+.hud-card .val.warn{
+    color:var(--warning);
+}
+
 .canvas-wrap{
-    position:relative;width:100%;aspect-ratio:4/3;
-    background:var(--input-bg);border:1px solid var(--border);
-    border-radius:var(--r-md);overflow:hidden;
-    display:flex;justify-content:center;align-items:center;
-    box-shadow:inset 0 0 40px -20px rgba(0,0,0,.5);
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+
+    background:var(--input-bg);
+
+    border:1px solid var(--border);
+    border-radius:var(--r-md);
+
+    overflow:hidden;
+
+    box-shadow:
+        inset 0 0 40px -20px rgba(0,0,0,.5);
 }
-canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
-canvas:active{cursor:grabbing}
-.toolbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+
+canvas{
+    display:block;
+    width:100%;
+    height:100%;
+
+    cursor:grab;
+    touch-action:none;
+}
+
+canvas:active{
+    cursor:grabbing;
+}
+
+.toolbar{
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
 .btn{
-    display:inline-flex;align-items:center;justify-content:center;gap:5px;
-    padding:9px 14px;border-radius:var(--r-sm);
-    font-size:12px;font-weight:700;font-family:inherit;border:none;
-    cursor:pointer;transition:all var(--ease);user-select:none;white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    padding:9px 13px;
+
+    border-radius:var(--r-sm);
+
+    font-size:11.5px;
+    font-weight:800;
+
+    border:none;
+
+    cursor:pointer;
+
+    transition:all var(--ease);
+
+    user-select:none;
+    white-space:nowrap;
 }
-.btn:active{transform:scale(.97)}
+
+.btn:active{
+    transform:scale(.97);
+}
+
 .btn-primary{
-    background:linear-gradient(135deg,var(--accent-2),var(--accent-3));
-    color:#fff;box-shadow:0 4px 16px -4px rgba(129,140,248,.5);
+    background:
+        linear-gradient(
+            135deg,
+            var(--accent-2),
+            var(--accent-3)
+        );
+
+    color:#fff;
+
+    box-shadow:
+        0 4px 16px -4px rgba(129,140,248,.5);
 }
-.btn-primary:hover{box-shadow:0 6px 24px -4px rgba(129,140,248,.7);transform:translateY(-1px)}
-.btn-ghost{background:var(--input-bg);color:var(--text);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--accent-1);color:var(--accent-1)}
+
+.btn-primary:hover{
+    box-shadow:
+        0 6px 24px -4px rgba(129,140,248,.7);
+
+    transform:translateY(-1px);
+}
+
+.btn-ghost{
+    background:var(--input-bg);
+    color:var(--text);
+
+    border:1px solid var(--border);
+}
+
+.btn-ghost:hover{
+    border-color:var(--accent-1);
+    color:var(--accent-1);
+}
+
+.btn-success{
+    background:
+        linear-gradient(
+            135deg,
+            #10b981,
+            #34d399
+        );
+
+    color:#06261b;
+}
+
+.btn:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+    transform:none;
+}
+
 .hint{
-    text-align:center;font-size:11px;color:var(--text-dim);
-    padding:6px 10px;background:var(--input-bg);
-    border-radius:var(--r-sm);border:1px solid var(--border);line-height:1.5;
+    text-align:center;
+
+    font-size:10.5px;
+
+    color:var(--text-dim);
+
+    padding:6px 10px;
+
+    background:var(--input-bg);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--r-sm);
+
+    line-height:1.5;
 }
+
 .hint kbd{
-    display:inline-block;padding:1px 5px;border-radius:4px;
-    background:var(--border);font-family:'JetBrains Mono',monospace;
-    font-size:10px;font-weight:700;color:var(--text-muted);
+    display:inline-block;
+
+    padding:1px 5px;
+
+    border-radius:4px;
+
+    background:var(--border);
+
+    font-family:'JetBrains Mono',monospace;
+
+    font-size:9.5px;
+
+    font-weight:700;
+
+    color:var(--text-muted);
 }
-.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+
+.legend{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:5px;
+}
+
 .legend-item{
-    display:flex;align-items:center;gap:5px;padding:5px 6px;
-    background:var(--input-bg);border:1px solid var(--border);
-    border-radius:var(--r-sm);transition:all var(--ease);cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    padding:6px 4px;
+
+    background:var(--input-bg);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--r-sm);
+
+    transition:all var(--ease);
+
+    cursor:pointer;
+
+    min-width:0;
 }
-.legend-item:hover{border-color:var(--accent-1)}
-.legend-item.active{border-color:var(--accent-1);background:rgba(56,189,248,.12)}
-.legend-item .sw{width:10px;height:10px;border-radius:2px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
-.legend-item .nm{font-weight:600;color:var(--text);font-size:9.5px;line-height:1.1}
+
+.legend-item:hover{
+    border-color:var(--accent-1);
+}
+
+.legend-item.active{
+    border-color:var(--accent-1);
+    background:rgba(56,189,248,.12);
+}
+
+.legend-item.done{
+    border-color:rgba(52,211,153,.55);
+}
+
+.legend-item .sw{
+    width:9px;
+    height:9px;
+
+    border-radius:2px;
+
+    flex-shrink:0;
+}
+
+.legend-item .nm{
+    font-weight:700;
+    color:var(--text);
+
+    font-size:8.5px;
+    line-height:1.1;
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.status{
+    text-align:center;
+
+    min-height:18px;
+
+    font-size:10.5px;
+
+    color:var(--text-dim);
+
+    transition:color var(--ease);
+}
+
+.status.success{
+    color:var(--success);
+}
+
+.status.warning{
+    color:var(--warning);
+}
+
 .modal{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    justify-content:center;align-items:center;z-index:1000;padding:20px;
-    animation:fadeIn .25s ease;
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.76);
+
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+
+    justify-content:center;
+    align-items:center;
+
+    z-index:1000;
+
+    padding:20px;
 }
-.modal.active{display:flex}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.modal.active{
+    display:flex;
+}
+
+@keyframes slideUp{
+    from{
+        opacity:0;
+        transform:translateY(20px) scale(.96);
+    }
+
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
 .modal-content{
-    background:var(--card-bg);backdrop-filter:blur(24px);
-    padding:28px 24px;border-radius:var(--r-lg);
-    border:1px solid var(--card-border);text-align:center;
-    max-width:340px;width:100%;
-    box-shadow:0 30px 80px -20px rgba(0,0,0,.8);
-    animation:slideUp .35s cubic-bezier(.16,1,.3,1);
+    background:var(--card-bg);
+
+    backdrop-filter:blur(24px);
+
+    padding:28px 24px;
+
+    border-radius:var(--r-lg);
+
+    border:1px solid var(--card-border);
+
+    text-align:center;
+
+    max-width:370px;
+    width:100%;
+
+    box-shadow:
+        0 30px 80px -20px rgba(0,0,0,.8);
+
+    animation:
+        slideUp .35s cubic-bezier(.16,1,.3,1);
 }
-.modal-content .emo{font-size:48px;display:block;margin-bottom:8px;animation:bounce .6s ease}
-@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-.modal-content h2{font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px}
-.modal-content p{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:20px}
-.modal-content .btn{width:100%}
-@media (max-width:420px){
-    .game{padding:12px;gap:8px}
-    .header h1{font-size:18px}
-    .header p{font-size:10.5px}
-    .btn{padding:8px 11px;font-size:11px}
-    .legend{grid-template-columns:repeat(2,1fr)}
+
+.modal-content .emo{
+    font-size:48px;
+
+    display:block;
+
+    margin-bottom:8px;
 }
-@media (max-height:720px){
-    .header p{display:none}
-    .game{gap:7px}
+
+.modal-content h2{
+    font-size:20px;
+
+    font-weight:800;
+
+    color:var(--success);
+
+    margin-bottom:8px;
 }
-@media (prefers-reduced-motion:reduce){
-    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+
+.modal-content p{
+    font-size:12.5px;
+
+    color:var(--text-muted);
+
+    line-height:1.6;
+
+    margin-bottom:20px;
+}
+
+.modal-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+
+    gap:6px;
+
+    margin-bottom:18px;
+}
+
+.modal-stat{
+    padding:8px;
+
+    background:var(--input-bg);
+
+    border:1px solid var(--border);
+
+    border-radius:8px;
+}
+
+.modal-stat b{
+    display:block;
+
+    font-family:'JetBrains Mono',monospace;
+
+    color:var(--accent-1);
+
+    font-size:13px;
+}
+
+.modal-stat span{
+    display:block;
+
+    color:var(--text-dim);
+
+    font-size:8px;
+
+    text-transform:uppercase;
+
+    margin-top:2px;
+}
+
+.modal-content .btn{
+    width:100%;
+}
+
+@media(max-width:560px){
+
+    .game{
+        padding:11px;
+        gap:8px;
+    }
+
+    .header h1{
+        font-size:19px;
+    }
+
+    .header p{
+        font-size:10px;
+    }
+
+    .hud{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .legend{
+        grid-template-columns:repeat(4,1fr);
+    }
+
+    .btn{
+        padding:8px 10px;
+        font-size:10.5px;
+    }
+}
+
+@media(max-height:720px){
+
+    .header p{
+        display:none;
+    }
+
+    .game{
+        gap:7px;
+    }
+
+    .canvas-wrap{
+        aspect-ratio:5/3;
+    }
+}
+
+@media(prefers-reduced-motion:reduce){
+
+    *,
+    *::before,
+    *::after{
+        animation-duration:.01ms!important;
+        transition-duration:.01ms!important;
+    }
 }
 </style>
 </head>
+
 <body>
+
 <main class="game" role="main">
+
     <div class="topbar">
-        <a href="index.html" class="icon-btn" title="Voltar" aria-label="Voltar">←</a>
-        <div class="brand"><span>📐</span><span>Tangram Tradicional</span></div>
-        <button id="theme-toggle" class="icon-btn" title="Tema" aria-label="Alternar tema">🌙</button>
+
+        <a
+            href="index.html"
+            class="icon-btn"
+            title="Voltar"
+            aria-label="Voltar"
+        >←</a>
+
+        <div class="brand">
+            <span>📐</span>
+            <span>Brain Hub · Tangram</span>
+        </div>
+
+        <button
+            id="theme-toggle"
+            class="icon-btn"
+            title="Tema"
+            aria-label="Alternar tema"
+        >🌙</button>
+
     </div>
+
 
     <header class="header">
+
         <h1>Tangram Tradicional</h1>
-        <p>Reconstrua a silhueta usando as 7 peças clássicas chinesas</p>
+
+        <p>
+            Reconstrua a silhueta usando as 7 peças clássicas.
+        </p>
+
     </header>
 
-    <div class="hud">
-        <div class="hud-card"><span class="lbl">Desafio</span><span class="val" id="model-name">—</span></div>
-        <div class="hud-card"><span class="lbl">Encaixes</span><span class="val" id="score-count">0 / 7</span></div>
-    </div>
+
+    <section
+        class="hud"
+        aria-label="Informações do desafio"
+    >
+
+        <div class="hud-card">
+
+            <span class="lbl">
+                Desafio
+            </span>
+
+            <span
+                class="val"
+                id="model-name"
+            >—</span>
+
+        </div>
+
+
+        <div class="hud-card">
+
+            <span class="lbl">
+                Encaixes
+            </span>
+
+            <span
+                class="val"
+                id="score-count"
+            >0 / 7</span>
+
+        </div>
+
+
+        <div class="hud-card">
+
+            <span class="lbl">
+                Tempo
+            </span>
+
+            <span
+                class="val"
+                id="timer"
+            >00:00</span>
+
+        </div>
+
+
+        <div class="hud-card">
+
+            <span class="lbl">
+                Tentativas
+            </span>
+
+            <span
+                class="val"
+                id="attempts"
+            >0</span>
+
+        </div>
+
+    </section>
+
 
     <div class="canvas-wrap">
-        <canvas id="cv" width="800" height="600" aria-label="Área de jogo do tangram"></canvas>
+
+        <canvas
+            id="cv"
+            width="800"
+            height="600"
+            aria-label="Área de jogo do tangram"
+        ></canvas>
+
     </div>
+
 
     <div class="toolbar">
-        <button class="btn btn-ghost" id="btn-rot-l" title="Rodar 45° anti-horário">↺ 45°</button>
-        <button class="btn btn-ghost" id="btn-rot-r" title="Rodar 45° horário">↻ 45°</button>
-        <button class="btn btn-ghost" id="btn-flip" title="Espelhar peça">↔ Espelhar</button>
-        <button class="btn btn-primary" id="btn-new" title="Novo modelo">🎲 Novo</button>
+
+        <button
+            class="btn btn-ghost"
+            id="btn-rot-l"
+            title="Rodar 45° anti-horário"
+        >
+            ↺ 45°
+        </button>
+
+        <button
+            class="btn btn-ghost"
+            id="btn-rot-r"
+            title="Rodar 45° horário"
+        >
+            ↻ 45°
+        </button>
+
+        <button
+            class="btn btn-ghost"
+            id="btn-flip"
+            title="Espelhar peça"
+        >
+            ↔ Espelhar
+        </button>
+
+        <button
+            class="btn btn-ghost"
+            id="btn-reset-piece"
+            title="Recolocar a peça na bandeja"
+        >
+            ↩ Recolher
+        </button>
+
+        <button
+            class="btn btn-primary"
+            id="btn-new"
+            title="Novo desafio"
+        >
+            🎲 Novo desafio
+        </button>
+
     </div>
+
 
     <div class="hint">
-        💡 Clique para selecionar · Arraste para mover · <kbd>R</kbd>/<kbd>Shift+R</kbd> rodar · <kbd>F</kbd> espelhar
+
+        Clique/toque para selecionar · arraste para mover ·
+
+        <kbd>R</kbd> girar ·
+        <kbd>F</kbd> espelhar ·
+        <kbd>← ↑ → ↓</kbd> mover
+
     </div>
 
-    <div class="legend" id="legend"></div>
+
+    <div
+        class="status"
+        id="status"
+    >
+        Selecione uma peça e comece a montar.
+    </div>
+
+
+    <div
+        class="legend"
+        id="legend"
+    ></div>
+
 </main>
 
-<div class="modal" id="win" role="dialog" aria-modal="true" aria-labelledby="win-title">
+
+<div
+    class="modal"
+    id="win"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="win-title"
+>
+
     <div class="modal-content">
-        <span class="emo">🎉</span>
-        <h2 id="win-title">Excelente!</h2>
+
+        <span class="emo">
+            🎉
+        </span>
+
+        <h2 id="win-title">
+            Excelente!
+        </h2>
+
         <p id="win-text"></p>
-        <button class="btn btn-primary" id="next">Próximo Desafio →</button>
+
+
+        <div class="modal-stats">
+
+            <div class="modal-stat">
+
+                <b id="win-time">
+                    00:00
+                </b>
+
+                <span>
+                    tempo
+                </span>
+
+            </div>
+
+
+            <div class="modal-stat">
+
+                <b id="win-attempts">
+                    0
+                </b>
+
+                <span>
+                    tentativas
+                </span>
+
+            </div>
+
+
+            <div class="modal-stat">
+
+                <b id="win-points">
+                    +40
+                </b>
+
+                <span>
+                    pontos
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="btn btn-primary"
+            id="next"
+        >
+            Próximo desafio →
+        </button>
+
     </div>
+
 </div>
 
+
 <script type="module">
-import { db } from "./firebase-config.js";
-import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-/* ============================================================================
-   UTILITÁRIOS
-============================================================================ */
-const normDeg = a => ((a % 360) + 360) % 360;
-function angDiff(a, b){
-    const d = Math.abs(normDeg(a) - normDeg(b));
-    return Math.min(d, 360 - d);
-}
-
-/* ============================================================================
-   CONSTANTES DO JOGO
-============================================================================ */
-const CANVAS_W = 800;
-const CANVAS_H = 600;
-const L = 260;                             // lado do quadrado tangram
-
-const TRAY_TOP = CANVAS_H - 140;
-const GAME_TOP = 15;
-const GAME_BOTTOM = TRAY_TOP - 10;
-const GAME_CX = CANVAS_W / 2;
-const GAME_CY = (GAME_TOP + GAME_BOTTOM) / 2;
-
-const SNAP_DIST = 26;
-const SNAP_ANGLE_TOL = 12;
-
-const S_SMALL = L / (2 * Math.SQRT2);      // lado do quadrado pequeno
-const H_BIG = L / Math.SQRT2;               // cateto do triângulo grande
-
-/* ============================================================================
-   PEÇAS — vértices locais centrados no centróide
-============================================================================ */
-const PIECES = (() => {
-    function center(pts){
-        let cx = 0, cy = 0;
-        for (const [x, y] of pts){ cx += x; cy += y; }
-        cx /= pts.length; cy /= pts.length;
-        return pts.map(([x, y]) => [x - cx, y - cy]);
-    }
-
-    // Triângulo grande: catetos H_BIG, ângulo reto em (0,0)
-    const big = center([[0, 0], [H_BIG, 0], [0, H_BIG]]);
-
-    // Triângulo médio: catetos L/2
-    const med = center([[0, 0], [L / 2, 0], [0, L / 2]]);
-
-    // Triângulo pequeno: catetos S_SMALL
-    const sml = center([[0, 0], [S_SMALL, 0], [0, S_SMALL]]);
-
-    // Quadrado pequeno: lado S_SMALL, centrado
-    const sq = [
-        [-S_SMALL / 2, -S_SMALL / 2],
-        [ S_SMALL / 2, -S_SMALL / 2],
-        [ S_SMALL / 2,  S_SMALL / 2],
-        [-S_SMALL / 2,  S_SMALL / 2]
-    ];
-
-    // Paralelogramo: lados L/2 e S_SMALL, ângulo interno 45°
-    const parDx = S_SMALL * Math.SQRT1_2;
-    const par = center([
-        [0, 0],
-        [L / 2, 0],
-        [L / 2 + parDx, parDx],
-        [parDx, parDx]
-    ]);
-
-    return {
-        bigA: { id: 'bigA', name: 'Triângulo Grande',  color: '#f43f5e', verts: big },
-        bigB: { id: 'bigB', name: 'Triângulo Grande',  color: '#fb923c', verts: big },
-        med:  { id: 'med',  name: 'Triângulo Médio',   color: '#facc15', verts: med },
-        smlA: { id: 'smlA', name: 'Triângulo Pequeno', color: '#34d399', verts: sml },
-        smlB: { id: 'smlB', name: 'Triângulo Pequeno', color: '#22d3ee', verts: sml },
-        sq:   { id: 'sq',   name: 'Quadrado',          color: '#818cf8', verts: sq },
-        par:  { id: 'par',  name: 'Paralelogramo',     color: '#c084fc', verts: par }
-    };
-})();
-
-/* ============================================================================
-   CONVERSÃO math → canvas
-   Coordenadas matemáticas: origem no canto inferior esquerdo do quadrado,
-   Y aponta para CIMA.
-============================================================================ */
-function mathToCanvas([mx, my]){
-    return [
-        GAME_CX - L / 2 + mx,
-        GAME_CY + L / 2 - my
-    ];
-}
-
-/* ============================================================================
-   TRANSFORMAÇÕES GEOMÉTRICAS
-============================================================================ */
-function transformPoint([x, y], rot, flip, tx, ty){
-    if (flip) x = -x;
-    const rad = rot * Math.PI / 180;
-    const c = Math.cos(rad), s = Math.sin(rad);
-    return [tx + x * c - y * s, ty + x * s + y * c];
-}
-
-/* ============================================================================
-   AUTO-DESCOBERTA DA POSIÇÃO-ALVO
-   Dado um conjunto de vértices-alvo (em coords do canvas), descobre
-   (rot, flip, tx, ty) que melhor alinha os vértices locais da peça.
-============================================================================ */
-function computeTargetFromVerts(pieceId, targetVerts){
-    const def = PIECES[pieceId];
-    const n = def.verts.length;
-
-    // Centróide dos alvos
-    let tcx = 0, tcy = 0;
-    for (const [x, y] of targetVerts){ tcx += x; tcy += y; }
-    tcx /= n; tcy /= n;
-
-    let best = null;
-
-    // Procura em passos de 5° — refina depois
-    for (let rot = 0; rot < 360; rot += 5){
-        for (const flip of [false, true]){
-            // Vértices locais transformados SEM translação
-            const tVerts = def.verts.map(v => transformPoint(v, rot, flip, 0, 0));
-
-            // Centróide dos locais transformados
-            let lcx = 0, lcy = 0;
-            for (const [x, y] of tVerts){ lcx += x; lcy += y; }
-            lcx /= n; lcy /= n;
-
-            // Translação para alinhar centróides
-            const tx = tcx - lcx;
-            const ty = tcy - lcy;
-
-            // Erro: soma das distâncias mínimas com emparelhamento greedy
-            let err = 0;
-            const used = new Array(n).fill(false);
-            for (const [txv, tyv] of targetVerts){
-                let bestD = Infinity, bestI = -1;
-                for (let i = 0; i < n; i++){
-                    if (used[i]) continue;
-                    const [vx, vy] = tVerts[i];
-                    const d = Math.hypot(vx + tx - txv, vy + ty - tyv);
-                    if (d < bestD){ bestD = d; bestI = i; }
-                }
-                if (bestI >= 0){ used[bestI] = true; err += bestD; }
-            }
-
-            if (!best || err < best.err){
-                best = { rot, flip, tx, ty, err };
-            }
-        }
-    }
-
-    // Refinamento fino: procura em passos de 1° em torno do melhor
-    const center = best.rot;
-    for (let delta = -5; delta <= 5; delta++){
-        const rot = normDeg(center + delta);
-        for (const flip of [false, true]){
-            const tVerts = def.verts.map(v => transformPoint(v, rot, flip, 0, 0));
-            let lcx = 0, lcy = 0;
-            for (const [x, y] of tVerts){ lcx += x; lcy += y; }
-            lcx /= n; lcy /= n;
-            const tx = tcx - lcx;
-            const ty = tcy - lcy;
-            let err = 0;
-            const used = new Array(n).fill(false);
-            for (const [txv, tyv] of targetVerts){
-                let bestD = Infinity, bestI = -1;
-                for (let i = 0; i < n; i++){
-                    if (used[i]) continue;
-                    const [vx, vy] = tVerts[i];
-                    const d = Math.hypot(vx + tx - txv, vy + ty - tyv);
-                    if (d < bestD){ bestD = d; bestI = i; }
-                }
-                if (bestI >= 0){ used[bestI] = true; err += bestD; }
-            }
-            if (err < best.err){
-                best = { rot, flip, tx, ty, err };
-            }
-        }
-    }
-
-    return { x: best.tx, y: best.ty, rot: best.rot, flip: best.flip };
-}
-
-/* ============================================================================
-   FIGURAS — vértices em COORDENADAS MATEMÁTICAS
-   Origem no canto inferior esquerdo do quadrado, Y para CIMA.
-   As peças são as regiões EXATAS do quadrado canónico.
-============================================================================ */
-const S = S_SMALL;
-const Q = L / 2;
-
-const FIGURES = {
-    /* --------------------------------------------------------------------
-       QUADRADO CANÓNICO
-       --------------------------------------------------------------------
-       Quadrado [0,L]² com Y para cima.
-       Decomposição verificada (áreas: L²/4 + L²/4 + L²/8 + L²/8 + L²/16
-       + L²/16 + L²/8 = L²) :
-       
-         bigA  — triângulo grande inferior esquerdo
-         bigB  — triângulo grande superior esquerdo
-         med   — triângulo médio inferior direito
-         sq    — quadrado pequeno no centro-direita
-         smlA  — triângulo pequeno (canto superior direito do sq)
-         smlB  — triângulo pequeno (canto inferior do sq)
-         par   — paralelogramo à direita do sq
-
-       Geometria:
-         Diagonal principal vai de (0,L) a (L,0).
-         bigA: hipotenusa em cima (diagonal), do canto sup-esq ao centro
-         bigB: hipotenusa em baixo (diagonal), do canto inf-esq ao centro
-       -------------------------------------------------------------------- */
-    square: (() => {
-        const c = [L / 2, L / 2];                // centro do quadrado
-        return {
-            // Triângulo grande superior esquerdo: (0,L) — c — (0,0)? Não.
-            // bigA ocupa a metade inferior esquerda:
-            //   (0,0) — (L,0)? não, bigA é só metade inferior esquerda
-            // bigA: (0,0), (L/2, L/2), (0, L)?  → cateto em baixo e à esq
-            //   cateto horizontal: (0,0)→(L/2,L/2) tem comp L/√2 ✓
-            //   cateto vertical: (0,0)→(0,L) tem comp L ✗ — precisa H_BIG
-            // Corrigir: bigA: (0,0), (H_BIG,0), (0, H_BIG)?  área = H_BIG²/2 = L²/4 ✓
-            // Mas isso deixa o quadrado maior do que L em altura...
-            // 
-            // A decomposição EXATA com catetos H_BIG = L/√2:
-            //   bigA: (0,0)              (H_BIG, 0)            (H_BIG/2, H_BIG/2)
-            //   → hipotenusa vai de (0,0) a (H_BIG, 0)? comp H_BIG
-            //   → catetos: (0,0)→(H_BIG/2, H_BIG/2) tem comp H_BIG/√2 = L/2 ✗
-            //
-            // OK, vou usar a formulação correta com hipotenusa = L:
-            //   bigA: (0,0)    (L/2, L/2)    (0, L)     — hipotenusa vertical esquerda
-            //   cateto (0,0)→(L/2,L/2): comp L/√2 = H_BIG ✓
-            //   cateto (0,L)→(L/2,L/2): comp L/√2 = H_BIG ✓
-            //   hipotenusa (0,0)→(0,L): comp L ✓
-            //   Ângulo reto em (L/2, L/2)? Não — o ângulo reto está em (0,L) ou (0,0)?
-            //   Se hipotenusa é (0,0)-(0,L), os catetos partem dos extremos:
-            //   O ângulo reto está em (L/2, L/2) onde os catetos se encontram.
-            //   Verificação: vetor de (L/2,L/2) a (0,0): (-L/2,-L/2)
-            //                vetor de (L/2,L/2) a (0,L): (-L/2, L/2)
-            //                dot = L²/4 - L²/4 = 0 ✓ ângulo reto!
-            bigA: [[0, 0], [L / 2, L / 2], [0, L]],
-
-            // bigB: espelhado, do lado direito
-            //   hipotenusa (L,0)-(L,L)? comp L
-            //   catetos para (L/2, L/2)
-            //   Verificar: (L/2,L/2)→(L,0) = (L/2,-L/2), (L/2,L/2)→(L,L) = (L/2,L/2)
-            //   dot = L²/4 - L²/4 = 0 ✓
-            bigB: [[L, 0], [L / 2, L / 2], [L, L]],
-
-            // med: triângulo médio — encaixa no canto superior direito
-            //   catetos L/2, hipotenusa H_BIG
-            //   (L/2, L/2) (L, L/2) (L/2, L)? Cateto horiz: L/2, cateto vert: L/2
-            //   Hipotenusa (L, L/2)→(L/2, L): comp √(L²/4+L²/4) = L/√2 = H_BIG ✓
-            //   Mas (L/2, L/2) (L, L/2) (L/2, L) — o ângulo reto está em (L/2, L/2)
-            //   Verificar: (L/2,L/2)→(L,L/2) = (L/2, 0), (L/2,L/2)→(L/2,L) = (0, L/2)
-            //   dot = 0 ✓
-            med: [[L / 2, L / 2], [L, L / 2], [L / 2, L]],
-
-            // sq: quadrado pequeno no canto inferior direito
-            //   lado S = L/(2√2)
-            //   canto sup-esq em (L/2, L/2)?  Não, deixa o med cobrir tudo
-            //   Vou colocar o sq entre bigB e med... 
-            // 
-            // Deixa-me parar e usar a decomposição CORRETA que já verifiquei
-            // nas minhas notas. Vou usar a seguinte (que é a publicada):
-            //
-            //   bigA: (0,0)              (L/2, L/2)              (0, L)
-            //   bigB: (L, 0)             (L, L)                  (L/2, L/2)
-            //   med:  (0, L)             (L/2, L)                (L/4, 3L/4)?
-            //     ✗ med tem catetos L/2 e hipotenusa H_BIG.
-            //       Vértices (0,L), (L/2,L), (0, L/2)?  hipotenusa (L/2,L)→(0,L/2)
-            //       comp: √(L²/4 + L²/4) = L/√2 = H_BIG ✓
-            //       cateto horiz: L/2 ✓ cateto vert: L/2 ✓
-            //   med:  (0, L) (L/2, L) (0, L/2)   ✓ canto superior esquerdo
-            //
-            // Mas bigA também ocupa (0,L)... conflito.
-            // 
-            // A decomposição REAL:
-            // bigA e bigB ocupam METADE do quadrado (dois triângulos grandes
-            // encostados pelas hipotenusas ao longo da diagonal principal).
-            //   bigA: (0,0) (L,0) (L/2, L/2)  — hipotenusa de (0,0) a (L,0)
-            //     ✗ hipotenusa horizontal tem comp L ✓
-            //     catetos: (0,0)→(L/2,L/2): L/√2 ✓  e  (L,0)→(L/2,L/2): L/√2 ✓
-            //     ângulo reto em (L/2, L/2)? vetor (L/2,L/2)→(0,0)=(-L/2,-L/2)
-            //     vetor (L/2,L/2)→(L,0)=(L/2,-L/2), dot = -L²/4 + L²/4 = 0 ✓
-            //   bigB: (0,L) (L/2,L/2) (L,L)  — hipotenusa de (0,L) a (L,L)
-            //     hipotenusa horizontal no topo, comp L ✓
-            //     catetos: (0,L)→(L/2,L/2): L/√2 ✓  e  (L,L)→(L/2,L/2): L/√2 ✓
-            //     ângulo reto em (L/2, L/2) ✓
-            //   
-            //   BIGA + BIGB juntos: bigA tem hipotenusa em baixo, bigB tem
-            //   hipotenusa em cima. Ambos têm vértice em (L/2, L/2).
-            //   Área total = L²/4 + L²/4 = L²/2 ✓ (metade do quadrado)
-            //   Cobertura: bigA ocupa triângulo inferior, bigB triângulo superior.
-            //   Juntos formam o quadrado? bigA tem vértices (0,0),(L,0),(L/2,L/2)
-            //   bigB tem (0,L),(L/2,L/2),(L,L).
-            //   União: parece um "diamante" (dois triângulos opostos). Faltam
-            //   as duas metades laterais (triângulos à esquerda e à direita).
-            //   ✗ Não é o quadrado.
-            //
-            // A decomposição REAL do quadrado tangram é:
-            //
-            //     ┌──────────┬────────────┐
-            //     │╲         │            │
-            //     │ ╲  bigA  │   bigB     │
-            //     │  ╲       │            │
-            //     │   ╲      ├─────┬──────┤
-            //     │    ╲     │ sq  │ par  │
-            //     │     ╲    │     │      │
-            //     │      ╲   ├─────┼──────┤
-            //     │       ╲  │smlA │ smlB │
-            //     │        ╲ │     │      │
-            //     └─────────┴─┴─────┴──────┘
-            //
-            // Hmm, isto não está bem. Vou usar a versão conhecida:
-            //
-            //   bigA: triângulo grande com hipotenusa na diagonal principal
-            //         (do canto inferior esquerdo ao superior direito)
-            //         Vértices: (0,0) (L,L) (0,L)  →  hipotenusa (0,0)-(L,L)?
-            //         comp L√2 ≠ L.  ✗
-            //         Vértices: (0,0) (L,0) (L/2, L/2)?  já verifiquei ✓
-            //   
-            // Finalmente encontrei a decomposição:
-            //
-            //   bigA: (0,0) (L,0) (L/2,L/2)               [inferior, hipot. em baixo]
-            //   bigB: (0,L) (L,L) (L/2,L/2)               [superior, hipot. em cima]
-            //   sq:   quadrado pequeno no MEIO DIREITO
-            //         canto inferior esquerdo em (L/2, L/2 - S/2)?
-            //   Isso deixa um rombo vazio.  Não é bem o quadrado.
-            //
-            // OK. Deixa-me usar as coordenadas publicadas na Wikipedia
-            // (Tangram article), que eu sei que estão corretas:
-            //
-            //   Quadrado unitário [0,L]²:
-            //     bigA: (0,0)              (L,0)              (L/2, L/2)
-            //     bigB: (0,0)              (L/2, L/2)         (0, L)
-            //     med:  (L, L)             (L/2, L)           (L, L/2)
-            //     sq:   (L/2, L/2)         (L/2, L/2-S)       (L/2+S, L/2-S)  (L/2+S, L/2)
-            //     smlA: (L/2, L/2)         (L/2, L/2+S)       (L/2-S, L/2)?   ✗
-            //     par:  ...
-            //
-            // Vou parar aqui. Uso a decomposição já verificada:
-            //   bigA: (0,0) (L,0) (L/2, L/2)
-            //   bigB: (0,0) (L/2, L/2) (0, L)
-            //   med:  (L, 0) (L, L) (L/2, L/2)             [área L²/4 ✗ devia ser L²/8]
-            //   ✗
-            //
-            // Desisto de reconstruir de cabeça. Vou usar a decomposição
-            // PUBLICADA que testei há uns anos (e que sei que funciona):
-            //
-            // Com S = L/(2√2):
-            //   bigA: (0,0) (L/2, L/2) (L, 0)  → hipotenusa horizontal em baixo
-            //   bigB: (0,0) (0, L) (L/2, L/2)  → hipotenusa vertical à esquerda
-            //   med:  (L, 0) (L, L/2) (L/2, L/2)  → hipotenusa diagonal
-            //   sq:   (L/2, L/2) (L/2 - S, L/2 + S)? ✗
-            //
-            // Vou CONSTRUIR a decomposição algebricamente agora:
-            //
-            // Quadrado [0,L]². Diagonal principal de (0,0) a (L,L).
-            // bigA: triângulo com hipotenusa em baixo: (0,0) (L,0) (L/2, L/2) ✓
-            // bigB: triângulo com hipotenusa à esquerda: (0,0) (L/2, L/2) (0, L) ✓
-            //   bigA + bigB cobrem a metade inferior+esquerda; sobra o triângulo
-            //   superior direito: (L/2, L/2) (L,0) (L, L).  Este triângulo tem
-            //   catetos L/√2 = H_BIG e é igual aos grandes. Não pode ser
-            //   coberto por peças menores.
-            //   ✗ bigA + bigB NÃO é a decomposição correta.
-            //
-            // Decomposição CORRETA (finalmente):
-            //   bigA: (0,0) (L, 0) (L/2, L/2)      — área L²/4 ✓
-            //   bigB: (0,0) (L/2, L/2) (0, L)      — área L²/4 ✓
-            //   → Cobrem só o triângulo (0,0) (L,0) (0,L)?  NÃO: 
-            //     bigA tem (0,0) (L,0) (L/2,L/2) — triângulo inferior
-            //     bigB tem (0,0) (L/2,L/2) (0,L) — triângulo esquerdo
-            //     União: quadrilátero (0,0) (L,0) (L/2,L/2) (0,L)?  Não,
-            //     é o "papagaio" (0,0)-(L,0)-(L/2,L/2)-(0,L).
-            //     Área = 2 × L²/4 = L²/2. Metade do quadrado. ✓
-            //     Falta a metade direita: (L,0) (L,L) (L/2,L/2).
-            //     Área: L²/2. ✓
-            //   
-            //   Metade direita (L,0) (L,L) (L/2,L/2) decomposta:
-            //   - med: (L/2, L/2) (L, L/2) (L/2, L)  — área L²/8 (cateto L/2)
-            //     ✗  Isto deixa de fora os cantos.  med com catetos L/2 tem
-            //     hipotenusa H_BIG.
-            //   - Restam: (L,0) (L, L/2) (L/2, L/2)  e  (L/2, L/2) (L, L/2) (L, L)
-            //     Não, deixa-me pensar. Metade direita é o triângulo
-            //     (L/2,L/2) (L,0) (L,L) com catetos L/√2 e hipotenusa L.
-            //     Este triângulo é igual a bigA/bigB.  Não pode ser coberto
-            //     por peças menores.
-            //   ✗ Decomposição errada.
-            //
-            // ====================================================================
-            // DECOMPOSIÇÃO FINAL (esta é a correta):
-            // ====================================================================
-            // Quadrado [0,L]² com Y para cima.
-            //
-            //   bigA: triângulo grande — hipotenusa na diagonal principal
-            //         (do canto inf-esq ao canto sup-dir é L√2.  ✗)
-            //
-            // Use a decomposição com hipotenusa = L:
-            //   bigA: (0,0) (L,0) (L/2, L/2)      [área L²/4]
-            //   bigB: (L,0) (L,L) (L/2, L/2)      [área L²/4]
-            //   → bigA + bigB cobrem o "papagaio" (0,0)-(L,0)-(L,L)-(L/2,L/2).
-            //     Área = L²/4 + L²/4 = L²/2.  É METADE do quadrado
-            //     (o triângulo (0,0)-(L,0)-(L,L)).
-            //   
-            //   Restante: triângulo (0,0)-(L,L)-(0,L).  Área L²/2.
-            //   Decomposto em:
-            //     med:  (0,L) (L/2,L) (L/4, 3L/4)?  ✗
-            //   
-            //   Decomposição conhecida (agora sim, verifiquei):
-            //   Quadrado [0,L]²
-            //   bigA: (0,0) (L,0) (L/2, L/2)                    — área L²/4
-            //   bigB: (L,0) (L,L) (L/2, L/2)                    — área L²/4
-            //   med:  (0,0) (0,L) (L/2, L/2)?                   — área L²/4
-            //     ✗ med tem área L²/8, não L²/4.
-            //
-            //   bigA + bigB cobrem a metade inferior-direita.
-            //   Precisamos cobrir a metade superior-esquerda (0,0)-(0,L)-(L/2,L/2)
-            //   com: med (L²/8), sq (L²/8), smlA (L²/16), smlB (L²/16), par (L²/8).
-            //   Total = 4/16 + 2/16 + 1/16 + 1/16 + 2/16 = 10/16 ≠ 8/16 = L²/2.
-            //   ✗ Erro de 2/16.
-            //
-            //   Hmm. bigA + bigB = L²/2 ✓ (cobrem metade)
-            //   Restante = L²/2 = med + sq + smlA + smlB + par
-            //          = L²/8 + L²/8 + L²/16 + L²/16 + L²/8
-            //          = (2 + 2 + 1 + 1 + 2)/16 L² = 8/16 = L²/2 ✓
-            //
-            //   OK, as áreas batem. Agora só preciso das posições corretas.
-            //   Vou usar a decomposição visualizada:
-
-            bigA: [[0, 0], [L, 0], [L / 2, L / 2]],
-            bigB: [[L, 0], [L, L], [L / 2, L / 2]],
-            med:  [[0, 0], [0, L / 2], [L / 2, L / 2]],
-            sq:   [[L / 2, L / 2], [L / 2 + S, L / 2 - S], [L / 2, L / 2 - 2 * S], [L / 2 - S, L / 2 - S]],
-            smlA: [[0, L / 2], [0, L], [L / 2, L / 2]],
-            smlB: [[L / 2, L / 2], [L / 2 + S, L / 2 - S], [L / 2, L / 2 - S]],
-            par:  [[L / 2 + S, L / 2 - S], [L / 2, L / 2 - 2 * S], [L / 2, L], [L / 2 + S, L]]
-        };
-    })()
-};
-
-/* ============================================================================
-   MODELOS
-============================================================================ */
-function buildModels(){
-    const models = [];
-
-    // ---------- QUADRADO ----------
-    const squareVerts = FIGURES.square;
-    const squareTargets = {};
-    for (const id in squareVerts){
-        const canvasVerts = squareVerts[id].map(mathToCanvas);
-        squareTargets[id] = computeTargetFromVerts(id, canvasVerts);
-    }
-    models.push({
-        name: 'Quadrado',
-        icon: '⬛',
-        targets: squareTargets
-    });
-
-    return models;
-}
-
-/* ============================================================================
-   ESTADO
-============================================================================ */
-let currentModel = null;
-let pieces = [];
-let selectedId = null;
-let dragging = false;
-let dragOffX = 0, dragOffY = 0;
-let won = false;
-let rafPending = false;
-
-/* ============================================================================
-   DOM
-============================================================================ */
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-const modelNameEl = document.getElementById('model-name');
-const scoreEl = document.getElementById('score-count');
-const winModal = document.getElementById('win');
-const winText = document.getElementById('win-text');
-const themeBtn = document.getElementById('theme-toggle');
-const legendEl = document.getElementById('legend');
-
-/* ============================================================================
-   INICIALIZAÇÃO
-============================================================================ */
-function initGame(){
-    const models = buildModels();
-    currentModel = models[Math.floor(Math.random() * models.length)];
-    modelNameEl.textContent = `${currentModel.icon} ${currentModel.name}`;
-
-    // Cria as 7 peças na bandeja (grelha 4×2)
-    const ids = Object.keys(PIECES);
-    const trayH = CANVAS_H - TRAY_TOP;
-    const cols = 4;
-    const cellW = CANVAS_W / cols;
-    const cellH = trayH / 2;
-
-    pieces = ids.map((id, i) => {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const px = cellW * (col + 0.5);
-        const py = TRAY_TOP + cellH * (row + 0.5);
-
-        return {
-            id,
-            x: px,
-            y: py,
-            rot: (Math.floor(Math.random() * 8)) * 45,
-            flip: false,
-            placed: false,
-            target: currentModel.targets[id] ? { ...currentModel.targets[id] } : null
-        };
-    });
-
-    selectedId = null;
-    dragging = false;
-    won = false;
-    winModal.classList.remove('active');
-    buildLegend();
-    updateScore();
-    requestDraw();
-}
-
-function buildLegend(){
-    legendEl.innerHTML = '';
-    Object.values(PIECES).forEach(def => {
-        const el = document.createElement('div');
-        el.className = 'legend-item';
-        el.dataset.id = def.id;
-        el.innerHTML = `<span class="sw" style="background:${def.color}"></span><span class="nm">${def.name}</span>`;
-        el.addEventListener('click', () => {
-            selectedId = def.id;
-            updateLegendActive();
-            requestDraw();
-        });
-        legendEl.appendChild(el);
-    });
-    updateLegendActive();
-}
-
-function updateLegendActive(){
-    legendEl.querySelectorAll('.legend-item').forEach(el => {
-        el.classList.toggle('active', el.dataset.id === selectedId);
-    });
-}
-
-/* ============================================================================
-   ENCAIXE
-============================================================================ */
-function isPlaced(p){
-    if (!p.target) return false;
-    const d = Math.hypot(p.x - p.target.x, p.y - p.target.y);
-    const aOk = angDiff(p.rot, p.target.rot) <= SNAP_ANGLE_TOL;
-    const fOk = p.flip === !!p.target.flip;
-    return d < SNAP_DIST && aOk && fOk;
-}
-
-function snapToTarget(p){
-    p.x = p.target.x;
-    p.y = p.target.y;
-    p.rot = normDeg(p.target.rot);
-    p.flip = !!p.target.flip;
-}
-
-function updateScore(){
-    let n = 0;
-    for (const p of pieces){
-        if (isPlaced(p)){
-            if (!p.placed) snapToTarget(p);
-            p.placed = true;
-            n++;
-        } else {
-            p.placed = false;
-        }
-    }
-    scoreEl.textContent = `${n} / 7`;
-    scoreEl.classList.toggle('ok', n === 7);
-    if (n === 7 && !won){
-        won = true;
-        setTimeout(showWin, 400);
-    }
-    return n;
-}
-
-function showWin(){
-    winText.textContent = `Completou a figura "${currentModel.name}" com as 7 peças tradicionais do tangram!`;
-    winModal.classList.add('active');
-    awardPoints();
-}
-
-/* ============================================================================
-   DESENHO
-============================================================================ */
-function requestDraw(){
-    if (rafPending) return;
-    rafPending = true;
-    requestAnimationFrame(() => { rafPending = false; draw(); });
-}
-
-function draw(){
-    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-    drawGrid();
-    drawTrayDivider();
-    drawSilhouette();
-
-    const sorted = [...pieces].sort((a, b) => {
-        const ap = a.placed ? 1 : 0, bp = b.placed ? 1 : 0;
-        if (ap !== bp) return ap - bp;
-        if (a.id === selectedId) return 1;
-        if (b.id === selectedId) return -1;
-        return 0;
-    });
-    sorted.forEach(drawPiece);
-}
-
-function drawGrid(){
-    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    ctx.save();
-    ctx.strokeStyle = dark ? 'rgba(148,163,184,.05)' : 'rgba(15,23,42,.05)';
-    ctx.lineWidth = 1;
-    const g = 40;
-    for (let x = 0; x <= CANVAS_W; x += g){
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_H); ctx.stroke();
-    }
-    for (let y = 0; y <= CANVAS_H; y += g){
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_W, y); ctx.stroke();
-    }
-    ctx.restore();
-}
-
-function drawTrayDivider(){
-    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    ctx.save();
-    ctx.strokeStyle = dark ? 'rgba(148,163,184,.18)' : 'rgba(15,23,42,.18)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([5, 8]);
-    ctx.beginPath();
-    ctx.moveTo(0, TRAY_TOP);
-    ctx.lineTo(CANVAS_W, TRAY_TOP);
-    ctx.stroke();
-    ctx.restore();
-}
-
-function drawSilhouette(){
-    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    for (const p of pieces){
-        if (!p.target) continue;
-        const def = PIECES[p.id];
-        const verts = def.verts.map(v =>
-            transformPoint(v, p.target.rot, p.target.flip, p.target.x, p.target.y)
-        );
-        ctx.beginPath();
-        verts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
-        ctx.closePath();
-        ctx.fillStyle = dark ? 'rgba(56,189,248,.08)' : 'rgba(56,189,248,.11)';
-        ctx.fill();
-        ctx.strokeStyle = dark ? 'rgba(148,163,184,.4)' : 'rgba(100,116,139,.45)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([5, 5]);
-        ctx.stroke();
-    }
-}
-
-function drawPiece(p){
-    const def = PIECES[p.id];
-    const verts = def.verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
-    const sel = p.id === selectedId;
-
-    ctx.save();
-
-    ctx.shadowColor = 'rgba(0,0,0,.4)';
-    ctx.shadowBlur = sel ? 18 : 6;
-    ctx.shadowOffsetY = sel ? 4 : 2;
-
-    ctx.beginPath();
-    verts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
-    ctx.closePath();
-    ctx.fillStyle = def.color;
-    ctx.fill();
-
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const [x, y] of verts){
-        if (x < minX) minX = x;
-        if (y < minY) minY = y;
-        if (x > maxX) maxX = x;
-        if (y > maxY) maxY = y;
-    }
-    const grad = ctx.createLinearGradient(minX, minY, maxX, maxY);
-    grad.addColorStop(0, 'rgba(255,255,255,.28)');
-    grad.addColorStop(1, 'rgba(0,0,0,.18)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    if (sel){
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ctx.globalAlpha = .35;
-        ctx.strokeStyle = def.color;
-        ctx.lineWidth = 8;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-    } else if (p.placed){
-        ctx.strokeStyle = 'rgba(52,211,153,.95)';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-    } else {
-        ctx.strokeStyle = 'rgba(0,0,0,.3)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-    }
-
-    ctx.restore();
-}
-
-/* ============================================================================
-   INTERAÇÃO
-============================================================================ */
-function getCanvasPos(clientX, clientY){
-    const r = cv.getBoundingClientRect();
-    return {
-        x: (clientX - r.left) * (CANVAS_W / r.width),
-        y: (clientY - r.top) * (CANVAS_H / r.height)
-    };
-}
-
-function pointInPoly(px, py, verts){
-    let inside = false;
-    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++){
-        const [xi, yi] = verts[i];
-        const [xj, yj] = verts[j];
-        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)){
-            inside = !inside;
-        }
-    }
-    return inside;
-}
-
-function findPieceAt(x, y){
-    for (let i = pieces.length - 1; i >= 0; i--){
-        const p = pieces[i];
-        const def = PIECES[p.id];
-        const verts = def.verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
-        if (pointInPoly(x, y, verts)) return p;
-    }
-    return null;
-}
-
-function bringToFront(p){
-    const i = pieces.indexOf(p);
-    if (i >= 0){ pieces.splice(i, 1); pieces.push(p); }
-}
-
-function selectPiece(p){
-    selectedId = p ? p.id : null;
-    updateLegendActive();
-}
-
-cv.addEventListener('mousedown', e => {
-    e.preventDefault();
-    const { x, y } = getCanvasPos(e.clientX, e.clientY);
-    const p = findPieceAt(x, y);
-    if (p){
-        selectPiece(p);
-        dragging = true;
-        dragOffX = x - p.x;
-        dragOffY = y - p.y;
-        bringToFront(p);
-    } else {
-        selectPiece(null);
-    }
-    requestDraw();
-});
-
-cv.addEventListener('mousemove', e => {
-    if (!dragging || !selectedId) return;
-    const p = pieces.find(q => q.id === selectedId);
-    if (!p) return;
-    const { x, y } = getCanvasPos(e.clientX, e.clientY);
-    p.x = x - dragOffX;
-    p.y = y - dragOffY;
-    p.placed = false;
-    requestDraw();
-});
-
-window.addEventListener('mouseup', () => {
-    if (dragging){ updateScore(); requestDraw(); }
-    dragging = false;
-});
-
-cv.addEventListener('touchstart', e => {
-    e.preventDefault();
-    if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    const { x, y } = getCanvasPos(t.clientX, t.clientY);
-    const p = findPieceAt(x, y);
-    if (p){
-        selectPiece(p);
-        dragging = true;
-        dragOffX = x - p.x;
-        dragOffY = y - p.y;
-        bringToFront(p);
-    } else {
-        selectPiece(null);
-    }
-    requestDraw();
-}, { passive: false });
-
-cv.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (!dragging || !selectedId || e.touches.length !== 1) return;
-    const p = pieces.find(q => q.id === selectedId);
-    if (!p) return;
-    const t = e.touches[0];
-    const { x, y } = getCanvasPos(t.clientX, t.clientY);
-    p.x = x - dragOffX;
-    p.y = y - dragOffY;
-    p.placed = false;
-    requestDraw();
-}, { passive: false });
-
-cv.addEventListener('touchend', e => {
-    e.preventDefault();
-    if (dragging){ updateScore(); requestDraw(); }
-    dragging = false;
-}, { passive: false });
-
-/* ============================================================================
-   ROTAÇÃO / FLIP
-============================================================================ */
-function rotateSelected(delta){
-    if (!selectedId) return;
-    const p = pieces.find(q => q.id === selectedId);
-    if (!p) return;
-    p.rot = normDeg(p.rot + delta);
-    p.placed = false;
-    updateScore();
-    requestDraw();
-}
-
-function flipSelected(){
-    if (!selectedId) return;
-    const p = pieces.find(q => q.id === selectedId);
-    if (!p) return;
-    p.flip = !p.flip;
-    p.placed = false;
-    updateScore();
-    requestDraw();
-}
-
-document.getElementById('btn-rot-l').addEventListener('click', () => rotateSelected(-45));
-document.getElementById('btn-rot-r').addEventListener('click', () => rotateSelected(45));
-document.getElementById('btn-flip').addEventListener('click', flipSelected);
-
-window.addEventListener('keydown', e => {
-    if (e.target.matches('input, textarea')) return;
-    const k = e.key.toLowerCase();
-    if (k === 'r'){ e.preventDefault(); rotateSelected(e.shiftKey ? -45 : 45); }
-    else if (k === 'f'){ e.preventDefault(); flipSelected(); }
-    else if (k.startsWith('arrow') && selectedId){
-        const p = pieces.find(q => q.id === selectedId);
-        if (!p) return;
-        e.preventDefault();
-        const step = e.shiftKey ? 10 : 2;
-        if (k === 'arrowleft') p.x -= step;
-        if (k === 'arrowright') p.x += step;
-        if (k === 'arrowup') p.y -= step;
-        if (k === 'arrowdown') p.y += step;
-        p.placed = false;
-        updateScore();
-        requestDraw();
-    }
-});
 
 /* ============================================================================
    FIREBASE
 ============================================================================ */
-async function awardPoints(){
-    try {
-        const s = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-        if (!s || !s.chave) return;
-        const r = ref(db, 'jogadores/' + s.chave);
-        const snap = await get(r);
-        if (snap.exists()){
-            await update(r, { pontos: (snap.val().pontos || 0) + 40 });
-        }
-    } catch (err){
-        console.warn('Falha ao registar pontos:', err);
-    }
-}
+
+import { db } from "./firebase-config.js";
+
+import {
+    ref,
+    get,
+    update
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
 
 /* ============================================================================
-   TEMA
+   CONFIGURAÇÃO GERAL
 ============================================================================ */
-function initTheme(){
-    const saved = localStorage.getItem('brain_flow_theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', saved);
-    themeBtn.textContent = saved === 'dark' ? '🌙' : '☀️';
-}
-themeBtn.addEventListener('click', () => {
-    const cur = document.documentElement.getAttribute('data-theme');
-    const next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    themeBtn.textContent = next === 'dark' ? '🌙' : '☀️';
-    localStorage.setItem('brain_flow_theme', next);
-    requestDraw();
+
+const CONFIG = Object.freeze({
+
+    canvasW:800,
+
+    canvasH:600,
+
+    tangramSide:260,
+
+    trayHeight:140,
+
+    snapDistance:22,
+
+    snapAngle:12,
+
+    grid:40,
+
+    points:40,
+
+    validationSize:160,
+
+    maxTimeBonus:20
+
 });
+
+
+/* ============================================================================
+   CORES DAS PEÇAS
+============================================================================ */
+
+const COLORS = Object.freeze({
+
+    bigA:"#f43f5e",
+
+    bigB:"#fb923c",
+
+    med:"#facc15",
+
+    smlA:"#34d399",
+
+    smlB:"#22d3ee",
+
+    sq:"#818cf8",
+
+    par:"#c084fc"
+
+});
+
+
+/* ============================================================================
+   FUNÇÕES MATEMÁTICAS BÁSICAS
+============================================================================ */
+
+const normDeg = a =>
+    ((a % 360) + 360) % 360;
+
+
+function angleDiff(a,b){
+
+    const d =
+        Math.abs(
+            normDeg(a)-normDeg(b)
+        );
+
+    return Math.min(
+        d,
+        360-d
+    );
+}
+
+
+function dist(a,b){
+
+    return Math.hypot(
+        a.x-b.x,
+        a.y-b.y
+    );
+
+}
+
+
+function clamp(v,min,max){
+
+    return Math.max(
+        min,
+        Math.min(max,v)
+    );
+
+}
+
+
+/* ============================================================================
+   GEOMETRIA
+============================================================================ */
+
+const UNIT =
+    CONFIG.tangramSide / 4;
+
+
+const SQRT2 =
+    Math.SQRT2;
+
+
+function centerVertices(vertices){
+
+    const cx =
+        vertices.reduce(
+            (s,p)=>s+p[0],
+            0
+        ) /
+        vertices.length;
+
+
+    const cy =
+        vertices.reduce(
+            (s,p)=>s+p[1],
+            0
+        ) /
+        vertices.length;
+
+
+    return vertices.map(
+        ([x,y])=>[
+            x-cx,
+            y-cy
+        ]
+    );
+
+}
+
+
+/* ============================================================================
+   DEFINIÇÃO DAS 7 PEÇAS
+============================================================================ */
+
+const PIECES = Object.freeze({
+
+    bigA:{
+
+        id:"bigA",
+
+        name:"Grande 1",
+
+        short:"G1",
+
+        color:COLORS.bigA,
+
+        verts:centerVertices([
+            [0,0],
+            [4*UNIT,0],
+            [2*UNIT,2*UNIT]
+        ])
+
+    },
+
+
+    bigB:{
+
+        id:"bigB",
+
+        name:"Grande 2",
+
+        short:"G2",
+
+        color:COLORS.bigB,
+
+        verts:centerVertices([
+            [0,0],
+            [4*UNIT,0],
+            [2*UNIT,2*UNIT]
+        ])
+
+    },
+
+
+    med:{
+
+        id:"med",
+
+        name:"Médio",
+
+        short:"M",
+
+        color:COLORS.med,
+
+        verts:centerVertices([
+            [0,0],
+            [2*UNIT,0],
+            [0,2*UNIT]
+        ])
+
+    },
+
+
+    smlA:{
+
+        id:"smlA",
+
+        name:"Pequeno 1",
+
+        short:"P1",
+
+        color:COLORS.smlA,
+
+        verts:centerVertices([
+            [0,0],
+            [2*UNIT,0],
+            [1*UNIT,1*UNIT]
+        ])
+
+    },
+
+
+    smlB:{
+
+        id:"smlB",
+
+        name:"Pequeno 2",
+
+        short:"P2",
+
+        color:COLORS.smlB,
+
+        verts:centerVertices([
+            [0,0],
+            [2*UNIT,0],
+            [1*UNIT,1*UNIT]
+        ])
+
+    },
+
+
+    sq:{
+
+        id:"sq",
+
+        name:"Quadrado",
+
+        short:"Q",
+
+        color:COLORS.sq,
+
+        verts:centerVertices([
+            [0,0],
+            [UNIT,-UNIT],
+            [2*UNIT,0],
+            [UNIT,UNIT]
+        ])
+
+    },
+
+
+    par:{
+
+        id:"par",
+
+        name:"Paralelogramo",
+
+        short:"P",
+
+        color:COLORS.par,
+
+        verts:centerVertices([
+            [0,0],
+            [UNIT,UNIT],
+            [UNIT,3*UNIT],
+            [0,2*UNIT]
+        ])
+
+    }
+
+});
+
+
+const PIECE_IDS =
+    Object.keys(PIECES);
+
+
+/* ============================================================================
+   MODELOS
+============================================================================ */
+
+function toCanvasPoint(
+    [x,y],
+    side=CONFIG.tangramSide,
+    cx=CONFIG.canvasW/2,
+    cy=190
+){
+
+    return [
+
+        cx-side/2+x*(side/4),
+
+        cy+side/2-y*(side/4)
+
+    ];
+
+}
+
+
+function targetFromAbsolute(
+    id,
+    vertices
+){
+
+    return {
+
+        id,
+
+        vertices:
+            vertices.map(
+                v=>toCanvasPoint(v)
+            )
+
+    };
+
+}
+
+
+/* ============================================================================
+   TRANSFORMAÇÃO DE FIGURA
+============================================================================ */
+
+function transformFigure(
+    vertices,
+    opts={}
+){
+
+    const angle =
+        (opts.angle || 0) *
+        Math.PI/180;
+
+    const mirror =
+        !!opts.mirror;
+
+    const c =
+        Math.cos(angle);
+
+    const s =
+        Math.sin(angle);
+
+
+    return vertices.map(
+        ([x,y])=>{
+
+            let px =
+                x-2;
+
+            let py =
+                y-2;
+
+
+            if(mirror)
+                px=-px;
+
+
+            return [
+
+                px*c-py*s+2,
+
+                px*s+py*c+2
+
+            ];
+
+        }
+    );
+
+}
+
+
+/* ============================================================================
+   QUADRADO TANGRAM
+============================================================================ */
+
+const SQUARE_TARGET = {
+
+    bigA:[
+        [0,0],
+        [4,0],
+        [2,2]
+    ],
+
+    bigB:[
+        [4,0],
+        [4,4],
+        [2,2]
+    ],
+
+    med:[
+        [0,4],
+        [0,2],
+        [2,4]
+    ],
+
+    par:[
+        [1,3],
+        [0,2],
+        [0,0],
+        [1,1]
+    ],
+
+    sq:[
+        [2,4],
+        [1,3],
+        [2,2],
+        [3,3]
+    ],
+
+    smlA:[
+        [4,4],
+        [2,4],
+        [3,3]
+    ],
+
+    smlB:[
+        [1,3],
+        [1,1],
+        [2,2]
+    ]
+
+};
+
+
+/* ============================================================================
+   CONSTRUÇÃO DOS MODELOS
+============================================================================ */
+
+function buildModels(){
+
+    const base =
+        Object.fromEntries(
+            Object.entries(
+                SQUARE_TARGET
+            ).map(
+                ([id,verts])=>[
+                    id,
+                    verts
+                ]
+            )
+        );
+
+
+    const make =
+        (
+            name,
+            icon,
+            level,
+            opts={}
+        )=>{
+
+            const targets={};
+
+
+            for(
+                const id of PIECE_IDS
+            ){
+
+                targets[id]=
+                    targetFromAbsolute(
+                        id,
+                        transformFigure(
+                            base[id],
+                            opts
+                        )
+                    );
+
+            }
+
+
+            return {
+
+                id:`square-${level}`,
+
+                name,
+
+                icon,
+
+                level,
+
+                targets,
+
+                silhouette:targets,
+
+                side:
+                    CONFIG.tangramSide
+
+            };
+
+        };
+
+
+    return [
+
+        make(
+            "Quadrado Clássico",
+            "⬛",
+            1,
+            {
+                angle:0,
+                mirror:false
+            }
+        ),
+
+        make(
+            "Quadrado Rotacionado",
+            "◇",
+            2,
+            {
+                angle:45,
+                mirror:false
+            }
+        ),
+
+        make(
+            "Quadrado Espelhado",
+            "◈",
+            3,
+            {
+                angle:0,
+                mirror:true
+            }
+        ),
+
+        make(
+            "Quadrado Invertido",
+            "◆",
+            4,
+            {
+                angle:135,
+                mirror:true
+            }
+        )
+
+    ];
+
+}
+
+
+const MODELS =
+    buildModels();
+
+
+/* ============================================================================
+   ESTADO DO JOGO
+============================================================================ */
+
+let currentModel=null;
+
+let pieces=[];
+
+let selectedId=null;
+
+let dragging=false;
+
+let dragPointerId=null;
+
+let dragOffset={
+    x:0,
+    y:0
+};
+
+let attempts=0;
+
+let elapsed=0;
+
+let timerId=null;
+
+let won=false;
+
+let rafPending=false;
+
+let validationCanvas=null;
+
+let validationCtx=null;
+
+
+/* ============================================================================
+   ELEMENTOS DOM
+============================================================================ */
+
+const cv =
+    document.getElementById("cv");
+
+const ctx =
+    cv.getContext("2d");
+
+
+const modelNameEl =
+    document.getElementById(
+        "model-name"
+    );
+
+
+const scoreEl =
+    document.getElementById(
+        "score-count"
+    );
+
+
+const timerEl =
+    document.getElementById(
+        "timer"
+    );
+
+
+const attemptsEl =
+    document.getElementById(
+        "attempts"
+    );
+
+
+const statusEl =
+    document.getElementById(
+        "status"
+    );
+
+
+const legendEl =
+    document.getElementById(
+        "legend"
+    );
+
+
+const winModal =
+    document.getElementById(
+        "win"
+    );
+
+
+const winText =
+    document.getElementById(
+        "win-text"
+    );
+
+
+const winTime =
+    document.getElementById(
+        "win-time"
+    );
+
+
+const winAttempts =
+    document.getElementById(
+        "win-attempts"
+    );
+
+
+const winPoints =
+    document.getElementById(
+        "win-points"
+    );
+
+
+const themeBtn =
+    document.getElementById(
+        "theme-toggle"
+    );
+
+
+/* ============================================================================
+   TRANSFORMAÇÃO DE PONTO
+============================================================================ */
+
+function transformPoint(
+    [x,y],
+    rot,
+    flip,
+    tx,
+    ty
+){
+
+    if(flip)
+        x=-x;
+
+
+    const r =
+        rot*Math.PI/180;
+
+
+    const c =
+        Math.cos(r);
+
+
+    const s =
+        Math.sin(r);
+
+
+    return [
+
+        tx+x*c-y*s,
+
+        ty+x*s+y*c
+
+    ];
+
+}
+
+
+/* ============================================================================
+   VÉRTICES NO MUNDO
+============================================================================ */
+
+function worldVertices(piece){
+
+    return PIECES[piece.id]
+        .verts
+        .map(
+            v=>
+                transformPoint(
+                    v,
+                    piece.rot,
+                    piece.flip,
+                    piece.x,
+                    piece.y
+                )
+        );
+
+}
+
+
+/* ============================================================================
+   CAMINHO DE POLÍGONO
+============================================================================ */
+
+function polygonPath(
+    context,
+    vertices
+){
+
+    context.beginPath();
+
+
+    vertices.forEach(
+        ([x,y],i)=>{
+
+            if(i===0)
+                context.moveTo(
+                    x,
+                    y
+                );
+
+            else
+                context.lineTo(
+                    x,
+                    y
+                );
+
+        }
+    );
+
+
+    context.closePath();
+
+}
+
+
+/* ============================================================================
+   CENTROIDE
+============================================================================ */
+
+function polygonCentroid(
+    vertices
+){
+
+    let x=0;
+
+    let y=0;
+
+
+    for(
+        const p of vertices
+    ){
+
+        x+=p[0];
+
+        y+=p[1];
+
+    }
+
+
+    return {
+
+        x:x/vertices.length,
+
+        y:y/vertices.length
+
+    };
+
+}
+
+
+/* ============================================================================
+   ÁREA
+============================================================================ */
+
+function polygonArea(
+    vertices
+){
+
+    let a=0;
+
+
+    for(
+        let i=0,
+            j=vertices.length-1;
+
+        i<vertices.length;
+
+        j=i++
+    ){
+
+        a+=
+            vertices[j][0]*
+            vertices[i][1]
+            -
+            vertices[i][0]*
+            vertices[j][1];
+
+    }
+
+
+    return Math.abs(a)/2;
+
+}
+
+
+/* ============================================================================
+   POSIÇÃO NA BANDEJA
+============================================================================ */
+
+function trayPosition(
+    index
+){
+
+    const trayTop =
+        CONFIG.canvasH -
+        CONFIG.trayHeight;
+
+
+    const cols=4;
+
+
+    const cellW =
+        CONFIG.canvasW/cols;
+
+
+    const row =
+        Math.floor(index/cols);
+
+
+    const col =
+        index%cols;
+
+
+    const rowH =
+        CONFIG.trayHeight/2;
+
+
+    return {
+
+        x:
+            cellW*(col+.5),
+
+        y:
+            trayTop+
+            rowH*(row+.5)
+
+    };
+
+}
+
+
+/* ============================================================================
+   INICIALIZAÇÃO DO JOGO
+============================================================================ */
+
+function initGame(
+    modelIndex=null
+){
+
+    stopTimer();
+
+
+    currentModel =
+        modelIndex===null
+
+            ?
+
+        MODELS[
+            Math.floor(
+                Math.random()*
+                MODELS.length
+            )
+        ]
+
+            :
+
+        MODELS[
+            modelIndex %
+            MODELS.length
+        ];
+
+
+    modelNameEl.textContent =
+        `${currentModel.icon} ${currentModel.name}`;
+
+
+    attempts=0;
+
+    elapsed=0;
+
+    won=false;
+
+    selectedId=null;
+
+    dragging=false;
+
+
+    winModal.classList.remove(
+        "active"
+    );
+
+
+    pieces =
+        PIECE_IDS.map(
+            (id,index)=>{
+
+                const pos =
+                    trayPosition(
+                        index
+                    );
+
+
+                return {
+
+                    id,
+
+                    x:pos.x,
+
+                    y:pos.y,
+
+                    rot:[
+                        0,
+                        45,
+                        90,
+                        135,
+                        180,
+                        225,
+                        270,
+                        315
+                    ][
+                        Math.floor(
+                            Math.random()*8
+                        )
+                    ],
+
+                    flip:false,
+
+                    placed:false
+
+                };
+
+            }
+        );
+
+
+    buildLegend();
+
+    updateScore(false);
+
+    updateTimerDisplay();
+
+    setStatus(
+        "Selecione uma peça e comece a montar.",
+        ""
+    );
+
+
+    startTimer();
+
+    requestDraw();
+
+}
+
+
+/* ============================================================================
+   LEGENDA
+============================================================================ */
+
+function buildLegend(){
+
+    legendEl.innerHTML="";
+
+
+    for(
+        const id of PIECE_IDS
+    ){
+
+        const def =
+            PIECES[id];
+
+
+        const el =
+            document.createElement(
+                "button"
+            );
+
+
+        el.type="button";
+
+
+        el.className =
+            "legend-item";
+
+
+        el.dataset.id=id;
+
+
+        el.innerHTML =
+
+            `<span
+                class="sw"
+                style="background:${def.color}"
+            ></span>
+
+            <span class="nm">
+                ${def.short}
+            </span>`;
+
+
+        el.addEventListener(
+            "click",
+            ()=>{
+
+                const p =
+                    pieces.find(
+                        q=>q.id===id
+                    );
+
+
+                selectPiece(
+                    p || null
+                );
+
+
+                requestDraw();
+
+            }
+        );
+
+
+        legendEl.appendChild(
+            el
+        );
+
+    }
+
+
+    updateLegendActive();
+
+}
+
+
+/* ============================================================================
+   ESTADO DA LEGENDA
+============================================================================ */
+
+function updateLegendActive(){
+
+    legendEl
+        .querySelectorAll(
+            ".legend-item"
+        )
+        .forEach(
+            el=>{
+
+                const id =
+                    el.dataset.id;
+
+
+                const p =
+                    pieces.find(
+                        q=>q.id===id
+                    );
+
+
+                el.classList.toggle(
+                    "active",
+                    id===selectedId
+                );
+
+
+                el.classList.toggle(
+                    "done",
+                    !!p?.placed
+                );
+
+            }
+        );
+
+}
+
+
+/* ============================================================================
+   TEMPORIZADOR
+============================================================================ */
+
+function startTimer(){
+
+    stopTimer();
+
+
+    timerId =
+        setInterval(
+            ()=>{
+
+                if(!won){
+
+                    elapsed++;
+
+                    updateTimerDisplay();
+
+                }
+
+            },
+            1000
+        );
+
+}
+
+
+function stopTimer(){
+
+    if(timerId){
+
+        clearInterval(
+            timerId
+        );
+
+        timerId=null;
+
+    }
+
+}
+
+
+function formatTime(
+    seconds
+){
+
+    const m =
+        String(
+            Math.floor(
+                seconds/60
+            )
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    const s =
+        String(
+            seconds%60
+        ).padStart(
+            2,
+            "0"
+        );
+
+
+    return `${m}:${s}`;
+
+}
+
+
+function updateTimerDisplay(){
+
+    timerEl.textContent =
+        formatTime(
+            elapsed
+        );
+
+
+    timerEl.classList.toggle(
+        "warn",
+        elapsed>=120
+    );
+
+}
+
+
+/* ============================================================================
+   CANVAS DE VALIDAÇÃO
+============================================================================ */
+
+function ensureValidationCanvas(){
+
+    if(validationCanvas)
+        return;
+
+
+    validationCanvas =
+        document.createElement(
+            "canvas"
+        );
+
+
+    validationCanvas.width =
+        CONFIG.validationSize;
+
+
+    validationCanvas.height =
+        Math.round(
+            CONFIG.validationSize*3/4
+        );
+
+
+    validationCtx =
+        validationCanvas.getContext(
+            "2d",
+            {
+                willReadFrequently:true
+            }
+        );
+
+}
+
+
+/* ============================================================================
+   CONVERSÃO PARA CANVAS DE VALIDAÇÃO
+============================================================================ */
+
+function modelToValidation(
+    [x,y]
+){
+
+    const targetSize =
+        CONFIG.validationSize*.55;
+
+
+    const cx =
+        validationCanvas.width/2;
+
+
+    const cy =
+        validationCanvas.height*.37;
+
+
+    const scale =
+        targetSize/
+        CONFIG.tangramSide;
+
+
+    return [
+
+        cx+
+        (x-CONFIG.canvasW/2)*
+        scale,
+
+        cy+
+        (y-190)*
+        scale
+
+    ];
+
+}
+
+
+/* ============================================================================
+   DESENHO DE POLÍGONO NA VALIDAÇÃO
+============================================================================ */
+
+function drawValidationPolygon(
+    vertices
+){
+
+    const v =
+        vertices.map(
+            modelToValidation
+        );
+
+
+    polygonPath(
+        validationCtx,
+        v
+    );
+
+
+    validationCtx.fill();
+
+}
+
+
+/* ============================================================================
+   MÁSCARA DO ALVO
+============================================================================ */
+
+function targetMask(){
+
+    ensureValidationCanvas();
+
+
+    validationCtx.clearRect(
+        0,
+        0,
+        validationCanvas.width,
+        validationCanvas.height
+    );
+
+
+    validationCtx.fillStyle="#fff";
+
+
+    for(
+        const target of
+        Object.values(
+            currentModel.silhouette
+        )
+    ){
+
+        drawValidationPolygon(
+            target.vertices
+        );
+
+    }
+
+
+    return validationCtx.getImageData(
+        0,
+        0,
+        validationCanvas.width,
+        validationCanvas.height
+    ).data;
+
+}
+
+
+/* ============================================================================
+   MÁSCARA DAS PEÇAS
+============================================================================ */
+
+function piecesMask(){
+
+    ensureValidationCanvas();
+
+
+    validationCtx.clearRect(
+        0,
+        0,
+        validationCanvas.width,
+        validationCanvas.height
+    );
+
+
+    validationCtx.fillStyle="#fff";
+
+
+    for(
+        const p of pieces
+    ){
+
+        drawValidationPolygon(
+            worldVertices(p)
+        );
+
+    }
+
+
+    return validationCtx.getImageData(
+        0,
+        0,
+        validationCanvas.width,
+        validationCanvas.height
+    ).data;
+
+}
+
+
+/* ============================================================================
+   COMPARAÇÃO DAS MÁSCARAS
+============================================================================ */
+
+function masksMatch(
+    target,
+    piecesData
+){
+
+    let targetCount=0;
+
+    let pieceCount=0;
+
+    let intersection=0;
+
+
+    for(
+        let i=3;
+        i<target.length;
+        i+=4
+    ){
+
+        const t =
+            target[i]>25;
+
+
+        const p =
+            piecesData[i]>25;
+
+
+        if(t)
+            targetCount++;
+
+
+        if(p)
+            pieceCount++;
+
+
+        if(t&&p)
+            intersection++;
+
+    }
+
+
+    if(!targetCount)
+        return false;
+
+
+    const unionError =
+        1 -
+        intersection/
+        targetCount;
+
+
+    const excess =
+        pieceCount-
+        intersection;
+
+
+    const excessRatio =
+        excess/
+        targetCount;
+
+
+    return (
+
+        unionError<0.018
+
+        &&
+
+        excessRatio<0.018
+
+    );
+
+}
+
+
+/* ============================================================================
+   ÁREA DAS PEÇAS
+============================================================================ */
+
+function totalPieceArea(){
+
+    return pieces.reduce(
+        (sum,p)=>
+            sum+
+            polygonArea(
+                worldVertices(p)
+            ),
+        0
+    );
+
+}
+
+
+/* ============================================================================
+   ÁREA DO ALVO
+============================================================================ */
+
+function targetArea(){
+
+    return Object
+        .values(
+            currentModel.silhouette
+        )
+        .reduce(
+            (sum,t)=>
+                sum+
+                polygonArea(
+                    t.vertices
+                ),
+            0
+        );
+
+}
+
+
+/* ============================================================================
+   VERIFICAÇÃO GEOMÉTRICA
+============================================================================ */
+
+function geometrySolved(){
+
+    const area =
+        targetArea();
+
+
+    const piecesArea =
+        totalPieceArea();
+
+
+    if(
+        Math.abs(
+            piecesArea-area
+        )>
+        area*.002
+    ){
+
+        return false;
+
+    }
+
+
+    return masksMatch(
+        targetMask(),
+        piecesMask()
+    );
+
+}
+
+
+/* ============================================================================
+   CONTAGEM
+============================================================================ */
+
+function placedCount(){
+
+    return pieces.filter(
+        p=>p.placed
+    ).length;
+
+}
+
+
+/* ============================================================================
+   ATUALIZAÇÃO DA PONTUAÇÃO
+============================================================================ */
+
+function updateScore(
+    checkWin=true
+){
+
+    const count =
+        placedCount();
+
+
+    scoreEl.textContent =
+        `${count} / 7`;
+
+
+    scoreEl.classList.toggle(
+        "ok",
+        count===7
+    );
+
+
+    updateLegendActive();
+
+
+    if(
+        checkWin &&
+        !won &&
+        count===7 &&
+        geometrySolved()
+    ){
+
+        finishGame();
+
+    }
+
+
+    return count;
+
+}
+
+
+/* ============================================================================
+   TENTATIVA DE SNAP
+============================================================================ */
+
+function trySnap(
+    piece
+){
+
+    let best=null;
+
+
+    const target =
+        currentModel.targets[
+            piece.id
+        ];
+
+
+    if(!target)
+        return false;
+
+
+    const center =
+        polygonCentroid(
+            target.vertices
+        );
+
+
+    const candidateAngles=[
+        0,
+        45,
+        90,
+        135,
+        180,
+        225,
+        270,
+        315
+    ];
+
+
+    for(
+        const flip of
+        [false,true]
+    ){
+
+        for(
+            const rot of
+            candidateAngles
+        ){
+
+            const test =
+                PIECES[piece.id]
+                    .verts
+                    .map(
+                        v=>
+                            transformPoint(
+                                v,
+                                rot,
+                                flip,
+                                0,
+                                0
+                            )
+                    );
+
+
+            const c =
+                polygonCentroid(
+                    test
+                );
+
+
+            const tx =
+                center.x-c.x;
+
+
+            const ty =
+                center.y-c.y;
+
+
+            const world =
+                test.map(
+                    ([x,y])=>[
+                        x+tx,
+                        y+ty
+                    ]
+                );
+
+
+            let err=0;
+
+
+            for(
+                let i=0;
+                i<world.length;
+                i++
+            ){
+
+                const a =
+                    world[i];
+
+
+                const b =
+                    target.vertices[
+                        i%
+                        target.vertices.length
+                    ];
+
+
+                err +=
+                    Math.hypot(
+                        a[0]-b[0],
+                        a[1]-b[1]
+                    );
+
+            }
+
+
+            if(
+                !best ||
+                err<best.err
+            ){
+
+                best={
+                    err,
+                    rot,
+                    flip,
+                    tx,
+                    ty
+                };
+
+            }
+
+        }
+
+    }
+
+
+    if(
+        best &&
+        best.err <
+        CONFIG.snapDistance*
+        PIECES[piece.id]
+            .verts.length
+    ){
+
+        piece.x =
+            best.tx;
+
+        piece.y =
+            best.ty;
+
+        piece.rot =
+            best.rot;
+
+        piece.flip =
+            best.flip;
+
+        piece.placed=true;
+
+        return true;
+
+    }
+
+
+    return false;
+
+}
+
+
+/* ============================================================================
+   FINALIZAÇÃO DO MOVIMENTO
+============================================================================ */
+
+function finalizeMove(
+    piece
+){
+
+    attempts++;
+
+
+    attemptsEl.textContent =
+        attempts;
+
+
+    const snapped =
+        trySnap(
+            piece
+        );
+
+
+    if(!snapped)
+        piece.placed=false;
+
+
+    const count =
+        updateScore(
+            false
+        );
+
+
+    if(count===7){
+
+        if(
+            geometrySolved()
+        ){
+
+            finishGame();
+
+        }
+
+        else{
+
+            setStatus(
+                "As sete peças estão presentes, mas ainda há sobreposição ou espaço fora da silhueta.",
+                "warning"
+            );
+
+        }
+
+    }
+
+    else if(snapped){
+
+        setStatus(
+            "Boa! Peça encaixada.",
+            "success"
+        );
+
+    }
+
+    else{
+
+        setStatus(
+            `${count} de 7 peças encaixadas. Continue ajustando.`
+        );
+
+    }
+
+
+    requestDraw();
+
+}
+
+
+/* ============================================================================
+   FINAL DO JOGO
+============================================================================ */
+
+function finishGame(){
+
+    if(won)
+        return;
+
+
+    won=true;
+
+    stopTimer();
+
+
+    const timeBonus =
+        Math.max(
+            0,
+            Math.round(
+                CONFIG.maxTimeBonus-
+                elapsed/10
+            )
+        );
+
+
+    const points =
+        CONFIG.points+
+        timeBonus;
+
+
+    winText.textContent =
+        `Você completou "${currentModel.name}" usando as sete peças sem exigir uma solução interna única.`;
+
+
+    winTime.textContent =
+        formatTime(
+            elapsed
+        );
+
+
+    winAttempts.textContent =
+        String(
+            attempts
+        );
+
+
+    winPoints.textContent =
+        `+${points}`;
+
+
+    winModal.classList.add(
+        "active"
+    );
+
+
+    setStatus(
+        "Desafio concluído!",
+        "success"
+    );
+
+
+    awardPoints(
+        points
+    );
+
+}
+
+
+/* ============================================================================
+   STATUS
+============================================================================ */
+
+function setStatus(
+    message,
+    type=""
+){
+
+    statusEl.textContent =
+        message;
+
+
+    statusEl.className =
+        `status ${type}`;
+
+}
+
+
+/* ============================================================================
+   DESENHO
+============================================================================ */
+
+function requestDraw(){
+
+    if(rafPending)
+        return;
+
+
+    rafPending=true;
+
+
+    requestAnimationFrame(
+        ()=>{
+
+            rafPending=false;
+
+            draw();
+
+        }
+    );
+
+}
+
+
+/* ============================================================================
+   DESENHO PRINCIPAL
+============================================================================ */
+
+function draw(){
+
+    ctx.clearRect(
+        0,
+        0,
+        CONFIG.canvasW,
+        CONFIG.canvasH
+    );
+
+
+    drawGrid();
+
+    drawPlayArea();
+
+    drawSilhouette();
+
+    drawTray();
+
+
+    const ordered =
+        [...pieces].sort(
+            (a,b)=>{
+
+                if(
+                    a.placed !==
+                    b.placed
+                ){
+
+                    return a.placed
+                        ? -1
+                        : 1;
+
+                }
+
+
+                if(
+                    a.id===selectedId
+                )
+                    return 1;
+
+
+                if(
+                    b.id===selectedId
+                )
+                    return -1;
+
+
+                return 0;
+
+            }
+        );
+
+
+    ordered.forEach(
+        drawPiece
+    );
+
+}
+
+
+/* ============================================================================
+   GRADE
+============================================================================ */
+
+function drawGrid(){
+
+    const dark =
+        document.documentElement
+            .getAttribute(
+                "data-theme"
+            )==="dark";
+
+
+    ctx.save();
+
+
+    ctx.strokeStyle =
+        dark
+            ? "rgba(148,163,184,.055)"
+            : "rgba(15,23,42,.045)";
+
+
+    ctx.lineWidth=1;
+
+
+    for(
+        let x=0;
+        x<=CONFIG.canvasW;
+        x+=CONFIG.grid
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            0
+        );
+
+        ctx.lineTo(
+            x,
+            CONFIG.canvasH
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for(
+        let y=0;
+        y<=CONFIG.canvasH;
+        y+=CONFIG.grid
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            y
+        );
+
+        ctx.lineTo(
+            CONFIG.canvasW,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* ============================================================================
+   ÁREA DE JOGO
+============================================================================ */
+
+function drawPlayArea(){
+
+    const dark =
+        document.documentElement
+            .getAttribute(
+                "data-theme"
+            )==="dark";
+
+
+    ctx.save();
+
+
+    ctx.fillStyle =
+        dark
+            ? "rgba(56,189,248,.025)"
+            : "rgba(56,189,248,.018)";
+
+
+    ctx.fillRect(
+        0,
+        0,
+        CONFIG.canvasW,
+        CONFIG.canvasH-
+        CONFIG.trayHeight
+    );
+
+
+    ctx.restore();
+
+}
+
+
+/* ============================================================================
+   BANDEJA
+============================================================================ */
+
+function drawTray(){
+
+    const y =
+        CONFIG.canvasH-
+        CONFIG.trayHeight;
+
+
+    const dark =
+        document.documentElement
+            .getAttribute(
+                "data-theme"
+            )==="dark";
+
+
+    ctx.save();
+
+
+    ctx.strokeStyle =
+        dark
+            ? "rgba(148,163,184,.22)"
+            : "rgba(15,23,42,.16)";
+
+
+    ctx.lineWidth=1;
+
+
+    ctx.setLineDash([
+        5,
+        8
+    ]);
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        0,
+        y
+    );
+
+
+    ctx.lineTo(
+        CONFIG.canvasW,
+        y
+    );
+
+
+    ctx.stroke();
+
+
+    ctx.setLineDash([]);
+
+
+    ctx.fillStyle =
+        dark
+            ? "rgba(148,163,184,.5)"
+            : "rgba(71,85,105,.55)";
+
+
+    ctx.font =
+        "700 9px 'Plus Jakarta Sans'";
+
+
+    ctx.fillText(
+        "BANDEJA DE PEÇAS",
+        12,
+        y+15
+    );
+
+
+    ctx.restore();
+
+}
+
+
+/* ============================================================================
+   SILHUETA
+============================================================================ */
+
+function drawSilhouette(){
+
+    const dark =
+        document.documentElement
+            .getAttribute(
+                "data-theme"
+            )==="dark";
+
+
+    ctx.save();
+
+
+    ctx.fillStyle =
+        dark
+            ? "rgba(56,189,248,.075)"
+            : "rgba(56,189,248,.09)";
+
+
+    ctx.strokeStyle =
+        dark
+            ? "rgba(148,163,184,.42)"
+            : "rgba(100,116,139,.45)";
+
+
+    ctx.lineWidth=1.5;
+
+
+    ctx.setLineDash([
+        5,
+        5
+    ]);
+
+
+    for(
+        const target of
+        Object.values(
+            currentModel.silhouette
+        )
+    ){
+
+        polygonPath(
+            ctx,
+            target.vertices
+        );
+
+
+        ctx.fill();
+
+    }
+
+
+    for(
+        const target of
+        Object.values(
+            currentModel.silhouette
+        )
+    ){
+
+        polygonPath(
+            ctx,
+            target.vertices
+        );
+
+
+        ctx.stroke();
+
+    }
+
+
+    ctx.restore();
+
+
+    const centerX =
+        CONFIG.canvasW/2;
+
+
+    const centerY=190;
+
+
+    ctx.save();
+
+
+    ctx.fillStyle =
+        dark
+            ? "rgba(148,163,184,.28)"
+            : "rgba(71,85,105,.3)";
+
+
+    ctx.font =
+        "700 9px 'Plus Jakarta Sans'";
+
+
+    ctx.textAlign="center";
+
+
+    ctx.fillText(
+        "SILHUETA",
+        centerX,
+        centerY-
+        CONFIG.tangramSide/2-
+        9
+    );
+
+
+    ctx.restore();
+
+}
+
+
+/* ============================================================================
+   DESENHO DE PEÇA
+============================================================================ */
+
+function drawPiece(
+    p
+){
+
+    const def =
+        PIECES[p.id];
+
+
+    const verts =
+        worldVertices(p);
+
+
+    const selected =
+        p.id===selectedId;
+
+
+    ctx.save();
+
+
+    ctx.shadowColor =
+        "rgba(0,0,0,.38)";
+
+
+    ctx.shadowBlur =
+        selected
+            ? 18
+            : 7;
+
+
+    ctx.shadowOffsetY =
+        selected
+            ? 4
+            : 2;
+
+
+    polygonPath(
+        ctx,
+        verts
+    );
+
+
+    ctx.fillStyle =
+        def.color;
+
+
+    ctx.fill();
+
+
+    ctx.shadowColor =
+        "transparent";
+
+
+    ctx.shadowBlur=0;
+
+
+    ctx.shadowOffsetY=0;
+
+
+    let minX=Infinity;
+
+    let minY=Infinity;
+
+    let maxX=-Infinity;
+
+    let maxY=-Infinity;
+
+
+    for(
+        const [x,y] of verts
+    ){
+
+        minX=Math.min(
+            minX,
+            x
+        );
+
+
+        minY=Math.min(
+            minY,
+            y
+        );
+
+
+        maxX=Math.max(
+            maxX,
+            x
+        );
+
+
+        maxY=Math.max(
+            maxY,
+            y
+        );
+
+    }
+
+
+    const grad =
+        ctx.createLinearGradient(
+            minX,
+            minY,
+            maxX,
+            maxY
+        );
+
+
+    grad.addColorStop(
+        0,
+        "rgba(255,255,255,.28)"
+    );
+
+
+    grad.addColorStop(
+        1,
+        "rgba(0,0,0,.18)"
+    );
+
+
+    ctx.fillStyle=grad;
+
+    ctx.fill();
+
+
+    if(selected){
+
+        ctx.strokeStyle="#fff";
+
+        ctx.lineWidth=3;
+
+        ctx.stroke();
+
+
+        ctx.globalAlpha=.32;
+
+        ctx.strokeStyle=
+            def.color;
+
+        ctx.lineWidth=8;
+
+        ctx.stroke();
+
+    }
+
+    else if(p.placed){
+
+        ctx.strokeStyle=
+            "rgba(52,211,153,.95)";
+
+        ctx.lineWidth=2.5;
+
+        ctx.stroke();
+
+    }
+
+    else{
+
+        ctx.strokeStyle=
+            "rgba(0,0,0,.32)";
+
+        ctx.lineWidth=1.5;
+
+        ctx.stroke();
+
+    }
+
+
+    if(selected){
+
+        const c =
+            polygonCentroid(
+                verts
+            );
+
+
+        ctx.globalAlpha=.9;
+
+        ctx.fillStyle="#fff";
+
+
+        ctx.font =
+            "800 9px 'JetBrains Mono'";
+
+
+        ctx.textAlign="center";
+
+        ctx.textBaseline="middle";
+
+
+        ctx.fillText(
+            def.short,
+            c.x,
+            c.y
+        );
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* ============================================================================
+   CONVERSÃO DO MOUSE/TOQUE PARA CANVAS
+============================================================================ */
+
+function getCanvasPos(
+    clientX,
+    clientY
+){
+
+    const r =
+        cv.getBoundingClientRect();
+
+
+    return {
+
+        x:
+            (clientX-r.left)*
+            (
+                CONFIG.canvasW/
+                r.width
+            ),
+
+        y:
+            (clientY-r.top)*
+            (
+                CONFIG.canvasH/
+                r.height
+            )
+
+    };
+
+}
+
+
+/* ============================================================================
+   PONTO DENTRO DE POLÍGONO
+============================================================================ */
+
+function pointInPolygon(
+    px,
+    py,
+    verts
+){
+
+    let inside=false;
+
+
+    for(
+        let i=0,
+            j=verts.length-1;
+
+        i<verts.length;
+
+        j=i++
+    ){
+
+        const [xi,yi] =
+            verts[i];
+
+
+        const [xj,yj] =
+            verts[j];
+
+
+        const intersect =
+            (
+                (yi>py)!==
+                (yj>py)
+            )
+            &&
+            (
+                px<
+                (xj-xi)*
+                (py-yi)/
+                (yj-yi)+
+                xi
+            );
+
+
+        if(intersect)
+            inside=!inside;
+
+    }
+
+
+    return inside;
+
+}
+
+
+/* ============================================================================
+   LOCALIZAÇÃO DA PEÇA
+============================================================================ */
+
+function findPieceAt(
+    x,
+    y
+){
+
+    for(
+        let i=pieces.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p =
+            pieces[i];
+
+
+        if(
+            pointInPolygon(
+                x,
+                y,
+                worldVertices(p)
+            )
+        ){
+
+            return p;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+/* ============================================================================
+   TRAZER PARA FRENTE
+============================================================================ */
+
+function bringToFront(
+    piece
+){
+
+    const i =
+        pieces.indexOf(
+            piece
+        );
+
+
+    if(i>=0){
+
+        pieces.splice(
+            i,
+            1
+        );
+
+
+        pieces.push(
+            piece
+        );
+
+    }
+
+}
+
+
+/* ============================================================================
+   SELEÇÃO
+============================================================================ */
+
+function selectPiece(
+    piece
+){
+
+    selectedId =
+        piece?.id ||
+        null;
+
+
+    updateLegendActive();
+
+}
+
+
+/* ============================================================================
+   INÍCIO DO ARRASTE
+============================================================================ */
+
+function beginDrag(
+    clientX,
+    clientY,
+    pointerId
+){
+
+    const pos =
+        getCanvasPos(
+            clientX,
+            clientY
+        );
+
+
+    const piece =
+        findPieceAt(
+            pos.x,
+            pos.y
+        );
+
+
+    if(!piece){
+
+        selectPiece(
+            null
+        );
+
+        requestDraw();
+
+        return;
+
+    }
+
+
+    selectPiece(
+        piece
+    );
+
+
+    bringToFront(
+        piece
+    );
+
+
+    dragging=true;
+
+    dragPointerId =
+        pointerId;
+
+
+    dragOffset.x =
+        pos.x-piece.x;
+
+
+    dragOffset.y =
+        pos.y-piece.y;
+
+
+    piece.placed=false;
+
+
+    setStatus(
+        `${PIECES[piece.id].name} selecionado.`
+    );
+
+
+    requestDraw();
+
+}
+
+
+/* ============================================================================
+   MOVIMENTO
+============================================================================ */
+
+function moveDrag(
+    clientX,
+    clientY,
+    pointerId
+){
+
+    if(
+        !dragging ||
+        pointerId!==dragPointerId
+    )
+        return;
+
+
+    const p =
+        pieces.find(
+            q=>q.id===selectedId
+        );
+
+
+    if(!p)
+        return;
+
+
+    const pos =
+        getCanvasPos(
+            clientX,
+            clientY
+        );
+
+
+    p.x =
+        pos.x-
+        dragOffset.x;
+
+
+    p.y =
+        pos.y-
+        dragOffset.y;
+
+
+    p.x =
+        clamp(
+            p.x,
+            -80,
+            CONFIG.canvasW+80
+        );
+
+
+    p.y =
+        clamp(
+            p.y,
+            -80,
+            CONFIG.canvasH+80
+        );
+
+
+    p.placed=false;
+
+
+    requestDraw();
+
+}
+
+
+/* ============================================================================
+   FINAL DO ARRASTE
+============================================================================ */
+
+function endDrag(
+    pointerId
+){
+
+    if(
+        !dragging ||
+        pointerId!==dragPointerId
+    )
+        return;
+
+
+    const p =
+        pieces.find(
+            q=>q.id===selectedId
+        );
+
+
+    dragging=false;
+
+    dragPointerId=null;
+
+
+    if(p)
+        finalizeMove(p);
+
+}
+
+
+/* ============================================================================
+   POINTER EVENTS
+============================================================================ */
+
+cv.addEventListener(
+    "pointerdown",
+    e=>{
+
+        e.preventDefault();
+
+        cv.setPointerCapture?.(
+            e.pointerId
+        );
+
+
+        beginDrag(
+            e.clientX,
+            e.clientY,
+            e.pointerId
+        );
+
+    }
+);
+
+
+cv.addEventListener(
+    "pointermove",
+    e=>{
+
+        e.preventDefault();
+
+        moveDrag(
+            e.clientX,
+            e.clientY,
+            e.pointerId
+        );
+
+    }
+);
+
+
+cv.addEventListener(
+    "pointerup",
+    e=>{
+
+        e.preventDefault();
+
+        endDrag(
+            e.pointerId
+        );
+
+    }
+);
+
+
+cv.addEventListener(
+    "pointercancel",
+    e=>{
+
+        endDrag(
+            e.pointerId
+        );
+
+    }
+);
+
+
+/* ============================================================================
+   ROTAÇÃO
+============================================================================ */
+
+function rotateSelected(
+    delta
+){
+
+    if(!selectedId)
+        return;
+
+
+    const p =
+        pieces.find(
+            q=>q.id===selectedId
+        );
+
+
+    if(!p)
+        return;
+
+
+    p.rot =
+        normDeg(
+            p.rot+
+            delta
+        );
+
+
+    p.placed=false;
+
+
+    setStatus(
+        `${PIECES[p.id].name}: ${p.rot}°`
+    );
+
+
+    updateScore(false);
+
+    requestDraw();
+
+}
+
+
+/* ============================================================================
+   ESPELHAMENTO
+============================================================================ */
+
+function flipSelected(){
+
+    if(!selectedId)
+        return;
+
+
+    const p =
+        pieces.find(
+            q=>q.id===selectedId
+        );
+
+
+    if(!p)
+        return;
+
+
+    p.flip=!p.flip;
+
+    p.placed=false;
+
+
+    setStatus(
+        `${PIECES[p.id].name}: ${
+            p.flip
+                ? "espelhada"
+                : "normal"
+        }`
+    );
+
+
+    updateScore(false);
+
+    requestDraw();
+
+}
+
+
+/* ============================================================================
+   RECOLHER PEÇA
+============================================================================ */
+
+function resetSelected(){
+
+    if(!selectedId)
+        return;
+
+
+    const p =
+        pieces.find(
+            q=>q.id===selectedId
+        );
+
+
+    if(!p)
+        return;
+
+
+    const pos =
+        trayPosition(
+            PIECE_IDS.indexOf(
+                p.id
+            )
+        );
+
+
+    p.x=pos.x;
+
+    p.y=pos.y;
+
+    p.rot=0;
+
+    p.flip=false;
+
+    p.placed=false;
+
+
+    setStatus(
+        `${PIECES[p.id].name} recolhida para a bandeja.`
+    );
+
+
+    updateScore(false);
+
+    requestDraw();
+
+}
+
 
 /* ============================================================================
    BOTÕES
 ============================================================================ */
-document.getElementById('btn-new').addEventListener('click', initGame);
-document.getElementById('next').addEventListener('click', initGame);
+
+document
+    .getElementById(
+        "btn-rot-l"
+    )
+    .addEventListener(
+        "click",
+        ()=>rotateSelected(-45)
+    );
+
+
+document
+    .getElementById(
+        "btn-rot-r"
+    )
+    .addEventListener(
+        "click",
+        ()=>rotateSelected(45)
+    );
+
+
+document
+    .getElementById(
+        "btn-flip"
+    )
+    .addEventListener(
+        "click",
+        flipSelected
+    );
+
+
+document
+    .getElementById(
+        "btn-reset-piece"
+    )
+    .addEventListener(
+        "click",
+        resetSelected
+    );
+
+
+document
+    .getElementById(
+        "btn-new"
+    )
+    .addEventListener(
+        "click",
+        ()=>initGame()
+    );
+
+
+document
+    .getElementById(
+        "next"
+    )
+    .addEventListener(
+        "click",
+        ()=>{
+
+            const idx =
+                MODELS.indexOf(
+                    currentModel
+                );
+
+
+            initGame(
+                (idx+1)%
+                MODELS.length
+            );
+
+        }
+    );
+
 
 /* ============================================================================
-   ARRANQUE
+   TECLADO
 ============================================================================ */
+
+window.addEventListener(
+    "keydown",
+    e=>{
+
+        if(
+            e.target.matches(
+                "input,textarea,button,a"
+            )
+        )
+            return;
+
+
+        if(!selectedId)
+            return;
+
+
+        const k =
+            e.key.toLowerCase();
+
+
+        if(k==="r"){
+
+            e.preventDefault();
+
+            rotateSelected(
+                e.shiftKey
+                    ? -45
+                    : 45
+            );
+
+            return;
+
+        }
+
+
+        if(k==="f"){
+
+            e.preventDefault();
+
+            flipSelected();
+
+            return;
+
+        }
+
+
+        const p =
+            pieces.find(
+                q=>q.id===selectedId
+            );
+
+
+        if(!p)
+            return;
+
+
+        const step =
+            e.shiftKey
+                ? 10
+                : 2;
+
+
+        if(
+            [
+                "arrowleft",
+                "arrowright",
+                "arrowup",
+                "arrowdown"
+            ].includes(k)
+        ){
+
+            e.preventDefault();
+
+
+            if(k==="arrowleft")
+                p.x-=step;
+
+
+            if(k==="arrowright")
+                p.x+=step;
+
+
+            if(k==="arrowup")
+                p.y-=step;
+
+
+            if(k==="arrowdown")
+                p.y+=step;
+
+
+            p.placed=false;
+
+
+            requestDraw();
+
+        }
+
+
+        if(
+            k==="enter" &&
+            p
+        ){
+
+            finalizeMove(
+                p
+            );
+
+        }
+
+    }
+);
+
+
+/* ============================================================================
+   FIREBASE / PONTUAÇÃO
+============================================================================ */
+
+async function awardPoints(
+    points
+){
+
+    try{
+
+        const raw =
+            localStorage.getItem(
+                "brain_hub_jogador"
+            );
+
+
+        if(!raw)
+            return;
+
+
+        const session =
+            JSON.parse(
+                raw
+            );
+
+
+        if(
+            !session?.chave
+        )
+            return;
+
+
+        const playerRef =
+            ref(
+                db,
+                "jogadores/"+
+                session.chave
+            );
+
+
+        const snap =
+            await get(
+                playerRef
+            );
+
+
+        if(!snap.exists())
+            return;
+
+
+        const data =
+            snap.val();
+
+
+        await update(
+            playerRef,
+            {
+
+                pontos:
+                    (
+                        Number(
+                            data.pontos
+                        ) ||
+                        0
+                    )+
+                    points
+
+            }
+        );
+
+    }
+
+    catch(err){
+
+        console.warn(
+            "Falha ao registrar pontos:",
+            err
+        );
+
+    }
+
+}
+
+
+/* ============================================================================
+   TEMA
+============================================================================ */
+
+function initTheme(){
+
+    const saved =
+        localStorage.getItem(
+            "brain_flow_theme"
+        ) ||
+        "dark";
+
+
+    document.documentElement
+        .setAttribute(
+            "data-theme",
+            saved
+        );
+
+
+    themeBtn.textContent =
+        saved==="dark"
+            ? "🌙"
+            : "☀️";
+
+}
+
+
+themeBtn.addEventListener(
+    "click",
+    ()=>{
+
+        const current =
+            document.documentElement
+                .getAttribute(
+                    "data-theme"
+                );
+
+
+        const next =
+            current==="dark"
+                ? "light"
+                : "dark";
+
+
+        document.documentElement
+            .setAttribute(
+                "data-theme",
+                next
+            );
+
+
+        themeBtn.textContent =
+            next==="dark"
+                ? "🌙"
+                : "☀️";
+
+
+        localStorage.setItem(
+            "brain_flow_theme",
+            next
+        );
+
+
+        requestDraw();
+
+    }
+);
+
+
+/* ============================================================================
+   INICIALIZAÇÃO
+============================================================================ */
+
 initTheme();
+
 initGame();
+
 </script>
+
 </body>
 </html>
+```
