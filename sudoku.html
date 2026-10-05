@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Sudoku 6x6</title>
+    <title>Brain Sudoku 6x6 - Duelo Multiplayer</title>
 
     <!-- SDK do EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -41,6 +41,7 @@
             --btn-primary: #6366f1;
             --btn-primary-hover: #818cf8;
             --btn-accent: #8b5cf6;
+            --btn-whatsapp: #22c55e;
 
             --board-bg: rgba(15, 23, 42, 0.55);
             --board-border: rgba(148, 163, 184, 0.45);
@@ -133,33 +134,24 @@
             background: var(--card-bg);
             backdrop-filter: blur(18px) saturate(160%);
             -webkit-backdrop-filter: blur(18px) saturate(160%);
-            padding: 20px 20px 22px;
+            padding: 20px;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
             width: 100%;
-            max-width: 460px;
+            max-width: 480px;
             text-align: center;
             border: 1px solid var(--card-border);
             animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
             overflow: hidden;
         }
 
-        .container::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 20%; right: 20%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
-            opacity: 0.9;
-        }
-
         @keyframes cardIn {
             from { opacity: 0; transform: translateY(16px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0)    scale(1); }
+            to   { opacity: 1; transform: translateY(0)   scale(1); }
         }
 
         /* ==========================================================
-           4. TOP BAR
+           4. TOP BAR & LOBBY OVERLAY
            ========================================================== */
         .top-bar {
             display: flex;
@@ -176,7 +168,6 @@
             border-radius: 999px;
             font-size: 13px;
             font-weight: 600;
-            letter-spacing: 0.01em;
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             color: var(--text-muted);
@@ -189,59 +180,91 @@
         .btn-small:hover {
             color: var(--text-color);
             border-color: var(--border-strong);
-            transform: translateY(-1px);
             background: var(--card-bg);
         }
 
+        /* Lobby de Duelo */
+        .lobby-box {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        .lobby-box h3 {
+            margin-top: 0;
+            font-size: 15px;
+            color: var(--c-blue);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .lobby-box p {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
         /* ==========================================================
-           5. USER HEADER
+           5. USER HEADER & MULTIPLAYER OPONENTE BAR
            ========================================================== */
         .user-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             background: var(--input-bg);
-            padding: 10px 14px;
+            padding: 8px 12px;
             border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
-            transition: border-color var(--t-base);
         }
-        .user-header:hover { border-color: var(--border-strong); }
-
         .user-info-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-
         .user-avatar-display {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
-            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
             border-radius: 50%;
             background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2));
             border: 1px solid rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
         }
-
         #display-nome {
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 700;
-            letter-spacing: -0.01em;
         }
 
-        .user-header .game-name {
-            font-size: 12.5px;
-            color: var(--text-muted);
+        /* Placar do Oponente ao Vivo */
+        .opponent-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .opponent-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(99, 102, 241, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.25);
+            color: var(--c-blue);
+        }
+        .opponent-stats {
+            display: flex;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
         }
 
         /* ==========================================================
@@ -254,7 +277,7 @@
             background: var(--input-bg);
             padding: 10px;
             border-radius: var(--radius-md);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-size: 11px;
             border: 1px solid var(--border-color);
             text-align: center;
@@ -263,7 +286,6 @@
             letter-spacing: 0.06em;
             font-weight: 600;
         }
-
         .score-board > div {
             display: flex;
             flex-direction: column;
@@ -272,39 +294,27 @@
             padding: 6px 2px;
             border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.02);
-            transition: background var(--t-base), transform var(--t-base);
         }
-        .score-board > div:hover {
-            background: rgba(99, 102, 241, 0.08);
-            transform: translateY(-1px);
-        }
-
         .score-board strong {
             font-size: 15px;
-            font-family: 'JetBrains Mono', 'Segoe UI', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            letter-spacing: 0;
             text-transform: none;
         }
-
         #display-dificuldade { color: var(--c-blue); font-size: 13px !important; }
         #display-erros      { color: var(--c-red); }
         #display-tempo      { color: #60a5fa; }
         #display-pontos     { color: var(--c-green); }
 
-        /* ==========================================================
-           7. INSTRUÇÕES
-           ========================================================== */
         .instructions {
-            font-size: 12.5px;
+            font-size: 12px;
             color: var(--text-muted);
-            margin: 4px 0 12px;
-            line-height: 1.5;
+            margin: 4px 0 10px;
             min-height: 18px;
         }
 
         /* ==========================================================
-           8. TABULEIRO SUDOKU 6x6
+           7. TABULEIRO SUDOKU 6x6
            ========================================================== */
         .sudoku-grid {
             display: grid;
@@ -317,7 +327,7 @@
             overflow: hidden;
             width: 100%;
             aspect-ratio: 1 / 1;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
         }
 
@@ -334,50 +344,25 @@
             user-select: none;
             transition: background var(--t-fast), color var(--t-fast);
         }
+        .sudoku-cell:hover { background: rgba(99, 102, 241, 0.15); }
+        .sudoku-cell.fixed { color: var(--text-muted); background: rgba(148, 163, 184, 0.08); cursor: default; }
+        .sudoku-cell.selected { background: rgba(99, 102, 241, 0.3) !important; box-shadow: inset 0 0 0 2px var(--btn-primary); }
+        .sudoku-cell.error { color: var(--c-red) !important; background: rgba(239, 68, 68, 0.15) !important; }
 
-        .sudoku-cell:hover {
-            background: rgba(99, 102, 241, 0.15);
-        }
-
-        .sudoku-cell.fixed {
-            color: var(--text-muted);
-            background: rgba(148, 163, 184, 0.08);
-            cursor: default;
-        }
-
-        .sudoku-cell.selected {
-            background: rgba(99, 102, 241, 0.3) !important;
-            box-shadow: inset 0 0 0 2px var(--btn-primary);
-        }
-
-        .sudoku-cell.error {
-            color: var(--c-red) !important;
-            background: rgba(239, 68, 68, 0.15) !important;
-        }
-
-        /* Bordas grossas para formar as caixas 2x3 */
-        .sudoku-cell:nth-child(2n) {
-            border-right: 2px solid var(--board-border);
-        }
-        .sudoku-cell:nth-child(6n) {
-            border-right: none;
-        }
-        /* Linhas horizontais das caixas 2x3 (linhas 2 e 4) */
+        .sudoku-cell:nth-child(2n) { border-right: 2px solid var(--board-border); }
+        .sudoku-cell:nth-child(6n) { border-right: none; }
         .sudoku-cell:nth-child(n+7):nth-child(-n+12),
-        .sudoku-cell:nth-child(n+19):nth-child(-n+24) {
-            border-bottom: 2px solid var(--board-border);
-        }
+        .sudoku-cell:nth-child(n+19):nth-child(-n+24) { border-bottom: 2px solid var(--board-border); }
 
         /* ==========================================================
-           9. TECLADO NUMÉRICO VIRTUAL (1 a 6)
+           8. TECLADO E CONTROLES
            ========================================================== */
         .number-pad {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: 6px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
-
         .num-btn {
             background: var(--input-bg);
             border: 1px solid var(--border-color);
@@ -386,22 +371,12 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 16px;
             font-weight: 700;
-            padding: 10px 0;
+            padding: 8px 0;
             cursor: pointer;
             transition: all var(--t-fast);
         }
+        .num-btn:hover { background: var(--btn-primary); border-color: var(--btn-primary); color: #fff; }
 
-        .num-btn:hover {
-            background: var(--btn-primary);
-            border-color: var(--btn-primary);
-            color: #ffffff;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-btn);
-        }
-
-        /* ==========================================================
-           10. CONTROLES E BOTÕES
-           ========================================================== */
         .controls-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -411,76 +386,29 @@
 
         select, button {
             width: 100%;
-            padding: 11px 12px;
+            padding: 10px 12px;
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            font-size: 14px;
+            font-size: 13.5px;
             font-family: inherit;
             font-weight: 600;
-            box-sizing: border-box;
             background: var(--input-bg);
             color: var(--text-color);
-            transition: border-color var(--t-base), box-shadow var(--t-base);
-        }
-        select:focus, button:focus {
-            outline: none;
-            border-color: var(--btn-primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
-        }
-
-        select {
             cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-            padding-right: 36px;
-            margin-top: 0;
+            transition: all var(--t-base);
         }
-
         button {
-            margin-top: 0;
             border: none;
-            color: #ffffff;
-            cursor: pointer;
+            color: #fff;
             background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
             box-shadow: var(--shadow-btn);
-            transition: transform var(--t-fast), box-shadow var(--t-base), filter var(--t-base);
         }
-        button:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.08);
-            box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.7);
-        }
-        button:active { transform: translateY(0); filter: brightness(0.97); }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #475569, #334155);
-            box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
-        }
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #64748b, #475569);
-        }
+        button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        
+        .btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+        .btn-whatsapp { background: linear-gradient(135deg, #16a34a, #22c55e); display: flex; align-items: center; justify-content: center; gap: 6px; }
 
         .hidden { display: none !important; }
-
-        /* ==========================================================
-           11. RESPONSIVIDADE
-           ========================================================== */
-        @media (max-width: 440px) {
-            body { padding: 10px; }
-            .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
-            .score-board { font-size: 10px; }
-            .score-board strong { font-size: 13px; }
-            .user-header .game-name { display: none; }
-            .sudoku-cell { font-size: 18px; }
-        }
-
-        :focus-visible {
-            outline: 2px solid var(--btn-primary);
-            outline-offset: 2px;
-        }
     </style>
 </head>
 <body>
@@ -492,14 +420,59 @@
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <!-- TELA DO JOGO -->
-        <div id="game-screen">
+        <!-- TELA DE LOBBY / ESCOLHA DE MODO -->
+        <div id="lobby-screen">
+            <div class="user-header" style="justify-content: center;">
+                <div class="user-info-left">
+                    <span id="lobby-avatar" class="user-avatar-display">😀</span>
+                    <strong id="lobby-nome">Carregando...</strong>
+                </div>
+            </div>
+
+            <div class="lobby-box">
+                <h3>⚔️ Modo Duelo Multiplayer</h3>
+                <p>Jogue no mesmo tabuleiro que um colega em tempo real. Crie uma sala, envie o link pelo WhatsApp e dispute quem termina mais rápido com menos erros!</p>
+                
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">DIFICULDADE DO DUELO:</label>
+                    <select id="select-dificuldade-lobby" style="margin-bottom: 8px;">
+                        <option value="facil">Fácil</option>
+                        <option value="medio" selected>Médio</option>
+                        <option value="dificil">Difícil</option>
+                    </select>
+                </div>
+
+                <button id="btn-criar-sala">🚀 Criar Sala de Duelo</button>
+            </div>
+
+            <div class="lobby-box" style="margin-bottom: 0;">
+                <h3>🔗 Entrar com Código</h3>
+                <div style="display: flex; gap: 6px;">
+                    <input type="text" id="input-codigo-sala" placeholder="Ex: DUELO-9421" style="padding: 9px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); width: 100%; font-family: monospace;">
+                    <button id="btn-entrar-sala" style="width: 120px;">Entrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TELA DO JOGO (Inicialmente oculta até iniciar ou entrar na sala) -->
+        <div id="game-screen" class="hidden">
             <div class="user-header">
                 <div class="user-info-left">
                     <span id="display-avatar" class="user-avatar-display">😀</span>
                     <strong id="display-nome"></strong>
                 </div>
-                <span class="game-name">Sudoku 6x6</span>
+                <span class="game-name" id="display-sala-tag" style="font-size: 11px; background: rgba(99,102,241,0.15); padding: 4px 8px; border-radius: 6px; color: var(--c-blue);">Modo Solo</span>
+            </div>
+
+            <!-- PLACAR DO OPONENTE EM TEMPO REAL -->
+            <div id="opponent-status-bar" class="opponent-bar">
+                <div class="opponent-info">
+                    <span>👥 Oponente:</span> <span id="op-nome">Aguardando...</span>
+                </div>
+                <div class="opponent-stats">
+                    <span>Erros: <strong id="op-erros">0/3</strong></span>
+                    <span>Tempo: <strong id="op-tempo">00:00</strong></span>
+                </div>
             </div>
 
             <div class="score-board">
@@ -524,30 +497,30 @@
                 <button class="num-btn" data-num="6">6</button>
             </div>
 
-            <!-- OPÇÕES E CONTROLES -->
-            <div class="controls-grid">
-                <select id="select-dificuldade">
-                    <option value="facil">Fácil</option>
-                    <option value="medio" selected>Médio</option>
-                    <option value="dificil">Difícil</option>
-                </select>
-                <button id="btn-apagar" class="btn-secondary">🧹 Apagar Célula</button>
+            <!-- BOTÃO DE WHATSAPP (Aparece se for Host) -->
+            <div id="div-whatsapp" class="hidden" style="margin-bottom: 8px;">
+                <button id="btn-whatsapp" class="btn-whatsapp">💬 Convidar Colega pelo WhatsApp</button>
             </div>
 
-            <div class="controls-grid" style="margin-top: 8px;">
-                <button id="btn-novo-jogo" class="btn-secondary">🔄 Novo Jogo</button>
+            <!-- CONTROLES -->
+            <div class="controls-grid">
+                <button id="btn-apagar" class="btn-secondary">🧹 Apagar Célula</button>
                 <button id="btn-verificar">✨ Verificar</button>
             </div>
         </div>
     </div>
 
-    <!-- Lógica do Sudoku -->
+    <!-- Lógica do Sudoku Multiplayer -->
     <script type="module">
         import { db } from "./firebase-config.js";
-        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { ref, get, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) { window.location.href = 'index.html'; }
+
+        // Elementos UI Lobby
+        document.getElementById('lobby-nome').textContent = jogadorSessao.nome;
+        document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
 
         let pontuacaoAcumulada = 0;
         let erros = 0;
@@ -560,6 +533,11 @@
         let tabuleiroAtual = [];
         let mascaraFixos = [];
 
+        // Controle de Sala Multiplayer
+        let idSalaAtual = null;
+        let ehHost = false;
+        let firebaseListener = null;
+
         const displayNome = document.getElementById('display-nome');
         const displayAvatar = document.getElementById('display-avatar');
         const displayDificuldade = document.getElementById('display-dificuldade');
@@ -568,7 +546,6 @@
         const displayPontos = document.getElementById('display-pontos');
         const infoInstrucao = document.getElementById('info-instrucao');
         const sudokuBoard = document.getElementById('sudoku-board');
-        const selectDificuldade = document.getElementById('select-dificuldade');
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         // Gestão de Tema
@@ -594,7 +571,8 @@
             return `${m}:${s}`;
         }
 
-        async function carregarDadosJogador() {
+        // Carregar Pontos Iniciais
+        async function inicializarPerfil() {
             displayNome.textContent = jogadorSessao.nome;
             displayAvatar.textContent = jogadorSessao.avatar;
 
@@ -602,71 +580,26 @@
             try {
                 const snapshot = await get(jogadorRef);
                 if (snapshot.exists()) {
-                    const dados = snapshot.val();
-                    pontuacaoAcumulada = dados.pontos || 0;
+                    pontuacaoAcumulada = snapshot.val().pontos || 0;
                 }
                 displayPontos.textContent = pontuacaoAcumulada;
-                iniciarNovoJogo();
-            } catch (error) {
-                console.error("Erro ao carregar dados:", error);
-                iniciarNovoJogo();
+            } catch (e) {
+                console.error(e);
+            }
+
+            // Verificar se abriu via Link de Sala (?sala=ID)
+            const urlParams = new URLSearchParams(window.location.search);
+            const salaUrl = urlParams.get('sala');
+            if (salaUrl) {
+                document.getElementById('input-codigo-sala').value = salaUrl;
+                entrarNaSala(salaUrl);
             }
         }
+        inicializarPerfil();
 
-        carregarDadosJogador();
-
-        document.getElementById('btn-novo-jogo').addEventListener('click', iniciarNovoJogo);
-        selectDificuldade.addEventListener('change', iniciarNovoJogo);
-
-        document.getElementById('btn-apagar').addEventListener('click', () => {
-            if (!celulaSelecionada) return;
-            const r = parseInt(celulaSelecionada.dataset.row);
-            const c = parseInt(celulaSelecionada.dataset.col);
-
-            if (mascaraFixos[r][c]) return; // Não apagar fixos
-
-            tabuleiroAtual[r][c] = 0;
-            celulaSelecionada.textContent = '';
-            celulaSelecionada.classList.remove('error');
-        });
-
-        document.querySelectorAll('.num-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (!celulaSelecionada) return;
-                const r = parseInt(celulaSelecionada.dataset.row);
-                const c = parseInt(celulaSelecionada.dataset.col);
-
-                if (mascaraFixos[r][c]) return;
-
-                const val = parseInt(btn.dataset.num);
-                tabuleiroAtual[r][c] = val;
-                celulaSelecionada.textContent = val;
-                celulaSelecionada.classList.remove('error');
-
-                verificarPreenchimentoAutomatico();
-            });
-        });
-
-        // Ouvinte de teclado físico para facilitar
-        document.addEventListener('keydown', (e) => {
-            if (!celulaSelecionada) return;
-            if (e.key >= '1' && e.key <= '6') {
-                const r = parseInt(celulaSelecionada.dataset.row);
-                const c = parseInt(celulaSelecionada.dataset.col);
-                if (mascaraFixos[r][c]) return;
-
-                const val = parseInt(e.key);
-                tabuleiroAtual[r][c] = val;
-                celulaSelecionada.textContent = val;
-                celulaSelecionada.classList.remove('error');
-                verificarPreenchimentoAutomatico();
-            } else if (e.key === 'Backspace' || e.key === 'Delete') {
-                document.getElementById('btn-apagar').click();
-            }
-        });
-
+        // Gerar Tabuleiro Sudoku 6x6 Base
         function gerarSudokuValido() {
-            let base = [
+            return [
                 [1,2,3,4,5,6],
                 [4,5,6,1,2,3],
                 [2,3,1,6,4,5],
@@ -674,44 +607,137 @@
                 [3,1,2,5,6,4],
                 [6,4,5,3,1,2]
             ];
-            // Para simplificar e garantir estabilidade, embaralhamos linhas/colunas respeitando regras 2x3
-            return base;
         }
 
-        function iniciarNovoJogo() {
+        // Criar Sala de Duelo
+        document.getElementById('btn-criar-sala').addEventListener('click', async () => {
+            const dif = document.getElementById('select-dificuldade-lobby').value;
+            idSalaAtual = 'DUELO-' + Math.floor(1000 + Math.random() * 9000);
+            ehHost = true;
+
+            solucaoAtual = gerarSudokuValido();
+            let removidos = dif === 'facil' ? 12 : dif === 'medio' ? 18 : 22;
+            let tabInicial = solucaoAtual.map(row => [...row]);
+            let mask = Array(6).fill(0).map(() => Array(6).fill(true));
+
+            let removidasCount = 0;
+            while (removidasCount < removidos) {
+                let r = Math.floor(Math.random() * 6);
+                let c = Math.floor(Math.random() * 6);
+                if (mask[r][c]) {
+                    mask[r][c] = false;
+                    tabInicial[r][c] = 0;
+                    removidasCount++;
+                }
+            }
+
+            // Salvar Sala no Firebase
+            const salaRef = ref(db, 'salas_duelo/' + idSalaAtual);
+            await set(salaRef, {
+                status: 'jogando',
+                dificuldade: dif,
+                tabuleiro_inicial: tabInicial,
+                solucao: solucaoAtual,
+                mascara: mask,
+                jogadores: {
+                    [jogadorSessao.chave]: {
+                        nome: jogadorSessao.nome,
+                        avatar: jogadorSessao.avatar,
+                        erros: 0,
+                        tempo: 0,
+                        concluido: false
+                    }
+                }
+            });
+
+            iniciarJogoComDados(tabInicial, solucaoAtual, mask, dif);
+            document.getElementById('div-whatsapp').classList.remove('hidden');
+            document.getElementById('display-sala-tag').textContent = `Sala: ${idSalaAtual}`;
+            document.getElementById('opponent-status-bar').style.display = 'flex';
+            document.getElementById('op-nome').textContent = 'Aguardando oponente...';
+
+            escutarSalaFirebase();
+        });
+
+        // Entrar em Sala Existente
+        document.getElementById('btn-entrar-sala').addEventListener('click', () => {
+            const codigo = document.getElementById('input-codigo-sala').value.trim().toUpperCase();
+            if (!codigo) {
+                alert('Digite um código de sala válido.');
+                return;
+            }
+            entrarNaSala(codigo);
+        });
+
+        async function entrarNaSala(codigo) {
+            const salaRef = ref(db, 'salas_duelo/' + codigo);
+            const snapshot = await get(salaRef);
+
+            if (!snapshot.exists()) {
+                alert('❌ Sala não encontrada ou expirada!');
+                return;
+            }
+
+            const dadosSala = snapshot.val();
+            idSalaAtual = codigo;
+            ehHost = false;
+
+            solucaoAtual = dadosSala.solucao;
+            let tabInicial = dadosSala.tabuleiro_inicial;
+            let mask = dadosSala.mascara;
+            let dif = dadosSala.dificuldade;
+
+            // Registrar jogador atual na sala
+            await update(ref(db, `salas_duelo/${codigo}/jogadores/${jogadorSessao.chave}`), {
+                nome: jogadorSessao.nome,
+                avatar: jogadorSessao.avatar,
+                erros: 0,
+                tempo: 0,
+                concluido: false
+            });
+
+            iniciarJogoComDados(tabInicial, solucaoAtual, mask, dif);
+            document.getElementById('display-sala-tag').textContent = `Sala: ${idSalaAtual}`;
+            document.getElementById('opponent-status-bar').style.display = 'flex';
+
+            escutarSalaFirebase();
+        }
+
+        // Compartilhar via WhatsApp
+        document.getElementById('btn-whatsapp').addEventListener('click', () => {
+            const linkJogo = `${window.location.origin}${window.location.pathname}?sala=${idSalaAtual}`;
+            const msg = encodeURIComponent(`🎮 Vamos disputar uma partida no Brain Sudoku 6x6?\n\nAcesse a sala por este link: ${linkJogo}\nChave da Sala: ${idSalaAtual}`);
+            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+        });
+
+        // Iniciar Estrutura Visual do Jogo
+        function iniciarJogoComDados(tabInicial, solucao, mask, dif) {
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            tabuleiroAtual = tabInicial.map(row => [...row]);
+            mascaraFixos = mask;
+            displayDificuldade.textContent = dif === 'facil' ? 'Fácil' : dif === 'medio' ? 'Médio' : 'Difícil';
+
             clearInterval(timerInterval);
             segundos = 0;
             erros = 0;
             displayErros.textContent = `${erros}/${maxErros}`;
             displayTempo.textContent = "00:00";
             celulaSelecionada = null;
-            infoInstrucao.textContent = "Preencha linhas, colunas e blocos 2x3 com os números 1 a 6.";
 
             timerInterval = setInterval(() => {
                 segundos++;
                 displayTempo.textContent = formatarTempo(segundos);
-            }, 1000);
-
-            solucaoAtual = gerarSudokuValido();
-            
-            const dif = selectDificuldade.value;
-            displayDificuldade.textContent = dif === 'facil' ? 'Fácil' : dif === 'medio' ? 'Médio' : 'Difícil';
-            
-            let removidos = dif === 'facil' ? 12 : dif === 'medio' ? 18 : 22;
-
-            tabuleiroAtual = solucaoAtual.map(row => [...row]);
-            mascaraFixos = Array(6).fill(0).map(() => Array(6).fill(true));
-
-            let celulasRemovidas = 0;
-            while (celulasRemovidas < removidos) {
-                let r = Math.floor(Math.random() * 6);
-                let c = Math.floor(Math.random() * 6);
-                if (mascaraFixos[r][c]) {
-                    mascaraFixos[r][c] = false;
-                    tabuleiroAtual[r][c] = 0;
-                    celulasRemovidas++;
+                
+                // Atualizar progresso próprio no Firebase
+                if (idSalaAtual) {
+                    update(ref(db, `salas_duelo/${idSalaAtual}/jogadores/${jogadorSessao.chave}`), {
+                        tempo: segundos,
+                        erros: erros
+                    });
                 }
-            }
+            }, 1000);
 
             renderizarTabuleiro();
         }
@@ -726,9 +752,7 @@
                     cell.dataset.col = c;
 
                     const val = tabuleiroAtual[r][c];
-                    if (val !== 0) {
-                        cell.textContent = val;
-                    }
+                    if (val !== 0) cell.textContent = val;
 
                     if (mascaraFixos[r][c]) {
                         cell.classList.add('fixed');
@@ -739,12 +763,49 @@
                             celulaSelecionada = cell;
                         });
                     }
-
                     sudokuBoard.appendChild(cell);
                 }
             }
         }
 
+        // Teclado Virtual e Físico
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.addEventListener('click', () => inserirNumero(parseInt(btn.dataset.num)));
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!celulaSelecionada) return;
+            if (e.key >= '1' && e.key <= '6') {
+                inserirNumero(parseInt(e.key));
+            } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                document.getElementById('btn-apagar').click();
+            }
+        });
+
+        function inserirNumero(val) {
+            if (!celulaSelecionada) return;
+            const r = parseInt(celulaSelecionada.dataset.row);
+            const c = parseInt(celulaSelecionada.dataset.col);
+            if (mascaraFixos[r][c]) return;
+
+            tabuleiroAtual[r][c] = val;
+            celulaSelecionada.textContent = val;
+            celulaSelecionada.classList.remove('error');
+            verificarPreenchimentoAutomatico();
+        }
+
+        document.getElementById('btn-apagar').addEventListener('click', () => {
+            if (!celulaSelecionada) return;
+            const r = parseInt(celulaSelecionada.dataset.row);
+            const c = parseInt(celulaSelecionada.dataset.col);
+            if (mascaraFixos[r][c]) return;
+
+            tabuleiroAtual[r][c] = 0;
+            celulaSelecionada.textContent = '';
+            celulaSelecionada.classList.remove('error');
+        });
+
+        // Verificação do Tabuleiro
         document.getElementById('btn-verificar').addEventListener('click', () => {
             let completo = true;
             let valido = true;
@@ -764,17 +825,20 @@
             if (!valido) {
                 erros++;
                 displayErros.textContent = `${erros}/${maxErros}`;
+                if (idSalaAtual) {
+                    update(ref(db, `salas_duelo/${idSalaAtual}/jogadores/${jogadorSessao.chave}`), { erros: erros });
+                }
                 if (erros >= maxErros) {
                     clearInterval(timerInterval);
-                    alert("❌ Limite de erros atingido! O jogo será reiniciado.");
-                    iniciarNovoJogo();
+                    alert("❌ Limite de erros atingido!");
+                    window.location.reload();
                 } else {
-                    infoInstrucao.textContent = "⚠️ Existem erros no tabuleiro assinalados a vermelho!";
+                    infoInstrucao.textContent = "⚠️ Existem erros no tabuleiro!";
                 }
             } else if (completo && valido) {
-                concluirJogoComSucesso();
+                concluirDueloSucesso();
             } else {
-                infoInstrucao.textContent = "👍 Os números verificados estão corretos até agora!";
+                infoInstrucao.textContent = "👍 Números corretos até agora!";
             }
         });
 
@@ -785,47 +849,49 @@
                     if (tabuleiroAtual[r][c] === 0) completo = false;
                 }
             }
-            if (completo) {
-                document.getElementById('btn-verificar').click();
-            }
+            if (completo) document.getElementById('btn-verificar').click();
         }
 
-        async function concluirJogoComSucesso() {
+        async function concluirDueloSucesso() {
             clearInterval(timerInterval);
-            infoInstrucao.textContent = "🎉 Parabéns! Sudoku concluído com sucesso!";
+            infoInstrucao.textContent = "🎉 Parabéns! Sudoku concluído!";
 
-            const bonusDificuldade = selectDificuldade.value === 'facil' ? 30 : selectDificuldade.value === 'medio' ? 60 : 100;
-            pontuacaoAcumulada += bonusDificuldade;
+            const bonus = document.getElementById('select-dificuldade-lobby').value === 'facil' ? 30 : 60;
+            pontuacaoAcumulada += bonus;
 
-            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
-            try {
-                await update(jogadorRef, {
-                    pontos: pontuacaoAcumulada,
-                    ultimaAtualizacao: new Date().toISOString()
+            if (idSalaAtual) {
+                await update(ref(db, `salas_duelo/${idSalaAtual}/jogadores/${jogadorSessao.chave}`), {
+                    concluido: true,
+                    tempo: segundos,
+                    pontos_ganhos: bonus
                 });
-
-                displayPontos.textContent = pontuacaoAcumulada;
-                alert(`🏆 Vitória! Ganhou ${bonusDificuldade} pontos.\nTempo total: ${formatarTempo(segundos)}`);
-                
-                enviarEmailResumo(jogadorSessao.nome, jogadorSessao.email, pontuacaoAcumulada, jogadorSessao.avatar);
-                iniciarNovoJogo();
-            } catch (error) {
-                console.error("Erro ao atualizar Firebase:", error);
             }
+
+            await update(ref(db, 'jogadores/' + jogadorSessao.chave), { pontos: pontuacaoAcumulada });
+            displayPontos.textContent = pontuacaoAcumulada;
+            alert(`🏆 Vitória! Ganhou ${bonus} pontos.\nTempo: ${formatarTempo(segundos)}`);
         }
 
-        function enviarEmailResumo(nome, email, pontos, avatar) {
-            const templateParams = {
-                to_name: nome,
-                to_email: email,
-                avatar: avatar,
-                pontos: pontos,
-                mensagem: `Completou com sucesso um Sudoku 6x6 no Brain Hub e acumulou ${pontos} pontos totais!`
-            };
+        // Monitorar Oponente em Tempo Real via Firebase
+        function escutarSalaFirebase() {
+            const salaRef = ref(db, 'salas_duelo/' + idSalaAtual + '/jogadores');
+            onValue(salaRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                const jogadores = snapshot.val();
 
-            emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
-                .then((response) => console.log('E-mail enviado!'))
-                .catch((error) => console.error('Erro ao enviar e-mail:', error));
+                for (let chaveId in jogadores) {
+                    if (chaveId !== jogadorSessao.chave) {
+                        const op = jogadores[chaveId];
+                        document.getElementById('op-nome').textContent = op.nome;
+                        document.getElementById('op-erros').textContent = `${op.erros}/3`;
+                        document.getElementById('op-tempo').textContent = formatarTempo(op.tempo || 0);
+
+                        if (op.concluido) {
+                            document.getElementById('op-nome').textContent = `${op.nome} (🏆 Venceu!)`;
+                        }
+                    }
+                }
+            });
         }
     </script>
 </body>
