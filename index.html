@@ -20,11 +20,9 @@
             --bg-gradient-2: #0b1020;
             --card-bg: rgba(30, 41, 59, 0.75);
             --card-border: rgba(148, 163, 184, 0.15);
-            --card-glow: rgba(99, 102, 241, 0.25);
 
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
-            --text-subtle: #64748b;
 
             --border-color: rgba(148, 163, 184, 0.18);
             --border-strong: rgba(148, 163, 184, 0.35);
@@ -32,14 +30,12 @@
 
             --btn-primary: #6366f1;
             --btn-primary-hover: #818cf8;
-            --btn-accent: #8b5cf6;
 
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 20px;
             --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
 
-            --t-fast: 0.15s ease;
             --t-base: 0.25s ease;
             --t-slow: 0.4s ease;
         }
@@ -50,11 +46,9 @@
             --bg-gradient-2: #f8fafc;
             --card-bg: rgba(255, 255, 255, 0.9);
             --card-border: rgba(15, 23, 42, 0.08);
-            --card-glow: rgba(99, 102, 241, 0.15);
 
             --text-color: #0f172a;
             --text-muted: #475569;
-            --text-subtle: #64748b;
 
             --border-color: rgba(15, 23, 42, 0.1);
             --border-strong: rgba(15, 23, 42, 0.25);
@@ -70,7 +64,7 @@
         html, body { height: 100%; }
 
         body {
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
             background-attachment: fixed;
             color: var(--text-color);
@@ -84,8 +78,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        body::before,
-        body::after {
+        body::before, body::after {
             content: "";
             position: fixed;
             border-radius: 50%;
@@ -98,7 +91,7 @@
         body::after { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px; right: -140px; }
 
         /* ==========================================================
-           3. CONTAINER PRINCIPAL E MODOS DE VISUALIZAÇÃO
+           3. CONTAINER PRINCIPAL E SIMULADOR
            ========================================================== */
         .container {
             position: relative;
@@ -109,29 +102,22 @@
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
             width: 100%;
-            max-width: 960px;
+            max-width: 1100px;
             border: 1px solid var(--card-border);
             transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.35s ease;
-            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
             max-height: 94vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* Classe acionada pelo botão para simular ecrã de telemóvel no PC */
-        .container.mobile-view {
+        /* Simulação manual de telemóvel no PC */
+        .container.mobile-simulation {
             max-width: 410px !important;
-            padding: 20px 14px !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 8px rgba(15, 23, 42, 0.3);
-        }
-
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0)    scale(1); }
+            padding: 18px 12px !important;
         }
 
         /* ==========================================================
-           4. CABEÇALHO DO HUB
+           4. CABEÇALHO
            ========================================================== */
         .hub-header {
             display: flex;
@@ -188,7 +174,7 @@
         }
 
         /* ==========================================================
-           5. SECÇÃO DE PERFIL / UTILIZADOR
+           5. SECÇÃO DE UTILIZADOR
            ========================================================== */
         .user-welcome {
             display: flex;
@@ -202,37 +188,18 @@
         }
         .user-welcome.hidden { display: none; }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
+        .user-info { display: flex; align-items: center; gap: 10px; }
         .user-avatar {
-            font-size: 20px;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(99, 102, 241, 0.15);
-            border-radius: 50%;
+            font-size: 20px; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(99, 102, 241, 0.15); border-radius: 50%;
             border: 1px solid rgba(99, 102, 241, 0.3);
         }
-
-        .user-details h3 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .user-details span {
-            font-size: 11.5px;
-            color: var(--text-muted);
-        }
+        .user-details h3 { margin: 0; font-size: 14px; font-weight: 700; }
+        .user-details span { font-size: 11.5px; color: var(--text-muted); }
 
         /* ==========================================================
-           6. GRELHA DE JOGOS E APLICAÇÕES (COM SCROLL INTERNO)
+           6. GRELHA DE JOGOS (COMPUTADOR = PAISAGEM / CELULAR = RETRATO)
            ========================================================== */
         .scrollable-content {
             overflow-y: auto;
@@ -240,18 +207,13 @@
             flex-grow: 1;
         }
         .scrollable-content::-webkit-scrollbar { width: 6px; }
-        .scrollable-content::-webkit-scrollbar-track { background: transparent; }
         .scrollable-content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
 
+        /* PADRÃO COMPUTADOR: Grelha com cartões em formato PAISAGEM (horizontal) */
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 14px;
-        }
-
-        /* Quando em modo telemóvel simulado, forçar coluna única */
-        .container.mobile-view .games-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
         }
 
         .game-card {
@@ -262,8 +224,9 @@
             text-decoration: none;
             color: var(--text-color);
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            flex-direction: row; /* Layout paisagem (ícone ao lado, texto estruturado) */
+            align-items: center;
+            gap: 16px;
             transition: transform var(--t-base), border-color var(--t-base), box-shadow var(--t-base);
             position: relative;
             overflow: hidden;
@@ -276,25 +239,33 @@
         }
 
         .card-icon {
-            font-size: 24px;
-            width: 42px;
-            height: 42px;
+            font-size: 30px;
+            min-width: 54px;
+            height: 54px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(99, 102, 241, 0.1);
             border-radius: var(--radius-sm);
             border: 1px solid rgba(99, 102, 241, 0.2);
+            flex-shrink: 0;
+        }
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
         }
 
         .card-content h3 {
             margin: 0;
-            font-size: 15px;
+            font-size: 15.5px;
             font-weight: 700;
         }
 
         .card-content p {
-            margin: 3px 0 0 0;
+            margin: 0;
             font-size: 12.5px;
             color: var(--text-muted);
             line-height: 1.35;
@@ -313,14 +284,39 @@
         }
 
         /* ==========================================================
-           7. MEDIA QUERIES NATURAIS (DISPOSITIVOS MÓVEIS REAIS)
+           7. MEDIA QUERIES E ROTAÇÃO EM DISPOSITIVOS MÓVEIS REAIS
+           (Permite retrato/paisagem livremente baseando-se na largura)
            ========================================================== */
-        @media (max-width: 640px) {
-            body { padding: 8px; align-items: flex-start; }
-            .container { padding: 16px; max-height: none; height: 100%; border-radius: var(--radius-md); }
+        @media (max-width: 768px), (orientation: portrait) and (max-width: 900px) {
+            body { padding: 6px; align-items: flex-start; }
+            .container { padding: 14px; max-height: none; height: 100%; border-radius: var(--radius-md); }
             .hub-header { flex-direction: column; align-items: flex-start; }
             .controls-group { width: 100%; justify-content: space-between; }
-            .games-grid { grid-template-columns: 1fr; }
+            
+            /* Em modo telemóvel / retrato real: Muda para coluna única vertical (retrato) */
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+            .game-card {
+                flex-direction: column; /* Retrato: ícone em cima, texto em baixo */
+                align-items: flex-start;
+                gap: 10px;
+                padding: 14px;
+            }
+            .card-icon {
+                min-width: 44px;
+                height: 44px;
+                font-size: 24px;
+            }
+        }
+
+        /* Forçar visualização retrato/paisagem via botão de simulação */
+        .container.mobile-simulation .games-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .container.mobile-simulation .game-card {
+            flex-direction: column !important;
+            align-items: flex-start !important;
         }
     </style>
 </head>
@@ -334,7 +330,7 @@
                 <p>Central de ferramentas interativas e lógica.</p>
             </div>
             <div class="controls-group">
-                <button id="view-toggle" class="btn-small" title="Alternar entre Computador e Telemóvel">📱 Telemóvel</button>
+                <button id="view-toggle" class="btn-small" title="Simular Telemóvel">📱 Telemóvel</button>
                 <button id="theme-toggle" class="btn-small">🌙 Tema</button>
             </div>
         </div>
@@ -357,9 +353,11 @@
                 <!-- 1. Brain Flow Master -->
                 <a href="brain-flow-master.html" class="game-card">
                     <div class="card-icon">🌊</div>
-                    <div class="card-content">
-                        <h3>Brain Flow Master</h3>
-                        <p>Versão avançada de conexões e fluxo lógico contínuo.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Brain Flow Master</h3>
+                            <p>Versão avançada de conexões e fluxo lógico contínuo.</p>
+                        </div>
                         <span class="badge">Master</span>
                     </div>
                 </a>
@@ -367,9 +365,11 @@
                 <!-- 2. Brain Link -->
                 <a href="brain-link.html" class="game-card">
                     <div class="card-icon">🔗</div>
-                    <div class="card-content">
-                        <h3>Brain Link</h3>
-                        <p>Conecte formas e números em sequência lógica crescente.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Brain Link</h3>
+                            <p>Conecte formas e números em sequência lógica crescente.</p>
+                        </div>
                         <span class="badge">Lógica</span>
                     </div>
                 </a>
@@ -377,9 +377,11 @@
                 <!-- 3. Brain Flow -->
                 <a href="brainflow.html" class="game-card">
                     <div class="card-icon">⚡</div>
-                    <div class="card-content">
-                        <h3>Brain Flow</h3>
-                        <p>Desafios clássicos de conexão de cores e caminhos mentais.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Brain Flow</h3>
+                            <p>Desafios clássicos de conexão de cores e caminhos mentais.</p>
+                        </div>
                         <span class="badge">Fluxo</span>
                     </div>
                 </a>
@@ -387,9 +389,11 @@
                 <!-- 4. Torres de Hanói -->
                 <a href="hanoi.html" class="game-card">
                     <div class="card-icon">🗼</div>
-                    <div class="card-content">
-                        <h3>Torres de Hanói</h3>
-                        <p>Quebra-cabeça clássico de raciocínio e movimentação de discos.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Torres de Hanói</h3>
+                            <p>Quebra-cabeça clássico de raciocínio e movimentação de discos.</p>
+                        </div>
                         <span class="badge">Estratégia</span>
                     </div>
                 </a>
@@ -397,9 +401,11 @@
                 <!-- 5. Memória 4x4 -->
                 <a href="memoria4x4.html" class="game-card">
                     <div class="card-icon">🧠</div>
-                    <div class="card-content">
-                        <h3>Memória 4x4</h3>
-                        <p>Teste a sua capacidade de memorização e agilidade visual.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Memória 4x4</h3>
+                            <p>Teste a sua capacidade de memorização e agilidade visual.</p>
+                        </div>
                         <span class="badge">Memória</span>
                     </div>
                 </a>
@@ -407,9 +413,11 @@
                 <!-- 6. Sudoku 6x6 -->
                 <a href="sudoku.html" class="game-card">
                     <div class="card-icon">🔢</div>
-                    <div class="card-content">
-                        <h3>Sudoku 6x6</h3>
-                        <p>Desafie a mente com o popular jogo de números adaptado.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Sudoku 6x6</h3>
+                            <p>Desafie a mente com o popular jogo de números adaptado.</p>
+                        </div>
                         <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Destaque</span>
                     </div>
                 </a>
@@ -417,9 +425,11 @@
                 <!-- 7. Sudoku 3x3 -->
                 <a href="sudoku3x3.html" class="game-card">
                     <div class="card-icon">🧩</div>
-                    <div class="card-content">
-                        <h3>Sudoku 3x3</h3>
-                        <p>Versão rápida e simplificada do clássico Sudoku.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Sudoku 3x3</h3>
+                            <p>Versão rápida e simplificada do clássico Sudoku.</p>
+                        </div>
                         <span class="badge">Iniciante</span>
                     </div>
                 </a>
@@ -427,9 +437,11 @@
                 <!-- 8. Tangram -->
                 <a href="tangram.html" class="game-card">
                     <div class="card-icon">📐</div>
-                    <div class="card-content">
-                        <h3>Tangram</h3>
-                        <p>Quebra-cabeça geométrico chinês de formas e encaixes.</p>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <h3>Tangram</h3>
+                            <p>Quebra-cabeça geométrico chinês de formas e encaixes.</p>
+                        </div>
                         <span class="badge">Geometria</span>
                     </div>
                 </a>
@@ -437,7 +449,7 @@
         </div>
     </div>
 
-    <!-- Script de Gestão de Tema, Sessão e Alternador de Vista -->
+    <!-- Script de Controlo -->
     <script>
         // Gestão de Tema
         const themeToggleBtn = document.getElementById('theme-toggle');
@@ -457,18 +469,18 @@
             themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
         }
 
-        // Botão de alternância de visualização (Computador <-> Telemóvel)
+        // Botão de simulação de telemóvel no PC
         const viewToggleBtn = document.getElementById('view-toggle');
         const mainContainer = document.getElementById('main-container');
         const savedView = localStorage.getItem('brain_hub_view') || 'desktop';
 
         if (savedView === 'mobile') {
-            mainContainer.classList.add('mobile-view');
+            mainContainer.classList.add('mobile-simulation');
             viewToggleBtn.textContent = '💻 Computador';
         }
 
         viewToggleBtn.addEventListener('click', () => {
-            const isMobile = mainContainer.classList.toggle('mobile-view');
+            const isMobile = mainContainer.classList.toggle('mobile-simulation');
             if (isMobile) {
                 viewToggleBtn.textContent = '💻 Computador';
                 localStorage.setItem('brain_hub_view', 'mobile');
@@ -478,7 +490,7 @@
             }
         });
 
-        // Gestão de Sessão do Jogador (se existente)
+        // Gestão de Sessão
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         const userWelcomeSection = document.getElementById('user-welcome-section');
         if (jogadorSessao) {
