@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Hub - Evangelho de Lucas: Quiz Teológico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.8);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --btn-primary: #6366f1;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+        }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+        }
+        .back-link {
+            color: var(--btn-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        h1 { font-size: 20px; margin: 0 0 6px 0; }
+        .question-text { font-size: 15px; font-weight: 600; margin: 16px 0; }
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            color: var(--text-color);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            text-align: left;
+            font-size: 13.5px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover { border-color: var(--btn-primary); background: rgba(99, 102, 241, 0.1); }
+        .option-btn.correct { background: rgba(74, 222, 128, 0.2); border-color: #4ade80; color: #4ade80; }
+        .option-btn.wrong { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; }
+        .quiz-footer { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Voltar ao Brain Hub</a>
+        <h1>❓ Evangelho de Lucas: Quiz Teológico</h1>
+        <div id="quiz-box">
+            <div class="question-text" id="question">A carregar pergunta...</div>
+            <div class="options-list" id="options"></div>
+            <div class="quiz-footer">
+                <span id="progress">Questão 1 de 4</span>
+                <span id="score">Pontuação: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questoes = [
+            {
+                pergunta: "Qual é uma das principais ênfases teológicas exclusivas do Evangelho de Lucas?",
+                opcoes: ["O cumprimento estrito das leis levíticas", "O universalismo da salvação e a misericórdia para com todos os povos", "A reconstrução física do Templo de Jerusalém", "A genealogia focada exclusivamente nos reis de Israel"],
+                correta: 1
+            },
+            {
+                pergunta: "Que grupo marginalizado da sociedade da época recebe destaque particular na narrativa de Lucas?",
+                opcoes: ["Apenas os sacerdotes do sinédrio", "Os comerciantes de tecidos finos", "As mulheres, os pobres, os cobradores de impostos e os samaritanos", "Os legionários romanos"],
+                correta: 2
+            },
+            {
+                pergunta: "Parábolas famosas como o 'Bom Samaritano' e o 'Filho Pródigo' encontram-se principalmente em qual evangelho?",
+                opcoes: ["Evangelho de Mateus", "Evangelho de Marcos", "Evangelho de Lucas", "Evangelho de João"],
+                correta: 2
+            },
+            {
+                pergunta: "Qual elemento espiritual e prático é fortemente registrado por Lucas ao longo da jornada de Jesus?",
+                opcoes: ["A prática constante da oração e a ação do Espírito Santo", "A realização de rituais secretos", "O isolamento total nas montanhas sem pregação", "A fundação de partidos políticos"],
+                correta: 0
+            }
+        ];
+
+        let atual = 0;
+        let pontos = 0;
+
+        const qElement = document.getElementById('question');
+        const oElement = document.getElementById('options');
+        const pElement = document.getElementById('progress');
+        const sElement = document.getElementById('score');
+
+        function carregarQuestao() {
+            if (atual >= questoes.length) {
+                document.getElementById('quiz-box').innerHTML = `
+                    <h2 style="color: var(--btn-primary); text-align: center;">Quiz Concluído! 🎉</h2>
+                    <p style="text-align: center; font-size: 15px;">Sua pontuação final foi: <strong>${pontos} de ${questoes.length * 25} pontos</strong></p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="index.html" style="background: var(--btn-primary); color: #fff; padding: 10px 20px; border-radius: 999px; text-decoration: none; font-weight: 600;">Voltar ao Hub</a>
+                    </div>
+                `;
+                return;
+            }
+
+            const q = questoes[atual];
+            qElement.textContent = q.pergunta;
+            oElement.innerHTML = '';
+            pElement.textContent = `Questão ${atual + 1} de ${questoes.length}`;
+
+            q.opcoes.forEach((opcao, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent =opcao;
+                btn.onclick = () => verificarResposta(index, btn);
+                oElement.appendChild(btn);
+            });
+        }
+
+        function verificarResposta(selecionada, btn) {
+            const correta = questoes[atual].correta;
+            const botoes = document.querySelectorAll('.option-btn');
+            botoes.forEach(b => b.disabled = true);
+
+            if (selecionada === correta) {
+                btn.classList.add('correct');
+                pontos += 25;
+                sElement.textContent = `Pontuação: ${pontos}`;
+            } else {
+                btn.classList.add('wrong');
+                botoes[correta].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                atual++;
+                carregarQuestao();
+            }, 1400);
+        }
+
+        carregarQuestao();
+    </script>
+</body>
+</html>
