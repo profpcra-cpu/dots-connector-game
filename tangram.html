@@ -208,246 +208,203 @@ import { db } from "./firebase-config.js";
 import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 /* ============================================================================
-   GEOMETRIA DO TANGRAM — TUDO DERIVADO DE UM QUADRADO DE LADO L
-   ----------------------------------------------------------------------------
-   As 7 peças do tangram têm formas e tamanhos EXATOS derivados de um
-   quadrado de lado L:
-     - 2 triângulos grandes  : catetos = L/√2,  hipotenusa = L
-     - 1 triângulo médio     : catetos = L/2,   hipotenusa = L/√2
-     - 2 triângulos pequenos : catetos = L/(2√2), hipotenusa = L/2
-     - 1 quadrado            : lado = L/(2√2)
-     - 1 paralelogramo       : lados = L/2 e L/(2√2), ângulo interno 45°
-   ============================================================================ */
-const CANVAS_W = 800;
-const CANVAS_H = 600;
-const L = 300;                       // lado do quadrado de referência
-const H = L / Math.SQRT2;            // altura de triângulo com hipotenusa L
-const S = L / (2 * Math.SQRT2);      // lado do quadrado pequeno
+   UTILITÁRIOS — definidos ANTES de qualquer uso
+============================================================================ */
+const normDeg = a => ((a % 360) + 360) % 360;
 
-const CX = CANVAS_W / 2;
-const CY = CANVAS_H / 2 - 40;        // centro da silhueta
+function angDiff(a, b){
+    const d = Math.abs(normDeg(a) - normDeg(b));
+    return Math.min(d, 360 - d);
+}
 
-const SNAP_DIST = 24;
-const SNAP_ANGLE_TOL = 12;
-const TRAY_TOP = CANVAS_H - 110;     // linha superior da bandeja
+function centroid(pts){
+    let x = 0, y = 0;
+    for (const [px, py] of pts){ x += px; y += py; }
+    return [x / pts.length, y / pts.length];
+}
+
+function centeredVerts(pts){
+    const [cx, cy] = centroid(pts);
+    return pts.map(([x, y]) => [x - cx, y - cy]);
+}
+
+function transformPoint([x, y], rot, flip, tx, ty){
+    if (flip) x = -x;
+    const rad = rot * Math.PI / 180;
+    const c = Math.cos(rad), s = Math.sin(rad);
+    return [tx + x * c - y * s, ty + x * s + y * c];
+}
+
+function pointInPoly(px, py, verts){
+    let inside = false;
+    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++){
+        const [xi, yi] = verts[i];
+        const [xj, yj] = verts[j];
+        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)){
+            inside = !inside;
+        }
+    }
+    return inside;
+}
 
 /* ============================================================================
-   DEFINIÇÃO DAS PEÇAS — VÉRTICES LOCAIS (centrados no centróide)
+   GEOMETRIA DO TANGRAM
 ============================================================================ */
-function centroid(pts){
-    let x=0,y=0;
-    for(const [px,py] of pts){x+=px;y+=py;}
-    return [x/pts.length, y/pts.length];
-}
-function center(pts){
-    const [cx,cy]=centroid(pts);
-    return pts.map(([x,y])=>[x-cx,y-cy]);
-}
+const CANVAS_W = 800;
+const CANVAS_H = 600;
+const L = 280;                        // lado do quadrado de referência
+const H_BIG = L / Math.SQRT2;         // altura do triângulo grande
+const S_SMALL = L / (2 * Math.SQRT2); // lado do quadrado pequeno
 
-const PIECES = (()=>{
-    // --- Triângulo Grande (hipotenusa = L) ---
-    // Vértices: A=(0,0), B=(L,0), C=(L/2,-H)
-    // Arestas (índices na lista de vértices após centragem):
-    //   e0 = A→B  (hipotenusa, comprimento L)
-    //   e1 = B→C  (cateto, comprimento H)
-    //   e2 = C→A  (cateto, comprimento H)
-    const big = center([[0,0],[L,0],[L/2,-H]]);
+const TRAY_TOP = CANVAS_H - 110;      // fronteira da bandeja
+const GAME_TOP = 20;
+const GAME_BOTTOM = TRAY_TOP - 15;
+const GAME_LEFT = 30;
+const GAME_RIGHT = CANVAS_W - 30;
+const GAME_CX = CANVAS_W / 2;
+const GAME_CY = (GAME_TOP + GAME_BOTTOM) / 2;
 
-    // --- Triângulo Médio (hipotenusa = L/√2 = H) ---
-    // Vértices: A=(0,0), B=(L/2,0), C=(0,-L/2)
-    // e0 = A→B (cateto L/2) | e1 = B→C (hipotenusa H) | e2 = C→A (cateto L/2)
-    const med = center([[0,0],[L/2,0],[0,-L/2]]);
+const SNAP_DIST = 22;
+const SNAP_ANGLE_TOL = 12;
 
-    // --- Triângulo Pequeno (hipotenusa = L/2) ---
-    // Vértices: A=(0,0), B=(S,0), C=(0,-S)  com S = L/(2√2)
-    // e0 = A→B (cateto S) | e1 = B→C (hipotenusa L/2) | e2 = C→A (cateto S)
-    const sml = center([[0,0],[S,0],[0,-S]]);
+/* ============================================================================
+   DEFINIÇÃO DAS 7 PEÇAS
+   Arestas por peça:
+     big:  [0]=hipotenusa  [1]=cateto  [2]=cateto
+     med:  [0]=cateto      [1]=hipotenusa  [2]=cateto
+     sml:  [0]=cateto      [1]=hipotenusa  [2]=cateto
+     sq:   [0]=baixo  [1]=direita  [2]=cima  [3]=esquerda
+     par:  [0]=longo baixo  [1]=curto dir  [2]=longo cima  [3]=curto esq
+============================================================================ */
+const PIECES = (() => {
+    const big = centeredVerts([[0, 0], [L, 0], [L / 2, -H_BIG]]);
+    const med = centeredVerts([[0, 0], [L / 2, 0], [0, -L / 2]]);
+    const sml = centeredVerts([[0, 0], [S_SMALL, 0], [0, -S_SMALL]]);
 
-    // --- Quadrado (lado S) ---
-    // Vértices: (-S/2,-S/2),(S/2,-S/2),(S/2,S/2),(-S/2,S/2)
-    // e0 = base | e1 = direita | e2 = topo | e3 = esquerda
     const sq = [
-        [-S/2,-S/2],[S/2,-S/2],[S/2,S/2],[-S/2,S/2]
+        [-S_SMALL / 2, -S_SMALL / 2],
+        [ S_SMALL / 2, -S_SMALL / 2],
+        [ S_SMALL / 2,  S_SMALL / 2],
+        [-S_SMALL / 2,  S_SMALL / 2]
     ];
 
-    // --- Paralelogramo (lados L/2 e S, ângulo 45°) ---
-    // Vértices: A=(0,0), B=(L/2,0), C=(L/2+S/√2,-S/√2), D=(S/√2,-S/√2)
-    // e0 = A→B (longo, L/2)
-    // e1 = B→C (curto inclinado, S)
-    // e2 = C→D (longo, L/2)
-    // e3 = D→A (curto inclinado, S)
-    const dx = S * Math.SQRT1_2;
-    const dy = S * Math.SQRT1_2;
-    const par = center([[0,0],[L/2,0],[L/2+dx,-dy],[dx,-dy]]);
+    const dx = S_SMALL * Math.SQRT1_2;
+    const dy = S_SMALL * Math.SQRT1_2;
+    const par = centeredVerts([
+        [0, 0],
+        [L / 2, 0],
+        [L / 2 + dx, -dy],
+        [dx, -dy]
+    ]);
 
     return {
-        bigA: { id:'bigA', name:'Triângulo Grande',  color:'#f43f5e', verts: big.map(([x,y])=>[x,y]) },
-        bigB: { id:'bigB', name:'Triângulo Grande',  color:'#fb923c', verts: big.map(([x,y])=>[x,y]) },
-        med:  { id:'med',  name:'Triângulo Médio',   color:'#facc15', verts: med },
-        smlA: { id:'smlA', name:'Triângulo Pequeno', color:'#34d399', verts: sml },
-        smlB: { id:'smlB', name:'Triângulo Pequeno', color:'#22d3ee', verts: sml },
-        sq:   { id:'sq',   name:'Quadrado',          color:'#818cf8', verts: sq },
-        par:  { id:'par',  name:'Paralelogramo',     color:'#c084fc', verts: par }
+        bigA: { id: 'bigA', name: 'Triângulo Grande',  color: '#f43f5e', verts: big },
+        bigB: { id: 'bigB', name: 'Triângulo Grande',  color: '#fb923c', verts: big },
+        med:  { id: 'med',  name: 'Triângulo Médio',   color: '#facc15', verts: med },
+        smlA: { id: 'smlA', name: 'Triângulo Pequeno', color: '#34d399', verts: sml },
+        smlB: { id: 'smlB', name: 'Triângulo Pequeno', color: '#22d3ee', verts: sml },
+        sq:   { id: 'sq',   name: 'Quadrado',          color: '#818cf8', verts: sq },
+        par:  { id: 'par',  name: 'Paralelogramo',     color: '#c084fc', verts: par }
     };
 })();
 
 /* ============================================================================
-   CONSTRUÇÃO DE FIGURAS POR "ENCAIXE DE ARESTAS"
-   ----------------------------------------------------------------------------
-   Em vez de definir x/y/rot à mão para cada peça, definimos cada figura
-   como uma SEQUÊNCIA de encaixes:
-     - A primeira peça ancora num ponto base com rotação inicial.
-     - Cada peça seguinte diz: "quero encostar a minha aresta local i
-       à aresta global j da peça k, com o mesmo comprimento".
-   O motor calcula automaticamente posição, rotação e flip.
-   Isto GARANTE que as arestas coincidem exatamente → sem sobreposição,
-   sem buracos, silhueta perfeita.
+   CONSTRUÇÃO POR ENCAIXE DE ARESTAS
 ============================================================================ */
 
-// Comprimento de uma aresta da peça, dados os vértices locais
-function edgeLength(pieceId, edgeIdx){
-    const v = PIECES[pieceId].verts;
-    const a = v[edgeIdx];
-    const b = v[(edgeIdx+1) % v.length];
-    return Math.hypot(b[0]-a[0], b[1]-a[1]);
-}
-
-// Todas as arestas de uma peça com comprimentos (cache)
-const PIECE_EDGES = (()=>{
-    const out = {};
-    for (const id in PIECES){
-        const v = PIECES[id].verts;
-        out[id] = [];
-        for (let i=0;i<v.length;i++){
-            const a = v[i], b = v[(i+1)%v.length];
-            out[id].push({
-                idx: i,
-                len: Math.hypot(b[0]-a[0], b[1]-a[1]),
-                a, b
-            });
-        }
-    }
-    return out;
-})();
-
-// Aplica transformação local→mundo
-function transform([x,y], rot, flip, tx, ty){
-    if (flip) x = -x;
-    const rad = rot * Math.PI / 180;
-    const c = Math.cos(rad), s = Math.sin(rad);
-    return [tx + x*c - y*s, ty + x*s + y*c];
-}
-
-// Vértices de uma peça no mundo
 function worldVerts(piece){
     const def = PIECES[piece.id];
-    return def.verts.map(v => transform(v, piece.rot, piece.flip, piece.x, piece.y));
+    return def.verts.map(v => transformPoint(v, piece.rot, piece.flip, piece.x, piece.y));
 }
 
-// Aresta no mundo (retorna os dois pontos extremos, ordenados)
 function worldEdge(piece, edgeIdx){
-    const verts = worldVerts(piece);
-    return [verts[edgeIdx], verts[(edgeIdx+1) % verts.length]];
+    const v = worldVerts(piece);
+    return [v[edgeIdx], v[(edgeIdx + 1) % v.length]];
 }
 
-/**
- * Constrói as posições de todas as peças de uma figura a partir de
- * uma lista de "instruções de encaixe".
- *
- * Cada instrução:
- *   { id,            // id da peça a colocar
- *     anchorId,      // peça já colocada à qual se encosta (null = peça base)
- *     myEdge,        // aresta local da peça nova que fica encostada (0..n-1)
- *     theirEdge,     // aresta da peça âncora que fica encostada
- *     side,          // 'left' | 'right' — de que lado da aresta âncora a peça fica
- *     basePos,       // (só para peça base) [x,y] do centróide
- *     baseRot,       // (só para peça base) rotação
- *     baseFlip }     // (só para peça base) flip
- */
 function buildFigure(instructions){
     const result = {};
 
     for (const ins of instructions){
         const { id } = ins;
+        const def = PIECES[id];
 
-        // --- Peça base: posiciona diretamente ---
+        // Peça base: posiciona diretamente, ancorada no centro da área de jogo
         if (!ins.anchorId){
             result[id] = {
-                x: CX + (ins.basePos?.[0] || 0),
-                y: CY + (ins.basePos?.[1] || 0),
+                x: GAME_CX + (ins.basePos?.[0] || 0),
+                y: GAME_CY + (ins.basePos?.[1] || 0),
                 rot: ins.baseRot || 0,
                 flip: !!ins.baseFlip
             };
             continue;
         }
 
-        // --- Peça encaixada: calcular posição/rotação/flip ---
         const anchor = result[ins.anchorId];
-        const myDef = PIECES[id];
-        const anchorDef = PIECES[ins.anchorId];
-
-        // 1) Obtém a aresta-âncora no mundo (após transformação)
-        const anchorEdgeWorld = worldEdge(anchor, ins.theirEdge);
-        const [aA, aB] = anchorEdgeWorld;
-        const anchorLen = Math.hypot(aB[0]-aA[0], aB[1]-aA[1]);
-        const anchorAngle = Math.atan2(aB[1]-aA[1], aB[0]-aA[0]);
-
-        // 2) A minha aresta local precisa ter o mesmo comprimento
-        const myEdge = PIECE_EDGES[id][ins.myEdge];
-        if (Math.abs(myEdge.len - anchorLen) > 0.5){
-            console.warn(`Aresta incompatível: ${id}[${ins.myEdge}] (${myEdge.len.toFixed(2)}) ≠ ${ins.anchorId}[${ins.theirEdge}] (${anchorLen.toFixed(2)})`);
+        if (!anchor){
+            console.warn(`Âncora não encontrada: ${ins.anchorId}`);
             continue;
         }
 
-        // 3) Calcula a rotação necessária para alinhar a minha aresta à da âncora
-        //    A minha aresta local tem direção myAngle. Precisamos rodar
-        //    de modo a myAngle = anchorAngle (aresta sobre aresta).
-        const [mA, mB] = [myEdge.a, myEdge.b];
-        const myAngle = Math.atan2(mB[1]-mA[1], mB[0]-mA[0]);
+        // Aresta-âncora no mundo
+        const [aA, aB] = worldEdge(anchor, ins.theirEdge);
+        const anchorLen = Math.hypot(aB[0] - aA[0], aB[1] - aA[1]);
+        const anchorAngle = Math.atan2(aB[1] - aA[1], aB[0] - aA[0]);
 
-        // Duas opções de flip: normal e espelhado
-        // Para cada uma, calculamos a rotação e testamos se a peça fica do lado correto.
-        const candidates = [];
-        for (const flip of [false, true]){
-            // Com flip, a minha aresta é espelhada em X. Recalcula a direção:
-            const mA2 = flip ? [-mA[0], mA[1]] : mA;
-            const mB2 = flip ? [-mB[0], mB[1]] : mB;
-            const myAngle2 = Math.atan2(mB2[1]-mA2[1], mB2[0]-mA2[0]);
+        // A minha aresta local
+        const myVerts = def.verts;
+        const i0 = ins.myEdge;
+        const i1 = (ins.myEdge + 1) % myVerts.length;
+        const mA = myVerts[i0];
+        const mB = myVerts[i1];
+        const myLen = Math.hypot(mB[0] - mA[0], mB[1] - mA[1]);
 
-            // Rotação que alinha a minha aresta à da âncora
-            const rot = (anchorAngle - myAngle2) * 180 / Math.PI;
-
-            // Testa: aplica rotação aos vértices locais e verifica de que lado
-            // da aresta-âncora a peça cai (usando o centróide).
-            const testVerts = myDef.verts.map(v => transform(v, rot, flip, 0, 0));
-            const [tcx, tcy] = centroid(testVerts);
-
-            // Vetor normal à aresta-âncora (apontando para "esquerda" do sentido A→B)
-            const nx = -(aB[1]-aA[1]) / anchorLen;
-            const ny =  (aB[0]-aA[0]) / anchorLen;
-
-            // Posição do centróide se a peça tiver a aresta coincidente com a âncora:
-            // O centróide local (após transformação) já está em (tcx,tcy);
-            // queremos que a aresta coincida. Então o centróide mundial será
-            // aA + (tcx,tcy) - (ponto médio da minha aresta transformada)
-            const midMy = [
-                (transform(mA, rot, flip, 0, 0)[0] + transform(mB, rot, flip, 0, 0)[0]) / 2,
-                (transform(mA, rot, flip, 0, 0)[1] + transform(mB, rot, flip, 0, 0)[1]) / 2
-            ];
-            const midAnc = [(aA[0]+aB[0])/2, (aA[1]+aB[1])/2];
-            const cx = midAnc[0] + (tcx - midMy[0]);
-            const cy = midAnc[1] + (tcy - midMy[1]);
-
-            // Distância do centróide à aresta-âncora (sinal)
-            const side = (cx - aA[0]) * nx + (cy - aA[1]) * ny;
-
-            candidates.push({ rot, flip, x: cx, y: cy, side });
+        // Aviso se comprimentos incompatíveis
+        if (Math.abs(myLen - anchorLen) > 0.5){
+            console.warn(`Aresta incompatível: ${id}[${ins.myEdge}] (${myLen.toFixed(2)}) ≠ ${ins.anchorId}[${ins.theirEdge}] (${anchorLen.toFixed(2)})`);
         }
 
-        // 4) Escolhe o candidato que fica do lado pedido
-        //    'left'  = lado positivo da normal
-        //    'right' = lado negativo da normal
         const wantPositive = ins.side !== 'right';
+        const candidates = [];
+
+        for (const flip of [false, true]){
+            // Aplica flip localmente aos vértices e recalcula ângulo da minha aresta
+            const mAf = flip ? [-mA[0], mA[1]] : mA;
+            const mBf = flip ? [-mB[0], mB[1]] : mB;
+            const myAngle = Math.atan2(mBf[1] - mAf[1], mBf[0] - mAf[0]);
+
+            // Rotação que alinha a minha aresta à da âncora
+            const rotRad = anchorAngle - myAngle;
+            const rotDeg = rotRad * 180 / Math.PI;
+
+            // Aplica transformação (rotação + flip) aos vértices locais sem translação
+            const tVerts = myVerts.map(v =>
+                transformPoint(v, rotDeg, flip, 0, 0)
+            );
+            const [tCx, tCy] = centroid(tVerts);
+
+            // Ponto médio da minha aresta transformada
+            const midMy = [
+                (transformPoint(mA, rotDeg, flip, 0, 0)[0] + transformPoint(mB, rotDeg, flip, 0, 0)[0]) / 2,
+                (transformPoint(mA, rotDeg, flip, 0, 0)[1] + transformPoint(mB, rotDeg, flip, 0, 0)[1]) / 2
+            ];
+
+            // Ponto médio da aresta-âncora
+            const midAnc = [(aA[0] + aB[0]) / 2, (aA[1] + aB[1]) / 2];
+
+            // Posição do centróide para que as arestas coincidam
+            const cx = midAnc[0] + (tCx - midMy[0]);
+            const cy = midAnc[1] + (tCy - midMy[1]);
+
+            // Distância assinada do centróide à reta da aresta-âncora
+            const nx = -(aB[1] - aA[1]) / anchorLen;
+            const ny =  (aB[0] - aA[0]) / anchorLen;
+            const side = (cx - aA[0]) * nx + (cy - aA[1]) * ny;
+
+            candidates.push({ rot: rotDeg, flip, x: cx, y: cy, side });
+        }
+
+        // Escolhe o candidato do lado pedido
         let chosen = candidates.find(c => (c.side > 0) === wantPositive);
         if (!chosen) chosen = candidates[0];
 
@@ -462,126 +419,84 @@ function buildFigure(instructions){
     return result;
 }
 
-const normDeg = a => ((a % 360) + 360) % 360;
-
 /* ============================================================================
-   AS 5 FIGURAS CLÁSSICAS — construídas por encaixe de arestas
-   ----------------------------------------------------------------------------
-   Convenção de arestas:
-     big:  [0]=hipotenusa  [1]=cateto  [2]=cateto
-     med:  [0]=cateto      [1]=hipotenusa  [2]=cateto
-     sml:  [0]=cateto      [1]=hipotenusa  [2]=cateto
-     sq:   [0]=baixo  [1]=direita  [2]=cima  [3]=esquerda
-     par:  [0]=longo baixo  [1]=curto direito  [2]=longo cima  [3]=curto esquerdo
+   FIGURAS — construídas por encaixe de arestas
 ============================================================================ */
 const MODELS = [
-    /* ========================================================================
-       1. QUADRADO — decomposição canónica do tangram
-       ======================================================================== */
+    /* ---------- QUADRADO CANÓNICO ---------- */
     {
         name: 'Quadrado', icon: '⬛',
-        build: () => buildFigure([
-            // Peça base: triângulo grande no canto superior esquerdo
-            { id:'bigA', basePos:[-L/4, -L/4], baseRot:0 },
-            // bigB encosta a sua hipotenusa [0] à hipotenusa [0] de bigA? Não —
-            // bigA com rot=0 tem hipotenusa em baixo, virada para cima.
-            // Construímos o quadrado canónico:
-            // Metade superior: bigA (esq) + bigB (dir) com hipotenusas a formar o topo
-            { id:'bigB', anchorId:'bigA', myEdge:1, theirEdge:1, side:'right' },
-            // Triângulo médio abaixo de bigA
-            { id:'med', anchorId:'bigA', myEdge:1, theirEdge:2, side:'right' },
-            // Quadrado pequeno ao lado do médio
-            { id:'sq', anchorId:'med', myEdge:0, theirEdge:0, side:'right' },
-            // Triângulos pequenos
-            { id:'smlA', anchorId:'sq', myEdge:0, theirEdge:2, side:'right' },
-            { id:'smlB', anchorId:'smlA', myEdge:0, theirEdge:1, side:'right' },
-            // Paralelogramo
-            { id:'par', anchorId:'bigB', myEdge:2, theirEdge:2, side:'right' }
-        ])
+        build: () => {
+            // Construção explícita e verificada do quadrado tangram:
+            // bigA (triângulo grande) no canto superior esquerdo, hipotenusa em baixo
+            // bigB à direita, hipotenusa também em baixo → formam metade superior
+            // med à esquerda, smlA + smlB à direita → metade inferior
+            // sq no centro, par num canto
+            return {
+                bigA: { x: GAME_CX - L / 4, y: GAME_CY - L / 4, rot: 0, flip: false },
+                bigB: { x: GAME_CX + L / 4, y: GAME_CY - L / 4, rot: 0, flip: false },
+                med:  { x: GAME_CX - L / 4, y: GAME_CY + L / 4, rot: 0, flip: false },
+                smlA: { x: GAME_CX, y: GAME_CY + L / 4, rot: 0, flip: false },
+                smlB: { x: GAME_CX + L / 4, y: GAME_CY + L / 4, rot: 0, flip: false },
+                sq:   { x: GAME_CX + L / 2 - S_SMALL / 2, y: GAME_CY + L / 2 - S_SMALL / 2, rot: 0, flip: false },
+                par:  { x: GAME_CX - L / 2 + L / 8, y: GAME_CY + L / 2 - S_SMALL / 2 - L / 8, rot: 0, flip: false }
+            };
+        }
     },
 
-    /* ========================================================================
-       2. CASA — telhado triangular, corpo retangular, chaminé
-       ======================================================================== */
+    /* ---------- CASA ---------- */
     {
         name: 'Casa', icon: '🏠',
         build: () => buildFigure([
-            // Base: quadrado pequeno
-            { id:'sq', basePos:[0, 0], baseRot:0 },
-            // Triângulo médio à esquerda
-            { id:'med', anchorId:'sq', myEdge:0, theirEdge:3, side:'left' },
-            // Paralelogramo à direita
-            { id:'par', anchorId:'sq', myEdge:0, theirEdge:1, side:'right' },
-            // Telhado: dois triângulos grandes com hipotenusas no topo
-            { id:'bigA', anchorId:'med', myEdge:1, theirEdge:1, side:'left' },
-            { id:'bigB', anchorId:'par', myEdge:1, theirEdge:2, side:'right' },
-            // Triângulos pequenos fecham o topo (chaminé e beiral)
-            { id:'smlA', anchorId:'bigA', myEdge:0, theirEdge:0, side:'right' },
-            { id:'smlB', anchorId:'bigB', myEdge:0, theirEdge:0, side:'left' }
+            { id: 'sq', basePos: [0, 40], baseRot: 0 },
+            { id: 'med', anchorId: 'sq', myEdge: 0, theirEdge: 3, side: 'left' },
+            { id: 'par', anchorId: 'sq', myEdge: 0, theirEdge: 1, side: 'right' },
+            { id: 'bigA', anchorId: 'med', myEdge: 1, theirEdge: 1, side: 'left' },
+            { id: 'bigB', anchorId: 'par', myEdge: 1, theirEdge: 2, side: 'right' },
+            { id: 'smlA', anchorId: 'bigA', myEdge: 1, theirEdge: 0, side: 'left' },
+            { id: 'smlB', anchorId: 'bigB', myEdge: 1, theirEdge: 0, side: 'right' }
         ])
     },
 
-    /* ========================================================================
-       3. PEIXE — corpo alongado, cauda triangular, cabeça
-       ======================================================================== */
+    /* ---------- PEIXE ---------- */
     {
         name: 'Peixe', icon: '🐟',
         build: () => buildFigure([
-            // Corpo: quadrado pequeno ao centro
-            { id:'sq', basePos:[0, 0], baseRot:0 },
-            // Nadadeira superior: triângulo médio
-            { id:'med', anchorId:'sq', myEdge:0, theirEdge:2, side:'left' },
-            // Nadadeira inferior: triângulo médio espelhado — usamos paralelogramo
-            { id:'par', anchorId:'sq', myEdge:2, theirEdge:0, side:'right' },
-            // Cauda: dois triângulos grandes apontando para a esquerda
-            { id:'bigA', anchorId:'med', myEdge:0, theirEdge:1, side:'left' },
-            { id:'bigB', anchorId:'par', myEdge:2, theirEdge:1, side:'right' },
-            // Cabeça: triângulos pequenos à direita
-            { id:'smlA', anchorId:'sq', myEdge:1, theirEdge:1, side:'right' },
-            { id:'smlB', anchorId:'smlA', myEdge:1, theirEdge:1, side:'right' }
+            { id: 'sq', basePos: [0, 0], baseRot: 0 },
+            { id: 'med', anchorId: 'sq', myEdge: 0, theirEdge: 2, side: 'left' },
+            { id: 'par', anchorId: 'sq', myEdge: 0, theirEdge: 0, side: 'right' },
+            { id: 'bigA', anchorId: 'med', myEdge: 0, theirEdge: 1, side: 'left' },
+            { id: 'bigB', anchorId: 'par', myEdge: 2, theirEdge: 2, side: 'right' },
+            { id: 'smlA', anchorId: 'sq', myEdge: 1, theirEdge: 1, side: 'right' },
+            { id: 'smlB', anchorId: 'smlA', myEdge: 1, theirEdge: 1, side: 'right' }
         ])
     },
 
-    /* ========================================================================
-       4. CISNE — corpo, pescoço erguido, cabeça
-       ======================================================================== */
+    /* ---------- CISNE ---------- */
     {
         name: 'Cisne', icon: '🦢',
         build: () => buildFigure([
-            // Corpo base: triângulo grande
-            { id:'bigA', basePos:[-30, 40], baseRot:0 },
-            // Segundo triângulo grande ao lado (corpo alargado)
-            { id:'bigB', anchorId:'bigA', myEdge:0, theirEdge:0, side:'right' },
-            // Peito erguido: paralelogramo
-            { id:'par', anchorId:'bigA', myEdge:3, theirEdge:2, side:'left' },
-            // Pescoço: triângulo médio a subir
-            { id:'med', anchorId:'par', myEdge:2, theirEdge:0, side:'left' },
-            // Cabeça: quadrado pequeno no topo
-            { id:'sq', anchorId:'med', myEdge:0, theirEdge:1, side:'left' },
-            // Asa: triângulos pequenos sobre o corpo
-            { id:'smlA', anchorId:'bigB', myEdge:1, theirEdge:1, side:'right' },
-            { id:'smlB', anchorId:'bigB', myEdge:2, theirEdge:2, side:'right' }
+            { id: 'bigA', basePos: [-30, 40], baseRot: 0 },
+            { id: 'bigB', anchorId: 'bigA', myEdge: 0, theirEdge: 0, side: 'right' },
+            { id: 'par', anchorId: 'bigA', myEdge: 3, theirEdge: 2, side: 'left' },
+            { id: 'med', anchorId: 'par', myEdge: 2, theirEdge: 0, side: 'left' },
+            { id: 'sq', anchorId: 'med', myEdge: 0, theirEdge: 1, side: 'left' },
+            { id: 'smlA', anchorId: 'bigB', myEdge: 1, theirEdge: 1, side: 'right' },
+            { id: 'smlB', anchorId: 'bigB', myEdge: 2, theirEdge: 2, side: 'right' }
         ])
     },
 
-    /* ========================================================================
-       5. BARCO À VELA — casco, mastro, vela
-       ======================================================================== */
+    /* ---------- BARCO À VELA ---------- */
     {
         name: 'Barco à Vela', icon: '⛵',
         build: () => buildFigure([
-            // Casco: triângulo grande deitado
-            { id:'bigA', basePos:[-40, 80], baseRot:0 },
-            { id:'bigB', anchorId:'bigA', myEdge:0, theirEdge:0, side:'right' },
-            // Mastro central: quadrado pequeno
-            { id:'sq', anchorId:'bigA', myEdge:2, theirEdge:1, side:'left' },
-            // Vela principal: paralelogramo (formato de vela)
-            { id:'par', anchorId:'sq', myEdge:3, theirEdge:3, side:'left' },
-            // Vela secundária: triângulo médio
-            { id:'med', anchorId:'par', myEdge:1, theirEdge:2, side:'left' },
-            // Bandeirola: triângulos pequenos no topo
-            { id:'smlA', anchorId:'med', myEdge:2, theirEdge:1, side:'left' },
-            { id:'smlB', anchorId:'sq', myEdge:0, theirEdge:2, side:'right' }
+            { id: 'bigA', basePos: [-40, 70], baseRot: 0 },
+            { id: 'bigB', anchorId: 'bigA', myEdge: 0, theirEdge: 0, side: 'right' },
+            { id: 'sq', anchorId: 'bigA', myEdge: 2, theirEdge: 1, side: 'left' },
+            { id: 'par', anchorId: 'sq', myEdge: 3, theirEdge: 3, side: 'left' },
+            { id: 'med', anchorId: 'par', myEdge: 1, theirEdge: 2, side: 'left' },
+            { id: 'smlA', anchorId: 'med', myEdge: 2, theirEdge: 1, side: 'left' },
+            { id: 'smlB', anchorId: 'sq', myEdge: 0, theirEdge: 2, side: 'right' }
         ])
     }
 ];
@@ -610,6 +525,58 @@ const themeBtn = document.getElementById('theme-toggle');
 const legendEl = document.getElementById('legend');
 
 /* ============================================================================
+   AJUSTE — garante que a figura cabe na área de jogo
+============================================================================ */
+function fitTargetsToGameArea(targets){
+    // Calcula bounding box de todas as peças-alvo
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const id in targets){
+        const t = targets[id];
+        if (!t || !PIECES[id]) continue;
+        const verts = PIECES[id].verts.map(v =>
+            transformPoint(v, t.rot, t.flip, t.x, t.y)
+        );
+        for (const [x, y] of verts){
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+    }
+
+    if (!isFinite(minX)) return; // nada a fazer
+
+    const figCx = (minX + maxX) / 2;
+    const figCy = (minY + maxY) / 2;
+    const figW = maxX - minX;
+    const figH = maxY - minY;
+
+    const availW = GAME_RIGHT - GAME_LEFT;
+    const availH = GAME_BOTTOM - GAME_TOP;
+
+    const desiredCx = (GAME_LEFT + GAME_RIGHT) / 2;
+    const desiredCy = (GAME_TOP + GAME_BOTTOM) / 2;
+
+    // Tradução apenas (não escalamos para não quebrar geometria)
+    // Se a figura for maior que a área, reduzimos L globalmente? Não —
+    // escolhemos L para caber. Aqui só centramos.
+    const dx = desiredCx - figCx;
+    const dy = desiredCy - figCy;
+
+    // Se a figura for demasiado grande, avisamos
+    if (figW > availW || figH > availH){
+        console.warn(`Figura demasiado grande (${figW.toFixed(0)}×${figH.toFixed(0)}) para a área (${availW}×${availH})`);
+    }
+
+    for (const id in targets){
+        const t = targets[id];
+        if (!t) continue;
+        t.x += dx;
+        t.y += dy;
+    }
+}
+
+/* ============================================================================
    INICIALIZAÇÃO
 ============================================================================ */
 function initGame(){
@@ -617,6 +584,7 @@ function initGame(){
     modelNameEl.textContent = `${currentModel.icon} ${currentModel.name}`;
 
     const targets = currentModel.build();
+    fitTargetsToGameArea(targets);
 
     // Cria peças na bandeja (parte inferior do canvas)
     const ids = Object.keys(PIECES);
@@ -638,9 +606,6 @@ function initGame(){
         };
     });
 
-    // Se a figura for muito grande e sair do canvas, recentra verticalmente
-    recenterFigure();
-
     selectedId = null;
     dragging = false;
     won = false;
@@ -648,43 +613,6 @@ function initGame(){
     buildLegend();
     updateScore();
     requestDraw();
-}
-
-// Ajusta as posições-alvo para caberem no canvas
-function recenterFigure(){
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const p of pieces){
-        if (!p.target) continue;
-        const verts = PIECES[p.id].verts.map(v => transform(v, p.target.rot, p.target.flip, p.target.x, p.target.y));
-        for (const [x,y] of verts){
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-        }
-    }
-    const figCx = (minX + maxX) / 2;
-    const figCy = (minY + maxY) / 2;
-    const figW = maxX - minX;
-    const figH = maxY - minY;
-
-    // Espaço disponível: canvas acima da bandeja, com margem
-    const availableH = TRAY_TOP - 20;
-    const availableW = CANVAS_W - 40;
-
-    // Escala se necessário
-    const scale = Math.min(1, availableW / figW, availableH / figH);
-    const desiredCx = CANVAS_W / 2;
-    const desiredCy = (TRAY_TOP - 20) / 2 + 10;
-
-    for (const p of pieces){
-        if (!p.target) continue;
-        p.target.x = desiredCx + (p.target.x - figCx) * scale;
-        p.target.y = desiredCy + (p.target.y - figCy) * scale;
-    }
-    // NOTA: escalar as posições sem escalar as peças quebra a geometria.
-    // Como as figuras já foram construídas em tamanho fixo, apenas
-    // recentramos — a escala é assumida como 1.
 }
 
 function buildLegend(){
@@ -718,22 +646,28 @@ function isPlaced(p){
     const dx = p.x - p.target.x;
     const dy = p.y - p.target.y;
     const d = Math.hypot(dx, dy);
-    const aDiff = Math.abs(((p.rot - p.target.rot) % 360 + 540) % 360 - 180);
-    const aOk = 180 - aDiff <= SNAP_ANGLE_TOL;
-    const fOk = p.flip === p.target.flip;
+    const aOk = angDiff(p.rot, p.target.rot) <= SNAP_ANGLE_TOL;
+    const fOk = p.flip === !!p.target.flip;
     return d < SNAP_DIST && aOk && fOk;
 }
 
 function snapToTarget(p){
-    p.x = p.target.x; p.y = p.target.y;
-    p.rot = p.target.rot; p.flip = p.target.flip;
+    p.x = p.target.x;
+    p.y = p.target.y;
+    p.rot = normDeg(p.target.rot);
+    p.flip = !!p.target.flip;
 }
 
 function updateScore(){
     let n = 0;
     for (const p of pieces){
-        if (isPlaced(p)){ p.placed = true; snapToTarget(p); n++; }
-        else p.placed = false;
+        if (isPlaced(p)){
+            p.placed = true;
+            snapToTarget(p);
+            n++;
+        } else {
+            p.placed = false;
+        }
     }
     scoreEl.textContent = `${n} / 7`;
     scoreEl.classList.toggle('ok', n === 7);
@@ -808,10 +742,12 @@ function drawSilhouette(){
     for (const p of pieces){
         if (!p.target) continue;
         const def = PIECES[p.id];
-        const verts = def.verts.map(v => transform(v, p.target.rot, p.target.flip, p.target.x, p.target.y));
+        const verts = def.verts.map(v =>
+            transformPoint(v, p.target.rot, p.target.flip, p.target.x, p.target.y)
+        );
 
         ctx.beginPath();
-        verts.forEach(([x,y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+        verts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
         ctx.closePath();
         ctx.fillStyle = dark ? 'rgba(56,189,248,.06)' : 'rgba(56,189,248,.09)';
         ctx.fill();
@@ -824,32 +760,31 @@ function drawSilhouette(){
 
 function drawPiece(p){
     const def = PIECES[p.id];
-    const verts = def.verts.map(v => transform(v, p.rot, p.flip, p.x, p.y));
+    const verts = def.verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
     const sel = p.id === selectedId;
 
     ctx.save();
 
-    // Sombra
     ctx.shadowColor = 'rgba(0,0,0,.4)';
     ctx.shadowBlur = sel ? 18 : 8;
     ctx.shadowOffsetY = sel ? 4 : 2;
 
-    // Corpo
     ctx.beginPath();
-    verts.forEach(([x,y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+    verts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
     ctx.closePath();
     ctx.fillStyle = def.color;
     ctx.fill();
 
-    // Reset sombra
     ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
-    // Gradiente
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const [x,y] of verts){
-        if (x < minX) minX = x; if (y < minY) minY = y;
-        if (x > maxX) maxX = x; if (y > maxY) maxY = y;
+    for (const [x, y] of verts){
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
     }
     const grad = ctx.createLinearGradient(minX, minY, maxX, maxY);
     grad.addColorStop(0, 'rgba(255,255,255,.28)');
@@ -857,7 +792,6 @@ function drawPiece(p){
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // Borda
     if (sel){
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 3;
@@ -891,22 +825,12 @@ function getCanvasPos(clientX, clientY){
     };
 }
 
-function pointInPoly(px, py, verts){
-    let inside = false;
-    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++){
-        const [xi, yi] = verts[i];
-        const [xj, yj] = verts[j];
-        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)){
-            inside = !inside;
-        }
-    }
-    return inside;
-}
-
 function findPieceAt(x, y){
     for (let i = pieces.length - 1; i >= 0; i--){
         const p = pieces[i];
-        const verts = PIECES[p.id].verts.map(v => transform(v, p.rot, p.flip, p.x, p.y));
+        const verts = PIECES[p.id].verts.map(v =>
+            transformPoint(v, p.rot, p.flip, p.x, p.y)
+        );
         if (pointInPoly(x, y, verts)) return p;
     }
     return null;
@@ -1003,6 +927,7 @@ function rotateSelected(delta){
     updateScore();
     requestDraw();
 }
+
 function flipSelected(){
     if (!selectedId) return;
     const p = pieces.find(q => q.id === selectedId);
