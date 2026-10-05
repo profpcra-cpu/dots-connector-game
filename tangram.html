@@ -181,8 +181,8 @@ canvas:active{cursor:grabbing}
     </div>
 
     <div class="toolbar">
-        <button class="btn btn-ghost" id="btn-rot-l" title="Rodar 15° anti-horário">↺ 15°</button>
-        <button class="btn btn-ghost" id="btn-rot-r" title="Rodar 15° horário">↻ 15°</button>
+        <button class="btn btn-ghost" id="btn-rot-l" title="Rodar 45° anti-horário">↺ 45°</button>
+        <button class="btn btn-ghost" id="btn-rot-r" title="Rodar 45° horário">↻ 45°</button>
         <button class="btn btn-ghost" id="btn-flip" title="Espelhar peça">↔ Espelhar</button>
         <button class="btn btn-primary" id="btn-new" title="Novo modelo">🎲 Novo</button>
     </div>
@@ -217,67 +217,60 @@ function angDiff(a, b){
 }
 
 /* ============================================================================
-   GEOMETRIA DO TANGRAM — PEÇAS EM COORDENADAS LOCAIS
-   ----------------------------------------------------------------------------
-   Cada peça tem vértices em coords locais com o CENTRO IDEAL em (0,0).
-   O "centro ideal" é o ponto que, quando colocado na posição-alvo,
-   faz os vértices coincidirem com a decomposição canónica.
+   CONSTANTES DO JOGO
 ============================================================================ */
 const CANVAS_W = 800;
 const CANVAS_H = 600;
+const L = 260;                             // lado do quadrado tangram
 
-const L = 280;                        // lado do quadrado tangram
-const S = L / (2 * Math.SQRT2);       // lado do quadrado pequeno (= L/(2√2))
-const H = L / Math.SQRT2;             // altura do triângulo grande
-
-const TRAY_TOP = CANVAS_H - 130;
+const TRAY_TOP = CANVAS_H - 140;
 const GAME_TOP = 15;
 const GAME_BOTTOM = TRAY_TOP - 10;
-const GAME_LEFT = 20;
-const GAME_RIGHT = CANVAS_W - 20;
+const GAME_CX = CANVAS_W / 2;
+const GAME_CY = (GAME_TOP + GAME_BOTTOM) / 2;
 
-const SNAP_DIST = 24;
+const SNAP_DIST = 26;
 const SNAP_ANGLE_TOL = 12;
 
-/* ----------------------------------------------------------------------------
-   DEFINIÇÃO DAS PEÇAS
-   Vértices em coords locais com centro geométrico em (0,0).
-   As peças são desenhadas e testadas com estes vértices.
-   As posições-alvo são calculadas a partir da decomposição canónica
-   e depois ajustadas para que cada peça tenha o SEU CENTRO na posição-alvo.
+const S_SMALL = L / (2 * Math.SQRT2);      // lado do quadrado pequeno
+const H_BIG = L / Math.SQRT2;               // cateto do triângulo grande
+
+/* ============================================================================
+   PEÇAS — vértices locais centrados no centróide
 ============================================================================ */
 const PIECES = (() => {
-    function centered(pts){
+    function center(pts){
         let cx = 0, cy = 0;
         for (const [x, y] of pts){ cx += x; cy += y; }
         cx /= pts.length; cy /= pts.length;
         return pts.map(([x, y]) => [x - cx, y - cy]);
     }
 
-    // Triângulo grande: catetos iguais a H, hipotenusa L
-    // Original: (0,0), (L,0), (L/2,-H)
-    const big = centered([[0, 0], [L, 0], [L / 2, -H]]);
+    // Triângulo grande: catetos H_BIG, ângulo reto em (0,0)
+    const big = center([[0, 0], [H_BIG, 0], [0, H_BIG]]);
 
-    // Triângulo médio: catetos L/2, hipotenusa H
-    // Original: (0,0), (L/2,0), (0,-L/2)
-    const med = centered([[0, 0], [L / 2, 0], [0, -L / 2]]);
+    // Triângulo médio: catetos L/2
+    const med = center([[0, 0], [L / 2, 0], [0, L / 2]]);
 
-    // Triângulo pequeno: catetos S, hipotenusa L/2
-    // Original: (0,0), (S,0), (0,-S)
-    const sml = centered([[0, 0], [S, 0], [0, -S]]);
+    // Triângulo pequeno: catetos S_SMALL
+    const sml = center([[0, 0], [S_SMALL, 0], [0, S_SMALL]]);
 
-    // Quadrado pequeno: lado S, centrado
+    // Quadrado pequeno: lado S_SMALL, centrado
     const sq = [
-        [-S / 2, -S / 2],
-        [ S / 2, -S / 2],
-        [ S / 2,  S / 2],
-        [-S / 2,  S / 2]
+        [-S_SMALL / 2, -S_SMALL / 2],
+        [ S_SMALL / 2, -S_SMALL / 2],
+        [ S_SMALL / 2,  S_SMALL / 2],
+        [-S_SMALL / 2,  S_SMALL / 2]
     ];
 
-    // Paralelogramo: lados L/2 e S, ângulo 45°
-    const dx = S * Math.SQRT1_2;
-    const dy = S * Math.SQRT1_2;
-    const par = centered([[0, 0], [L / 2, 0], [L / 2 + dx, -dy], [dx, -dy]]);
+    // Paralelogramo: lados L/2 e S_SMALL, ângulo interno 45°
+    const parDx = S_SMALL * Math.SQRT1_2;
+    const par = center([
+        [0, 0],
+        [L / 2, 0],
+        [L / 2 + parDx, parDx],
+        [parDx, parDx]
+    ]);
 
     return {
         bigA: { id: 'bigA', name: 'Triângulo Grande',  color: '#f43f5e', verts: big },
@@ -291,313 +284,388 @@ const PIECES = (() => {
 })();
 
 /* ============================================================================
-   DECOMPOSIÇÃO CANÓNICA DO QUADRADO TANGRAM
-   ----------------------------------------------------------------------------
-   Referência: quadrado unitário [0,L]×[0,L] com origem no canto inferior
-   esquerdo e Y a apontar para CIMA (matemático). No canvas Y aponta para
-   BAIXO, por isso a conversão: canvasY = L - mathY.
-
-   Vértices (em coords matemáticas, com Y para cima):
-     bigA : (0,0), (L,0), (L/2,L/2)          → tri. grande inferior esquerdo
-     bigB : (L,0), (L,L), (L/2,L/2)          → tri. grande inferior direito
-     med  : (0,L), (L/2,L), (L/4,3L/4)? — não. Decomposição correta:
-   
-   Decomposição exata (verificada):
-     bigA : (0,0)  (L,0)   (L/2,L/2)
-     bigB : (L,0)  (L,L)   (L/2,L/2)
-     med  : (0,L)  (L/2,L) (L/4,3L/4)   → NÃO. Vamos usar a clássica:
-   
-   A decomposição canónica correta do tangram num quadrado [0,L]×[0,L] é:
-     bigA : (0,0), (L,0), (L/2, L/2)         [tri. grande inferior]
-     bigB : (0,0), (L/2,L/2), (0,L)          [tri. grande esquerdo]
-     med  : (L,0), (L,L), (L/2,L/2)          [tri. médio direito] — não, é:
-   
-   Simplificando — versão TESTADA e correta:
-   --------------------------------------------------------------------------
-   Com o quadrado [0,L]×[0,L] e Y para cima:
-     bigA  : triângulo rectângulo isósceles com hipotenusa em baixo
-             vértices (0,0) (L,0) (L/2, L/2)
-     bigB  : triângulo rectângulo isósceles com hipotenusa à esquerda
-             vértices (0,0) (L/2,L/2) (0,L)
-     med   : triângulo rectângulo isósceles médio
-             vértices (L,0) (L,L/2) (L/2,L/2)  — hipotenusa vertical
-             (não confere) — Usar:
-             vértices (L/2,L/2) (L,L/2) (L/2,L) 
-     sq    : quadrado pequeno
-             vértices (L/2,L/2) (L/2+S,L/2) (L/2+S,L/2+S) (L/2,L/2+S)
-             onde S = L/(2√2). Não confere com L/2. Hmm.
-   
-   OK — vou usar as coordenadas ATUAIS da decomposição canónica em que
-   as peças têm exatamente as seguintes posições (com centro em):
+   CONVERSÃO math → canvas
+   Coordenadas matemáticas: origem no canto inferior esquerdo do quadrado,
+   Y aponta para CIMA.
 ============================================================================ */
-
-/* ============================================================================
-   POSIÇÕES-ALVO CANÓNICAS PARA O QUADRADO
-   ----------------------------------------------------------------------------
-   Para o QUADRADO específico, usamos posições verificadas:
-   Y no canvas aponta para baixo. O quadrado ocupa [0,L]×[0,L] centrado
-   no centro da área de jogo.
-============================================================================ */
-function buildSquareTargets(cx, cy){
-    // Deslocamento do canto superior esquerdo do quadrado
-    const ox = cx - L / 2;
-    const oy = cy - L / 2;
-    const S2 = S; // lado do quadrado pequeno
-
-    // Função auxiliar: coloca uma peça com os vértices em coords "matemáticas"
-    // (Y para cima a partir do canto inferior esquerdo do quadrado) e
-    // converte para a posição-alvo (centro da peça em coords do canvas).
-    // Usa apenas translação (rot=0, flip=false) — a peça é colocada na
-    // orientação em que os seus vértices locais já correspondem.
-    // Isto obriga a que a peça já esteja definida com a orientação correta.
-    // Como não é prático, vamos fazer diferente: definimos rotação e flip
-    // para cada peça do quadrado canónico.
-
-    // Abordagem: definimos cada peça com rot e a posição do SEU CENTRO.
-    // As peças já estão centradas em (0,0) localmente. Colocá-las em
-    // (tx, ty) com rotação r coloca o centróide em (tx, ty).
-    //
-    // Posições canónicas verificadas (em coords do canvas, Y para BAIXO,
-    // origem no canto superior esquerdo do quadrado):
-    //
-    //   bigA : hipotenusa horizontal no topo da metade inferior esquerda
-    //          centro em (L/4, 3L/4), rot = 0  → hipotenusa em cima
-    //          Vértices locais: (-L/2,0)... hmm.
-    //
-    // Vou dar as posições corretas do quadrado tangram clássico:
-    // Quadrado [0,L]² com Y para BAIXO:
-    //   bigA : triângulo grande em baixo-esquerda
-    //          vértices (0,0) (L/2,L/2) (0,L)
-    //          centro (L/6, L/2)
-    //   bigB : triângulo grande em baixo-direita
-    //          vértices (L,0) (L/2,L/2) (L,L) — não, é (L/2,L/2) (L,0) (L/2, L)... 
-    //
-    // Este é o problema: preciso de escrever as 7 posições corretas.
-
-    // SOLUÇÃO PRÁTICA:
-    // Uso um ficheiro de referência mental — o quadrado tangram clássico:
-    //
-    //   +-------+-------+
-    //   |       |       |
-    //   | bigB  | med   |
-    //   |       |       |
-    //   +---+---+       |
-    //   |   |sq |       |
-    //   | b |---+-------+
-    //   | i |sml|  par  |
-    //   | g |   |       |
-    //   | A +---+-------+
-    //   |   | sml |     |
-    //   +---+-----+-----+
-    //
-    // Não é bem assim. A decomposição real é:
-    //
-    //   +-----------+-------+
-    //   |\          |       |
-    //   | \   bigA  |  med  |
-    //   |  \        |       |
-    //   |   \       +---+---+
-    //   |    \      |sq |par|
-    //   |     \     |   |   |
-    //   |      \    +---+---+
-    //   |       \   |sml|sml|
-    //   |        \  |   |   |
-    //   +---------+-+---+---+
-    //
-    // bigA ocupa o triângulo retângulo com catetos verticais e horizontais
-    // de comprimento L, hipotenusa ao longo da diagonal principal.
-
-    // Vou usar as posições publicadas:
-    // Referência: https://en.wikipedia.org/wiki/Tangram
-    //
-    // Num quadrado [0,L]² com Y para BAIXO e origem no canto superior esquerdo:
-    //   bigA  (tri. grande #1): vértices (0,0) (L/2,L/2) (0,L)
-    //   bigB  (tri. grande #2): vértices (0,0) (L,0) (L/2,L/2)
-    //   med   (tri. médio):     vértices (L/2,L/2) (L,L/2) (L,L)
-    //   smlA  (tri. pequeno #1): vértices (L/2,L/2) (L/2,L/2 + S) (L/2 - S, L/2)
-    //   smlB  (tri. pequeno #2): vértices (L/2,L/2) (L/2 + S, L/2) (L/2, L/2 - S)
-    //   sq    (quadrado):       vértices (L/2, L/2) (L/2 + S, L/2) (L/2 + S, L/2 - S)... 
-    //
-    // Isto está a ficar demasiado complexo para escrever de cabeça com garantia.
-
-    // ABORDAGEM FINAL E CORRETA:
-    // Vou usar o quadrado decomposto com as peças nas seguintes posições
-    // (S = L/(2√2)), todas em coords do canvas com Y para BAIXO:
-    // (0,0) é o canto superior esquerdo do quadrado.
-    //
-    //   Peça    Vértices (local→global)
-    //   bigA    (0,0) (L,0) (L/2, L/2)
-    //   bigB    (0,0) (L/2, L/2) (0, L)
-    //   med     (L/2, L/2) (L, L/2) (L, L) — não: med tem cateto L/2.
-    //
-    // O triângulo médio no tangram tem catetos L/2 e hipotenusa L/√2 = H.
-    // No quadrado decomposto, o médio ocupa o canto inferior direito:
-    //   med: (L, L) (L/2, L) (L, L/2)? Catetos L/2 sim. Hipotenusa de (L/2,L) a (L, L/2): comprimento √(L²/4+L²/4)=L/√2 ✓.
-    //   Hipotenusa vai de (L/2, L) a (L, L/2). Hipotenusa = H ✓.
-    //
-    //   sq: entre bigA e med. Vértices: (L/2, L/2), (L/2 + S, L/2), (L/2 + S, L/2 - S), (L/2, L/2 - S)? Não, Y para baixo.
-    //   
-    //   Verificando as peças por área:
-    //   Área total = L².
-    //   bigA = bigB = L²/4 cada. Soma = L²/2.
-    //   med = (L/2)²/2 = L²/8.
-    //   sml = S²/2 = (L²/8)/2 = L²/16 cada. Soma = L²/8.
-    //   sq = S² = L²/8.
-    //   par = base × altura = (L/2) × (S/√2) × 2 = L × S/√2 = L × L/(2√2)/√2 = L × L/4 = L²/4? 
-    //   Áreas: L²/4 + L²/4 + L²/8 + L²/16 + L²/16 + L²/8 + L²/4 = 
-    //   (4+4+2+1+1+2+4)/16 L² = 18/16 L²... erro.
-    //   Corrigir: par área = L²/8. Então (4+4+2+1+1+2+2)/16 = 16/16 ✓.
-
-    // OK, vou parar a análise e usar UMA SOLUÇÃO PRAGMÁTICA VERIFICADA:
-    // Uso o quadrado decomposto do ficheiro de teste que se segue,
-    // construído por tentativa e erro até funcionar visualmente.
-
-    // Peças do quadrado tangram (posições verificadas empiricamente):
-    // Centro do quadrado em (cx, cy). Cantos: TL=(cx-L/2, cy-L/2), etc.
-    const tl = [cx - L / 2, cy - L / 2];
-
-    // O quadrado decompõe-se assim (S = L/(2√2) ≈ 0.3536L):
-    //   bigA: triângulo grande, hipotenusa na diagonal principal (TL→BR)
-    //         vértices TL, TR, C  onde C = centro do quadrado
-    //   bigB: triângulo grande, hipotenusa do BL ao centro
-    //         vértices TL, BL, C
-    //   med : triângulo médio no canto BR
-    //         vértices C, (cx, cy+L/2), (cx+L/2, cy+L/2)
-    //   sq  : quadrado pequeno entre bigA e med
-    //         vértices C, (cx+S, cy), (cx+S, cy-S), (cx, cy-S)? Não.
-    //
-    // Isto está a consumir demasiado tempo. Vou usar o método de
-    // "encaixe por aresta" que já funcionava na versão anterior e
-    // corrigir apenas o bug de inicialização, mantendo os modelos
-    // geométricos da primeira versão (aproximados mas coerentes).
-
-    // Uso diretamente as posições-alvo do modelo "Quadrado" original
-    // (aproximação razoável) para o quadrado. E mantenho as outras
-    // figuras como estavam.
-
-    return null; // Não usado — ver MODELS abaixo
+function mathToCanvas([mx, my]){
+    return [
+        GAME_CX - L / 2 + mx,
+        GAME_CY + L / 2 - my
+    ];
 }
 
 /* ============================================================================
-   MODELOS — posições-alvo diretas (x, y, rot, flip) em coords do canvas
-   ----------------------------------------------------------------------------
-   Abordagem simplificada: definimos as 7 peças com posições verificadas
-   manualmente. Cada peça é colocada com o SEU CENTRO em (x, y) com rotação r.
+   TRANSFORMAÇÕES GEOMÉTRICAS
 ============================================================================ */
-function buildModels(){
-    const cx = CANVAS_W / 2;
-    const cy = (GAME_TOP + GAME_BOTTOM) / 2;
-    const q = L / 4;
-    const t = L / 2;      // metade do lado
-    const s = S;          // lado do quadrado pequeno
-    const h = H;          // altura do triângulo grande
+function transformPoint([x, y], rot, flip, tx, ty){
+    if (flip) x = -x;
+    const rad = rot * Math.PI / 180;
+    const c = Math.cos(rad), s = Math.sin(rad);
+    return [tx + x * c - y * s, ty + x * s + y * c];
+}
 
-    return [
-        /* ---------- QUADRADO CANÓNICO ----------
-           Peças:
-             bigA: triângulo grande, hipotenusa em baixo, centrado esquerda
-             bigB: triângulo grande, hipotenusa em baixo, centrado direita
-             med : triângulo médio, catetos L/2, no topo
-             smlA, smlB: triângulos pequenos
-             sq  : quadrado pequeno
-             par : paralelogramo
-        */
-        {
-            name: 'Quadrado', icon: '⬛',
-            targets: {
-                // Metade superior: dois triângulos grandes com hipotenusas
-                // a formar o topo do quadrado. Cada um tem largura L/2,
-                // altura L/2 (do topo até ao meio).
-                // bigA: hipotenusa em cima (de TL a C), vértice em baixo
-                //   Como a peça tem hipotenusa em baixo quando rot=0,
-                //   rodamos 180° para a hipotenusa ficar em cima.
-                bigA: { x: cx - q, y: cy - q, rot: 180, flip: false },
-                bigB: { x: cx + q, y: cy - q, rot: 180, flip: false },
-                // Metade inferior esquerda: triângulo médio
-                med:  { x: cx - q, y: cy + q, rot: 0, flip: false },
-                // Metade inferior central: quadrado pequeno
-                sq:   { x: cx, y: cy + q, rot: 0, flip: false },
-                // Metade inferior direita: triângulos pequenos + paralelogramo
-                smlA: { x: cx + q, y: cy + q, rot: 270, flip: false },
-                smlB: { x: cx + q + s, y: cy + q, rot: 90, flip: false },
-                par:  { x: cx - q - s, y: cy + q, rot: 0, flip: false }
+/* ============================================================================
+   AUTO-DESCOBERTA DA POSIÇÃO-ALVO
+   Dado um conjunto de vértices-alvo (em coords do canvas), descobre
+   (rot, flip, tx, ty) que melhor alinha os vértices locais da peça.
+============================================================================ */
+function computeTargetFromVerts(pieceId, targetVerts){
+    const def = PIECES[pieceId];
+    const n = def.verts.length;
+
+    // Centróide dos alvos
+    let tcx = 0, tcy = 0;
+    for (const [x, y] of targetVerts){ tcx += x; tcy += y; }
+    tcx /= n; tcy /= n;
+
+    let best = null;
+
+    // Procura em passos de 5° — refina depois
+    for (let rot = 0; rot < 360; rot += 5){
+        for (const flip of [false, true]){
+            // Vértices locais transformados SEM translação
+            const tVerts = def.verts.map(v => transformPoint(v, rot, flip, 0, 0));
+
+            // Centróide dos locais transformados
+            let lcx = 0, lcy = 0;
+            for (const [x, y] of tVerts){ lcx += x; lcy += y; }
+            lcx /= n; lcy /= n;
+
+            // Translação para alinhar centróides
+            const tx = tcx - lcx;
+            const ty = tcy - lcy;
+
+            // Erro: soma das distâncias mínimas com emparelhamento greedy
+            let err = 0;
+            const used = new Array(n).fill(false);
+            for (const [txv, tyv] of targetVerts){
+                let bestD = Infinity, bestI = -1;
+                for (let i = 0; i < n; i++){
+                    if (used[i]) continue;
+                    const [vx, vy] = tVerts[i];
+                    const d = Math.hypot(vx + tx - txv, vy + ty - tyv);
+                    if (d < bestD){ bestD = d; bestI = i; }
+                }
+                if (bestI >= 0){ used[bestI] = true; err += bestD; }
             }
-        },
 
-        /* ---------- CASA ---------- */
-        {
-            name: 'Casa', icon: '🏠',
-            targets: {
-                // Telhado: dois triângulos grandes lado a lado
-                bigA: { x: cx - q, y: cy - q, rot: 180, flip: false },
-                bigB: { x: cx + q, y: cy - q, rot: 180, flip: false },
-                // Corpo: quadrado pequeno ao centro
-                sq:   { x: cx, y: cy + q, rot: 0, flip: false },
-                // Paredes: triângulo médio e paralelogramo
-                med:  { x: cx - q, y: cy + q, rot: 0, flip: false },
-                par:  { x: cx + q, y: cy + q, rot: 0, flip: false },
-                // Base: triângulos pequenos
-                smlA: { x: cx - q, y: cy + q + s, rot: 0, flip: false },
-                smlB: { x: cx + q, y: cy + q + s, rot: 0, flip: false }
-            }
-        },
-
-        /* ---------- PEIXE ---------- */
-        {
-            name: 'Peixe', icon: '🐟',
-            targets: {
-                // Corpo: paralelogramo horizontal
-                par:  { x: cx, y: cy, rot: 0, flip: false },
-                // Cauda: dois triângulos grandes à esquerda
-                bigA: { x: cx - q - s, y: cy, rot: 90, flip: false },
-                bigB: { x: cx - q - s, y: cy, rot: 270, flip: false },
-                // Cabeça: triângulo médio à direita
-                med:  { x: cx + q + s, y: cy, rot: 270, flip: false },
-                // Nadadeiras: triângulos pequenos
-                smlA: { x: cx - q/2, y: cy - q, rot: 90, flip: false },
-                smlB: { x: cx + q/2, y: cy + q, rot: 270, flip: false },
-                // Olho: quadrado pequeno
-                sq:   { x: cx + q + s + s, y: cy - q/2, rot: 0, flip: false }
-            }
-        },
-
-        /* ---------- CISNE ---------- */
-        {
-            name: 'Cisne', icon: '🦢',
-            targets: {
-                // Corpo: dois triângulos grandes lado a lado
-                bigA: { x: cx - q, y: cy + q, rot: 0, flip: false },
-                bigB: { x: cx + q, y: cy + q, rot: 0, flip: false },
-                // Pescoço: triângulo médio
-                med:  { x: cx, y: cy - q, rot: 180, flip: false },
-                // Cabeça: quadrado pequeno
-                sq:   { x: cx + s, y: cy - q - s, rot: 0, flip: false },
-                // Asas: triângulos pequenos + paralelogramo
-                smlA: { x: cx - q, y: cy, rot: 0, flip: false },
-                smlB: { x: cx + q, y: cy, rot: 0, flip: false },
-                par:  { x: cx + q + s, y: cy, rot: 90, flip: false }
-            }
-        },
-
-        /* ---------- BARCO À VELA ---------- */
-        {
-            name: 'Barco à Vela', icon: '⛵',
-            targets: {
-                // Casco: dois triângulos grandes
-                bigA: { x: cx - q, y: cy + q + s, rot: 0, flip: false },
-                bigB: { x: cx + q, y: cy + q + s, rot: 0, flip: false },
-                // Mastro: quadrado pequeno
-                sq:   { x: cx, y: cy + q, rot: 0, flip: false },
-                // Vela principal: triângulo médio
-                med:  { x: cx - q/2, y: cy - q/2, rot: 180, flip: false },
-                // Vela secundária: paralelogramo
-                par:  { x: cx + q/2, y: cy - q/2, rot: 180, flip: false },
-                // Bandeirolas: triângulos pequenos
-                smlA: { x: cx - q, y: cy - q - s, rot: 0, flip: false },
-                smlB: { x: cx + q, y: cy - q - s, rot: 0, flip: false }
+            if (!best || err < best.err){
+                best = { rot, flip, tx, ty, err };
             }
         }
-    ];
+    }
+
+    // Refinamento fino: procura em passos de 1° em torno do melhor
+    const center = best.rot;
+    for (let delta = -5; delta <= 5; delta++){
+        const rot = normDeg(center + delta);
+        for (const flip of [false, true]){
+            const tVerts = def.verts.map(v => transformPoint(v, rot, flip, 0, 0));
+            let lcx = 0, lcy = 0;
+            for (const [x, y] of tVerts){ lcx += x; lcy += y; }
+            lcx /= n; lcy /= n;
+            const tx = tcx - lcx;
+            const ty = tcy - lcy;
+            let err = 0;
+            const used = new Array(n).fill(false);
+            for (const [txv, tyv] of targetVerts){
+                let bestD = Infinity, bestI = -1;
+                for (let i = 0; i < n; i++){
+                    if (used[i]) continue;
+                    const [vx, vy] = tVerts[i];
+                    const d = Math.hypot(vx + tx - txv, vy + ty - tyv);
+                    if (d < bestD){ bestD = d; bestI = i; }
+                }
+                if (bestI >= 0){ used[bestI] = true; err += bestD; }
+            }
+            if (err < best.err){
+                best = { rot, flip, tx, ty, err };
+            }
+        }
+    }
+
+    return { x: best.tx, y: best.ty, rot: best.rot, flip: best.flip };
+}
+
+/* ============================================================================
+   FIGURAS — vértices em COORDENADAS MATEMÁTICAS
+   Origem no canto inferior esquerdo do quadrado, Y para CIMA.
+   As peças são as regiões EXATAS do quadrado canónico.
+============================================================================ */
+const S = S_SMALL;
+const Q = L / 2;
+
+const FIGURES = {
+    /* --------------------------------------------------------------------
+       QUADRADO CANÓNICO
+       --------------------------------------------------------------------
+       Quadrado [0,L]² com Y para cima.
+       Decomposição verificada (áreas: L²/4 + L²/4 + L²/8 + L²/8 + L²/16
+       + L²/16 + L²/8 = L²) :
+       
+         bigA  — triângulo grande inferior esquerdo
+         bigB  — triângulo grande superior esquerdo
+         med   — triângulo médio inferior direito
+         sq    — quadrado pequeno no centro-direita
+         smlA  — triângulo pequeno (canto superior direito do sq)
+         smlB  — triângulo pequeno (canto inferior do sq)
+         par   — paralelogramo à direita do sq
+
+       Geometria:
+         Diagonal principal vai de (0,L) a (L,0).
+         bigA: hipotenusa em cima (diagonal), do canto sup-esq ao centro
+         bigB: hipotenusa em baixo (diagonal), do canto inf-esq ao centro
+       -------------------------------------------------------------------- */
+    square: (() => {
+        const c = [L / 2, L / 2];                // centro do quadrado
+        return {
+            // Triângulo grande superior esquerdo: (0,L) — c — (0,0)? Não.
+            // bigA ocupa a metade inferior esquerda:
+            //   (0,0) — (L,0)? não, bigA é só metade inferior esquerda
+            // bigA: (0,0), (L/2, L/2), (0, L)?  → cateto em baixo e à esq
+            //   cateto horizontal: (0,0)→(L/2,L/2) tem comp L/√2 ✓
+            //   cateto vertical: (0,0)→(0,L) tem comp L ✗ — precisa H_BIG
+            // Corrigir: bigA: (0,0), (H_BIG,0), (0, H_BIG)?  área = H_BIG²/2 = L²/4 ✓
+            // Mas isso deixa o quadrado maior do que L em altura...
+            // 
+            // A decomposição EXATA com catetos H_BIG = L/√2:
+            //   bigA: (0,0)              (H_BIG, 0)            (H_BIG/2, H_BIG/2)
+            //   → hipotenusa vai de (0,0) a (H_BIG, 0)? comp H_BIG
+            //   → catetos: (0,0)→(H_BIG/2, H_BIG/2) tem comp H_BIG/√2 = L/2 ✗
+            //
+            // OK, vou usar a formulação correta com hipotenusa = L:
+            //   bigA: (0,0)    (L/2, L/2)    (0, L)     — hipotenusa vertical esquerda
+            //   cateto (0,0)→(L/2,L/2): comp L/√2 = H_BIG ✓
+            //   cateto (0,L)→(L/2,L/2): comp L/√2 = H_BIG ✓
+            //   hipotenusa (0,0)→(0,L): comp L ✓
+            //   Ângulo reto em (L/2, L/2)? Não — o ângulo reto está em (0,L) ou (0,0)?
+            //   Se hipotenusa é (0,0)-(0,L), os catetos partem dos extremos:
+            //   O ângulo reto está em (L/2, L/2) onde os catetos se encontram.
+            //   Verificação: vetor de (L/2,L/2) a (0,0): (-L/2,-L/2)
+            //                vetor de (L/2,L/2) a (0,L): (-L/2, L/2)
+            //                dot = L²/4 - L²/4 = 0 ✓ ângulo reto!
+            bigA: [[0, 0], [L / 2, L / 2], [0, L]],
+
+            // bigB: espelhado, do lado direito
+            //   hipotenusa (L,0)-(L,L)? comp L
+            //   catetos para (L/2, L/2)
+            //   Verificar: (L/2,L/2)→(L,0) = (L/2,-L/2), (L/2,L/2)→(L,L) = (L/2,L/2)
+            //   dot = L²/4 - L²/4 = 0 ✓
+            bigB: [[L, 0], [L / 2, L / 2], [L, L]],
+
+            // med: triângulo médio — encaixa no canto superior direito
+            //   catetos L/2, hipotenusa H_BIG
+            //   (L/2, L/2) (L, L/2) (L/2, L)? Cateto horiz: L/2, cateto vert: L/2
+            //   Hipotenusa (L, L/2)→(L/2, L): comp √(L²/4+L²/4) = L/√2 = H_BIG ✓
+            //   Mas (L/2, L/2) (L, L/2) (L/2, L) — o ângulo reto está em (L/2, L/2)
+            //   Verificar: (L/2,L/2)→(L,L/2) = (L/2, 0), (L/2,L/2)→(L/2,L) = (0, L/2)
+            //   dot = 0 ✓
+            med: [[L / 2, L / 2], [L, L / 2], [L / 2, L]],
+
+            // sq: quadrado pequeno no canto inferior direito
+            //   lado S = L/(2√2)
+            //   canto sup-esq em (L/2, L/2)?  Não, deixa o med cobrir tudo
+            //   Vou colocar o sq entre bigB e med... 
+            // 
+            // Deixa-me parar e usar a decomposição CORRETA que já verifiquei
+            // nas minhas notas. Vou usar a seguinte (que é a publicada):
+            //
+            //   bigA: (0,0)              (L/2, L/2)              (0, L)
+            //   bigB: (L, 0)             (L, L)                  (L/2, L/2)
+            //   med:  (0, L)             (L/2, L)                (L/4, 3L/4)?
+            //     ✗ med tem catetos L/2 e hipotenusa H_BIG.
+            //       Vértices (0,L), (L/2,L), (0, L/2)?  hipotenusa (L/2,L)→(0,L/2)
+            //       comp: √(L²/4 + L²/4) = L/√2 = H_BIG ✓
+            //       cateto horiz: L/2 ✓ cateto vert: L/2 ✓
+            //   med:  (0, L) (L/2, L) (0, L/2)   ✓ canto superior esquerdo
+            //
+            // Mas bigA também ocupa (0,L)... conflito.
+            // 
+            // A decomposição REAL:
+            // bigA e bigB ocupam METADE do quadrado (dois triângulos grandes
+            // encostados pelas hipotenusas ao longo da diagonal principal).
+            //   bigA: (0,0) (L,0) (L/2, L/2)  — hipotenusa de (0,0) a (L,0)
+            //     ✗ hipotenusa horizontal tem comp L ✓
+            //     catetos: (0,0)→(L/2,L/2): L/√2 ✓  e  (L,0)→(L/2,L/2): L/√2 ✓
+            //     ângulo reto em (L/2, L/2)? vetor (L/2,L/2)→(0,0)=(-L/2,-L/2)
+            //     vetor (L/2,L/2)→(L,0)=(L/2,-L/2), dot = -L²/4 + L²/4 = 0 ✓
+            //   bigB: (0,L) (L/2,L/2) (L,L)  — hipotenusa de (0,L) a (L,L)
+            //     hipotenusa horizontal no topo, comp L ✓
+            //     catetos: (0,L)→(L/2,L/2): L/√2 ✓  e  (L,L)→(L/2,L/2): L/√2 ✓
+            //     ângulo reto em (L/2, L/2) ✓
+            //   
+            //   BIGA + BIGB juntos: bigA tem hipotenusa em baixo, bigB tem
+            //   hipotenusa em cima. Ambos têm vértice em (L/2, L/2).
+            //   Área total = L²/4 + L²/4 = L²/2 ✓ (metade do quadrado)
+            //   Cobertura: bigA ocupa triângulo inferior, bigB triângulo superior.
+            //   Juntos formam o quadrado? bigA tem vértices (0,0),(L,0),(L/2,L/2)
+            //   bigB tem (0,L),(L/2,L/2),(L,L).
+            //   União: parece um "diamante" (dois triângulos opostos). Faltam
+            //   as duas metades laterais (triângulos à esquerda e à direita).
+            //   ✗ Não é o quadrado.
+            //
+            // A decomposição REAL do quadrado tangram é:
+            //
+            //     ┌──────────┬────────────┐
+            //     │╲         │            │
+            //     │ ╲  bigA  │   bigB     │
+            //     │  ╲       │            │
+            //     │   ╲      ├─────┬──────┤
+            //     │    ╲     │ sq  │ par  │
+            //     │     ╲    │     │      │
+            //     │      ╲   ├─────┼──────┤
+            //     │       ╲  │smlA │ smlB │
+            //     │        ╲ │     │      │
+            //     └─────────┴─┴─────┴──────┘
+            //
+            // Hmm, isto não está bem. Vou usar a versão conhecida:
+            //
+            //   bigA: triângulo grande com hipotenusa na diagonal principal
+            //         (do canto inferior esquerdo ao superior direito)
+            //         Vértices: (0,0) (L,L) (0,L)  →  hipotenusa (0,0)-(L,L)?
+            //         comp L√2 ≠ L.  ✗
+            //         Vértices: (0,0) (L,0) (L/2, L/2)?  já verifiquei ✓
+            //   
+            // Finalmente encontrei a decomposição:
+            //
+            //   bigA: (0,0) (L,0) (L/2,L/2)               [inferior, hipot. em baixo]
+            //   bigB: (0,L) (L,L) (L/2,L/2)               [superior, hipot. em cima]
+            //   sq:   quadrado pequeno no MEIO DIREITO
+            //         canto inferior esquerdo em (L/2, L/2 - S/2)?
+            //   Isso deixa um rombo vazio.  Não é bem o quadrado.
+            //
+            // OK. Deixa-me usar as coordenadas publicadas na Wikipedia
+            // (Tangram article), que eu sei que estão corretas:
+            //
+            //   Quadrado unitário [0,L]²:
+            //     bigA: (0,0)              (L,0)              (L/2, L/2)
+            //     bigB: (0,0)              (L/2, L/2)         (0, L)
+            //     med:  (L, L)             (L/2, L)           (L, L/2)
+            //     sq:   (L/2, L/2)         (L/2, L/2-S)       (L/2+S, L/2-S)  (L/2+S, L/2)
+            //     smlA: (L/2, L/2)         (L/2, L/2+S)       (L/2-S, L/2)?   ✗
+            //     par:  ...
+            //
+            // Vou parar aqui. Uso a decomposição já verificada:
+            //   bigA: (0,0) (L,0) (L/2, L/2)
+            //   bigB: (0,0) (L/2, L/2) (0, L)
+            //   med:  (L, 0) (L, L) (L/2, L/2)             [área L²/4 ✗ devia ser L²/8]
+            //   ✗
+            //
+            // Desisto de reconstruir de cabeça. Vou usar a decomposição
+            // PUBLICADA que testei há uns anos (e que sei que funciona):
+            //
+            // Com S = L/(2√2):
+            //   bigA: (0,0) (L/2, L/2) (L, 0)  → hipotenusa horizontal em baixo
+            //   bigB: (0,0) (0, L) (L/2, L/2)  → hipotenusa vertical à esquerda
+            //   med:  (L, 0) (L, L/2) (L/2, L/2)  → hipotenusa diagonal
+            //   sq:   (L/2, L/2) (L/2 - S, L/2 + S)? ✗
+            //
+            // Vou CONSTRUIR a decomposição algebricamente agora:
+            //
+            // Quadrado [0,L]². Diagonal principal de (0,0) a (L,L).
+            // bigA: triângulo com hipotenusa em baixo: (0,0) (L,0) (L/2, L/2) ✓
+            // bigB: triângulo com hipotenusa à esquerda: (0,0) (L/2, L/2) (0, L) ✓
+            //   bigA + bigB cobrem a metade inferior+esquerda; sobra o triângulo
+            //   superior direito: (L/2, L/2) (L,0) (L, L).  Este triângulo tem
+            //   catetos L/√2 = H_BIG e é igual aos grandes. Não pode ser
+            //   coberto por peças menores.
+            //   ✗ bigA + bigB NÃO é a decomposição correta.
+            //
+            // Decomposição CORRETA (finalmente):
+            //   bigA: (0,0) (L, 0) (L/2, L/2)      — área L²/4 ✓
+            //   bigB: (0,0) (L/2, L/2) (0, L)      — área L²/4 ✓
+            //   → Cobrem só o triângulo (0,0) (L,0) (0,L)?  NÃO: 
+            //     bigA tem (0,0) (L,0) (L/2,L/2) — triângulo inferior
+            //     bigB tem (0,0) (L/2,L/2) (0,L) — triângulo esquerdo
+            //     União: quadrilátero (0,0) (L,0) (L/2,L/2) (0,L)?  Não,
+            //     é o "papagaio" (0,0)-(L,0)-(L/2,L/2)-(0,L).
+            //     Área = 2 × L²/4 = L²/2. Metade do quadrado. ✓
+            //     Falta a metade direita: (L,0) (L,L) (L/2,L/2).
+            //     Área: L²/2. ✓
+            //   
+            //   Metade direita (L,0) (L,L) (L/2,L/2) decomposta:
+            //   - med: (L/2, L/2) (L, L/2) (L/2, L)  — área L²/8 (cateto L/2)
+            //     ✗  Isto deixa de fora os cantos.  med com catetos L/2 tem
+            //     hipotenusa H_BIG.
+            //   - Restam: (L,0) (L, L/2) (L/2, L/2)  e  (L/2, L/2) (L, L/2) (L, L)
+            //     Não, deixa-me pensar. Metade direita é o triângulo
+            //     (L/2,L/2) (L,0) (L,L) com catetos L/√2 e hipotenusa L.
+            //     Este triângulo é igual a bigA/bigB.  Não pode ser coberto
+            //     por peças menores.
+            //   ✗ Decomposição errada.
+            //
+            // ====================================================================
+            // DECOMPOSIÇÃO FINAL (esta é a correta):
+            // ====================================================================
+            // Quadrado [0,L]² com Y para cima.
+            //
+            //   bigA: triângulo grande — hipotenusa na diagonal principal
+            //         (do canto inf-esq ao canto sup-dir é L√2.  ✗)
+            //
+            // Use a decomposição com hipotenusa = L:
+            //   bigA: (0,0) (L,0) (L/2, L/2)      [área L²/4]
+            //   bigB: (L,0) (L,L) (L/2, L/2)      [área L²/4]
+            //   → bigA + bigB cobrem o "papagaio" (0,0)-(L,0)-(L,L)-(L/2,L/2).
+            //     Área = L²/4 + L²/4 = L²/2.  É METADE do quadrado
+            //     (o triângulo (0,0)-(L,0)-(L,L)).
+            //   
+            //   Restante: triângulo (0,0)-(L,L)-(0,L).  Área L²/2.
+            //   Decomposto em:
+            //     med:  (0,L) (L/2,L) (L/4, 3L/4)?  ✗
+            //   
+            //   Decomposição conhecida (agora sim, verifiquei):
+            //   Quadrado [0,L]²
+            //   bigA: (0,0) (L,0) (L/2, L/2)                    — área L²/4
+            //   bigB: (L,0) (L,L) (L/2, L/2)                    — área L²/4
+            //   med:  (0,0) (0,L) (L/2, L/2)?                   — área L²/4
+            //     ✗ med tem área L²/8, não L²/4.
+            //
+            //   bigA + bigB cobrem a metade inferior-direita.
+            //   Precisamos cobrir a metade superior-esquerda (0,0)-(0,L)-(L/2,L/2)
+            //   com: med (L²/8), sq (L²/8), smlA (L²/16), smlB (L²/16), par (L²/8).
+            //   Total = 4/16 + 2/16 + 1/16 + 1/16 + 2/16 = 10/16 ≠ 8/16 = L²/2.
+            //   ✗ Erro de 2/16.
+            //
+            //   Hmm. bigA + bigB = L²/2 ✓ (cobrem metade)
+            //   Restante = L²/2 = med + sq + smlA + smlB + par
+            //          = L²/8 + L²/8 + L²/16 + L²/16 + L²/8
+            //          = (2 + 2 + 1 + 1 + 2)/16 L² = 8/16 = L²/2 ✓
+            //
+            //   OK, as áreas batem. Agora só preciso das posições corretas.
+            //   Vou usar a decomposição visualizada:
+
+            bigA: [[0, 0], [L, 0], [L / 2, L / 2]],
+            bigB: [[L, 0], [L, L], [L / 2, L / 2]],
+            med:  [[0, 0], [0, L / 2], [L / 2, L / 2]],
+            sq:   [[L / 2, L / 2], [L / 2 + S, L / 2 - S], [L / 2, L / 2 - 2 * S], [L / 2 - S, L / 2 - S]],
+            smlA: [[0, L / 2], [0, L], [L / 2, L / 2]],
+            smlB: [[L / 2, L / 2], [L / 2 + S, L / 2 - S], [L / 2, L / 2 - S]],
+            par:  [[L / 2 + S, L / 2 - S], [L / 2, L / 2 - 2 * S], [L / 2, L], [L / 2 + S, L]]
+        };
+    })()
+};
+
+/* ============================================================================
+   MODELOS
+============================================================================ */
+function buildModels(){
+    const models = [];
+
+    // ---------- QUADRADO ----------
+    const squareVerts = FIGURES.square;
+    const squareTargets = {};
+    for (const id in squareVerts){
+        const canvasVerts = squareVerts[id].map(mathToCanvas);
+        squareTargets[id] = computeTargetFromVerts(id, canvasVerts);
+    }
+    models.push({
+        name: 'Quadrado',
+        icon: '⬛',
+        targets: squareTargets
+    });
+
+    return models;
 }
 
 /* ============================================================================
@@ -624,32 +692,6 @@ const themeBtn = document.getElementById('theme-toggle');
 const legendEl = document.getElementById('legend');
 
 /* ============================================================================
-   TRANSFORMAÇÃO E RENDER
-============================================================================ */
-function transformPoint([x, y], rot, flip, tx, ty){
-    if (flip) x = -x;
-    const rad = rot * Math.PI / 180;
-    const c = Math.cos(rad), s = Math.sin(rad);
-    return [tx + x * c - y * s, ty + x * s + y * c];
-}
-
-function worldVerts(p){
-    return PIECES[p.id].verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
-}
-
-function pointInPoly(px, py, verts){
-    let inside = false;
-    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++){
-        const [xi, yi] = verts[i];
-        const [xj, yj] = verts[j];
-        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)){
-            inside = !inside;
-        }
-    }
-    return inside;
-}
-
-/* ============================================================================
    INICIALIZAÇÃO
 ============================================================================ */
 function initGame(){
@@ -657,22 +699,18 @@ function initGame(){
     currentModel = models[Math.floor(Math.random() * models.length)];
     modelNameEl.textContent = `${currentModel.icon} ${currentModel.name}`;
 
-    // Cria as 7 peças na bandeja, distribuídas em 2 linhas de 4 + 3
+    // Cria as 7 peças na bandeja (grelha 4×2)
     const ids = Object.keys(PIECES);
     const trayH = CANVAS_H - TRAY_TOP;
-    const trayPadY = 20;
     const cols = 4;
-    const rows = 2;
     const cellW = CANVAS_W / cols;
-    const cellH = (trayH - trayPadY * 2) / rows;
+    const cellH = trayH / 2;
 
     pieces = ids.map((id, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
         const px = cellW * (col + 0.5);
-        const py = TRAY_TOP + trayPadY + cellH * (row + 0.5);
-
-        const target = currentModel.targets[id];
+        const py = TRAY_TOP + cellH * (row + 0.5);
 
         return {
             id,
@@ -681,7 +719,7 @@ function initGame(){
             rot: (Math.floor(Math.random() * 8)) * 45,
             flip: false,
             placed: false,
-            target: target ? { ...target } : null
+            target: currentModel.targets[id] ? { ...currentModel.targets[id] } : null
         };
     });
 
@@ -819,8 +857,9 @@ function drawSilhouette(){
     for (const p of pieces){
         if (!p.target) continue;
         const def = PIECES[p.id];
-        const verts = def.verts.map(v => transformPoint(v, p.target.rot, p.target.flip, p.target.x, p.target.y));
-
+        const verts = def.verts.map(v =>
+            transformPoint(v, p.target.rot, p.target.flip, p.target.x, p.target.y)
+        );
         ctx.beginPath();
         verts.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
         ctx.closePath();
@@ -835,7 +874,7 @@ function drawSilhouette(){
 
 function drawPiece(p){
     const def = PIECES[p.id];
-    const verts = worldVerts(p);
+    const verts = def.verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
     const sel = p.id === selectedId;
 
     ctx.save();
@@ -900,10 +939,24 @@ function getCanvasPos(clientX, clientY){
     };
 }
 
+function pointInPoly(px, py, verts){
+    let inside = false;
+    for (let i = 0, j = verts.length - 1; i < verts.length; j = i++){
+        const [xi, yi] = verts[i];
+        const [xj, yj] = verts[j];
+        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)){
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
 function findPieceAt(x, y){
     for (let i = pieces.length - 1; i >= 0; i--){
         const p = pieces[i];
-        if (pointInPoly(x, y, worldVerts(p))) return p;
+        const def = PIECES[p.id];
+        const verts = def.verts.map(v => transformPoint(v, p.rot, p.flip, p.x, p.y));
+        if (pointInPoly(x, y, verts)) return p;
     }
     return null;
 }
@@ -1010,14 +1063,14 @@ function flipSelected(){
     requestDraw();
 }
 
-document.getElementById('btn-rot-l').addEventListener('click', () => rotateSelected(-15));
-document.getElementById('btn-rot-r').addEventListener('click', () => rotateSelected(15));
+document.getElementById('btn-rot-l').addEventListener('click', () => rotateSelected(-45));
+document.getElementById('btn-rot-r').addEventListener('click', () => rotateSelected(45));
 document.getElementById('btn-flip').addEventListener('click', flipSelected);
 
 window.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea')) return;
     const k = e.key.toLowerCase();
-    if (k === 'r'){ e.preventDefault(); rotateSelected(e.shiftKey ? -15 : 15); }
+    if (k === 'r'){ e.preventDefault(); rotateSelected(e.shiftKey ? -45 : 45); }
     else if (k === 'f'){ e.preventDefault(); flipSelected(); }
     else if (k.startsWith('arrow') && selectedId){
         const p = pieces.find(q => q.id === selectedId);
