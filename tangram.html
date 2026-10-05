@@ -970,8 +970,13 @@ const CONFIG = Object.freeze({
 
     validationSize:160,
 
-    maxTimeBonus:20
+    maxTimeBonus:20,
 
+    /* espaçamento da malha de pontos dentro da silhueta */
+    dotSpacing:20,
+
+    /* margem em torno do modelo dentro do tabuleiro */
+    modelMargin:40
 });
 
 
@@ -1228,48 +1233,7 @@ const PIECE_IDS =
 
 
 /* ============================================================================
-   MODELOS
-============================================================================ */
-
-function toCanvasPoint(
-    [x,y],
-    side=CONFIG.tangramSide,
-    cx=CONFIG.canvasW/2,
-    cy=190
-){
-
-    return [
-
-        cx-side/2+x*(side/4),
-
-        cy+side/2-y*(side/4)
-
-    ];
-
-}
-
-
-function targetFromAbsolute(
-    id,
-    vertices
-){
-
-    return {
-
-        id,
-
-        vertices:
-            vertices.map(
-                v=>toCanvasPoint(v)
-            )
-
-    };
-
-}
-
-
-/* ============================================================================
-   TRANSFORMAÇÃO DE FIGURA
+   TRANSFORMAÇÃO DE FIGURA (rotação + espelhamento no plano 4×4)
 ============================================================================ */
 
 function transformFigure(
@@ -1320,9 +1284,12 @@ function transformFigure(
 
 
 /* ============================================================================
-   QUADRADO TANGRAM
+   MODELOS — DEFINIÇÃO DE ALVOS EM COORDENADAS ABSOLUTAS (grid 4×4 base)
+   Cada modelo é um objeto { bigA, bigB, med, smlA, smlB, sq, par } onde cada
+   entrada é uma lista de vértices em coordenadas absolutas.
 ============================================================================ */
 
+/* -------- QUADRADO CLÁSSICO (base, lado 4) -------- */
 const SQUARE_TARGET = {
 
     bigA:[
@@ -1372,114 +1339,545 @@ const SQUARE_TARGET = {
 };
 
 
+/* -------- BARCO (vela + casco) --------
+   Silhueta: casco trapezoidal em baixo, vela triangular em cima.
+   Peças:
+     bigA — vela superior (triângulo grande)
+     bigB — casco esquerdo (triângulo grande)
+     med  — casco direito (triângulo médio)
+     smlA — popa esquerda (triângulo pequeno)
+     smlB — proa direita (triângulo pequeno)
+     sq   — centro do casco (quadrado, virado em losango)
+     par  — mastro/vela inferior (paralelogramo)
+------------------------------------------------------------ */
+const BOAT_TARGET = {
+
+    /* Vela grande superior — triângulo retângulo apoiado no mastro */
+    bigA:[
+        [2,0],
+        [2,4],
+        [0,4]
+    ],
+
+    /* Vela menor inferior — triângulo grande virado */
+    bigB:[
+        [2,4],
+        [4,4],
+        [2,2]
+    ],
+
+    /* Casco esquerdo — triângulo médio */
+    med:[
+        [0,4],
+        [1,5],
+        [0,6]
+    ],
+
+    /* Casco central — quadrado em losango */
+    sq:[
+        [1,5],
+        [2,4],
+        [3,5],
+        [2,6]
+    ],
+
+    /* Casco direito — triângulo médio */
+    smlA:[
+        [4,4],
+        [4,6],
+        [3,5]
+    ],
+
+    /* Popa esquerda — pequeno */
+    smlB:[
+        [0,6],
+        [1,5],
+        [2,6]
+    ],
+
+    /* Proa direita — paralelogramo */
+    par:[
+        [2,6],
+        [3,5],
+        [4,6],
+        [3,7]
+    ]
+
+};
+
+
+/* -------- CASA (telhado + corpo) --------
+   Silhueta: telhado triangular em cima, corpo retangular em baixo.
+------------------------------------------------------------ */
+const HOUSE_TARGET = {
+
+    /* Telhado esquerdo */
+    bigA:[
+        [0,3],
+        [2,0],
+        [2,3]
+    ],
+
+    /* Telhado direito */
+    bigB:[
+        [2,0],
+        [4,3],
+        [2,3]
+    ],
+
+    /* Parede esquerda — triângulo médio */
+    med:[
+        [0,3],
+        [2,3],
+        [0,5]
+    ],
+
+    /* Parede direita — triângulo médio */
+    smlA:[
+        [4,3],
+        [4,5],
+        [2,3]
+    ],
+
+    /* Parede central esquerda — paralelogramo */
+    par:[
+        [0,5],
+        [0,3],
+        [2,3],
+        [2,5]
+    ],
+
+    /* Parede central direita — triângulo pequeno */
+    smlB:[
+        [2,3],
+        [4,5],
+        [2,5]
+    ],
+
+    /* Chão — quadrado em losango */
+    sq:[
+        [1,5],
+        [2,4],
+        [3,5],
+        [2,6]
+    ]
+
+};
+
+
+/* -------- PEIXE (corpo + cauda + nadadeira) --------
+   Silhueta: corpo losangular, cauda triangular à direita.
+------------------------------------------------------------ */
+const FISH_TARGET = {
+
+    /* Corpo superior — triângulo grande */
+    bigA:[
+        [0,2],
+        [4,2],
+        [2,0]
+    ],
+
+    /* Corpo inferior — triângulo grande */
+    bigB:[
+        [0,2],
+        [2,4],
+        [4,2]
+    ],
+
+    /* Nadadeira dorsal — triângulo médio */
+    med:[
+        [2,0],
+        [4,2],
+        [3,1]
+    ],
+
+    /* Cauda superior — triângulo pequeno */
+    smlA:[
+        [4,2],
+        [6,0],
+        [5,2]
+    ],
+
+    /* Cauda inferior — triângulo pequeno */
+    smlB:[
+        [4,2],
+        [5,2],
+        [6,4]
+    ],
+
+    /* Olho — quadrado em losango */
+    sq:[
+        [1,2],
+        [2,1],
+        [3,2],
+        [2,3]
+    ],
+
+    /* Nadadeira ventral — paralelogramo */
+    par:[
+        [2,4],
+        [3,4],
+        [3,5],
+        [2,5]
+    ]
+
+};
+
+
+/* -------- CISNE (corpo + pescoço + cabeça) --------
+   Silhueta: corpo volumoso em baixo, pescoço fino subindo à esquerda.
+------------------------------------------------------------ */
+const SWAN_TARGET = {
+
+    /* Corpo principal — triângulo grande */
+    bigA:[
+        [0,5],
+        [4,5],
+        [2,2]
+    ],
+
+    /* Asa direita — triângulo grande */
+    bigB:[
+        [4,5],
+        [6,3],
+        [4,3]
+    ],
+
+    /* Pescoço — triângulo médio */
+    med:[
+        [0,5],
+        [2,2],
+        [1,1]
+    ],
+
+    /* Cabeça — triângulo pequeno */
+    smlA:[
+        [0,2],
+        [1,1],
+        [0,0]
+    ],
+
+    /* Bico — triângulo pequeno */
+    smlB:[
+        [0,0],
+        [1,1],
+        [0,2]
+    ],
+
+    /* Peito — quadrado em losango */
+    sq:[
+        [1,3],
+        [2,2],
+        [3,3],
+        [2,4]
+    ],
+
+    /* Cauda — paralelogramo */
+    par:[
+        [2,4],
+        [4,5],
+        [5,4],
+        [3,3]
+    ]
+
+};
+
+
+/* -------- GATO (cabeça + corpo + patas + cauda) --------
+   Silhueta: gato sentado com orelhas pontiagudas.
+------------------------------------------------------------ */
+const CAT_TARGET = {
+
+    /* Cabeça — triângulo grande (base de cima) */
+    bigA:[
+        [1,0],
+        [4,2],
+        [1,2]
+    ],
+
+    /* Corpo — triângulo grande */
+    bigB:[
+        [1,2],
+        [4,2],
+        [2,5]
+    ],
+
+    /* Orelha esquerda — triângulo pequeno */
+    smlA:[
+        [1,0],
+        [2,0],
+        [1,1]
+    ],
+
+    /* Orelha direita — triângulo pequeno */
+    smlB:[
+        [3,0],
+        [4,2],
+        [3,2]
+    ],
+
+    /* Pescoço/peito — triângulo médio */
+    med:[
+        [1,2],
+        [1,4],
+        [2,3]
+    ],
+
+    /* Pata dianteira — quadrado em losango */
+    sq:[
+        [1,4],
+        [2,3],
+        [3,4],
+        [2,5]
+    ],
+
+    /* Cauda — paralelogramo */
+    par:[
+        [2,5],
+        [4,5],
+        [5,4],
+        [3,4]
+    ]
+
+};
+
+
+/* -------- VELA (barco a vela clássico) --------
+   Silhueta: barco simples com uma vela triangular alta.
+------------------------------------------------------------ */
+const SAILBOAT_TARGET = {
+
+    /* Vela principal — triângulo grande */
+    bigA:[
+        [2,0],
+        [2,4],
+        [0,4]
+    ],
+
+    /* Reflexo da vela / casco — triângulo grande */
+    bigB:[
+        [2,4],
+        [4,4],
+        [2,2]
+    ],
+
+    /* Casco esquerdo — triângulo médio */
+    med:[
+        [0,4],
+        [2,4],
+        [1,5]
+    ],
+
+    /* Casco direito — triângulo pequeno */
+    smlA:[
+        [4,4],
+        [4,5],
+        [3,5]
+    ],
+
+    /* Mastro — triângulo pequeno */
+    smlB:[
+        [2,0],
+        [3,1],
+        [2,2]
+    ],
+
+    /* Casco central — quadrado em losango */
+    sq:[
+        [1,5],
+        [2,4],
+        [3,5],
+        [2,6]
+    ],
+
+    /* Proa — paralelogramo */
+    par:[
+        [2,6],
+        [3,5],
+        [4,5],
+        [3,6]
+    ]
+
+};
+
+
+/* ============================================================================
+   NORMALIZAÇÃO DE MODELOS
+   Recebe um objeto com vértices brutos (0..N) e devolve o mesmo objeto com
+   vértices já convertidos para o canvas, escalados e centrados no tabuleiro.
+============================================================================ */
+
+function normalizeModel(rawTargets){
+
+    /* 1. bounding box de todos os vértices crus */
+    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+
+    for(const verts of Object.values(rawTargets)){
+        for(const [x,y] of verts){
+            if(x<minX) minX=x;
+            if(x>maxX) maxX=x;
+            if(y<minY) minY=y;
+            if(y>maxY) maxY=y;
+        }
+    }
+
+    const rawW = maxX - minX;
+    const rawH = maxY - minY;
+
+    /* 2. espaço útil do tabuleiro (fora da bandeja) */
+    const playW = CONFIG.canvasW - 2*CONFIG.modelMargin;
+    const playH = (CONFIG.canvasH - CONFIG.trayHeight) - 2*CONFIG.modelMargin;
+
+    /* 3. escala para caber mantendo proporção */
+    const scale = Math.min(
+        playW / rawW,
+        playH / rawH
+    );
+
+    /* 4. centro do tabuleiro */
+    const cx = CONFIG.canvasW / 2;
+    const cy = (CONFIG.canvasH - CONFIG.trayHeight) / 2;
+
+    /* 5. centro do modelo cru */
+    const rawCx = (minX + maxX) / 2;
+    const rawCy = (minY + maxY) / 2;
+
+    /* 6. converter cada vértice */
+    const out = {};
+
+    for(const [id, verts] of Object.entries(rawTargets)){
+        out[id] = verts.map(([x,y])=>[
+            cx + (x - rawCx) * scale,
+            cy + (y - rawCy) * scale
+        ]);
+    }
+
+    return out;
+
+}
+
+
 /* ============================================================================
    CONSTRUÇÃO DOS MODELOS
 ============================================================================ */
 
-function buildModels(){
+function buildModel(id, name, icon, level, rawTargets, silhouetteSide = null){
 
-    const base =
-        Object.fromEntries(
-            Object.entries(
-                SQUARE_TARGET
-            ).map(
-                ([id,verts])=>[
-                    id,
-                    verts
-                ]
-            )
-        );
+    /* normaliza e usa também como silhueta */
+    const targets = {};
 
-
-    const make =
-        (
-            name,
-            icon,
-            level,
-            opts={}
-        )=>{
-
-            const targets={};
-
-
-            for(
-                const id of PIECE_IDS
-            ){
-
-                targets[id]=
-                    targetFromAbsolute(
-                        id,
-                        transformFigure(
-                            base[id],
-                            opts
-                        )
-                    );
-
-            }
-
-
-            return {
-
-                id:`square-${level}`,
-
-                name,
-
-                icon,
-
-                level,
-
-                targets,
-
-                silhouette:targets,
-
-                side:
-                    CONFIG.tangramSide
-
-            };
-
+    for(const pieceId of PIECE_IDS){
+        targets[pieceId] = {
+            id: pieceId,
+            vertices: rawTargets[pieceId]
         };
+    }
 
+    return {
+        id,
+        name,
+        icon,
+        level,
+        targets,
+        silhouette: targets,
+        side: silhouetteSide || CONFIG.tangramSide
+    };
+
+}
+
+
+function buildModels(){
 
     return [
 
-        make(
+        buildModel(
+            "square-classic",
             "Quadrado Clássico",
             "⬛",
             1,
-            {
-                angle:0,
-                mirror:false
-            }
+            normalizeModel(SQUARE_TARGET)
         ),
 
-        make(
+        buildModel(
+            "square-rotated",
             "Quadrado Rotacionado",
             "◇",
-            2,
-            {
-                angle:45,
-                mirror:false
-            }
+            1,
+            normalizeModel(
+                Object.fromEntries(
+                    Object.entries(SQUARE_TARGET).map(
+                        ([id,verts])=>[
+                            id,
+                            transformFigure(verts, {angle:45})
+                        ]
+                    )
+                )
+            )
         ),
 
-        make(
+        buildModel(
+            "square-mirrored",
             "Quadrado Espelhado",
             "◈",
-            3,
-            {
-                angle:0,
-                mirror:true
-            }
+            2,
+            normalizeModel(
+                Object.fromEntries(
+                    Object.entries(SQUARE_TARGET).map(
+                        ([id,verts])=>[
+                            id,
+                            transformFigure(verts, {mirror:true})
+                        ]
+                    )
+                )
+            )
         ),
 
-        make(
-            "Quadrado Invertido",
-            "◆",
+        buildModel(
+            "boat",
+            "Barco",
+            "⛵",
+            2,
+            normalizeModel(BOAT_TARGET)
+        ),
+
+        buildModel(
+            "house",
+            "Casa",
+            "🏠",
+            2,
+            normalizeModel(HOUSE_TARGET)
+        ),
+
+        buildModel(
+            "fish",
+            "Peixe",
+            "🐟",
+            3,
+            normalizeModel(FISH_TARGET)
+        ),
+
+        buildModel(
+            "swan",
+            "Cisne",
+            "🦢",
+            3,
+            normalizeModel(SWAN_TARGET)
+        ),
+
+        buildModel(
+            "cat",
+            "Gato",
+            "🐱",
             4,
-            {
-                angle:135,
-                mirror:true
-            }
+            normalizeModel(CAT_TARGET)
+        ),
+
+        buildModel(
+            "sailboat",
+            "Vela",
+            "⛺",
+            4,
+            normalizeModel(SAILBOAT_TARGET)
         )
 
     ];
@@ -2807,7 +3205,7 @@ function finishGame(){
 
 
     winText.textContent =
-        `Você completou "${currentModel.name}" usando as sete peças sem exigir uma solução interna única.`;
+        `Você completou "${currentModel.name}" usando as sete peças.`;
 
 
     winTime.textContent =
@@ -3145,7 +3543,7 @@ function drawTray(){
 
 
 /* ============================================================================
-   SILHUETA
+   SILHUETA COM MALHA PONTILHADA BEM DEFINIDA
 ============================================================================ */
 
 function drawSilhouette(){
@@ -3160,25 +3558,11 @@ function drawSilhouette(){
     ctx.save();
 
 
+    /* 1. preenchimento sutil da silhueta */
     ctx.fillStyle =
         dark
-            ? "rgba(56,189,248,.075)"
-            : "rgba(56,189,248,.09)";
-
-
-    ctx.strokeStyle =
-        dark
-            ? "rgba(148,163,184,.42)"
-            : "rgba(100,116,139,.45)";
-
-
-    ctx.lineWidth=1.5;
-
-
-    ctx.setLineDash([
-        5,
-        5
-    ]);
+            ? "rgba(56,189,248,.05)"
+            : "rgba(56,189,248,.07)";
 
 
     for(
@@ -3199,6 +3583,63 @@ function drawSilhouette(){
     }
 
 
+    /* 2. malha pontilhada DENTRO da silhueta (clip em cada peça) */
+    ctx.save();
+
+
+    for(
+        const target of
+        Object.values(
+            currentModel.silhouette
+        )
+    ){
+
+        ctx.save();
+
+
+        polygonPath(
+            ctx,
+            target.vertices
+        );
+
+
+        ctx.clip();
+
+
+        drawDotGrid(
+            dark
+                ? "rgba(148,163,184,.55)"
+                : "rgba(71,85,105,.55)",
+            dark
+                ? "rgba(148,163,184,.28)"
+                : "rgba(71,85,105,.28)"
+        );
+
+
+        ctx.restore();
+
+    }
+
+
+    ctx.restore();
+
+
+    /* 3. contorno tracejado bem definido */
+    ctx.strokeStyle =
+        dark
+            ? "rgba(148,163,184,.55)"
+            : "rgba(71,85,105,.55)";
+
+
+    ctx.lineWidth=1.8;
+
+
+    ctx.setLineDash([
+        6,
+        5
+    ]);
+
+
     for(
         const target of
         Object.values(
@@ -3217,23 +3658,20 @@ function drawSilhouette(){
     }
 
 
+    ctx.setLineDash([]);
+
+
     ctx.restore();
 
 
-    const centerX =
-        CONFIG.canvasW/2;
-
-
-    const centerY=190;
-
-
+    /* 4. rótulo "SILHUETA" */
     ctx.save();
 
 
     ctx.fillStyle =
         dark
-            ? "rgba(148,163,184,.28)"
-            : "rgba(71,85,105,.3)";
+            ? "rgba(148,163,184,.35)"
+            : "rgba(71,85,105,.4)";
 
 
     ctx.font =
@@ -3245,14 +3683,59 @@ function drawSilhouette(){
 
     ctx.fillText(
         "SILHUETA",
-        centerX,
-        centerY-
-        CONFIG.tangramSide/2-
-        9
+        CONFIG.canvasW/2,
+        20
     );
 
 
     ctx.restore();
+
+}
+
+
+/* ============================================================================
+   MALHA PONTILHADA
+   Desenha uma grade de pontos com passo fixo (CONFIG.dotSpacing).
+   Dois níveis de opacidade para dar profundidade sutil.
+============================================================================ */
+
+function drawDotGrid(colorMain, colorSoft){
+
+    const spacing =
+        CONFIG.dotSpacing;
+
+
+    const r1 = 1.4;  /* raio do ponto principal */
+    const r2 = 2.6;  /* raio do ponto "soft" (aura) */
+
+
+    for(
+        let y = spacing/2;
+        y < CONFIG.canvasH;
+        y += spacing
+    ){
+
+        for(
+            let x = spacing/2;
+            x < CONFIG.canvasW;
+            x += spacing
+        ){
+
+            /* aura mais clara */
+            ctx.beginPath();
+            ctx.arc(x, y, r2, 0, Math.PI*2);
+            ctx.fillStyle = colorSoft;
+            ctx.fill();
+
+            /* núcleo mais escuro */
+            ctx.beginPath();
+            ctx.arc(x, y, r1, 0, Math.PI*2);
+            ctx.fillStyle = colorMain;
+            ctx.fill();
+
+        }
+
+    }
 
 }
 
