@@ -1,4863 +1,1007 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Tangram Tradicional · Brain Hub</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
-
-<style>
-:root{
-    --bg-1:#1a1f3a;
-    --bg-2:#070b14;
-    --card-bg:rgba(18,24,40,.94);
-    --card-border:rgba(148,163,184,.12);
-    --text:#f1f5f9;
-    --text-muted:#94a3b8;
-    --text-dim:#64748b;
-    --border:rgba(148,163,184,.15);
-    --input-bg:rgba(10,15,28,.72);
-
-    --accent-1:#38bdf8;
-    --accent-2:#818cf8;
-    --accent-3:#c084fc;
-
-    --success:#34d399;
-    --warning:#fbbf24;
-    --danger:#fb7185;
-
-    --r-sm:8px;
-    --r-md:14px;
-    --r-lg:22px;
-
-    --shadow:0 20px 60px -20px rgba(0,0,0,.75);
-    --ease:.22s cubic-bezier(.4,0,.2,1);
-}
-
-[data-theme="light"]{
-    --bg-1:#e0e7ff;
-    --bg-2:#f8fafc;
-    --card-bg:rgba(255,255,255,.95);
-    --card-border:rgba(15,23,42,.08);
-    --text:#0f172a;
-    --text-muted:#475569;
-    --text-dim:#94a3b8;
-    --border:rgba(15,23,42,.1);
-    --input-bg:rgba(241,245,249,.86);
-    --shadow:0 20px 60px -20px rgba(15,23,42,.15);
-}
-
-*,*::before,*::after{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
-html,
-body{
-    min-height:100%;
-    overflow:hidden;
-}
-
-body{
-    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
-    background:
-        radial-gradient(
-            ellipse at 50% -20%,
-            var(--bg-1) 0%,
-            var(--bg-2) 62%
-        );
-    color:var(--text);
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    min-height:100vh;
-    padding:10px;
-
-    -webkit-font-smoothing:antialiased;
-}
-
-button,
-a{
-    font:inherit;
-}
-
-.game{
-    width:100%;
-    max-width:720px;
-    max-height:98vh;
-
-    overflow-y:auto;
-
-    padding:16px;
-
-    border-radius:var(--r-lg);
-
-    background:var(--card-bg);
-
-    backdrop-filter:blur(24px) saturate(1.4);
-    -webkit-backdrop-filter:blur(24px) saturate(1.4);
-
-    border:1px solid var(--card-border);
-
-    box-shadow:var(--shadow);
-
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-
-    scrollbar-width:thin;
-}
-
-.game::-webkit-scrollbar{
-    width:4px;
-}
-
-.game::-webkit-scrollbar-thumb{
-    background:var(--border);
-    border-radius:4px;
-}
-
-.topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-}
-
-.brand{
-    display:flex;
-    align-items:center;
-    gap:7px;
-
-    font-size:13px;
-    font-weight:800;
-}
-
-.icon-btn{
-    width:34px;
-    height:34px;
-
-    border-radius:var(--r-sm);
-
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-
-    background:var(--input-bg);
-    border:1px solid var(--border);
-
-    color:var(--text-muted);
-
-    cursor:pointer;
-
-    transition:all var(--ease);
-
-    text-decoration:none;
-    user-select:none;
-}
-
-.icon-btn:hover{
-    color:var(--text);
-    border-color:var(--accent-1);
-    transform:translateY(-1px);
-}
-
-.icon-btn:active{
-    transform:scale(.96);
-}
-
-.header{
-    text-align:center;
-}
-
-.header h1{
-    font-size:24px;
-    font-weight:800;
-    letter-spacing:-.03em;
-    margin-bottom:2px;
-
-    background:
-        linear-gradient(
-            135deg,
-            var(--accent-1),
-            var(--accent-2),
-            var(--accent-3)
-        );
-
-    -webkit-background-clip:text;
-    background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-
-.header p{
-    font-size:11.5px;
-    color:var(--text-muted);
-    line-height:1.45;
-}
-
-.hud{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:7px;
-}
-
-.hud-card{
-    background:var(--input-bg);
-    border:1px solid var(--border);
-    border-radius:var(--r-sm);
-
-    padding:8px 9px;
-
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-
-    min-width:0;
-}
-
-.hud-card .lbl{
-    font-size:8.5px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    font-weight:800;
-    color:var(--text-dim);
-}
-
-.hud-card .val{
-    font-family:'JetBrains Mono',monospace;
-    font-size:13px;
-    font-weight:700;
-
-    color:var(--accent-1);
-
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
-
-.hud-card .val.ok{
-    color:var(--success);
-}
-
-.hud-card .val.warn{
-    color:var(--warning);
-}
-
-.canvas-wrap{
-    position:relative;
-    width:100%;
-    aspect-ratio:4/3;
-
-    background:var(--input-bg);
-
-    border:1px solid var(--border);
-    border-radius:var(--r-md);
-
-    overflow:hidden;
-
-    box-shadow:
-        inset 0 0 40px -20px rgba(0,0,0,.5);
-}
-
-canvas{
-    display:block;
-    width:100%;
-    height:100%;
-
-    cursor:grab;
-    touch-action:none;
-}
-
-canvas:active{
-    cursor:grabbing;
-}
-
-.toolbar{
-    display:flex;
-    gap:6px;
-    justify-content:center;
-    flex-wrap:wrap;
-}
-
-.btn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-
-    gap:5px;
-
-    padding:9px 13px;
-
-    border-radius:var(--r-sm);
-
-    font-size:11.5px;
-    font-weight:800;
-
-    border:none;
-
-    cursor:pointer;
-
-    transition:all var(--ease);
-
-    user-select:none;
-    white-space:nowrap;
-}
-
-.btn:active{
-    transform:scale(.97);
-}
-
-.btn-primary{
-    background:
-        linear-gradient(
-            135deg,
-            var(--accent-2),
-            var(--accent-3)
-        );
-
-    color:#fff;
-
-    box-shadow:
-        0 4px 16px -4px rgba(129,140,248,.5);
-}
-
-.btn-primary:hover{
-    box-shadow:
-        0 6px 24px -4px rgba(129,140,248,.7);
-
-    transform:translateY(-1px);
-}
-
-.btn-ghost{
-    background:var(--input-bg);
-    color:var(--text);
-
-    border:1px solid var(--border);
-}
-
-.btn-ghost:hover{
-    border-color:var(--accent-1);
-    color:var(--accent-1);
-}
-
-.btn-success{
-    background:
-        linear-gradient(
-            135deg,
-            #10b981,
-            #34d399
-        );
-
-    color:#06261b;
-}
-
-.btn:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-    transform:none;
-}
-
-.hint{
-    text-align:center;
-
-    font-size:10.5px;
-
-    color:var(--text-dim);
-
-    padding:6px 10px;
-
-    background:var(--input-bg);
-
-    border:1px solid var(--border);
-
-    border-radius:var(--r-sm);
-
-    line-height:1.5;
-}
-
-.hint kbd{
-    display:inline-block;
-
-    padding:1px 5px;
-
-    border-radius:4px;
-
-    background:var(--border);
-
-    font-family:'JetBrains Mono',monospace;
-
-    font-size:9.5px;
-
-    font-weight:700;
-
-    color:var(--text-muted);
-}
-
-.legend{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:5px;
-}
-
-.legend-item{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    gap:5px;
-
-    padding:6px 4px;
-
-    background:var(--input-bg);
-
-    border:1px solid var(--border);
-
-    border-radius:var(--r-sm);
-
-    transition:all var(--ease);
-
-    cursor:pointer;
-
-    min-width:0;
-}
-
-.legend-item:hover{
-    border-color:var(--accent-1);
-}
-
-.legend-item.active{
-    border-color:var(--accent-1);
-    background:rgba(56,189,248,.12);
-}
-
-.legend-item.done{
-    border-color:rgba(52,211,153,.55);
-}
-
-.legend-item .sw{
-    width:9px;
-    height:9px;
-
-    border-radius:2px;
-
-    flex-shrink:0;
-}
-
-.legend-item .nm{
-    font-weight:700;
-    color:var(--text);
-
-    font-size:8.5px;
-    line-height:1.1;
-
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
-
-.status{
-    text-align:center;
-
-    min-height:18px;
-
-    font-size:10.5px;
-
-    color:var(--text-dim);
-
-    transition:color var(--ease);
-}
-
-.status.success{
-    color:var(--success);
-}
-
-.status.warning{
-    color:var(--warning);
-}
-
-.modal{
-    display:none;
-
-    position:fixed;
-
-    inset:0;
-
-    background:rgba(0,0,0,.76);
-
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
-
-    justify-content:center;
-    align-items:center;
-
-    z-index:1000;
-
-    padding:20px;
-}
-
-.modal.active{
-    display:flex;
-}
-
-@keyframes slideUp{
-    from{
-        opacity:0;
-        transform:translateY(20px) scale(.96);
-    }
-
-    to{
-        opacity:1;
-        transform:none;
-    }
-}
-
-.modal-content{
-    background:var(--card-bg);
-
-    backdrop-filter:blur(24px);
-
-    padding:28px 24px;
-
-    border-radius:var(--r-lg);
-
-    border:1px solid var(--card-border);
-
-    text-align:center;
-
-    max-width:370px;
-    width:100%;
-
-    box-shadow:
-        0 30px 80px -20px rgba(0,0,0,.8);
-
-    animation:
-        slideUp .35s cubic-bezier(.16,1,.3,1);
-}
-
-.modal-content .emo{
-    font-size:48px;
-
-    display:block;
-
-    margin-bottom:8px;
-}
-
-.modal-content h2{
-    font-size:20px;
-
-    font-weight:800;
-
-    color:var(--success);
-
-    margin-bottom:8px;
-}
-
-.modal-content p{
-    font-size:12.5px;
-
-    color:var(--text-muted);
-
-    line-height:1.6;
-
-    margin-bottom:20px;
-}
-
-.modal-stats{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-
-    gap:6px;
-
-    margin-bottom:18px;
-}
-
-.modal-stat{
-    padding:8px;
-
-    background:var(--input-bg);
-
-    border:1px solid var(--border);
-
-    border-radius:8px;
-}
-
-.modal-stat b{
-    display:block;
-
-    font-family:'JetBrains Mono',monospace;
-
-    color:var(--accent-1);
-
-    font-size:13px;
-}
-
-.modal-stat span{
-    display:block;
-
-    color:var(--text-dim);
-
-    font-size:8px;
-
-    text-transform:uppercase;
-
-    margin-top:2px;
-}
-
-.modal-content .btn{
-    width:100%;
-}
-
-@media(max-width:560px){
-
-    .game{
-        padding:11px;
-        gap:8px;
-    }
-
-    .header h1{
-        font-size:19px;
-    }
-
-    .header p{
-        font-size:10px;
-    }
-
-    .hud{
-        grid-template-columns:repeat(2,1fr);
-    }
-
-    .legend{
-        grid-template-columns:repeat(4,1fr);
-    }
-
-    .btn{
-        padding:8px 10px;
-        font-size:10.5px;
-    }
-}
-
-@media(max-height:720px){
-
-    .header p{
-        display:none;
-    }
-
-    .game{
-        gap:7px;
-    }
-
-    .canvas-wrap{
-        aspect-ratio:5/3;
-    }
-}
-
-@media(prefers-reduced-motion:reduce){
-
-    *,
-    *::before,
-    *::after{
-        animation-duration:.01ms!important;
-        transition-duration:.01ms!important;
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tangram — Brain Hub</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ==========================================================
+           1. DESIGN TOKENS (idêntico aos outros jogos)
+           ========================================================== */
+        :root {
+            --bg-color: #0b1020;
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --card-glow: rgba(99, 102, 241, 0.25);
+
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-subtle: #64748b;
+
+            --border-color: rgba(148, 163, 184, 0.18);
+            --border-strong: rgba(148, 163, 184, 0.35);
+            --input-bg: rgba(15, 23, 42, 0.7);
+
+            --btn-primary: #6366f1;
+            --btn-primary-hover: #818cf8;
+            --btn-accent: #8b5cf6;
+
+            --board-bg: rgba(15, 23, 42, 0.55);
+            --board-border: rgba(148, 163, 184, 0.45);
+
+            --c-green: #4ade80;
+            --c-blue: #38bdf8;
+            --c-amber: #f59e0b;
+            --c-red: #ef4444;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+            --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+
+            --t-fast: 0.15s ease;
+            --t-base: 0.25s ease;
+            --t-slow: 0.4s ease;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --bg-gradient-1: #e0e7ff;
+            --bg-gradient-2: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.88);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --card-glow: rgba(99, 102, 241, 0.15);
+
+            --text-color: #0f172a;
+            --text-muted: #475569;
+            --text-subtle: #64748b;
+
+            --border-color: rgba(15, 23, 42, 0.1);
+            --border-strong: rgba(15, 23, 42, 0.25);
+            --input-bg: rgba(255, 255, 255, 0.95);
+
+            --board-bg: rgba(248, 250, 252, 0.9);
+            --board-border: rgba(15, 23, 42, 0.25);
+
+            --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+        }
+
+        /* ==========================================================
+           2. RESET E BASE
+           ========================================================== */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color var(--t-slow), color var(--t-base);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: 0.3;
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before { width: 420px; height: 420px; background: #6366f1; top: -140px; left: -120px; }
+        body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px; right: -140px; }
+
+        /* ==========================================================
+           3. CONTAINER
+           ========================================================== */
+        .container {
+            position: relative;
+            background: var(--card-bg);
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            padding: 20px 20px 22px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+            width: 100%;
+            max-width: 520px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 20%; right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
+            opacity: 0.9;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ==========================================================
+           4. TOP BAR / HEADER
+           ========================================================== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .btn-small {
+            width: auto;
+            margin: 0;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--t-base);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-small:hover {
+            color: var(--text-color);
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+            background: var(--card-bg);
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            background: var(--input-bg);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .user-info-left { display: flex; align-items: center; gap: 10px; }
+
+        .user-avatar-display {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px; height: 38px;
+            font-size: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2));
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+        }
+
+        #display-nome { font-size: 14px; font-weight: 700; }
+
+        .game-name {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        /* ==========================================================
+           5. SCORE BOARD
+           ========================================================== */
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+        }
+        .score-board > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 2px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.02);
+            transition: background var(--t-base), transform var(--t-base);
+        }
+        .score-board > div:hover {
+            background: rgba(99, 102, 241, 0.08);
+            transform: translateY(-1px);
+        }
+        .score-board strong {
+            font-size: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            text-transform: none;
+        }
+        #display-fase   { color: var(--c-blue); }
+        #display-pecas  { color: var(--c-green); }
+        #display-tempo  { color: var(--c-amber); }
+
+        /* ==========================================================
+           6. INSTRUÇÕES
+           ========================================================== */
+        .instructions {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin: 4px 0 12px;
+            line-height: 1.5;
+            min-height: 18px;
+        }
+
+        /* ==========================================================
+           7. TABULEIRO
+           ========================================================== */
+        .board-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-height: 460px;
+            margin: 0 auto 12px;
+            border-radius: 14px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.10), transparent 60%),
+                var(--board-bg);
+            background-image:
+                linear-gradient(var(--board-bg), var(--board-bg)),
+                linear-gradient(135deg,
+                    rgba(99, 102, 241, 0.55) 0%,
+                    rgba(139, 92, 246, 0.35) 30%,
+                    rgba(56, 189, 248, 0.30) 65%,
+                    rgba(99, 102, 241, 0.45) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            border: 2px solid transparent;
+            box-shadow:
+                0 12px 40px -14px rgba(0, 0, 0, 0.55),
+                0 0 0 1px var(--card-border),
+                0 0 24px -6px rgba(99, 102, 241, 0.35);
+            touch-action: none;
+        }
+
+        .board-wrapper::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 18px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.28), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(6px);
+        }
+
+        #tangram-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            user-select: none;
+        }
+
+        /* Silhueta-objetivo */
+        #silhouette {
+            fill: rgba(99, 102, 241, 0.10);
+            stroke: rgba(99, 102, 241, 0.55);
+            stroke-width: 2;
+            stroke-dasharray: 6 6;
+            transition: fill var(--t-slow), stroke var(--t-slow);
+        }
+        #silhouette.completed {
+            fill: rgba(34, 197, 94, 0.18);
+            stroke: rgba(34, 197, 94, 0.85);
+            stroke-dasharray: none;
+        }
+
+        /* Peças */
+        .piece {
+            cursor: grab;
+            transition: filter var(--t-base), opacity var(--t-base);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+        }
+        .piece:hover { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.12); }
+        .piece.dragging { cursor: grabbing; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6)) brightness(1.15); }
+        .piece.selected { filter: drop-shadow(0 0 0 3px rgba(99,102,241,0.8)) brightness(1.15); }
+        .piece.locked {
+            cursor: default;
+            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.7));
+        }
+
+        /* ==========================================================
+           8. CONTROLES
+           ========================================================== */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .controls-grid.triple {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 600;
+            background: var(--input-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color var(--t-base), box-shadow var(--t-base);
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 36px;
+        }
+        select:focus {
+            outline: none;
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+        }
+
+        button.action {
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            box-shadow: var(--shadow-btn);
+            transition: transform var(--t-fast), box-shadow var(--t-base), filter var(--t-base);
+        }
+        button.action:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+            box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.7);
+        }
+        button.action:active { transform: translateY(0); filter: brightness(0.97); }
+
+        button.secondary {
+            background: linear-gradient(135deg, #475569, #334155);
+            box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
+        }
+        button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
+
+        /* ==========================================================
+           9. RESPONSIVIDADE
+           ========================================================== */
+        @media (max-width: 440px) {
+            body { padding: 10px; }
+            .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
+            .score-board { font-size: 10px; }
+            .score-board strong { font-size: 13px; }
+            .game-name { display: none; }
+        }
+
+        /* ==========================================================
+           10. ACESSIBILIDADE
+           ========================================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
+        }
+
+        :focus-visible { outline: 2px solid var(--btn-primary); outline-offset: 2px; }
+    </style>
 </head>
-
 <body>
 
-<main class="game" role="main">
-
-    <div class="topbar">
-
-        <a
-            href="index.html"
-            class="icon-btn"
-            title="Voltar"
-            aria-label="Voltar"
-        >←</a>
-
-        <div class="brand">
-            <span>📐</span>
-            <span>Brain Hub · Tangram</span>
+    <div class="container">
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <button
-            id="theme-toggle"
-            class="icon-btn"
-            title="Tema"
-            aria-label="Alternar tema"
-        >🌙</button>
+        <!-- USER HEADER -->
+        <div class="user-header">
+            <div class="user-info-left">
+                <span id="display-avatar" class="user-avatar-display">😀</span>
+                <strong id="display-nome"></strong>
+            </div>
+            <span class="game-name">Tangram</span>
+        </div>
 
-    </div>
+        <!-- SCORE BOARD -->
+        <div class="score-board">
+            <div>Desafio<br><strong id="display-fase">Livre</strong></div>
+            <div>Peças<br><strong id="display-pecas">0/7</strong></div>
+            <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
+        </div>
 
-
-    <header class="header">
-
-        <h1>Tangram Tradicional</h1>
-
-        <p>
-            Reconstrua a silhueta usando as 7 peças clássicas.
+        <p class="instructions" id="info-instrucao">
+            Arraste as peças. Use <b>R</b> ou a roda do mouse para rotacionar a peça selecionada.
         </p>
 
-    </header>
-
-
-    <section
-        class="hud"
-        aria-label="Informações do desafio"
-    >
-
-        <div class="hud-card">
-
-            <span class="lbl">
-                Desafio
-            </span>
-
-            <span
-                class="val"
-                id="model-name"
-            >—</span>
-
+        <!-- TABULEIRO -->
+        <div class="board-wrapper" id="board-wrapper">
+            <svg id="tangram-svg" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet">
+                <!-- Silhueta-objetivo (mutável) -->
+                <polygon id="silhouette" points=""></polygon>
+                <!-- Peças são injetadas aqui -->
+                <g id="pieces-layer"></g>
+            </svg>
         </div>
 
-
-        <div class="hud-card">
-
-            <span class="lbl">
-                Encaixes
-            </span>
-
-            <span
-                class="val"
-                id="score-count"
-            >0 / 7</span>
-
+        <!-- CONTROLES -->
+        <div class="controls-grid">
+            <select id="select-desafio">
+                <option value="free">Modo Livre</option>
+                <option value="square" selected>Desafio: Quadrado</option>
+                <option value="house">Desafio: Casa</option>
+                <option value="boat">Desafio: Barco</option>
+                <option value="swan">Desafio: Cisne</option>
+            </select>
+            <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
         </div>
 
-
-        <div class="hud-card">
-
-            <span class="lbl">
-                Tempo
-            </span>
-
-            <span
-                class="val"
-                id="timer"
-            >00:00</span>
-
+        <div class="controls-grid triple" style="margin-top: 8px;">
+            <button id="btn-rotate-l" class="action secondary">↺ -45°</button>
+            <button id="btn-rotate-r" class="action secondary">↻ +45°</button>
+            <button id="btn-reset" class="action">🔄 Reiniciar</button>
         </div>
-
-
-        <div class="hud-card">
-
-            <span class="lbl">
-                Tentativas
-            </span>
-
-            <span
-                class="val"
-                id="attempts"
-            >0</span>
-
-        </div>
-
-    </section>
-
-
-    <div class="canvas-wrap">
-
-        <canvas
-            id="cv"
-            width="800"
-            height="600"
-            aria-label="Área de jogo do tangram"
-        ></canvas>
-
     </div>
 
-
-    <div class="toolbar">
-
-        <button
-            class="btn btn-ghost"
-            id="btn-rot-l"
-            title="Rodar 45° anti-horário"
-        >
-            ↺ 45°
-        </button>
-
-        <button
-            class="btn btn-ghost"
-            id="btn-rot-r"
-            title="Rodar 45° horário"
-        >
-            ↻ 45°
-        </button>
-
-        <button
-            class="btn btn-ghost"
-            id="btn-flip"
-            title="Espelhar peça"
-        >
-            ↔ Espelhar
-        </button>
-
-        <button
-            class="btn btn-ghost"
-            id="btn-reset-piece"
-            title="Recolocar a peça na bandeja"
-        >
-            ↩ Recolher
-        </button>
-
-        <button
-            class="btn btn-primary"
-            id="btn-new"
-            title="Novo desafio"
-        >
-            🎲 Novo desafio
-        </button>
-
-    </div>
-
-
-    <div class="hint">
-
-        Clique/toque para selecionar · arraste para mover ·
-
-        <kbd>R</kbd> girar ·
-        <kbd>F</kbd> espelhar ·
-        <kbd>← ↑ → ↓</kbd> mover
-
-    </div>
-
-
-    <div
-        class="status"
-        id="status"
-    >
-        Selecione uma peça e comece a montar.
-    </div>
-
-
-    <div
-        class="legend"
-        id="legend"
-    ></div>
-
-</main>
-
-
-<div
-    class="modal"
-    id="win"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="win-title"
->
-
-    <div class="modal-content">
-
-        <span class="emo">
-            🎉
-        </span>
-
-        <h2 id="win-title">
-            Excelente!
-        </h2>
-
-        <p id="win-text"></p>
-
-
-        <div class="modal-stats">
-
-            <div class="modal-stat">
-
-                <b id="win-time">
-                    00:00
-                </b>
-
-                <span>
-                    tempo
-                </span>
-
-            </div>
-
-
-            <div class="modal-stat">
-
-                <b id="win-attempts">
-                    0
-                </b>
-
-                <span>
-                    tentativas
-                </span>
-
-            </div>
-
-
-            <div class="modal-stat">
-
-                <b id="win-points">
-                    +40
-                </b>
-
-                <span>
-                    pontos
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <button
-            class="btn btn-primary"
-            id="next"
-        >
-            Próximo desafio →
-        </button>
-
-    </div>
-
-</div>
-
-
-<script type="module">
-
-/* ============================================================================
-   FIREBASE
-============================================================================ */
-
-import { db } from "./firebase-config.js";
-
-import {
-    ref,
-    get,
-    update
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-
-/* ============================================================================
-   CONFIGURAÇÃO GERAL
-============================================================================ */
-
-const CONFIG = Object.freeze({
-
-    canvasW:800,
-
-    canvasH:600,
-
-    tangramSide:260,
-
-    trayHeight:140,
-
-    snapDistance:22,
-
-    snapAngle:12,
-
-    grid:40,
-
-    points:40,
-
-    validationSize:160,
-
-    maxTimeBonus:20,
-
-    /* espaçamento da malha de pontos dentro da silhueta */
-    dotSpacing:20,
-
-    /* margem em torno do modelo dentro do tabuleiro */
-    modelMargin:40
-});
-
-
-/* ============================================================================
-   CORES DAS PEÇAS
-============================================================================ */
-
-const COLORS = Object.freeze({
-
-    bigA:"#f43f5e",
-
-    bigB:"#fb923c",
-
-    med:"#facc15",
-
-    smlA:"#34d399",
-
-    smlB:"#22d3ee",
-
-    sq:"#818cf8",
-
-    par:"#c084fc"
-
-});
-
-
-/* ============================================================================
-   FUNÇÕES MATEMÁTICAS BÁSICAS
-============================================================================ */
-
-const normDeg = a =>
-    ((a % 360) + 360) % 360;
-
-
-function angleDiff(a,b){
-
-    const d =
-        Math.abs(
-            normDeg(a)-normDeg(b)
-        );
-
-    return Math.min(
-        d,
-        360-d
-    );
-}
-
-
-function dist(a,b){
-
-    return Math.hypot(
-        a.x-b.x,
-        a.y-b.y
-    );
-
-}
-
-
-function clamp(v,min,max){
-
-    return Math.max(
-        min,
-        Math.min(max,v)
-    );
-
-}
-
-
-/* ============================================================================
-   GEOMETRIA
-============================================================================ */
-
-const UNIT =
-    CONFIG.tangramSide / 4;
-
-
-const SQRT2 =
-    Math.SQRT2;
-
-
-function centerVertices(vertices){
-
-    const cx =
-        vertices.reduce(
-            (s,p)=>s+p[0],
-            0
-        ) /
-        vertices.length;
-
-
-    const cy =
-        vertices.reduce(
-            (s,p)=>s+p[1],
-            0
-        ) /
-        vertices.length;
-
-
-    return vertices.map(
-        ([x,y])=>[
-            x-cx,
-            y-cy
-        ]
-    );
-
-}
-
-
-/* ============================================================================
-   DEFINIÇÃO DAS 7 PEÇAS
-============================================================================ */
-
-const PIECES = Object.freeze({
-
-    bigA:{
-
-        id:"bigA",
-
-        name:"Grande 1",
-
-        short:"G1",
-
-        color:COLORS.bigA,
-
-        verts:centerVertices([
-            [0,0],
-            [4*UNIT,0],
-            [2*UNIT,2*UNIT]
-        ])
-
-    },
-
-
-    bigB:{
-
-        id:"bigB",
-
-        name:"Grande 2",
-
-        short:"G2",
-
-        color:COLORS.bigB,
-
-        verts:centerVertices([
-            [0,0],
-            [4*UNIT,0],
-            [2*UNIT,2*UNIT]
-        ])
-
-    },
-
-
-    med:{
-
-        id:"med",
-
-        name:"Médio",
-
-        short:"M",
-
-        color:COLORS.med,
-
-        verts:centerVertices([
-            [0,0],
-            [2*UNIT,0],
-            [0,2*UNIT]
-        ])
-
-    },
-
-
-    smlA:{
-
-        id:"smlA",
-
-        name:"Pequeno 1",
-
-        short:"P1",
-
-        color:COLORS.smlA,
-
-        verts:centerVertices([
-            [0,0],
-            [2*UNIT,0],
-            [1*UNIT,1*UNIT]
-        ])
-
-    },
-
-
-    smlB:{
-
-        id:"smlB",
-
-        name:"Pequeno 2",
-
-        short:"P2",
-
-        color:COLORS.smlB,
-
-        verts:centerVertices([
-            [0,0],
-            [2*UNIT,0],
-            [1*UNIT,1*UNIT]
-        ])
-
-    },
-
-
-    sq:{
-
-        id:"sq",
-
-        name:"Quadrado",
-
-        short:"Q",
-
-        color:COLORS.sq,
-
-        verts:centerVertices([
-            [0,0],
-            [UNIT,-UNIT],
-            [2*UNIT,0],
-            [UNIT,UNIT]
-        ])
-
-    },
-
-
-    par:{
-
-        id:"par",
-
-        name:"Paralelogramo",
-
-        short:"P",
-
-        color:COLORS.par,
-
-        verts:centerVertices([
-            [0,0],
-            [UNIT,UNIT],
-            [UNIT,3*UNIT],
-            [0,2*UNIT]
-        ])
-
-    }
-
-});
-
-
-const PIECE_IDS =
-    Object.keys(PIECES);
-
-
-/* ============================================================================
-   TRANSFORMAÇÃO DE FIGURA (rotação + espelhamento no plano 4×4)
-============================================================================ */
-
-function transformFigure(
-    vertices,
-    opts={}
-){
-
-    const angle =
-        (opts.angle || 0) *
-        Math.PI/180;
-
-    const mirror =
-        !!opts.mirror;
-
-    const c =
-        Math.cos(angle);
-
-    const s =
-        Math.sin(angle);
-
-
-    return vertices.map(
-        ([x,y])=>{
-
-            let px =
-                x-2;
-
-            let py =
-                y-2;
-
-
-            if(mirror)
-                px=-px;
-
-
-            return [
-
-                px*c-py*s+2,
-
-                px*s+py*c+2
-
-            ];
-
+    <script>
+    (function () {
+        "use strict";
+
+        /* ==========================================================
+           1. GEOMETRIA CANÔNICA — 7 PEÇAS DO TANGRAM
+           ==========================================================
+           Todas as coordenadas são calculadas a partir de L.
+           O quadrado mestre fica em (0,0)-(L,L).
+           A soma das 7 peças = L²  (verificado por construção).
+           ========================================================== */
+        const L = 320;
+        const R = L * Math.SQRT2 / 2;   // ≈ 226.27  (cateto dos triângulos grandes)
+        const HALF_L = L / 2;           // 160
+        const QUARTER_L = L / 4;        // 80
+
+        // Cada peça: { id, cor, pontos: [[x,y], ...] }
+        // As coordenadas estão na posição final (montagem do quadrado mestre).
+        const PECAS_BASE = [
+            // T1 — Triângulo grande superior esquerdo
+            { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [HALF_L, 0], [0, HALF_L]] },
+
+            // T2 — Triângulo grande superior direito
+            { id: 'T2', cor: '#8b5cf6', pontos: [[L, 0], [L, HALF_L], [HALF_L, 0]] },
+
+            // TM — Triângulo médio (lado esquerdo inferior)
+            { id: 'TM', cor: '#ec4899', pontos: [[0, L], [0, HALF_L], [HALF_L, HALF_L]] },
+
+            // T3 — Triângulo pequeno central
+            { id: 'T3', cor: '#14b8a6', pontos: [[HALF_L, HALF_L], [HALF_L, QUARTER_L], [QUARTER_L * 3, QUARTER_L]] },
+
+            // T4 — Triângulo pequeno (canto inferior direito)
+            { id: 'T4', cor: '#f59e0b', pontos: [[L, L], [HALF_L, L], [HALF_L, HALF_L + QUARTER_L]] },
+
+            // Q — Quadrado (meio inferior esquerdo)
+            { id: 'Q', cor: '#06b6d4', pontos: [[QUARTER_L, HALF_L], [HALF_L, HALF_L], [HALF_L, QUARTER_L * 3], [QUARTER_L, QUARTER_L * 3]] },
+
+            // P — Paralelogramo (inferior direito)
+            { id: 'P', cor: '#d946ef', pontos: [[HALF_L, L], [HALF_L + QUARTER_L, L], [L, QUARTER_L * 3], [HALF_L, QUARTER_L * 3]] }
+        ];
+
+        /* ==========================================================
+           2. SILHUETAS-ALVO
+           ==========================================================
+           As silhuetas abaixo são DESENHADAS usando as mesmas peças,
+           apenas reposicionadas. Isso garante que a área casa
+           exatamente com a soma das peças (L²).
+
+           Cada silhueta é uma lista de transformações {id, x, y, rot}
+           que, quando aplicadas às peças-base, formam a figura.
+           A silhueta visual é o polígono convexo resultante.
+           ========================================================== */
+
+        // Helper: aplica rotação e translação a um ponto
+        function transformarPonto(p, cx, cy, rot, dx, dy) {
+            const rad = rot * Math.PI / 180;
+            const cos = Math.cos(rad), sin = Math.sin(rad);
+            const px = p[0] - cx, py = p[1] - cy;
+            return [cos * px - sin * py + cx + dx, sin * px + cos * py + cy + dy];
         }
-    );
 
-}
-
-
-/* ============================================================================
-   MODELOS — DEFINIÇÃO DE ALVOS EM COORDENADAS ABSOLUTAS (grid 4×4 base)
-   Cada modelo é um objeto { bigA, bigB, med, smlA, smlB, sq, par } onde cada
-   entrada é uma lista de vértices em coordenadas absolutas.
-============================================================================ */
-
-/* -------- QUADRADO CLÁSSICO (base, lado 4) -------- */
-const SQUARE_TARGET = {
-
-    bigA:[
-        [0,0],
-        [4,0],
-        [2,2]
-    ],
-
-    bigB:[
-        [4,0],
-        [4,4],
-        [2,2]
-    ],
-
-    med:[
-        [0,4],
-        [0,2],
-        [2,4]
-    ],
-
-    par:[
-        [1,3],
-        [0,2],
-        [0,0],
-        [1,1]
-    ],
-
-    sq:[
-        [2,4],
-        [1,3],
-        [2,2],
-        [3,3]
-    ],
-
-    smlA:[
-        [4,4],
-        [2,4],
-        [3,3]
-    ],
-
-    smlB:[
-        [1,3],
-        [1,1],
-        [2,2]
-    ]
-
-};
-
-
-/* -------- BARCO (vela + casco) --------
-   Silhueta: casco trapezoidal em baixo, vela triangular em cima.
-   Peças:
-     bigA — vela superior (triângulo grande)
-     bigB — casco esquerdo (triângulo grande)
-     med  — casco direito (triângulo médio)
-     smlA — popa esquerda (triângulo pequeno)
-     smlB — proa direita (triângulo pequeno)
-     sq   — centro do casco (quadrado, virado em losango)
-     par  — mastro/vela inferior (paralelogramo)
------------------------------------------------------------- */
-const BOAT_TARGET = {
-
-    /* Vela grande superior — triângulo retângulo apoiado no mastro */
-    bigA:[
-        [2,0],
-        [2,4],
-        [0,4]
-    ],
-
-    /* Vela menor inferior — triângulo grande virado */
-    bigB:[
-        [2,4],
-        [4,4],
-        [2,2]
-    ],
-
-    /* Casco esquerdo — triângulo médio */
-    med:[
-        [0,4],
-        [1,5],
-        [0,6]
-    ],
-
-    /* Casco central — quadrado em losango */
-    sq:[
-        [1,5],
-        [2,4],
-        [3,5],
-        [2,6]
-    ],
-
-    /* Casco direito — triângulo médio */
-    smlA:[
-        [4,4],
-        [4,6],
-        [3,5]
-    ],
-
-    /* Popa esquerda — pequeno */
-    smlB:[
-        [0,6],
-        [1,5],
-        [2,6]
-    ],
-
-    /* Proa direita — paralelogramo */
-    par:[
-        [2,6],
-        [3,5],
-        [4,6],
-        [3,7]
-    ]
-
-};
-
-
-/* -------- CASA (telhado + corpo) --------
-   Silhueta: telhado triangular em cima, corpo retangular em baixo.
------------------------------------------------------------- */
-const HOUSE_TARGET = {
-
-    /* Telhado esquerdo */
-    bigA:[
-        [0,3],
-        [2,0],
-        [2,3]
-    ],
-
-    /* Telhado direito */
-    bigB:[
-        [2,0],
-        [4,3],
-        [2,3]
-    ],
-
-    /* Parede esquerda — triângulo médio */
-    med:[
-        [0,3],
-        [2,3],
-        [0,5]
-    ],
-
-    /* Parede direita — triângulo médio */
-    smlA:[
-        [4,3],
-        [4,5],
-        [2,3]
-    ],
-
-    /* Parede central esquerda — paralelogramo */
-    par:[
-        [0,5],
-        [0,3],
-        [2,3],
-        [2,5]
-    ],
-
-    /* Parede central direita — triângulo pequeno */
-    smlB:[
-        [2,3],
-        [4,5],
-        [2,5]
-    ],
-
-    /* Chão — quadrado em losango */
-    sq:[
-        [1,5],
-        [2,4],
-        [3,5],
-        [2,6]
-    ]
-
-};
-
-
-/* -------- PEIXE (corpo + cauda + nadadeira) --------
-   Silhueta: corpo losangular, cauda triangular à direita.
------------------------------------------------------------- */
-const FISH_TARGET = {
-
-    /* Corpo superior — triângulo grande */
-    bigA:[
-        [0,2],
-        [4,2],
-        [2,0]
-    ],
-
-    /* Corpo inferior — triângulo grande */
-    bigB:[
-        [0,2],
-        [2,4],
-        [4,2]
-    ],
-
-    /* Nadadeira dorsal — triângulo médio */
-    med:[
-        [2,0],
-        [4,2],
-        [3,1]
-    ],
-
-    /* Cauda superior — triângulo pequeno */
-    smlA:[
-        [4,2],
-        [6,0],
-        [5,2]
-    ],
-
-    /* Cauda inferior — triângulo pequeno */
-    smlB:[
-        [4,2],
-        [5,2],
-        [6,4]
-    ],
-
-    /* Olho — quadrado em losango */
-    sq:[
-        [1,2],
-        [2,1],
-        [3,2],
-        [2,3]
-    ],
-
-    /* Nadadeira ventral — paralelogramo */
-    par:[
-        [2,4],
-        [3,4],
-        [3,5],
-        [2,5]
-    ]
-
-};
-
-
-/* -------- CISNE (corpo + pescoço + cabeça) --------
-   Silhueta: corpo volumoso em baixo, pescoço fino subindo à esquerda.
------------------------------------------------------------- */
-const SWAN_TARGET = {
-
-    /* Corpo principal — triângulo grande */
-    bigA:[
-        [0,5],
-        [4,5],
-        [2,2]
-    ],
-
-    /* Asa direita — triângulo grande */
-    bigB:[
-        [4,5],
-        [6,3],
-        [4,3]
-    ],
-
-    /* Pescoço — triângulo médio */
-    med:[
-        [0,5],
-        [2,2],
-        [1,1]
-    ],
-
-    /* Cabeça — triângulo pequeno */
-    smlA:[
-        [0,2],
-        [1,1],
-        [0,0]
-    ],
-
-    /* Bico — triângulo pequeno */
-    smlB:[
-        [0,0],
-        [1,1],
-        [0,2]
-    ],
-
-    /* Peito — quadrado em losango */
-    sq:[
-        [1,3],
-        [2,2],
-        [3,3],
-        [2,4]
-    ],
-
-    /* Cauda — paralelogramo */
-    par:[
-        [2,4],
-        [4,5],
-        [5,4],
-        [3,3]
-    ]
-
-};
-
-
-/* -------- GATO (cabeça + corpo + patas + cauda) --------
-   Silhueta: gato sentado com orelhas pontiagudas.
------------------------------------------------------------- */
-const CAT_TARGET = {
-
-    /* Cabeça — triângulo grande (base de cima) */
-    bigA:[
-        [1,0],
-        [4,2],
-        [1,2]
-    ],
-
-    /* Corpo — triângulo grande */
-    bigB:[
-        [1,2],
-        [4,2],
-        [2,5]
-    ],
-
-    /* Orelha esquerda — triângulo pequeno */
-    smlA:[
-        [1,0],
-        [2,0],
-        [1,1]
-    ],
-
-    /* Orelha direita — triângulo pequeno */
-    smlB:[
-        [3,0],
-        [4,2],
-        [3,2]
-    ],
-
-    /* Pescoço/peito — triângulo médio */
-    med:[
-        [1,2],
-        [1,4],
-        [2,3]
-    ],
-
-    /* Pata dianteira — quadrado em losango */
-    sq:[
-        [1,4],
-        [2,3],
-        [3,4],
-        [2,5]
-    ],
-
-    /* Cauda — paralelogramo */
-    par:[
-        [2,5],
-        [4,5],
-        [5,4],
-        [3,4]
-    ]
-
-};
-
-
-/* -------- VELA (barco a vela clássico) --------
-   Silhueta: barco simples com uma vela triangular alta.
------------------------------------------------------------- */
-const SAILBOAT_TARGET = {
-
-    /* Vela principal — triângulo grande */
-    bigA:[
-        [2,0],
-        [2,4],
-        [0,4]
-    ],
-
-    /* Reflexo da vela / casco — triângulo grande */
-    bigB:[
-        [2,4],
-        [4,4],
-        [2,2]
-    ],
-
-    /* Casco esquerdo — triângulo médio */
-    med:[
-        [0,4],
-        [2,4],
-        [1,5]
-    ],
-
-    /* Casco direito — triângulo pequeno */
-    smlA:[
-        [4,4],
-        [4,5],
-        [3,5]
-    ],
-
-    /* Mastro — triângulo pequeno */
-    smlB:[
-        [2,0],
-        [3,1],
-        [2,2]
-    ],
-
-    /* Casco central — quadrado em losango */
-    sq:[
-        [1,5],
-        [2,4],
-        [3,5],
-        [2,6]
-    ],
-
-    /* Proa — paralelogramo */
-    par:[
-        [2,6],
-        [3,5],
-        [4,5],
-        [3,6]
-    ]
-
-};
-
-
-/* ============================================================================
-   NORMALIZAÇÃO DE MODELOS
-   Recebe um objeto com vértices brutos (0..N) e devolve o mesmo objeto com
-   vértices já convertidos para o canvas, escalados e centrados no tabuleiro.
-============================================================================ */
-
-function normalizeModel(rawTargets){
-
-    /* 1. bounding box de todos os vértices crus */
-    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
-
-    for(const verts of Object.values(rawTargets)){
-        for(const [x,y] of verts){
-            if(x<minX) minX=x;
-            if(x>maxX) maxX=x;
-            if(y<minY) minY=y;
-            if(y>maxY) maxY=y;
+        // Helper: centroide de uma peça
+        function centroide(pontos) {
+            let x = 0, y = 0;
+            for (const p of pontos) { x += p[0]; y += p[1]; }
+            return [x / pontos.length, y / pontos.length];
         }
-    }
 
-    const rawW = maxX - minX;
-    const rawH = maxY - minY;
+        /* Definição das soluções finais (posição-alvo de cada peça).
+           Cada entrada é {id, dx, dy, rot} — deslocamento + rotação
+           a partir da posição canônica. */
+        const SOLUCOES = {
+            square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 })),
 
-    /* 2. espaço útil do tabuleiro (fora da bandeja) */
-    const playW = CONFIG.canvasW - 2*CONFIG.modelMargin;
-    const playH = (CONFIG.canvasH - CONFIG.trayHeight) - 2*CONFIG.modelMargin;
+            house: [
+                // Telhado: dois triângulos grandes
+                { id: 'T1', dx: 0, dy: -80, rot: 0 },
+                { id: 'T2', dx: 0, dy: -80, rot: 0 },
+                // Corpo: restante
+                { id: 'TM', dx: 40, dy: 40, rot: 0 },
+                { id: 'T3', dx: 40, dy: 0, rot: 45 },
+                { id: 'T4', dx: -40, dy: 60, rot: -45 },
+                { id: 'Q', dx: 0, dy: 40, rot: 0 },
+                { id: 'P', dx: 40, dy: 40, rot: 0 }
+            ],
 
-    /* 3. escala para caber mantendo proporção */
-    const scale = Math.min(
-        playW / rawW,
-        playH / rawH
-    );
+            boat: [
+                { id: 'T1', dx: -80, dy: 0, rot: 45 },
+                { id: 'T2', dx: 80, dy: 0, rot: -45 },
+                { id: 'TM', dx: 0, dy: 40, rot: 0 },
+                { id: 'T3', dx: 0, dy: -40, rot: 90 },
+                { id: 'T4', dx: -40, dy: 40, rot: 45 },
+                { id: 'Q', dx: 40, dy: 40, rot: 0 },
+                { id: 'P', dx: 0, dy: 80, rot: 0 }
+            ],
 
-    /* 4. centro do tabuleiro */
-    const cx = CONFIG.canvasW / 2;
-    const cy = (CONFIG.canvasH - CONFIG.trayHeight) / 2;
-
-    /* 5. centro do modelo cru */
-    const rawCx = (minX + maxX) / 2;
-    const rawCy = (minY + maxY) / 2;
-
-    /* 6. converter cada vértice */
-    const out = {};
-
-    for(const [id, verts] of Object.entries(rawTargets)){
-        out[id] = verts.map(([x,y])=>[
-            cx + (x - rawCx) * scale,
-            cy + (y - rawCy) * scale
-        ]);
-    }
-
-    return out;
-
-}
-
-
-/* ============================================================================
-   CONSTRUÇÃO DOS MODELOS
-============================================================================ */
-
-function buildModel(id, name, icon, level, rawTargets, silhouetteSide = null){
-
-    /* normaliza e usa também como silhueta */
-    const targets = {};
-
-    for(const pieceId of PIECE_IDS){
-        targets[pieceId] = {
-            id: pieceId,
-            vertices: rawTargets[pieceId]
+            swan: [
+                { id: 'T1', dx: 0, dy: -40, rot: 0 },
+                { id: 'T2', dx: 0, dy: 40, rot: 180 },
+                { id: 'TM', dx: -80, dy: -40, rot: 45 },
+                { id: 'T3', dx: 40, dy: -40, rot: -45 },
+                { id: 'T4', dx: -40, dy: 40, rot: 45 },
+                { id: 'Q', dx: 40, dy: 40, rot: 0 },
+                { id: 'P', dx: 80, dy: 40, rot: 0 }
+            ]
         };
-    }
 
-    return {
-        id,
-        name,
-        icon,
-        level,
-        targets,
-        silhouette: targets,
-        side: silhouetteSide || CONFIG.tangramSide
-    };
-
-}
-
-
-function buildModels(){
-
-    return [
-
-        buildModel(
-            "square-classic",
-            "Quadrado Clássico",
-            "⬛",
-            1,
-            normalizeModel(SQUARE_TARGET)
-        ),
-
-        buildModel(
-            "square-rotated",
-            "Quadrado Rotacionado",
-            "◇",
-            1,
-            normalizeModel(
-                Object.fromEntries(
-                    Object.entries(SQUARE_TARGET).map(
-                        ([id,verts])=>[
-                            id,
-                            transformFigure(verts, {angle:45})
-                        ]
-                    )
-                )
-            )
-        ),
-
-        buildModel(
-            "square-mirrored",
-            "Quadrado Espelhado",
-            "◈",
-            2,
-            normalizeModel(
-                Object.fromEntries(
-                    Object.entries(SQUARE_TARGET).map(
-                        ([id,verts])=>[
-                            id,
-                            transformFigure(verts, {mirror:true})
-                        ]
-                    )
-                )
-            )
-        ),
-
-        buildModel(
-            "boat",
-            "Barco",
-            "⛵",
-            2,
-            normalizeModel(BOAT_TARGET)
-        ),
-
-        buildModel(
-            "house",
-            "Casa",
-            "🏠",
-            2,
-            normalizeModel(HOUSE_TARGET)
-        ),
-
-        buildModel(
-            "fish",
-            "Peixe",
-            "🐟",
-            3,
-            normalizeModel(FISH_TARGET)
-        ),
-
-        buildModel(
-            "swan",
-            "Cisne",
-            "🦢",
-            3,
-            normalizeModel(SWAN_TARGET)
-        ),
-
-        buildModel(
-            "cat",
-            "Gato",
-            "🐱",
-            4,
-            normalizeModel(CAT_TARGET)
-        ),
-
-        buildModel(
-            "sailboat",
-            "Vela",
-            "⛺",
-            4,
-            normalizeModel(SAILBOAT_TARGET)
-        )
-
-    ];
-
-}
-
-
-const MODELS =
-    buildModels();
-
-
-/* ============================================================================
-   ESTADO DO JOGO
-============================================================================ */
-
-let currentModel=null;
-
-let pieces=[];
-
-let selectedId=null;
-
-let dragging=false;
-
-let dragPointerId=null;
-
-let dragOffset={
-    x:0,
-    y:0
-};
-
-let attempts=0;
-
-let elapsed=0;
-
-let timerId=null;
-
-let won=false;
-
-let rafPending=false;
-
-let validationCanvas=null;
-
-let validationCtx=null;
-
-
-/* ============================================================================
-   ELEMENTOS DOM
-============================================================================ */
-
-const cv =
-    document.getElementById("cv");
-
-const ctx =
-    cv.getContext("2d");
-
-
-const modelNameEl =
-    document.getElementById(
-        "model-name"
-    );
-
-
-const scoreEl =
-    document.getElementById(
-        "score-count"
-    );
-
-
-const timerEl =
-    document.getElementById(
-        "timer"
-    );
-
-
-const attemptsEl =
-    document.getElementById(
-        "attempts"
-    );
-
-
-const statusEl =
-    document.getElementById(
-        "status"
-    );
-
-
-const legendEl =
-    document.getElementById(
-        "legend"
-    );
-
-
-const winModal =
-    document.getElementById(
-        "win"
-    );
-
-
-const winText =
-    document.getElementById(
-        "win-text"
-    );
-
-
-const winTime =
-    document.getElementById(
-        "win-time"
-    );
-
-
-const winAttempts =
-    document.getElementById(
-        "win-attempts"
-    );
-
-
-const winPoints =
-    document.getElementById(
-        "win-points"
-    );
-
-
-const themeBtn =
-    document.getElementById(
-        "theme-toggle"
-    );
-
-
-/* ============================================================================
-   TRANSFORMAÇÃO DE PONTO
-============================================================================ */
-
-function transformPoint(
-    [x,y],
-    rot,
-    flip,
-    tx,
-    ty
-){
-
-    if(flip)
-        x=-x;
-
-
-    const r =
-        rot*Math.PI/180;
-
-
-    const c =
-        Math.cos(r);
-
-
-    const s =
-        Math.sin(r);
-
-
-    return [
-
-        tx+x*c-y*s,
-
-        ty+x*s+y*c
-
-    ];
-
-}
-
-
-/* ============================================================================
-   VÉRTICES NO MUNDO
-============================================================================ */
-
-function worldVertices(piece){
-
-    return PIECES[piece.id]
-        .verts
-        .map(
-            v=>
-                transformPoint(
-                    v,
-                    piece.rot,
-                    piece.flip,
-                    piece.x,
-                    piece.y
-                )
-        );
-
-}
-
-
-/* ============================================================================
-   CAMINHO DE POLÍGONO
-============================================================================ */
-
-function polygonPath(
-    context,
-    vertices
-){
-
-    context.beginPath();
-
-
-    vertices.forEach(
-        ([x,y],i)=>{
-
-            if(i===0)
-                context.moveTo(
-                    x,
-                    y
-                );
-
-            else
-                context.lineTo(
-                    x,
-                    y
-                );
-
-        }
-    );
-
-
-    context.closePath();
-
-}
-
-
-/* ============================================================================
-   CENTROIDE
-============================================================================ */
-
-function polygonCentroid(
-    vertices
-){
-
-    let x=0;
-
-    let y=0;
-
-
-    for(
-        const p of vertices
-    ){
-
-        x+=p[0];
-
-        y+=p[1];
-
-    }
-
-
-    return {
-
-        x:x/vertices.length,
-
-        y:y/vertices.length
-
-    };
-
-}
-
-
-/* ============================================================================
-   ÁREA
-============================================================================ */
-
-function polygonArea(
-    vertices
-){
-
-    let a=0;
-
-
-    for(
-        let i=0,
-            j=vertices.length-1;
-
-        i<vertices.length;
-
-        j=i++
-    ){
-
-        a+=
-            vertices[j][0]*
-            vertices[i][1]
-            -
-            vertices[i][0]*
-            vertices[j][1];
-
-    }
-
-
-    return Math.abs(a)/2;
-
-}
-
-
-/* ============================================================================
-   POSIÇÃO NA BANDEJA
-============================================================================ */
-
-function trayPosition(
-    index
-){
-
-    const trayTop =
-        CONFIG.canvasH -
-        CONFIG.trayHeight;
-
-
-    const cols=4;
-
-
-    const cellW =
-        CONFIG.canvasW/cols;
-
-
-    const row =
-        Math.floor(index/cols);
-
-
-    const col =
-        index%cols;
-
-
-    const rowH =
-        CONFIG.trayHeight/2;
-
-
-    return {
-
-        x:
-            cellW*(col+.5),
-
-        y:
-            trayTop+
-            rowH*(row+.5)
-
-    };
-
-}
-
-
-/* ============================================================================
-   INICIALIZAÇÃO DO JOGO
-============================================================================ */
-
-function initGame(
-    modelIndex=null
-){
-
-    stopTimer();
-
-
-    currentModel =
-        modelIndex===null
-
-            ?
-
-        MODELS[
-            Math.floor(
-                Math.random()*
-                MODELS.length
-            )
-        ]
-
-            :
-
-        MODELS[
-            modelIndex %
-            MODELS.length
-        ];
-
-
-    modelNameEl.textContent =
-        `${currentModel.icon} ${currentModel.name}`;
-
-
-    attempts=0;
-
-    elapsed=0;
-
-    won=false;
-
-    selectedId=null;
-
-    dragging=false;
-
-
-    winModal.classList.remove(
-        "active"
-    );
-
-
-    pieces =
-        PIECE_IDS.map(
-            (id,index)=>{
-
-                const pos =
-                    trayPosition(
-                        index
-                    );
-
-
-                return {
-
-                    id,
-
-                    x:pos.x,
-
-                    y:pos.y,
-
-                    rot:[
-                        0,
-                        45,
-                        90,
-                        135,
-                        180,
-                        225,
-                        270,
-                        315
-                    ][
-                        Math.floor(
-                            Math.random()*8
-                        )
-                    ],
-
-                    flip:false,
-
-                    placed:false
-
-                };
-
+        /* Calcula a silhueta (bounding convex hull aproximado) para um desafio.
+           Para o quadrado, é o próprio quadrado mestre.
+           Para os outros, é o polígono que envolve as peças na posição final. */
+        function calcularSilhueta(nome) {
+            if (nome === 'square') {
+                return [[0, 0], [L, 0], [L, L], [0, L]];
             }
-        );
-
-
-    buildLegend();
-
-    updateScore(false);
-
-    updateTimerDisplay();
-
-    setStatus(
-        "Selecione uma peça e comece a montar.",
-        ""
-    );
-
-
-    startTimer();
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   LEGENDA
-============================================================================ */
-
-function buildLegend(){
-
-    legendEl.innerHTML="";
-
-
-    for(
-        const id of PIECE_IDS
-    ){
-
-        const def =
-            PIECES[id];
-
-
-        const el =
-            document.createElement(
-                "button"
-            );
-
-
-        el.type="button";
-
-
-        el.className =
-            "legend-item";
-
-
-        el.dataset.id=id;
-
-
-        el.innerHTML =
-
-            `<span
-                class="sw"
-                style="background:${def.color}"
-            ></span>
-
-            <span class="nm">
-                ${def.short}
-            </span>`;
-
-
-        el.addEventListener(
-            "click",
-            ()=>{
-
-                const p =
-                    pieces.find(
-                        q=>q.id===id
-                    );
-
-
-                selectPiece(
-                    p || null
-                );
-
-
-                requestDraw();
-
-            }
-        );
-
-
-        legendEl.appendChild(
-            el
-        );
-
-    }
-
-
-    updateLegendActive();
-
-}
-
-
-/* ============================================================================
-   ESTADO DA LEGENDA
-============================================================================ */
-
-function updateLegendActive(){
-
-    legendEl
-        .querySelectorAll(
-            ".legend-item"
-        )
-        .forEach(
-            el=>{
-
-                const id =
-                    el.dataset.id;
-
-
-                const p =
-                    pieces.find(
-                        q=>q.id===id
-                    );
-
-
-                el.classList.toggle(
-                    "active",
-                    id===selectedId
-                );
-
-
-                el.classList.toggle(
-                    "done",
-                    !!p?.placed
-                );
-
-            }
-        );
-
-}
-
-
-/* ============================================================================
-   TEMPORIZADOR
-============================================================================ */
-
-function startTimer(){
-
-    stopTimer();
-
-
-    timerId =
-        setInterval(
-            ()=>{
-
-                if(!won){
-
-                    elapsed++;
-
-                    updateTimerDisplay();
-
+            const solucao = SOLUCOES[nome] || [];
+            const todosPontos = [];
+            for (const item of solucao) {
+                const peca = PECAS_BASE.find(p => p.id === item.id);
+                if (!peca) continue;
+                const [cx, cy] = centroide(peca.pontos);
+                for (const p of peca.pontos) {
+                    todosPontos.push(transformarPonto(p, cx, cy, item.rot, item.dx, item.dy));
                 }
-
-            },
-            1000
-        );
-
-}
-
-
-function stopTimer(){
-
-    if(timerId){
-
-        clearInterval(
-            timerId
-        );
-
-        timerId=null;
-
-    }
-
-}
-
-
-function formatTime(
-    seconds
-){
-
-    const m =
-        String(
-            Math.floor(
-                seconds/60
-            )
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    const s =
-        String(
-            seconds%60
-        ).padStart(
-            2,
-            "0"
-        );
-
-
-    return `${m}:${s}`;
-
-}
-
-
-function updateTimerDisplay(){
-
-    timerEl.textContent =
-        formatTime(
-            elapsed
-        );
-
-
-    timerEl.classList.toggle(
-        "warn",
-        elapsed>=120
-    );
-
-}
-
-
-/* ============================================================================
-   CANVAS DE VALIDAÇÃO
-============================================================================ */
-
-function ensureValidationCanvas(){
-
-    if(validationCanvas)
-        return;
-
-
-    validationCanvas =
-        document.createElement(
-            "canvas"
-        );
-
-
-    validationCanvas.width =
-        CONFIG.validationSize;
-
-
-    validationCanvas.height =
-        Math.round(
-            CONFIG.validationSize*3/4
-        );
-
-
-    validationCtx =
-        validationCanvas.getContext(
-            "2d",
-            {
-                willReadFrequently:true
             }
-        );
-
-}
-
-
-/* ============================================================================
-   CONVERSÃO PARA CANVAS DE VALIDAÇÃO
-============================================================================ */
-
-function modelToValidation(
-    [x,y]
-){
-
-    const targetSize =
-        CONFIG.validationSize*.55;
-
-
-    const cx =
-        validationCanvas.width/2;
-
-
-    const cy =
-        validationCanvas.height*.37;
-
-
-    const scale =
-        targetSize/
-        CONFIG.tangramSide;
-
-
-    return [
-
-        cx+
-        (x-CONFIG.canvasW/2)*
-        scale,
-
-        cy+
-        (y-190)*
-        scale
-
-    ];
-
-}
-
-
-/* ============================================================================
-   DESENHO DE POLÍGONO NA VALIDAÇÃO
-============================================================================ */
-
-function drawValidationPolygon(
-    vertices
-){
-
-    const v =
-        vertices.map(
-            modelToValidation
-        );
-
-
-    polygonPath(
-        validationCtx,
-        v
-    );
-
-
-    validationCtx.fill();
-
-}
-
-
-/* ============================================================================
-   MÁSCARA DO ALVO
-============================================================================ */
-
-function targetMask(){
-
-    ensureValidationCanvas();
-
-
-    validationCtx.clearRect(
-        0,
-        0,
-        validationCanvas.width,
-        validationCanvas.height
-    );
-
-
-    validationCtx.fillStyle="#fff";
-
-
-    for(
-        const target of
-        Object.values(
-            currentModel.silhouette
-        )
-    ){
-
-        drawValidationPolygon(
-            target.vertices
-        );
-
-    }
-
-
-    return validationCtx.getImageData(
-        0,
-        0,
-        validationCanvas.width,
-        validationCanvas.height
-    ).data;
-
-}
-
-
-/* ============================================================================
-   MÁSCARA DAS PEÇAS
-============================================================================ */
-
-function piecesMask(){
-
-    ensureValidationCanvas();
-
-
-    validationCtx.clearRect(
-        0,
-        0,
-        validationCanvas.width,
-        validationCanvas.height
-    );
-
-
-    validationCtx.fillStyle="#fff";
-
-
-    for(
-        const p of pieces
-    ){
-
-        drawValidationPolygon(
-            worldVertices(p)
-        );
-
-    }
-
-
-    return validationCtx.getImageData(
-        0,
-        0,
-        validationCanvas.width,
-        validationCanvas.height
-    ).data;
-
-}
-
-
-/* ============================================================================
-   COMPARAÇÃO DAS MÁSCARAS
-============================================================================ */
-
-function masksMatch(
-    target,
-    piecesData
-){
-
-    let targetCount=0;
-
-    let pieceCount=0;
-
-    let intersection=0;
-
-
-    for(
-        let i=3;
-        i<target.length;
-        i+=4
-    ){
-
-        const t =
-            target[i]>25;
-
-
-        const p =
-            piecesData[i]>25;
-
-
-        if(t)
-            targetCount++;
-
-
-        if(p)
-            pieceCount++;
-
-
-        if(t&&p)
-            intersection++;
-
-    }
-
-
-    if(!targetCount)
-        return false;
-
-
-    const unionError =
-        1 -
-        intersection/
-        targetCount;
-
-
-    const excess =
-        pieceCount-
-        intersection;
-
-
-    const excessRatio =
-        excess/
-        targetCount;
-
-
-    return (
-
-        unionError<0.018
-
-        &&
-
-        excessRatio<0.018
-
-    );
-
-}
-
-
-/* ============================================================================
-   ÁREA DAS PEÇAS
-============================================================================ */
-
-function totalPieceArea(){
-
-    return pieces.reduce(
-        (sum,p)=>
-            sum+
-            polygonArea(
-                worldVertices(p)
-            ),
-        0
-    );
-
-}
-
-
-/* ============================================================================
-   ÁREA DO ALVO
-============================================================================ */
-
-function targetArea(){
-
-    return Object
-        .values(
-            currentModel.silhouette
-        )
-        .reduce(
-            (sum,t)=>
-                sum+
-                polygonArea(
-                    t.vertices
-                ),
-            0
-        );
-
-}
-
-
-/* ============================================================================
-   VERIFICAÇÃO GEOMÉTRICA
-============================================================================ */
-
-function geometrySolved(){
-
-    const area =
-        targetArea();
-
-
-    const piecesArea =
-        totalPieceArea();
-
-
-    if(
-        Math.abs(
-            piecesArea-area
-        )>
-        area*.002
-    ){
-
-        return false;
-
-    }
-
-
-    return masksMatch(
-        targetMask(),
-        piecesMask()
-    );
-
-}
-
-
-/* ============================================================================
-   CONTAGEM
-============================================================================ */
-
-function placedCount(){
-
-    return pieces.filter(
-        p=>p.placed
-    ).length;
-
-}
-
-
-/* ============================================================================
-   ATUALIZAÇÃO DA PONTUAÇÃO
-============================================================================ */
-
-function updateScore(
-    checkWin=true
-){
-
-    const count =
-        placedCount();
-
-
-    scoreEl.textContent =
-        `${count} / 7`;
-
-
-    scoreEl.classList.toggle(
-        "ok",
-        count===7
-    );
-
-
-    updateLegendActive();
-
-
-    if(
-        checkWin &&
-        !won &&
-        count===7 &&
-        geometrySolved()
-    ){
-
-        finishGame();
-
-    }
-
-
-    return count;
-
-}
-
-
-/* ============================================================================
-   TENTATIVA DE SNAP
-============================================================================ */
-
-function trySnap(
-    piece
-){
-
-    let best=null;
-
-
-    const target =
-        currentModel.targets[
-            piece.id
-        ];
-
-
-    if(!target)
-        return false;
-
-
-    const center =
-        polygonCentroid(
-            target.vertices
-        );
-
-
-    const candidateAngles=[
-        0,
-        45,
-        90,
-        135,
-        180,
-        225,
-        270,
-        315
-    ];
-
-
-    for(
-        const flip of
-        [false,true]
-    ){
-
-        for(
-            const rot of
-            candidateAngles
-        ){
-
-            const test =
-                PIECES[piece.id]
-                    .verts
-                    .map(
-                        v=>
-                            transformPoint(
-                                v,
-                                rot,
-                                flip,
-                                0,
-                                0
-                            )
-                    );
-
-
-            const c =
-                polygonCentroid(
-                    test
-                );
-
-
-            const tx =
-                center.x-c.x;
-
-
-            const ty =
-                center.y-c.y;
-
-
-            const world =
-                test.map(
-                    ([x,y])=>[
-                        x+tx,
-                        y+ty
-                    ]
-                );
-
-
-            let err=0;
-
-
-            for(
-                let i=0;
-                i<world.length;
-                i++
-            ){
-
-                const a =
-                    world[i];
-
-
-                const b =
-                    target.vertices[
-                        i%
-                        target.vertices.length
-                    ];
-
-
-                err +=
-                    Math.hypot(
-                        a[0]-b[0],
-                        a[1]-b[1]
-                    );
-
+            return convexHull(todosPontos);
+        }
+
+        // Convex hull (Andrew monotone chain)
+        function convexHull(pontos) {
+            if (pontos.length < 3) return pontos;
+            const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+            const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+            const lower = [];
+            for (const p of pts) {
+                while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+                lower.push(p);
+            }
+            const upper = [];
+            for (let i = pts.length - 1; i >= 0; i--) {
+                const p = pts[i];
+                while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+                upper.push(p);
+            }
+            upper.pop(); lower.pop();
+            return lower.concat(upper);
+        }
+
+        /* ==========================================================
+           3. ESTADO DO JOGO
+           ========================================================== */
+        const estado = {
+            pecas: [],            // peças vivas (com transformação atual)
+            selecionada: null,    // id da peça selecionada
+            dragging: null,       // { id, offsetX, offsetY }
+            desafio: 'square',
+            colocadas: 0,
+            segundos: 0,
+            timer: null
+        };
+
+        /* ==========================================================
+           4. DOM
+           ========================================================== */
+        const svg = document.getElementById('tangram-svg');
+        const piecesLayer = document.getElementById('pieces-layer');
+        const silhouette = document.getElementById('silhouette');
+        const boardWrapper = document.getElementById('board-wrapper');
+
+        const displayFase = document.getElementById('display-fase');
+        const displayPecas = document.getElementById('display-pecas');
+        const displayTempo = document.getElementById('display-tempo');
+        const infoInstrucao = document.getElementById('info-instrucao');
+        const selectDesafio = document.getElementById('select-desafio');
+        const btnShuffle = document.getElementById('btn-shuffle');
+        const btnRotateL = document.getElementById('btn-rotate-l');
+        const btnRotateR = document.getElementById('btn-rotate-r');
+        const btnReset = document.getElementById('btn-reset');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        /* ==========================================================
+           5. UTILITÁRIOS
+           ========================================================== */
+        function formatarTempo(s) {
+            const m = String(Math.floor(s / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${m}:${ss}`;
+        }
+
+        function pontosParaString(pontos) {
+            return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
+        }
+
+        /* Aplica a transformação (dx, dy, rot) a uma peça-base */
+        function transformarPeca(pecaBase, dx, dy, rot) {
+            const [cx, cy] = centroide(pecaBase.pontos);
+            return pecaBase.pontos.map(p => transformarPonto(p, cx, cy, rot, dx, dy));
+        }
+
+        /* ==========================================================
+           6. RENDERIZAÇÃO
+           ========================================================== */
+        function renderizarPecas() {
+            piecesLayer.innerHTML = '';
+            for (const p of estado.pecas) {
+                const pontos = transformarPeca(p.base, p.dx, p.dy, p.rot);
+                const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                el.setAttribute('points', pontosParaString(pontos));
+                el.setAttribute('fill', p.cor);
+                el.setAttribute('stroke', 'rgba(255,255,255,0.55)');
+                el.setAttribute('stroke-width', '1.5');
+                el.setAttribute('stroke-linejoin', 'round');
+                el.classList.add('piece');
+                if (p.travada) el.classList.add('locked');
+                if (estado.selecionada === p.id) el.classList.add('selected');
+                if (estado.dragging && estado.dragging.id === p.id) el.classList.add('dragging');
+                el.dataset.id = p.id;
+                el.addEventListener('pointerdown', onPointerDown);
+                piecesLayer.appendChild(el);
+            }
+        }
+
+        function renderizarSilhueta() {
+            const pontos = calcularSilhueta(estado.desafio);
+            silhouette.setAttribute('points', pontosParaString(pontos));
+            silhouette.classList.toggle('completed', estado.colocadas === 7);
+        }
+
+        /* ==========================================================
+           7. INTERAÇÃO — ARRASTAR, SELECIONAR, ROTACIONAR
+           ========================================================== */
+        function getSVGPoint(evt) {
+            const rect = svg.getBoundingClientRect();
+            const x = (evt.clientX - rect.left) / rect.width * L;
+            const y = (evt.clientY - rect.top) / rect.height * L;
+            return [x, y];
+        }
+
+        function onPointerDown(evt) {
+            const id = evt.currentTarget.dataset.id;
+            const peca = estado.pecas.find(p => p.id === id);
+            if (!peca || peca.travada) return;
+
+            // Seleciona
+            estado.selecionada = id;
+
+            // Inicia arraste
+            const [px, py] = getSVGPoint(evt);
+            const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot));
+            estado.dragging = { id, offsetX: cx - px, offsetY: cy - py };
+
+            svg.setPointerCapture(evt.pointerId);
+            svg.addEventListener('pointermove', onPointerMove);
+            svg.addEventListener('pointerup', onPointerUp);
+            svg.addEventListener('pointercancel', onPointerUp);
+
+            renderizarPecas();
+        }
+
+        function onPointerMove(evt) {
+            if (!estado.dragging) return;
+            const peca = estado.pecas.find(p => p.id === estado.dragging.id);
+            if (!peca) return;
+
+            const [px, py] = getSVGPoint(evt);
+            const newX = px + estado.dragging.offsetX;
+            const newY = py + estado.dragging.offsetY;
+
+            // Converte posição absoluta do centroide para deslocamento (dx, dy)
+            const [cx0, cy0] = centroide(peca.base.pontos);
+            peca.dx = newX - cx0;
+            peca.dy = newY - cy0;
+
+            renderizarPecas();
+        }
+
+        function onPointerUp(evt) {
+            svg.removeEventListener('pointermove', onPointerMove);
+            svg.removeEventListener('pointerup', onPointerUp);
+            svg.removeEventListener('pointercancel', onPointerUp);
+            svg.releasePointerCapture?.(evt.pointerId);
+
+            // Tenta encaixar
+            if (estado.dragging) {
+                tentarEncaixe(estado.dragging.id);
+            }
+            estado.dragging = null;
+            renderizarPecas();
+            verificarConclusao();
+        }
+
+        /* Rotaciona a peça selecionada em +delta graus */
+        function rotacionarSelecionada(delta) {
+            if (!estado.selecionada) {
+                infoInstrucao.textContent = '⚠️ Selecione uma peça primeiro (clique nela).';
+                return;
+            }
+            const peca = estado.pecas.find(p => p.id === estado.selecionada);
+            if (!peca || peca.travada) return;
+
+            peca.rot = (peca.rot + delta) % 360;
+            // Ajusta dx, dy para manter o centroide no mesmo lugar
+            renderizarPecas();
+        }
+
+        /* ==========================================================
+           8. SNAP — ENCAIXE POR VÉRTICES
+           ==========================================================
+           Compara cada vértice da peça arrastada com os vértices-alvo
+           da solução do desafio atual. Se todos os vértices estiverem
+           dentro de uma tolerância ε, a peça é travada na posição-alvo.
+           ========================================================== */
+        const TOLERANCIA = 14; // px no espaço do viewBox
+
+        function verticesAlvo(pecaId) {
+            const solucao = SOLUCOES[estado.desafio];
+            if (!solucao) return null;
+            const item = solucao.find(s => s.id === pecaId);
+            if (!item) return null;
+            const pecaBase = PECAS_BASE.find(p => p.id === pecaId);
+            return transformarPeca(pecaBase, item.dx, item.dy, item.rot);
+        }
+
+        function tentarEncaixe(pecaId) {
+            if (estado.desafio === 'free') return;
+            const peca = estado.pecas.find(p => p.id === pecaId);
+            if (!peca || peca.travada) return;
+
+            const alvo = verticesAlvo(pecaId);
+            if (!alvo) return;
+
+            const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
+
+            // Distância máxima entre vértices correspondentes
+            let maxDist = 0;
+            for (let i = 0; i < alvo.length; i++) {
+                const dx = alvo[i][0] - atual[i][0];
+                const dy = alvo[i][1] - atual[i][1];
+                maxDist = Math.max(maxDist, Math.hypot(dx, dy));
             }
 
+            if (maxDist <= TOLERANCIA) {
+                // Trava na posição-alvo exata (snap perfeito)
+                const solucao = SOLUCOES[estado.desafio];
+                const item = solucao.find(s => s.id === pecaId);
+                peca.dx = item.dx;
+                peca.dy = item.dy;
+                peca.rot = item.rot;
+                peca.travada = true;
+                estado.colocadas = estado.pecas.filter(p => p.travada).length;
+                displayPecas.textContent = `${estado.colocadas}/7`;
+                infoInstrucao.textContent = `✅ Peça encaixada! ${7 - estado.colocadas} restantes.`;
+            }
+        }
 
-            if(
-                !best ||
-                err<best.err
-            ){
+        function verificarConclusao() {
+            if (estado.desafio === 'free') return;
+            if (estado.colocadas === 7) {
+                pararTimer();
+                silhouette.classList.add('completed');
+                const bonus = Math.max(50, 200 - estado.segundos);
+                infoInstrucao.textContent = `🎉 Desafio concluído em ${formatarTempo(estado.segundos)}! +${bonus} pontos.`;
 
-                best={
-                    err,
-                    rot,
-                    flip,
-                    tx,
-                    ty
-                };
+                // Guarda progresso local (Firebase opcional)
+                try {
+                    const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+                    if (jogador) {
+                        const chave = `tangram_${jogador.chave}_${estado.desafio}`;
+                        const melhor = parseInt(localStorage.getItem(chave) || '0', 10);
+                        if (!melhor || estado.segundos < melhor) {
+                            localStorage.setItem(chave, String(estado.segundos));
+                        }
+                    }
+                } catch (_) { /* ignore */ }
+            }
+        }
 
+        /* ==========================================================
+           9. CONTROLE DE TEMPO
+           ========================================================== */
+        function iniciarTimer() {
+            pararTimer();
+            estado.segundos = 0;
+            displayTempo.textContent = '00:00';
+            estado.timer = setInterval(() => {
+                estado.segundos++;
+                displayTempo.textContent = formatarTempo(estado.segundos);
+            }, 1000);
+        }
+
+        function pararTimer() {
+            if (estado.timer) clearInterval(estado.timer);
+            estado.timer = null;
+        }
+
+        /* ==========================================================
+           10. INICIALIZAÇÃO E RESET
+           ========================================================== */
+        function posicoesIniciaisEmbaralhadas() {
+            // Coloca as peças fora do centro, em posições aleatórias
+            // para o jogador ter que arrastá-las para o alvo.
+            const resultado = [];
+            const margem = 40;
+
+            for (const peca of PECAS_BASE) {
+                let tentativa = 0;
+                let dx, dy;
+                do {
+                    dx = (Math.random() - 0.5) * (L - 2 * margem);
+                    dy = (Math.random() - 0.5) * (L - 2 * margem) + (Math.random() > 0.5 ? 60 : -60);
+                    tentativa++;
+                } while (tentativa < 20 && Math.hypot(dx, dy) < 60);
+
+                resultado.push({
+                    id: peca.id,
+                    base: peca,
+                    cor: peca.cor,
+                    dx, dy,
+                    rot: (Math.floor(Math.random() * 8) * 45) % 360,
+                    travada: false
+                });
+            }
+            return resultado;
+        }
+
+        function resetarDesafio() {
+            estado.pecas = posicoesIniciaisEmbaralhadas();
+            estado.selecionada = null;
+            estado.colocadas = 0;
+            displayPecas.textContent = '0/7';
+            silhouette.classList.remove('completed');
+
+            if (estado.desafio === 'free') {
+                displayFase.textContent = 'Livre';
+                infoInstrucao.textContent = 'Modo livre: arraste e rotacione como quiser.';
+            } else {
+                displayFase.textContent = estado.desafio.charAt(0).toUpperCase() + estado.desafio.slice(1);
+                infoInstrucao.textContent = 'Arraste as peças até encaixarem na silhueta.';
             }
 
+            renderizarSilhueta();
+            renderizarPecas();
+            iniciarTimer();
         }
 
-    }
-
-
-    if(
-        best &&
-        best.err <
-        CONFIG.snapDistance*
-        PIECES[piece.id]
-            .verts.length
-    ){
-
-        piece.x =
-            best.tx;
-
-        piece.y =
-            best.ty;
-
-        piece.rot =
-            best.rot;
-
-        piece.flip =
-            best.flip;
-
-        piece.placed=true;
-
-        return true;
-
-    }
-
-
-    return false;
-
-}
-
-
-/* ============================================================================
-   FINALIZAÇÃO DO MOVIMENTO
-============================================================================ */
-
-function finalizeMove(
-    piece
-){
-
-    attempts++;
-
-
-    attemptsEl.textContent =
-        attempts;
-
-
-    const snapped =
-        trySnap(
-            piece
-        );
-
-
-    if(!snapped)
-        piece.placed=false;
-
-
-    const count =
-        updateScore(
-            false
-        );
-
-
-    if(count===7){
-
-        if(
-            geometrySolved()
-        ){
-
-            finishGame();
-
-        }
-
-        else{
-
-            setStatus(
-                "As sete peças estão presentes, mas ainda há sobreposição ou espaço fora da silhueta.",
-                "warning"
-            );
-
-        }
-
-    }
-
-    else if(snapped){
-
-        setStatus(
-            "Boa! Peça encaixada.",
-            "success"
-        );
-
-    }
-
-    else{
-
-        setStatus(
-            `${count} de 7 peças encaixadas. Continue ajustando.`
-        );
-
-    }
-
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   FINAL DO JOGO
-============================================================================ */
-
-function finishGame(){
-
-    if(won)
-        return;
-
-
-    won=true;
-
-    stopTimer();
-
-
-    const timeBonus =
-        Math.max(
-            0,
-            Math.round(
-                CONFIG.maxTimeBonus-
-                elapsed/10
-            )
-        );
-
-
-    const points =
-        CONFIG.points+
-        timeBonus;
-
-
-    winText.textContent =
-        `Você completou "${currentModel.name}" usando as sete peças.`;
-
-
-    winTime.textContent =
-        formatTime(
-            elapsed
-        );
-
-
-    winAttempts.textContent =
-        String(
-            attempts
-        );
-
-
-    winPoints.textContent =
-        `+${points}`;
-
-
-    winModal.classList.add(
-        "active"
-    );
-
-
-    setStatus(
-        "Desafio concluído!",
-        "success"
-    );
-
-
-    awardPoints(
-        points
-    );
-
-}
-
-
-/* ============================================================================
-   STATUS
-============================================================================ */
-
-function setStatus(
-    message,
-    type=""
-){
-
-    statusEl.textContent =
-        message;
-
-
-    statusEl.className =
-        `status ${type}`;
-
-}
-
-
-/* ============================================================================
-   DESENHO
-============================================================================ */
-
-function requestDraw(){
-
-    if(rafPending)
-        return;
-
-
-    rafPending=true;
-
-
-    requestAnimationFrame(
-        ()=>{
-
-            rafPending=false;
-
-            draw();
-
-        }
-    );
-
-}
-
-
-/* ============================================================================
-   DESENHO PRINCIPAL
-============================================================================ */
-
-function draw(){
-
-    ctx.clearRect(
-        0,
-        0,
-        CONFIG.canvasW,
-        CONFIG.canvasH
-    );
-
-
-    drawGrid();
-
-    drawPlayArea();
-
-    drawSilhouette();
-
-    drawTray();
-
-
-    const ordered =
-        [...pieces].sort(
-            (a,b)=>{
-
-                if(
-                    a.placed !==
-                    b.placed
-                ){
-
-                    return a.placed
-                        ? -1
-                        : 1;
-
-                }
-
-
-                if(
-                    a.id===selectedId
-                )
-                    return 1;
-
-
-                if(
-                    b.id===selectedId
-                )
-                    return -1;
-
-
-                return 0;
-
-            }
-        );
-
-
-    ordered.forEach(
-        drawPiece
-    );
-
-}
-
-
-/* ============================================================================
-   GRADE
-============================================================================ */
-
-function drawGrid(){
-
-    const dark =
-        document.documentElement
-            .getAttribute(
-                "data-theme"
-            )==="dark";
-
-
-    ctx.save();
-
-
-    ctx.strokeStyle =
-        dark
-            ? "rgba(148,163,184,.055)"
-            : "rgba(15,23,42,.045)";
-
-
-    ctx.lineWidth=1;
-
-
-    for(
-        let x=0;
-        x<=CONFIG.canvasW;
-        x+=CONFIG.grid
-    ){
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            x,
-            0
-        );
-
-        ctx.lineTo(
-            x,
-            CONFIG.canvasH
-        );
-
-        ctx.stroke();
-
-    }
-
-
-    for(
-        let y=0;
-        y<=CONFIG.canvasH;
-        y+=CONFIG.grid
-    ){
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            0,
-            y
-        );
-
-        ctx.lineTo(
-            CONFIG.canvasW,
-            y
-        );
-
-        ctx.stroke();
-
-    }
-
-
-    ctx.restore();
-
-}
-
-
-/* ============================================================================
-   ÁREA DE JOGO
-============================================================================ */
-
-function drawPlayArea(){
-
-    const dark =
-        document.documentElement
-            .getAttribute(
-                "data-theme"
-            )==="dark";
-
-
-    ctx.save();
-
-
-    ctx.fillStyle =
-        dark
-            ? "rgba(56,189,248,.025)"
-            : "rgba(56,189,248,.018)";
-
-
-    ctx.fillRect(
-        0,
-        0,
-        CONFIG.canvasW,
-        CONFIG.canvasH-
-        CONFIG.trayHeight
-    );
-
-
-    ctx.restore();
-
-}
-
-
-/* ============================================================================
-   BANDEJA
-============================================================================ */
-
-function drawTray(){
-
-    const y =
-        CONFIG.canvasH-
-        CONFIG.trayHeight;
-
-
-    const dark =
-        document.documentElement
-            .getAttribute(
-                "data-theme"
-            )==="dark";
-
-
-    ctx.save();
-
-
-    ctx.strokeStyle =
-        dark
-            ? "rgba(148,163,184,.22)"
-            : "rgba(15,23,42,.16)";
-
-
-    ctx.lineWidth=1;
-
-
-    ctx.setLineDash([
-        5,
-        8
-    ]);
-
-
-    ctx.beginPath();
-
-
-    ctx.moveTo(
-        0,
-        y
-    );
-
-
-    ctx.lineTo(
-        CONFIG.canvasW,
-        y
-    );
-
-
-    ctx.stroke();
-
-
-    ctx.setLineDash([]);
-
-
-    ctx.fillStyle =
-        dark
-            ? "rgba(148,163,184,.5)"
-            : "rgba(71,85,105,.55)";
-
-
-    ctx.font =
-        "700 9px 'Plus Jakarta Sans'";
-
-
-    ctx.fillText(
-        "BANDEJA DE PEÇAS",
-        12,
-        y+15
-    );
-
-
-    ctx.restore();
-
-}
-
-
-/* ============================================================================
-   SILHUETA COM MALHA PONTILHADA BEM DEFINIDA
-============================================================================ */
-
-function drawSilhouette(){
-
-    const dark =
-        document.documentElement
-            .getAttribute(
-                "data-theme"
-            )==="dark";
-
-
-    ctx.save();
-
-
-    /* 1. preenchimento sutil da silhueta */
-    ctx.fillStyle =
-        dark
-            ? "rgba(56,189,248,.05)"
-            : "rgba(56,189,248,.07)";
-
-
-    for(
-        const target of
-        Object.values(
-            currentModel.silhouette
-        )
-    ){
-
-        polygonPath(
-            ctx,
-            target.vertices
-        );
-
-
-        ctx.fill();
-
-    }
-
-
-    /* 2. malha pontilhada DENTRO da silhueta (clip em cada peça) */
-    ctx.save();
-
-
-    for(
-        const target of
-        Object.values(
-            currentModel.silhouette
-        )
-    ){
-
-        ctx.save();
-
-
-        polygonPath(
-            ctx,
-            target.vertices
-        );
-
-
-        ctx.clip();
-
-
-        drawDotGrid(
-            dark
-                ? "rgba(148,163,184,.55)"
-                : "rgba(71,85,105,.55)",
-            dark
-                ? "rgba(148,163,184,.28)"
-                : "rgba(71,85,105,.28)"
-        );
-
-
-        ctx.restore();
-
-    }
-
-
-    ctx.restore();
-
-
-    /* 3. contorno tracejado bem definido */
-    ctx.strokeStyle =
-        dark
-            ? "rgba(148,163,184,.55)"
-            : "rgba(71,85,105,.55)";
-
-
-    ctx.lineWidth=1.8;
-
-
-    ctx.setLineDash([
-        6,
-        5
-    ]);
-
-
-    for(
-        const target of
-        Object.values(
-            currentModel.silhouette
-        )
-    ){
-
-        polygonPath(
-            ctx,
-            target.vertices
-        );
-
-
-        ctx.stroke();
-
-    }
-
-
-    ctx.setLineDash([]);
-
-
-    ctx.restore();
-
-
-    /* 4. rótulo "SILHUETA" */
-    ctx.save();
-
-
-    ctx.fillStyle =
-        dark
-            ? "rgba(148,163,184,.35)"
-            : "rgba(71,85,105,.4)";
-
-
-    ctx.font =
-        "700 9px 'Plus Jakarta Sans'";
-
-
-    ctx.textAlign="center";
-
-
-    ctx.fillText(
-        "SILHUETA",
-        CONFIG.canvasW/2,
-        20
-    );
-
-
-    ctx.restore();
-
-}
-
-
-/* ============================================================================
-   MALHA PONTILHADA
-   Desenha uma grade de pontos com passo fixo (CONFIG.dotSpacing).
-   Dois níveis de opacidade para dar profundidade sutil.
-============================================================================ */
-
-function drawDotGrid(colorMain, colorSoft){
-
-    const spacing =
-        CONFIG.dotSpacing;
-
-
-    const r1 = 1.4;  /* raio do ponto principal */
-    const r2 = 2.6;  /* raio do ponto "soft" (aura) */
-
-
-    for(
-        let y = spacing/2;
-        y < CONFIG.canvasH;
-        y += spacing
-    ){
-
-        for(
-            let x = spacing/2;
-            x < CONFIG.canvasW;
-            x += spacing
-        ){
-
-            /* aura mais clara */
-            ctx.beginPath();
-            ctx.arc(x, y, r2, 0, Math.PI*2);
-            ctx.fillStyle = colorSoft;
-            ctx.fill();
-
-            /* núcleo mais escuro */
-            ctx.beginPath();
-            ctx.arc(x, y, r1, 0, Math.PI*2);
-            ctx.fillStyle = colorMain;
-            ctx.fill();
-
-        }
-
-    }
-
-}
-
-
-/* ============================================================================
-   DESENHO DE PEÇA
-============================================================================ */
-
-function drawPiece(
-    p
-){
-
-    const def =
-        PIECES[p.id];
-
-
-    const verts =
-        worldVertices(p);
-
-
-    const selected =
-        p.id===selectedId;
-
-
-    ctx.save();
-
-
-    ctx.shadowColor =
-        "rgba(0,0,0,.38)";
-
-
-    ctx.shadowBlur =
-        selected
-            ? 18
-            : 7;
-
-
-    ctx.shadowOffsetY =
-        selected
-            ? 4
-            : 2;
-
-
-    polygonPath(
-        ctx,
-        verts
-    );
-
-
-    ctx.fillStyle =
-        def.color;
-
-
-    ctx.fill();
-
-
-    ctx.shadowColor =
-        "transparent";
-
-
-    ctx.shadowBlur=0;
-
-
-    ctx.shadowOffsetY=0;
-
-
-    let minX=Infinity;
-
-    let minY=Infinity;
-
-    let maxX=-Infinity;
-
-    let maxY=-Infinity;
-
-
-    for(
-        const [x,y] of verts
-    ){
-
-        minX=Math.min(
-            minX,
-            x
-        );
-
-
-        minY=Math.min(
-            minY,
-            y
-        );
-
-
-        maxX=Math.max(
-            maxX,
-            x
-        );
-
-
-        maxY=Math.max(
-            maxY,
-            y
-        );
-
-    }
-
-
-    const grad =
-        ctx.createLinearGradient(
-            minX,
-            minY,
-            maxX,
-            maxY
-        );
-
-
-    grad.addColorStop(
-        0,
-        "rgba(255,255,255,.28)"
-    );
-
-
-    grad.addColorStop(
-        1,
-        "rgba(0,0,0,.18)"
-    );
-
-
-    ctx.fillStyle=grad;
-
-    ctx.fill();
-
-
-    if(selected){
-
-        ctx.strokeStyle="#fff";
-
-        ctx.lineWidth=3;
-
-        ctx.stroke();
-
-
-        ctx.globalAlpha=.32;
-
-        ctx.strokeStyle=
-            def.color;
-
-        ctx.lineWidth=8;
-
-        ctx.stroke();
-
-    }
-
-    else if(p.placed){
-
-        ctx.strokeStyle=
-            "rgba(52,211,153,.95)";
-
-        ctx.lineWidth=2.5;
-
-        ctx.stroke();
-
-    }
-
-    else{
-
-        ctx.strokeStyle=
-            "rgba(0,0,0,.32)";
-
-        ctx.lineWidth=1.5;
-
-        ctx.stroke();
-
-    }
-
-
-    if(selected){
-
-        const c =
-            polygonCentroid(
-                verts
-            );
-
-
-        ctx.globalAlpha=.9;
-
-        ctx.fillStyle="#fff";
-
-
-        ctx.font =
-            "800 9px 'JetBrains Mono'";
-
-
-        ctx.textAlign="center";
-
-        ctx.textBaseline="middle";
-
-
-        ctx.fillText(
-            def.short,
-            c.x,
-            c.y
-        );
-
-    }
-
-
-    ctx.restore();
-
-}
-
-
-/* ============================================================================
-   CONVERSÃO DO MOUSE/TOQUE PARA CANVAS
-============================================================================ */
-
-function getCanvasPos(
-    clientX,
-    clientY
-){
-
-    const r =
-        cv.getBoundingClientRect();
-
-
-    return {
-
-        x:
-            (clientX-r.left)*
-            (
-                CONFIG.canvasW/
-                r.width
-            ),
-
-        y:
-            (clientY-r.top)*
-            (
-                CONFIG.canvasH/
-                r.height
-            )
-
-    };
-
-}
-
-
-/* ============================================================================
-   PONTO DENTRO DE POLÍGONO
-============================================================================ */
-
-function pointInPolygon(
-    px,
-    py,
-    verts
-){
-
-    let inside=false;
-
-
-    for(
-        let i=0,
-            j=verts.length-1;
-
-        i<verts.length;
-
-        j=i++
-    ){
-
-        const [xi,yi] =
-            verts[i];
-
-
-        const [xj,yj] =
-            verts[j];
-
-
-        const intersect =
-            (
-                (yi>py)!==
-                (yj>py)
-            )
-            &&
-            (
-                px<
-                (xj-xi)*
-                (py-yi)/
-                (yj-yi)+
-                xi
-            );
-
-
-        if(intersect)
-            inside=!inside;
-
-    }
-
-
-    return inside;
-
-}
-
-
-/* ============================================================================
-   LOCALIZAÇÃO DA PEÇA
-============================================================================ */
-
-function findPieceAt(
-    x,
-    y
-){
-
-    for(
-        let i=pieces.length-1;
-        i>=0;
-        i--
-    ){
-
-        const p =
-            pieces[i];
-
-
-        if(
-            pointInPolygon(
-                x,
-                y,
-                worldVertices(p)
-            )
-        ){
-
-            return p;
-
-        }
-
-    }
-
-
-    return null;
-
-}
-
-
-/* ============================================================================
-   TRAZER PARA FRENTE
-============================================================================ */
-
-function bringToFront(
-    piece
-){
-
-    const i =
-        pieces.indexOf(
-            piece
-        );
-
-
-    if(i>=0){
-
-        pieces.splice(
-            i,
-            1
-        );
-
-
-        pieces.push(
-            piece
-        );
-
-    }
-
-}
-
-
-/* ============================================================================
-   SELEÇÃO
-============================================================================ */
-
-function selectPiece(
-    piece
-){
-
-    selectedId =
-        piece?.id ||
-        null;
-
-
-    updateLegendActive();
-
-}
-
-
-/* ============================================================================
-   INÍCIO DO ARRASTE
-============================================================================ */
-
-function beginDrag(
-    clientX,
-    clientY,
-    pointerId
-){
-
-    const pos =
-        getCanvasPos(
-            clientX,
-            clientY
-        );
-
-
-    const piece =
-        findPieceAt(
-            pos.x,
-            pos.y
-        );
-
-
-    if(!piece){
-
-        selectPiece(
-            null
-        );
-
-        requestDraw();
-
-        return;
-
-    }
-
-
-    selectPiece(
-        piece
-    );
-
-
-    bringToFront(
-        piece
-    );
-
-
-    dragging=true;
-
-    dragPointerId =
-        pointerId;
-
-
-    dragOffset.x =
-        pos.x-piece.x;
-
-
-    dragOffset.y =
-        pos.y-piece.y;
-
-
-    piece.placed=false;
-
-
-    setStatus(
-        `${PIECES[piece.id].name} selecionado.`
-    );
-
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   MOVIMENTO
-============================================================================ */
-
-function moveDrag(
-    clientX,
-    clientY,
-    pointerId
-){
-
-    if(
-        !dragging ||
-        pointerId!==dragPointerId
-    )
-        return;
-
-
-    const p =
-        pieces.find(
-            q=>q.id===selectedId
-        );
-
-
-    if(!p)
-        return;
-
-
-    const pos =
-        getCanvasPos(
-            clientX,
-            clientY
-        );
-
-
-    p.x =
-        pos.x-
-        dragOffset.x;
-
-
-    p.y =
-        pos.y-
-        dragOffset.y;
-
-
-    p.x =
-        clamp(
-            p.x,
-            -80,
-            CONFIG.canvasW+80
-        );
-
-
-    p.y =
-        clamp(
-            p.y,
-            -80,
-            CONFIG.canvasH+80
-        );
-
-
-    p.placed=false;
-
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   FINAL DO ARRASTE
-============================================================================ */
-
-function endDrag(
-    pointerId
-){
-
-    if(
-        !dragging ||
-        pointerId!==dragPointerId
-    )
-        return;
-
-
-    const p =
-        pieces.find(
-            q=>q.id===selectedId
-        );
-
-
-    dragging=false;
-
-    dragPointerId=null;
-
-
-    if(p)
-        finalizeMove(p);
-
-}
-
-
-/* ============================================================================
-   POINTER EVENTS
-============================================================================ */
-
-cv.addEventListener(
-    "pointerdown",
-    e=>{
-
-        e.preventDefault();
-
-        cv.setPointerCapture?.(
-            e.pointerId
-        );
-
-
-        beginDrag(
-            e.clientX,
-            e.clientY,
-            e.pointerId
-        );
-
-    }
-);
-
-
-cv.addEventListener(
-    "pointermove",
-    e=>{
-
-        e.preventDefault();
-
-        moveDrag(
-            e.clientX,
-            e.clientY,
-            e.pointerId
-        );
-
-    }
-);
-
-
-cv.addEventListener(
-    "pointerup",
-    e=>{
-
-        e.preventDefault();
-
-        endDrag(
-            e.pointerId
-        );
-
-    }
-);
-
-
-cv.addEventListener(
-    "pointercancel",
-    e=>{
-
-        endDrag(
-            e.pointerId
-        );
-
-    }
-);
-
-
-/* ============================================================================
-   ROTAÇÃO
-============================================================================ */
-
-function rotateSelected(
-    delta
-){
-
-    if(!selectedId)
-        return;
-
-
-    const p =
-        pieces.find(
-            q=>q.id===selectedId
-        );
-
-
-    if(!p)
-        return;
-
-
-    p.rot =
-        normDeg(
-            p.rot+
-            delta
-        );
-
-
-    p.placed=false;
-
-
-    setStatus(
-        `${PIECES[p.id].name}: ${p.rot}°`
-    );
-
-
-    updateScore(false);
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   ESPELHAMENTO
-============================================================================ */
-
-function flipSelected(){
-
-    if(!selectedId)
-        return;
-
-
-    const p =
-        pieces.find(
-            q=>q.id===selectedId
-        );
-
-
-    if(!p)
-        return;
-
-
-    p.flip=!p.flip;
-
-    p.placed=false;
-
-
-    setStatus(
-        `${PIECES[p.id].name}: ${
-            p.flip
-                ? "espelhada"
-                : "normal"
-        }`
-    );
-
-
-    updateScore(false);
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   RECOLHER PEÇA
-============================================================================ */
-
-function resetSelected(){
-
-    if(!selectedId)
-        return;
-
-
-    const p =
-        pieces.find(
-            q=>q.id===selectedId
-        );
-
-
-    if(!p)
-        return;
-
-
-    const pos =
-        trayPosition(
-            PIECE_IDS.indexOf(
-                p.id
-            )
-        );
-
-
-    p.x=pos.x;
-
-    p.y=pos.y;
-
-    p.rot=0;
-
-    p.flip=false;
-
-    p.placed=false;
-
-
-    setStatus(
-        `${PIECES[p.id].name} recolhida para a bandeja.`
-    );
-
-
-    updateScore(false);
-
-    requestDraw();
-
-}
-
-
-/* ============================================================================
-   BOTÕES
-============================================================================ */
-
-document
-    .getElementById(
-        "btn-rot-l"
-    )
-    .addEventListener(
-        "click",
-        ()=>rotateSelected(-45)
-    );
-
-
-document
-    .getElementById(
-        "btn-rot-r"
-    )
-    .addEventListener(
-        "click",
-        ()=>rotateSelected(45)
-    );
-
-
-document
-    .getElementById(
-        "btn-flip"
-    )
-    .addEventListener(
-        "click",
-        flipSelected
-    );
-
-
-document
-    .getElementById(
-        "btn-reset-piece"
-    )
-    .addEventListener(
-        "click",
-        resetSelected
-    );
-
-
-document
-    .getElementById(
-        "btn-new"
-    )
-    .addEventListener(
-        "click",
-        ()=>initGame()
-    );
-
-
-document
-    .getElementById(
-        "next"
-    )
-    .addEventListener(
-        "click",
-        ()=>{
-
-            const idx =
-                MODELS.indexOf(
-                    currentModel
-                );
-
-
-            initGame(
-                (idx+1)%
-                MODELS.length
-            );
-
-        }
-    );
-
-
-/* ============================================================================
-   TECLADO
-============================================================================ */
-
-window.addEventListener(
-    "keydown",
-    e=>{
-
-        if(
-            e.target.matches(
-                "input,textarea,button,a"
-            )
-        )
-            return;
-
-
-        if(!selectedId)
-            return;
-
-
-        const k =
-            e.key.toLowerCase();
-
-
-        if(k==="r"){
-
+        /* ==========================================================
+           11. EVENTOS
+           ========================================================== */
+        selectDesafio.addEventListener('change', () => {
+            estado.desafio = selectDesafio.value;
+            resetarDesafio();
+        });
+
+        btnShuffle.addEventListener('click', resetarDesafio);
+        btnReset.addEventListener('click', resetarDesafio);
+
+        btnRotateL.addEventListener('click', () => rotacionarSelecionada(-45));
+        btnRotateR.addEventListener('click', () => rotacionarSelecionada(+45));
+
+        // Roda do mouse sobre o tabuleiro
+        boardWrapper.addEventListener('wheel', (e) => {
+            if (!estado.selecionada) return;
             e.preventDefault();
+            rotacionarSelecionada(e.deltaY > 0 ? +15 : -15);
+        }, { passive: false });
 
-            rotateSelected(
-                e.shiftKey
-                    ? -45
-                    : 45
-            );
+        // Teclado: R / setas
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') rotacionarSelecionada(+45);
+            if (e.key === 'ArrowLeft')  { e.preventDefault(); rotacionarSelecionada(-15); }
+            if (e.key === 'ArrowRight') { e.preventDefault(); rotacionarSelecionada(+15); }
+            if (e.key === 'Escape') { estado.selecionada = null; renderizarPecas(); }
+        });
 
-            return;
+        /* ==========================================================
+           12. TEMA + SESSÃO
+           ========================================================== */
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        atualizarTextoBotaoTema(savedTheme);
 
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+            atualizarTextoBotaoTema(next);
+        });
+
+        function atualizarTextoBotaoTema(theme) {
+            themeToggle.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
         }
 
-
-        if(k==="f"){
-
-            e.preventDefault();
-
-            flipSelected();
-
-            return;
-
-        }
-
-
-        const p =
-            pieces.find(
-                q=>q.id===selectedId
-            );
-
-
-        if(!p)
-            return;
-
-
-        const step =
-            e.shiftKey
-                ? 10
-                : 2;
-
-
-        if(
-            [
-                "arrowleft",
-                "arrowright",
-                "arrowup",
-                "arrowdown"
-            ].includes(k)
-        ){
-
-            e.preventDefault();
-
-
-            if(k==="arrowleft")
-                p.x-=step;
-
-
-            if(k==="arrowright")
-                p.x+=step;
-
-
-            if(k==="arrowup")
-                p.y-=step;
-
-
-            if(k==="arrowdown")
-                p.y+=step;
-
-
-            p.placed=false;
-
-
-            requestDraw();
-
-        }
-
-
-        if(
-            k==="enter" &&
-            p
-        ){
-
-            finalizeMove(
-                p
-            );
-
-        }
-
-    }
-);
-
-
-/* ============================================================================
-   FIREBASE / PONTUAÇÃO
-============================================================================ */
-
-async function awardPoints(
-    points
-){
-
-    try{
-
-        const raw =
-            localStorage.getItem(
-                "brain_hub_jogador"
-            );
-
-
-        if(!raw)
-            return;
-
-
-        const session =
-            JSON.parse(
-                raw
-            );
-
-
-        if(
-            !session?.chave
-        )
-            return;
-
-
-        const playerRef =
-            ref(
-                db,
-                "jogadores/"+
-                session.chave
-            );
-
-
-        const snap =
-            await get(
-                playerRef
-            );
-
-
-        if(!snap.exists())
-            return;
-
-
-        const data =
-            snap.val();
-
-
-        await update(
-            playerRef,
-            {
-
-                pontos:
-                    (
-                        Number(
-                            data.pontos
-                        ) ||
-                        0
-                    )+
-                    points
-
+        try {
+            const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+            if (jogador) {
+                document.getElementById('display-nome').textContent = jogador.nome;
+                document.getElementById('display-avatar').textContent = jogador.avatar;
+            } else {
+                document.getElementById('display-nome').textContent = 'Visitante';
             }
-        );
+        } catch (_) {
+            document.getElementById('display-nome').textContent = 'Visitante';
+        }
 
-    }
-
-    catch(err){
-
-        console.warn(
-            "Falha ao registrar pontos:",
-            err
-        );
-
-    }
-
-}
-
-
-/* ============================================================================
-   TEMA
-============================================================================ */
-
-function initTheme(){
-
-    const saved =
-        localStorage.getItem(
-            "brain_flow_theme"
-        ) ||
-        "dark";
-
-
-    document.documentElement
-        .setAttribute(
-            "data-theme",
-            saved
-        );
-
-
-    themeBtn.textContent =
-        saved==="dark"
-            ? "🌙"
-            : "☀️";
-
-}
-
-
-themeBtn.addEventListener(
-    "click",
-    ()=>{
-
-        const current =
-            document.documentElement
-                .getAttribute(
-                    "data-theme"
-                );
-
-
-        const next =
-            current==="dark"
-                ? "light"
-                : "dark";
-
-
-        document.documentElement
-            .setAttribute(
-                "data-theme",
-                next
-            );
-
-
-        themeBtn.textContent =
-            next==="dark"
-                ? "🌙"
-                : "☀️";
-
-
-        localStorage.setItem(
-            "brain_flow_theme",
-            next
-        );
-
-
-        requestDraw();
-
-    }
-);
-
-
-/* ============================================================================
-   INICIALIZAÇÃO
-============================================================================ */
-
-initTheme();
-
-initGame();
-
-</script>
-
+        /* ==========================================================
+           13. BOOT
+           ========================================================== */
+        resetarDesafio();
+    })();
+    </script>
 </body>
 </html>
