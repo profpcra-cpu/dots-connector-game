@@ -118,7 +118,7 @@
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
             width: 100%;
-            max-width: 900px;
+            max-width: 960px;
             border: 1px solid var(--card-border);
             animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -177,7 +177,7 @@
         }
 
         /* ==========================================================
-           5. SECÇÃO DE PERFIL / IDENTIFICAÇÃO (SE NECESSÁRIO)
+           5. SECÇÃO DE PERFIL / IDENTIFICAÇÃO
            ========================================================== */
         .user-welcome {
             display: flex;
@@ -220,7 +220,7 @@
         }
 
         /* ==========================================================
-           6. GRELHA DE JOGOS E APLICAÇÕES (CARDS)
+           6. GRELHA DE JOGOS E APLICAÇÕES
            ========================================================== */
         .games-grid {
             display: grid;
@@ -309,7 +309,7 @@
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <!-- UTILIZADOR ATIVO (Opcional - Lê do localStorage se existir) -->
+        <!-- UTILIZADOR ATIVO -->
         <div id="user-welcome-section" class="user-welcome hidden">
             <div class="user-info">
                 <span id="hub-avatar" class="user-avatar">😀</span>
@@ -321,95 +321,85 @@
             <button class="btn-small" id="btn-trocar-perfil">Trocar Perfil</button>
         </div>
 
-        <!-- GRELHA DE NAVEGAÇÃO -->
+        <!-- GRELHA DE NAVEGAÇÃO DOS FICHEIROS REAIS -->
         <div class="games-grid">
-            <!-- 1. Jogo 1 (Exemplo / Genérico) -->
-            <a href="jogo1.html" class="game-card">
-                <div class="card-icon">🎯</div>
+            <!-- 1. Brain Flow Master -->
+            <a href="brain-flow-master.html" class="game-card">
+                <div class="card-icon">🌊</div>
                 <div class="card-content">
-                    <h3>Desafio de Foco</h3>
-                    <p>Treine a sua agilidade mental e velocidade de raciocínio.</p>
-                    <span class="badge">Agilidade</span>
+                    <h3>Brain Flow Master</h3>
+                    <p>Versão avançada de conexões e fluxo lógico contínuo.</p>
+                    <span class="badge">Master</span>
                 </div>
             </a>
 
-            <!-- 2. Jogo 2 -->
-            <a href="jogo2.html" class="game-card">
-                <div class="card-icon">🧠</div>
-                <div class="card-content">
-                    <h3>Memória Ativa</h3>
-                    <p>Teste e expanda os limites da sua memória de curto prazo.</p>
-                    <span class="badge">Memória</span>
-                </div>
-            </a>
-
-            <!-- 3. Jogo 3 -->
-            <a href="jogo3.html" class="game-card">
-                <div class="card-icon">⚡</div>
-                <div class="card-content">
-                    <h3>Velocidade Lógica</h3>
-                    <p>Resolução rápida de problemas sob restrição de tempo.</p>
-                    <span class="badge">Velocidade</span>
-                </div>
-            </a>
-
-            <!-- 4. Jogo 4 -->
-            <a href="jogo4.html" class="game-card">
-                <div class="card-icon">🧩</div>
-                <div class="card-content">
-                    <h3>Quebra-Cabeça</h3>
-                    <p>Monte sequências e encaixe peças lógicas estruturadas.</p>
-                    <span class="badge">Estratégia</span>
-                </div>
-            </a>
-
-            <!-- 5. Jogo 5 -->
-            <a href="jogo5.html" class="game-card">
-                <div class="card-icon">🔮</div>
-                <div class="card-content">
-                    <h3>Padrões Ocultos</h3>
-                    <p>Identifique tendências e preveja padrões visuais complexos.</p>
-                    <span class="badge">Análise</span>
-                </div>
-            </a>
-
-            <!-- 6. Jogo 6 -->
-            <a href="jogo6.html" class="game-card">
-                <div class="card-icon">🚀</div>
-                <div class="card-content">
-                    <h3>Missão Espacial</h3>
-                    <p>Navegue por desafios de cálculo e física recreativa.</p>
-                    <span class="badge">Aventura</span>
-                </div>
-            </a>
-
-            <!-- 7. Jogo 7 -->
-            <a href="jogo7.html" class="game-card">
-                <div class="card-icon">💡</div>
-                <div class="card-content">
-                    <h3>Eureka Insights</h3>
-                    <p>Enigmas criativos para testar o pensamento lateral.</p>
-                    <span class="badge">Criatividade</span>
-                </div>
-            </a>
-
-            <!-- 8. Jogo 8 -->
-            <a href="jogo8.html" class="game-card">
-                <div class="card-icon">🏆</div>
-                <div class="card-content">
-                    <h3>Torneio Mestre</h3>
-                    <p>Desafios avançados multi-fase para utilizadores experientes.</p>
-                    <span class="badge">Avançado</span>
-                </div>
-            </a>
-
-            <!-- 9. Brain Link (NOVO) -->
-            <a href="brain-link.html" class="game-card" style="border-color: rgba(99, 102, 241, 0.4); background: linear-gradient(135deg, var(--input-bg), rgba(99, 102, 241, 0.08));">
+            <!-- 2. Brain Link -->
+            <a href="brain-link.html" class="game-card">
                 <div class="card-icon">🔗</div>
                 <div class="card-content">
                     <h3>Brain Link</h3>
                     <p>Conecte formas e números em sequência lógica crescente.</p>
-                    <span class="badge" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border-color: rgba(34, 197, 94, 0.3);">Novo Jogo</span>
+                    <span class="badge">Lógica</span>
+                </div>
+            </a>
+
+            <!-- 3. Brain Flow -->
+            <a href="brainflow.html" class="game-card">
+                <div class="card-icon">⚡</div>
+                <div class="card-content">
+                    <h3>Brain Flow</h3>
+                    <p>Desafios clássicos de conexão de cores e caminhos mentais.</p>
+                    <span class="badge">Fluxo</span>
+                </div>
+            </a>
+
+            <!-- 4. Torres de Hanói -->
+            <a href="hanoi.html" class="game-card">
+                <div class="card-icon">🗼</div>
+                <div class="card-content">
+                    <h3>Torres de Hanói</h3>
+                    <p>O clássico quebra-cabeça de raciocínio e movimentação de discos.</p>
+                    <span class="badge">Estratégia</span>
+                </div>
+            </a>
+
+            <!-- 5. Memória 4x4 -->
+            <a href="memoria4x4.html" class="game-card">
+                <div class="card-icon">🧠</div>
+                <div class="card-content">
+                    <h3>Memória 4x4</h3>
+                    <p>Teste a sua capacidade de memorização e agilidade visual.</p>
+                    <span class="badge">Memória</span>
+                </div>
+            </a>
+
+            <!-- 6. Sudoku 6x6 -->
+            <a href="sudoku.html" class="game-card">
+                <div class="card-icon">🔢</div>
+                <div class="card-content">
+                    <h3>Sudoku 6x6</h3>
+                    <p>Desafie a mente com o popular jogo de números adaptado.</p>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Destaque</span>
+                </div>
+            </a>
+
+            <!-- 7. Sudoku 3x3 -->
+            <a href="sudoku3x3.html" class="game-card">
+                <div class="card-icon">🧩</div>
+                <div class="card-content">
+                    <h3>Sudoku 3x3</h3>
+                    <p>Versão rápida e simplificada do clássico Sudoku.</p>
+                    <span class="badge">Iniciante</span>
+                </div>
+            </a>
+
+            <!-- 8. Tangram -->
+            <a href="tangram.html" class="game-card">
+                <div class="card-icon">📐</div>
+                <div class="card-content">
+                    <h3>Tangram</h3>
+                    <p>Quebra-cabeça geométrico chinês de formas e encaixes.</p>
+                    <span class="badge">Geometria</span>
                 </div>
             </a>
         </div>
