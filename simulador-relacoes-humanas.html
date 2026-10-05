@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Hub - Simulador: Relações Humanas e Gestão de Conflitos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --btn-primary: #6366f1;
+            --success-color: #4ade80;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+        }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --text-color: #0f172a;
+            --text-muted: #475569;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            width: 100%;
+            max-width: 650px;
+            box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+        }
+        .back-link {
+            color: var(--btn-primary); text-decoration: none; font-weight: 600;
+            font-size: 13.5px; display: inline-block; margin-bottom: 16px;
+        }
+        h1 { font-size: 20px; margin: 0 0 6px 0; }
+        .scenario-box {
+            background: rgba(15, 23, 42, 0.5); border: 1px solid var(--card-border);
+            padding: 18px; border-radius: var(--radius-md); margin: 16px 0;
+            font-size: 14.5Line; line-height: 1.5; color: var(--text-color);
+        }
+        .choices-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+        .choice-btn {
+            background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border);
+            color: var(--text-color); padding: 14px 16px; border-radius: var(--radius-md);
+            text-align: left; font-size: 13.5px; font-family: inherit; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .choice-btn:hover { border-color: var(--btn-primary); background: rgba(99, 102, 241, 0.12); transform: translateY(-1px); }
+        .status-bar {
+            margin-top: 20px; display: flex; justify-content: space-between;
+            font-size: 12.5px; color: var(--text-muted); border-top: 1px solid var(--card-border); padding-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Voltar ao Hub</a>
+        <h1>🧭 Simulador: Relações Humanas no Ambiente Institucional</h1>
+        <div id="game-container">
+            <div class="scenario-box" id="scenario-text">A carregar cenário...</div>
+            <div class="choices-list" id="choices-list"></div>
+            <div class="status-bar">
+                <span id="step-indicator">Passo 1 de 3</span>
+                <span id="score-indicator">Empatia / Práxis: 0 pts</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const etapas = {
+            inicio: {
+                texto: "<strong>O Contexto:</strong> Você assumiu recentemente a coordenação de um setor educativo. Numa manhã intensa, dois colaboradores experientes entram em colapso devido a divergências na organização de um projeto crítico, gerando um clima de tensão na sala dos professores.<br><br><strong>O Dilema:</strong> Como você decide intervir nesta situação?",
+                opcoes: [
+                    { texto: "A) Chamar ambos imediatamente para uma reunião formal e rígida, exigindo cumprimento estrito de conduta.", proximo: "rigido", pontos: 10 },
+                    { texto: "B) Conversar individualmente com cada um primeiro, escutando as suas perspetivas e sentimentos.", proximo: "escuta", pontos: 30 },
+                    { texto: "C) Evitar interferir diretamente, deixando que resolvam sozinhos para não demonstrar autoritarismo.", proximo: "omisso", pontos: 5 }
+                ]
+            },
+            rigido: {
+                texto: "<strong>Desdobramento:</strong> A abordagem formal conteve o atrito visível imediato, mas gerou um clima de silêncio defensivo e distanciamento entre os membros da equipa.",
+                opcoes: [
+                    { texto: "1. Manter a imposição de regras e focar apenas na entrega mecânica do projeto.", proximo: "fim_ruim", pontos: 5 },
+                    { texto: "2. Perceber que a rigidez não resolveu a raiz do problema e propor um círculo de diálogo restaurativo.", proximo: "escuta_tardia", pontos: 20 }
+                ]
+            },
+            escuta: {
+                texto: "<strong>Desdobramento:</strong> Ao ouvir individualmente, você descobre que o conflito não era pessoal, mas sim acúmulo de sobrecarga de trabalho e falhas de comunicação. Ambos sentem-se valorizados por terem sido ouvidos com empatia.",
+                opcoes: [
+                    { texto: "1. Convidar ambos para uma roda de escuta mútua, mediando a reconstrução conjunta dos acordos de trabalho.", proximo: "fim_perfeito", pontos: 40 },
+                    { texto: "2. Decidir você mesmo a divisão de tarefas e ditar as regras sem reuni-los novamente.", proximo: "fim_parcial", pontos: 20 }
+                ]
+            },
+            omisso: {
+                texto: "<strong>Desdobramento:</strong> Sem mediação, o mal-estar intensificou-se, espalhando boatos e dividindo a equipa em facções, o que comprometeu diretamente o andamento do projeto coletivo.",
+                opcoes: [
+                    { texto: "1. Intervir tardiamente de forma autoritária para apagar o incêndio institucional.", proximo: "fim_ruim", pontos: 5 }
+                ]
+            },
+            escuta_tardia: {
+                texto: "<strong>Desdobramento:</strong> Embora tenha demorado a adotar a escuta dialógica, a sua abertura permitiu que a equipa recuperasse parcialmente o fôlego e os laços de respeito mútuo.",
+                opcoes: [
+                    { texto: "Concluir a análise e refletir sobre a práxis gerencial.", proximo: "fim_parcial", pontos: 25 }
+                ]
+            },
+            fim_perfeito: {
+                fim: true,
+                texto: "🎉 <strong>Conclusão Exemplar:</strong> Através da escuta ativa, do diálogo horizontal e da mediação humanizada, você transformou um conflito destrutivo numa oportunidade de fortalecimento coletivo e parceria pedagógica!"
+            },
+            fim_parcial: {
+                fim: true,
+                texto: "⚖️ <strong>Conclusão Parcial:</strong> O problema foi contido com sucesso moderado, mas ficou a lição de que o envolvimento contínuo e a autonomia negociada geram resultados muito mais sustentáveis a longo prazo."
+            },
+            fim_ruim: {
+                fim: true,
+                texto: "⚠️ <strong>Conclusão Crítica:</strong> A gestão baseada estritamente no controle vertical ou na omissão falhou em resolver a raiz humana do problema. As relações de confiança na equipa precisarán de reconstrução futura."
+            }
+        };
+
+        let atualChave = 'inicio';
+        let pontuacaoTotal = 0;
+        let passoAtual = 1;
+
+        const textoEl = document.getElementById('scenario-text');
+        const listaEl = document.getElementById('choices-list');
+        const passoEl = document.getElementById('step-indicator');
+        const pontuacaoEl = document.getElementById('score-indicator');
+
+        function carregarPasso(chave) {
+            const estado = etapas[chave];
+            textoEl.innerHTML = estado.texto;
+            listaEl.innerHTML = '';
+
+            if (estado.fim) {
+                passoEl.textContent = 'Simulação Concluída';
+                pontuacaoEl.textContent = `Pontuação Final: ${pontuacaoTotal} pts`;
+                
+                const btnVoltar = document.createElement('button');
+                btnVoltar.className = 'choice-btn';
+                btnVoltar.style.textAlign = 'center';
+                btnVoltar.style.fontWeight = '700';
+                btnVoltar.style.background = 'var(--btn-primary)';
+                btnVoltar.style.color = '#fff';
+                btnVoltar.textContent = '🔄 Reiniciar Simulação ou Voltar ao Hub';
+                btnVoltar.onclick = () => window.location.href = 'index.html';
+                listaEl.appendChild(btnVoltar);
+                return;
+            }
+
+            passoEl.textContent = `Passo ${passoAtual} da Decisão`;
+            pontuacaoEl.textContent = `Empatia / Práxis: ${pontuacaoTotal} pts`;
+
+            estado.opcoes.forEach(opcao => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = opcao.texto;
+                btn.onclick = () => {
+                    pontuacaoTotal += opcao.pontos;
+                    passoAtual++;
+                    atualChave = opcao.proximo;
+                    carregarPasso(atualChave);
+                };
+                listaEl.appendChild(btn);
+            });
+        }
+
+        carregarPasso(atualChave);
+    </script>
+</body>
+</html>
