@@ -10,9 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ==========================================================
-           1. DESIGN TOKENS (idêntico aos outros jogos)
-           ========================================================== */
         :root {
             --bg-color: #0b1020;
             --bg-gradient-1: #1e1b4b;
@@ -34,12 +31,10 @@
             --btn-accent: #8b5cf6;
 
             --board-bg: rgba(15, 23, 42, 0.55);
-            --board-border: rgba(148, 163, 184, 0.45);
 
             --c-green: #4ade80;
             --c-blue: #38bdf8;
             --c-amber: #f59e0b;
-            --c-red: #ef4444;
 
             --radius-sm: 8px;
             --radius-md: 12px;
@@ -59,24 +54,16 @@
             --card-bg: rgba(255, 255, 255, 0.88);
             --card-border: rgba(15, 23, 42, 0.08);
             --card-glow: rgba(99, 102, 241, 0.15);
-
             --text-color: #0f172a;
             --text-muted: #475569;
             --text-subtle: #64748b;
-
             --border-color: rgba(15, 23, 42, 0.1);
             --border-strong: rgba(15, 23, 42, 0.25);
             --input-bg: rgba(255, 255, 255, 0.95);
-
             --board-bg: rgba(248, 250, 252, 0.9);
-            --board-border: rgba(15, 23, 42, 0.25);
-
             --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
         }
 
-        /* ==========================================================
-           2. RESET E BASE
-           ========================================================== */
         *, *::before, *::after { box-sizing: border-box; }
         html, body { height: 100%; }
 
@@ -108,9 +95,6 @@
         body::before { width: 420px; height: 420px; background: #6366f1; top: -140px; left: -120px; }
         body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px; right: -140px; }
 
-        /* ==========================================================
-           3. CONTAINER
-           ========================================================== */
         .container {
             position: relative;
             background: var(--card-bg);
@@ -141,9 +125,6 @@
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ==========================================================
-           4. TOP BAR / HEADER
-           ========================================================== */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -212,9 +193,6 @@
             border: 1px solid rgba(99, 102, 241, 0.25);
         }
 
-        /* ==========================================================
-           5. SCORE BOARD
-           ========================================================== */
         .score-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -238,11 +216,6 @@
             padding: 6px 2px;
             border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.02);
-            transition: background var(--t-base), transform var(--t-base);
-        }
-        .score-board > div:hover {
-            background: rgba(99, 102, 241, 0.08);
-            transform: translateY(-1px);
         }
         .score-board strong {
             font-size: 15px;
@@ -254,9 +227,6 @@
         #display-pecas  { color: var(--c-green); }
         #display-tempo  { color: var(--c-amber); }
 
-        /* ==========================================================
-           6. INSTRUÇÕES
-           ========================================================== */
         .instructions {
             font-size: 12.5px;
             color: var(--text-muted);
@@ -265,9 +235,6 @@
             min-height: 18px;
         }
 
-        /* ==========================================================
-           7. TABULEIRO
-           ========================================================== */
         .board-wrapper {
             position: relative;
             width: 100%;
@@ -296,17 +263,6 @@
             touch-action: none;
         }
 
-        .board-wrapper::before {
-            content: "";
-            position: absolute;
-            inset: -6px;
-            border-radius: 18px;
-            background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.28), transparent 70%);
-            z-index: -1;
-            pointer-events: none;
-            filter: blur(6px);
-        }
-
         #tangram-svg {
             position: absolute;
             inset: 0;
@@ -316,37 +272,39 @@
             user-select: none;
         }
 
-        /* Silhueta-objetivo */
         #silhouette {
-            fill: rgba(99, 102, 241, 0.10);
-            stroke: rgba(99, 102, 241, 0.55);
-            stroke-width: 2;
-            stroke-dasharray: 6 6;
+            fill: rgba(99, 102, 241, 0.14);
+            stroke: rgba(99, 102, 241, 0.75);
+            stroke-width: 2.5;
+            stroke-dasharray: 8 6;
             transition: fill var(--t-slow), stroke var(--t-slow);
         }
         #silhouette.completed {
-            fill: rgba(34, 197, 94, 0.18);
-            stroke: rgba(34, 197, 94, 0.85);
+            fill: rgba(34, 197, 94, 0.20);
+            stroke: rgba(34, 197, 94, 0.9);
             stroke-dasharray: none;
         }
 
-        /* Peças */
+        /* Grade-guia sutil para o jogador perceber o alvo */
+        #grid-guide {
+            fill: none;
+            stroke: rgba(148, 163, 184, 0.12);
+            stroke-width: 1;
+        }
+
         .piece {
             cursor: grab;
-            transition: filter var(--t-base), opacity var(--t-base);
+            transition: filter var(--t-base);
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
         }
         .piece:hover { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.12); }
         .piece.dragging { cursor: grabbing; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6)) brightness(1.15); }
-        .piece.selected { filter: drop-shadow(0 0 0 3px rgba(99,102,241,0.8)) brightness(1.15); }
+        .piece.selected { filter: drop-shadow(0 0 6px rgba(99,102,241,1)) brightness(1.15); }
         .piece.locked {
             cursor: default;
-            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.7));
+            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
         }
 
-        /* ==========================================================
-           8. CONTROLES
-           ========================================================== */
         .controls-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -410,9 +368,6 @@
         }
         button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
 
-        /* ==========================================================
-           9. RESPONSIVIDADE
-           ========================================================== */
         @media (max-width: 440px) {
             body { padding: 10px; }
             .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
@@ -421,13 +376,9 @@
             .game-name { display: none; }
         }
 
-        /* ==========================================================
-           10. ACESSIBILIDADE
-           ========================================================== */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.001ms !important;
-                animation-iteration-count: 1 !important;
                 transition-duration: 0.001ms !important;
             }
         }
@@ -438,13 +389,11 @@
 <body>
 
     <div class="container">
-        <!-- TOP BAR -->
         <div class="top-bar">
             <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <!-- USER HEADER -->
         <div class="user-header">
             <div class="user-info-left">
                 <span id="display-avatar" class="user-avatar-display">😀</span>
@@ -453,35 +402,29 @@
             <span class="game-name">Tangram</span>
         </div>
 
-        <!-- SCORE BOARD -->
         <div class="score-board">
-            <div>Desafio<br><strong id="display-fase">Livre</strong></div>
+            <div>Desafio<br><strong id="display-fase">Quadrado</strong></div>
             <div>Peças<br><strong id="display-pecas">0/7</strong></div>
             <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
         </div>
 
         <p class="instructions" id="info-instrucao">
-            Arraste as peças. Use <b>R</b> ou a roda do mouse para rotacionar a peça selecionada.
+            Arraste as peças para dentro da silhueta. Use <b>R</b> ou a roda do mouse para rotacionar.
         </p>
 
-        <!-- TABULEIRO -->
         <div class="board-wrapper" id="board-wrapper">
-            <svg id="tangram-svg" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet">
-                <!-- Silhueta-objetivo (mutável) -->
+            <!-- viewBox ampliado para dar folga em volta do quadrado mestre -->
+            <svg id="tangram-svg" viewBox="-40 -40 400 400" preserveAspectRatio="xMidYMid meet">
+                <g id="grid-guide-layer"></g>
                 <polygon id="silhouette" points=""></polygon>
-                <!-- Peças são injetadas aqui -->
                 <g id="pieces-layer"></g>
             </svg>
         </div>
 
-        <!-- CONTROLES -->
         <div class="controls-grid">
             <select id="select-desafio">
-                <option value="free">Modo Livre</option>
                 <option value="square" selected>Desafio: Quadrado</option>
-                <option value="house">Desafio: Casa</option>
-                <option value="boat">Desafio: Barco</option>
-                <option value="swan">Desafio: Cisne</option>
+                <option value="free">Modo Livre</option>
             </select>
             <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
         </div>
@@ -498,55 +441,62 @@
         "use strict";
 
         /* ==========================================================
-           1. GEOMETRIA CANÔNICA — 7 PEÇAS DO TANGRAM
+           1. GEOMETRIA CANÔNICA — TANGRAM CLÁSSICO
            ==========================================================
-           Todas as coordenadas são calculadas a partir de L.
-           O quadrado mestre fica em (0,0)-(L,L).
-           A soma das 7 peças = L²  (verificado por construção).
+           Quadrado mestre: (0,0) → (L, L) no viewBox do SVG.
+           L = 320, H = L/2 = 160, Q = L/4 = 80.
+
+           Decomposição exata (área total = L² = 102 400):
+             T1  triângulo grande   → 25 600
+             T2  triângulo grande   → 25 600
+             TM  triângulo médio    → 12 800
+             T3  triângulo pequeno  →  6 400
+             T4  triângulo pequeno  →  6 400
+             Q   quadrado           → 12 800
+             P   paralelogramo      → 12 800
            ========================================================== */
         const L = 320;
-        const R = L * Math.SQRT2 / 2;   // ≈ 226.27  (cateto dos triângulos grandes)
-        const HALF_L = L / 2;           // 160
-        const QUARTER_L = L / 4;        // 80
+        const H = L / 2;    // 160
+        const Q = L / 4;    // 80
 
-        // Cada peça: { id, cor, pontos: [[x,y], ...] }
-        // As coordenadas estão na posição final (montagem do quadrado mestre).
         const PECAS_BASE = [
-            // T1 — Triângulo grande superior esquerdo
-            { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [HALF_L, 0], [0, HALF_L]] },
+            // Dois triângulos grandes: dividem o quadrado pela diagonal principal
+            { id: 'T1', cor: '#6366f1', pontos: [[0, 0],     [L, 0],     [H, H]] },       // metade superior direita
+            { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0],     [H, H],     [0, L]] },       // metade inferior esquerda
 
-            // T2 — Triângulo grande superior direito
-            { id: 'T2', cor: '#8b5cf6', pontos: [[L, 0], [L, HALF_L], [HALF_L, 0]] },
+            // Triângulo médio: canto superior direito
+            { id: 'TM', cor: '#ec4899', pontos: [[L, 0],     [L, H],     [H, H]] },
 
-            // TM — Triângulo médio (lado esquerdo inferior)
-            { id: 'TM', cor: '#ec4899', pontos: [[0, L], [0, HALF_L], [HALF_L, HALF_L]] },
+            // Dois triângulos pequenos
+            { id: 'T3', cor: '#14b8a6', pontos: [[H, H],     [H + Q, Q], [L, H]] },       // pequeno 1
+            { id: 'T4', cor: '#f59e0b', pontos: [[H, H],     [Q, H + Q], [H, H + Q]] },   // pequeno 2
 
-            // T3 — Triângulo pequeno central
-            { id: 'T3', cor: '#14b8a6', pontos: [[HALF_L, HALF_L], [HALF_L, QUARTER_L], [QUARTER_L * 3, QUARTER_L]] },
+            // Quadrado central
+            { id: 'Q',  cor: '#06b6d4', pontos: [[H, H + Q], [H + Q, H], [L, H + Q], [H + Q, L]] },
 
-            // T4 — Triângulo pequeno (canto inferior direito)
-            { id: 'T4', cor: '#f59e0b', pontos: [[L, L], [HALF_L, L], [HALF_L, HALF_L + QUARTER_L]] },
-
-            // Q — Quadrado (meio inferior esquerdo)
-            { id: 'Q', cor: '#06b6d4', pontos: [[QUARTER_L, HALF_L], [HALF_L, HALF_L], [HALF_L, QUARTER_L * 3], [QUARTER_L, QUARTER_L * 3]] },
-
-            // P — Paralelogramo (inferior direito)
-            { id: 'P', cor: '#d946ef', pontos: [[HALF_L, L], [HALF_L + QUARTER_L, L], [L, QUARTER_L * 3], [HALF_L, QUARTER_L * 3]] }
+            // Paralelogramo inferior direito
+            { id: 'P',  cor: '#d946ef', pontos: [[H + Q, L],[L, H + Q], [L, H],     [H, H + Q]] }
         ];
 
         /* ==========================================================
-           2. SILHUETAS-ALVO
+           2. SOLUÇÕES (posição-alvo por desafio)
            ==========================================================
-           As silhuetas abaixo são DESENHADAS usando as mesmas peças,
-           apenas reposicionadas. Isso garante que a área casa
-           exatamente com a soma das peças (L²).
-
-           Cada silhueta é uma lista de transformações {id, x, y, rot}
-           que, quando aplicadas às peças-base, formam a figura.
-           A silhueta visual é o polígono convexo resultante.
+           Cada solução é a lista de posições finais de cada peça.
+           'square' usa dx=0, dy=0, rot=0 (peças-base já formam o quadrado).
            ========================================================== */
+        const SOLUCOES = {
+            square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 }))
+        };
 
-        // Helper: aplica rotação e translação a um ponto
+        /* ==========================================================
+           3. UTILITÁRIOS GEOMÉTRICOS
+           ========================================================== */
+        function centroide(pontos) {
+            let x = 0, y = 0;
+            for (const p of pontos) { x += p[0]; y += p[1]; }
+            return [x / pontos.length, y / pontos.length];
+        }
+
         function transformarPonto(p, cx, cy, rot, dx, dy) {
             const rad = rot * Math.PI / 180;
             const cos = Math.cos(rad), sin = Math.sin(rad);
@@ -554,99 +504,22 @@
             return [cos * px - sin * py + cx + dx, sin * px + cos * py + cy + dy];
         }
 
-        // Helper: centroide de uma peça
-        function centroide(pontos) {
-            let x = 0, y = 0;
-            for (const p of pontos) { x += p[0]; y += p[1]; }
-            return [x / pontos.length, y / pontos.length];
+        function transformarPeca(pecaBase, dx, dy, rot) {
+            const [cx, cy] = centroide(pecaBase.pontos);
+            return pecaBase.pontos.map(p => transformarPonto(p, cx, cy, rot, dx, dy));
         }
 
-        /* Definição das soluções finais (posição-alvo de cada peça).
-           Cada entrada é {id, dx, dy, rot} — deslocamento + rotação
-           a partir da posição canônica. */
-        const SOLUCOES = {
-            square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 })),
-
-            house: [
-                // Telhado: dois triângulos grandes
-                { id: 'T1', dx: 0, dy: -80, rot: 0 },
-                { id: 'T2', dx: 0, dy: -80, rot: 0 },
-                // Corpo: restante
-                { id: 'TM', dx: 40, dy: 40, rot: 0 },
-                { id: 'T3', dx: 40, dy: 0, rot: 45 },
-                { id: 'T4', dx: -40, dy: 60, rot: -45 },
-                { id: 'Q', dx: 0, dy: 40, rot: 0 },
-                { id: 'P', dx: 40, dy: 40, rot: 0 }
-            ],
-
-            boat: [
-                { id: 'T1', dx: -80, dy: 0, rot: 45 },
-                { id: 'T2', dx: 80, dy: 0, rot: -45 },
-                { id: 'TM', dx: 0, dy: 40, rot: 0 },
-                { id: 'T3', dx: 0, dy: -40, rot: 90 },
-                { id: 'T4', dx: -40, dy: 40, rot: 45 },
-                { id: 'Q', dx: 40, dy: 40, rot: 0 },
-                { id: 'P', dx: 0, dy: 80, rot: 0 }
-            ],
-
-            swan: [
-                { id: 'T1', dx: 0, dy: -40, rot: 0 },
-                { id: 'T2', dx: 0, dy: 40, rot: 180 },
-                { id: 'TM', dx: -80, dy: -40, rot: 45 },
-                { id: 'T3', dx: 40, dy: -40, rot: -45 },
-                { id: 'T4', dx: -40, dy: 40, rot: 45 },
-                { id: 'Q', dx: 40, dy: 40, rot: 0 },
-                { id: 'P', dx: 80, dy: 40, rot: 0 }
-            ]
-        };
-
-        /* Calcula a silhueta (bounding convex hull aproximado) para um desafio.
-           Para o quadrado, é o próprio quadrado mestre.
-           Para os outros, é o polígono que envolve as peças na posição final. */
-        function calcularSilhueta(nome) {
-            if (nome === 'square') {
-                return [[0, 0], [L, 0], [L, L], [0, L]];
-            }
-            const solucao = SOLUCOES[nome] || [];
-            const todosPontos = [];
-            for (const item of solucao) {
-                const peca = PECAS_BASE.find(p => p.id === item.id);
-                if (!peca) continue;
-                const [cx, cy] = centroide(peca.pontos);
-                for (const p of peca.pontos) {
-                    todosPontos.push(transformarPonto(p, cx, cy, item.rot, item.dx, item.dy));
-                }
-            }
-            return convexHull(todosPontos);
-        }
-
-        // Convex hull (Andrew monotone chain)
-        function convexHull(pontos) {
-            if (pontos.length < 3) return pontos;
-            const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-            const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
-            const lower = [];
-            for (const p of pts) {
-                while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
-                lower.push(p);
-            }
-            const upper = [];
-            for (let i = pts.length - 1; i >= 0; i--) {
-                const p = pts[i];
-                while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
-                upper.push(p);
-            }
-            upper.pop(); lower.pop();
-            return lower.concat(upper);
+        function pontosParaString(pontos) {
+            return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
         }
 
         /* ==========================================================
-           3. ESTADO DO JOGO
+           4. ESTADO
            ========================================================== */
         const estado = {
-            pecas: [],            // peças vivas (com transformação atual)
-            selecionada: null,    // id da peça selecionada
-            dragging: null,       // { id, offsetX, offsetY }
+            pecas: [],
+            selecionada: null,
+            dragging: null,
             desafio: 'square',
             colocadas: 0,
             segundos: 0,
@@ -654,10 +527,11 @@
         };
 
         /* ==========================================================
-           4. DOM
+           5. DOM
            ========================================================== */
         const svg = document.getElementById('tangram-svg');
         const piecesLayer = document.getElementById('pieces-layer');
+        const gridLayer = document.getElementById('grid-guide-layer');
         const silhouette = document.getElementById('silhouette');
         const boardWrapper = document.getElementById('board-wrapper');
 
@@ -673,27 +547,40 @@
         const themeToggle = document.getElementById('theme-toggle');
 
         /* ==========================================================
-           5. UTILITÁRIOS
+           6. RENDER
            ========================================================== */
-        function formatarTempo(s) {
-            const m = String(Math.floor(s / 60)).padStart(2, '0');
-            const ss = String(s % 60).padStart(2, '0');
-            return `${m}:${ss}`;
+        function desenharGradeGuia() {
+            gridLayer.innerHTML = '';
+            const passos = 4; // divide o quadrado em 4x4
+            const passo = L / passos;
+            for (let i = 0; i <= passos; i++) {
+                const linhaV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                linhaV.setAttribute('x1', i * passo);
+                linhaV.setAttribute('y1', 0);
+                linhaV.setAttribute('x2', i * passo);
+                linhaV.setAttribute('y2', L);
+                gridLayer.appendChild(linhaV);
+
+                const linhaH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                linhaH.setAttribute('x1', 0);
+                linhaH.setAttribute('y1', i * passo);
+                linhaH.setAttribute('x2', L);
+                linhaH.setAttribute('y2', i * passo);
+                gridLayer.appendChild(linhaH);
+            }
         }
 
-        function pontosParaString(pontos) {
-            return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
+        function desenharSilhueta() {
+            if (estado.desafio === 'free') {
+                silhouette.setAttribute('points', '');
+                silhouette.style.display = 'none';
+                return;
+            }
+            silhouette.style.display = '';
+            // Para o quadrado: o próprio quadrado mestre
+            silhouette.setAttribute('points', pontosParaString([[0, 0], [L, 0], [L, L], [0, L]]));
         }
 
-        /* Aplica a transformação (dx, dy, rot) a uma peça-base */
-        function transformarPeca(pecaBase, dx, dy, rot) {
-            const [cx, cy] = centroide(pecaBase.pontos);
-            return pecaBase.pontos.map(p => transformarPonto(p, cx, cy, rot, dx, dy));
-        }
-
-        /* ==========================================================
-           6. RENDERIZAÇÃO
-           ========================================================== */
         function renderizarPecas() {
             piecesLayer.innerHTML = '';
             for (const p of estado.pecas) {
@@ -701,7 +588,7 @@
                 const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 el.setAttribute('points', pontosParaString(pontos));
                 el.setAttribute('fill', p.cor);
-                el.setAttribute('stroke', 'rgba(255,255,255,0.55)');
+                el.setAttribute('stroke', 'rgba(255,255,255,0.6)');
                 el.setAttribute('stroke-width', '1.5');
                 el.setAttribute('stroke-linejoin', 'round');
                 el.classList.add('piece');
@@ -714,19 +601,17 @@
             }
         }
 
-        function renderizarSilhueta() {
-            const pontos = calcularSilhueta(estado.desafio);
-            silhouette.setAttribute('points', pontosParaString(pontos));
-            silhouette.classList.toggle('completed', estado.colocadas === 7);
-        }
-
         /* ==========================================================
-           7. INTERAÇÃO — ARRASTAR, SELECIONAR, ROTACIONAR
+           7. INTERAÇÃO
            ========================================================== */
+        // Coordenadas do viewBox atual (-40,-40 a 360,360)
+        const VB_MIN = -40;
+        const VB_SIZE = 400;
+
         function getSVGPoint(evt) {
             const rect = svg.getBoundingClientRect();
-            const x = (evt.clientX - rect.left) / rect.width * L;
-            const y = (evt.clientY - rect.top) / rect.height * L;
+            const x = VB_MIN + (evt.clientX - rect.left) / rect.width * VB_SIZE;
+            const y = VB_MIN + (evt.clientY - rect.top) / rect.height * VB_SIZE;
             return [x, y];
         }
 
@@ -735,15 +620,13 @@
             const peca = estado.pecas.find(p => p.id === id);
             if (!peca || peca.travada) return;
 
-            // Seleciona
             estado.selecionada = id;
 
-            // Inicia arraste
             const [px, py] = getSVGPoint(evt);
             const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot));
             estado.dragging = { id, offsetX: cx - px, offsetY: cy - py };
 
-            svg.setPointerCapture(evt.pointerId);
+            try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
             svg.addEventListener('pointermove', onPointerMove);
             svg.addEventListener('pointerup', onPointerUp);
             svg.addEventListener('pointercancel', onPointerUp);
@@ -760,7 +643,6 @@
             const newX = px + estado.dragging.offsetX;
             const newY = py + estado.dragging.offsetY;
 
-            // Converte posição absoluta do centroide para deslocamento (dx, dy)
             const [cx0, cy0] = centroide(peca.base.pontos);
             peca.dx = newX - cx0;
             peca.dy = newY - cy0;
@@ -772,9 +654,8 @@
             svg.removeEventListener('pointermove', onPointerMove);
             svg.removeEventListener('pointerup', onPointerUp);
             svg.removeEventListener('pointercancel', onPointerUp);
-            svg.releasePointerCapture?.(evt.pointerId);
+            try { svg.releasePointerCapture(evt.pointerId); } catch (_) {}
 
-            // Tenta encaixar
             if (estado.dragging) {
                 tentarEncaixe(estado.dragging.id);
             }
@@ -783,28 +664,21 @@
             verificarConclusao();
         }
 
-        /* Rotaciona a peça selecionada em +delta graus */
         function rotacionarSelecionada(delta) {
             if (!estado.selecionada) {
-                infoInstrucao.textContent = '⚠️ Selecione uma peça primeiro (clique nela).';
+                infoInstrucao.textContent = '⚠️ Clique numa peça para selecioná-la primeiro.';
                 return;
             }
             const peca = estado.pecas.find(p => p.id === estado.selecionada);
             if (!peca || peca.travada) return;
-
             peca.rot = (peca.rot + delta) % 360;
-            // Ajusta dx, dy para manter o centroide no mesmo lugar
             renderizarPecas();
         }
 
         /* ==========================================================
-           8. SNAP — ENCAIXE POR VÉRTICES
-           ==========================================================
-           Compara cada vértice da peça arrastada com os vértices-alvo
-           da solução do desafio atual. Se todos os vértices estiverem
-           dentro de uma tolerância ε, a peça é travada na posição-alvo.
+           8. SNAP POR VÉRTICES
            ========================================================== */
-        const TOLERANCIA = 14; // px no espaço do viewBox
+        const TOLERANCIA = 18;
 
         function verticesAlvo(pecaId) {
             const solucao = SOLUCOES[estado.desafio];
@@ -825,7 +699,6 @@
 
             const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
 
-            // Distância máxima entre vértices correspondentes
             let maxDist = 0;
             for (let i = 0; i < alvo.length; i++) {
                 const dx = alvo[i][0] - atual[i][0];
@@ -834,7 +707,6 @@
             }
 
             if (maxDist <= TOLERANCIA) {
-                // Trava na posição-alvo exata (snap perfeito)
                 const solucao = SOLUCOES[estado.desafio];
                 const item = solucao.find(s => s.id === pecaId);
                 peca.dx = item.dx;
@@ -852,26 +724,19 @@
             if (estado.colocadas === 7) {
                 pararTimer();
                 silhouette.classList.add('completed');
-                const bonus = Math.max(50, 200 - estado.segundos);
-                infoInstrucao.textContent = `🎉 Desafio concluído em ${formatarTempo(estado.segundos)}! +${bonus} pontos.`;
-
-                // Guarda progresso local (Firebase opcional)
-                try {
-                    const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-                    if (jogador) {
-                        const chave = `tangram_${jogador.chave}_${estado.desafio}`;
-                        const melhor = parseInt(localStorage.getItem(chave) || '0', 10);
-                        if (!melhor || estado.segundos < melhor) {
-                            localStorage.setItem(chave, String(estado.segundos));
-                        }
-                    }
-                } catch (_) { /* ignore */ }
+                infoInstrucao.textContent = `🎉 Parabéns! Concluiu o Tangram em ${formatarTempo(estado.segundos)}.`;
             }
         }
 
         /* ==========================================================
-           9. CONTROLE DE TEMPO
+           9. TIMER
            ========================================================== */
+        function formatarTempo(s) {
+            const m = String(Math.floor(s / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${m}:${ss}`;
+        }
+
         function iniciarTimer() {
             pararTimer();
             estado.segundos = 0;
@@ -888,32 +753,45 @@
         }
 
         /* ==========================================================
-           10. INICIALIZAÇÃO E RESET
+           10. RESET / INICIALIZAÇÃO
+           ==========================================================
+           Posições iniciais espalhadas em torno do quadrado,
+           mas DENTRO do viewBox (-40 a 360) para não cortar.
            ========================================================== */
         function posicoesIniciaisEmbaralhadas() {
-            // Coloca as peças fora do centro, em posições aleatórias
-            // para o jogador ter que arrastá-las para o alvo.
             const resultado = [];
-            const margem = 40;
 
-            for (const peca of PECAS_BASE) {
-                let tentativa = 0;
-                let dx, dy;
-                do {
-                    dx = (Math.random() - 0.5) * (L - 2 * margem);
-                    dy = (Math.random() - 0.5) * (L - 2 * margem) + (Math.random() > 0.5 ? 60 : -60);
-                    tentativa++;
-                } while (tentativa < 20 && Math.hypot(dx, dy) < 60);
+            // Áreas seguras: 4 cantos em torno do quadrado central.
+            // Cada canto é uma zona onde as peças são empilhadas.
+            const zonas = [
+                { x: -10, y: -10 },   // topo-esquerda
+                { x: 210, y: -10 },   // topo-direita
+                { x: -10, y: 210 },   // baixo-esquerda
+                { x: 210, y: 210 }    // baixo-direita
+            ];
+
+            PECAS_BASE.forEach((peca, idx) => {
+                const zona = zonas[idx % zonas.length];
+                // Cada peça recebe um pequeno deslocamento aleatório dentro da sua zona
+                const baseCentro = centroide(peca.pontos);
+                const jitterX = (Math.random() - 0.5) * 40;
+                const jitterY = (Math.random() - 0.5) * 40;
+
+                // Queremos mover o centro da peça para o centro da zona + jitter
+                const alvoX = zona.x + 40 + jitterX;
+                const alvoY = zona.y + 40 + jitterY;
 
                 resultado.push({
                     id: peca.id,
                     base: peca,
                     cor: peca.cor,
-                    dx, dy,
+                    dx: alvoX - baseCentro[0],
+                    dy: alvoY - baseCentro[1],
                     rot: (Math.floor(Math.random() * 8) * 45) % 360,
                     travada: false
                 });
-            }
+            });
+
             return resultado;
         }
 
@@ -929,10 +807,11 @@
                 infoInstrucao.textContent = 'Modo livre: arraste e rotacione como quiser.';
             } else {
                 displayFase.textContent = estado.desafio.charAt(0).toUpperCase() + estado.desafio.slice(1);
-                infoInstrucao.textContent = 'Arraste as peças até encaixarem na silhueta.';
+                infoInstrucao.textContent = 'Arraste as peças para dentro do quadrado tracejado.';
             }
 
-            renderizarSilhueta();
+            desenharGradeGuia();
+            desenharSilhueta();
             renderizarPecas();
             iniciarTimer();
         }
@@ -951,14 +830,12 @@
         btnRotateL.addEventListener('click', () => rotacionarSelecionada(-45));
         btnRotateR.addEventListener('click', () => rotacionarSelecionada(+45));
 
-        // Roda do mouse sobre o tabuleiro
         boardWrapper.addEventListener('wheel', (e) => {
             if (!estado.selecionada) return;
             e.preventDefault();
             rotacionarSelecionada(e.deltaY > 0 ? +15 : -15);
         }, { passive: false });
 
-        // Teclado: R / setas
         document.addEventListener('keydown', (e) => {
             if (e.key === 'r' || e.key === 'R') rotacionarSelecionada(+45);
             if (e.key === 'ArrowLeft')  { e.preventDefault(); rotacionarSelecionada(-15); }
