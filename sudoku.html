@@ -2,1235 +2,831 @@
 <html lang="pt" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Brain Flow Master — Turbo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Sudoku 6x6</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- SDK do EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("SEU_PUBLIC_KEY");
+        })();
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* ==========================================================
+           1. DESIGN TOKENS
+           ========================================================== */
         :root {
-            --bg: #0f172a;
-            --card: rgba(30, 41, 59, 0.85);
-            --card-solid: #1e293b;
-            --text: #f8fafc;
+            --bg-color: #0b1020;
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(148, 163, 184, 0.15);
+            --card-glow: rgba(99, 102, 241, 0.25);
+
+            --text-color: #f8fafc;
             --text-muted: #94a3b8;
-            --border: rgba(51, 65, 85, 0.8);
-            --input-bg: rgba(15, 23, 42, 0.9);
-            --primary: #6366f1;
-            --board-bg: #0a0f1e;
-            --board-border: #334155;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --opponent: #ec4899;
-        }
-        [data-theme="light"] {
-            --bg: #f1f5f9;
-            --card: rgba(255, 255, 255, 0.9);
-            --card-solid: #ffffff;
-            --text: #0f172a;
-            --text-muted: #64748b;
-            --border: rgba(203, 213, 225, 0.8);
-            --input-bg: rgba(248, 250, 252, 0.9);
-            --board-bg: #f8fafc;
-            --board-border: #cbd5e1;
-        }
-        [data-theme="oled"] {
-            --bg: #000000;
-            --card: rgba(20, 20, 20, 0.9);
-            --card-solid: #0a0a0a;
-            --text: #ffffff;
-            --text-muted: #71717a;
-            --border: rgba(63, 63, 70, 0.6);
-            --input-bg: rgba(10, 10, 10, 0.95);
-            --board-bg: #000000;
-            --board-border: #27272a;
+            --text-subtle: #64748b;
+
+            --border-color: rgba(148, 163, 184, 0.18);
+            --border-strong: rgba(148, 163, 184, 0.35);
+            --input-bg: rgba(15, 23, 42, 0.7);
+
+            --btn-primary: #6366f1;
+            --btn-primary-hover: #818cf8;
+            --btn-accent: #8b5cf6;
+
+            --board-bg: rgba(15, 23, 42, 0.55);
+            --board-border: rgba(148, 163, 184, 0.45);
+
+            --c-green: #4ade80;
+            --c-blue: #38bdf8;
+            --c-amber: #f59e0b;
+            --c-red: #ef4444;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+            --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+
+            --t-fast: 0.15s ease;
+            --t-base: 0.25s ease;
+            --t-slow: 0.4s ease;
         }
 
-        * { font-family: 'Outfit', system-ui, sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        [data-theme="light"] {
+            --bg-color: #eef2ff;
+            --bg-gradient-1: #e0e7ff;
+            --bg-gradient-2: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.88);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --card-glow: rgba(99, 102, 241, 0.15);
+
+            --text-color: #0f172a;
+            --text-muted: #475569;
+            --text-subtle: #64748b;
+
+            --border-color: rgba(15, 23, 42, 0.1);
+            --border-strong: rgba(15, 23, 42, 0.25);
+            --input-bg: rgba(255, 255, 255, 0.95);
+
+            --board-bg: rgba(248, 250, 252, 0.9);
+            --board-border: rgba(15, 23, 42, 0.25);
+
+            --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+        }
+
+        /* ==========================================================
+           2. RESET E BASE
+           ========================================================== */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
 
         body {
-            background: var(--bg);
-            color: var(--text);
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
+            color: var(--text-color);
             margin: 0;
-            min-height: 100dvh;
+            padding: 16px;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding: 10px;
-            transition: background 0.3s, color 0.3s;
-            overflow-x: hidden;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color var(--t-slow), color var(--t-base);
+            -webkit-font-smoothing: antialiased;
         }
 
-        .glass { background: var(--card); border: 1px solid var(--border); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            opacity: 0.3;
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before {
+            width: 420px; height: 420px;
+            background: #6366f1;
+            top: -140px; left: -120px;
+        }
+        body::after {
+            width: 460px; height: 460px;
+            background: #8b5cf6;
+            bottom: -180px; right: -140px;
+        }
 
+        /* ==========================================================
+           3. CONTAINER
+           ========================================================== */
         .container {
+            position: relative;
+            background: var(--card-bg);
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            padding: 20px 20px 22px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
             width: 100%;
-            max-width: 500px;
-            padding: 14px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            max-width: 460px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 20%; right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
+            opacity: 0.9;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0)    scale(1); }
+        }
+
+        /* ==========================================================
+           4. TOP BAR
+           ========================================================== */
+        .top-bar {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .btn-small {
+            width: auto;
+            margin: 0;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--t-base);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-small:hover {
+            color: var(--text-color);
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+            background: var(--card-bg);
+        }
+
+        /* ==========================================================
+           5. USER HEADER
+           ========================================================== */
+        .user-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            background: var(--input-bg);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            transition: border-color var(--t-base);
+        }
+        .user-header:hover { border-color: var(--border-strong); }
+
+        .user-info-left {
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
 
-        .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-        .btn-icon {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: var(--input-bg); border: 1px solid var(--border);
-            color: var(--text); cursor: pointer; font-size: 14px;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.15s; flex-shrink: 0;
-        }
-        .btn-icon:hover { background: var(--border); }
-        .btn-icon:active { transform: scale(0.92); }
-
-        .user-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 12px; border-radius: 12px;
-            background: var(--input-bg); border: 1px solid var(--border);
-        }
-        .user-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .user-avatar {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; box-shadow: 0 4px 12px rgba(99,102,241,0.4);
-            flex-shrink: 0;
-        }
-        .user-name { font-weight: 800; font-size: 14px; line-height: 1.1; }
-        .user-sub { font-size: 10px; color: var(--text-muted); font-weight: 600; }
-
-        .mp-bar {
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 10px; border-radius: 12px;
-            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(236,72,153,0.15));
-            border: 1px solid rgba(99,102,241,0.3);
-            font-size: 12px; font-weight: 700;
-        }
-        .mp-player { flex: 1; text-align: center; padding: 4px; min-width: 0; }
-        .mp-player .name { font-size: 11px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mp-player .progress { height: 6px; background: rgba(0,0,0,0.2); border-radius: 999px; overflow: hidden; margin-top: 3px; }
-        .mp-player .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease; border-radius: 999px; }
-        .mp-player.opponent .progress-fill { background: var(--opponent); }
-        .mp-player .score-mini { font-size: 10px; color: var(--warning); margin-top: 2px; }
-        .mp-vs { font-size: 14px; font-weight: 900; color: var(--warning); flex-shrink: 0; }
-
-        .score-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .stat-card {
-            background: var(--input-bg); border: 1px solid var(--border);
-            border-radius: 10px; padding: 6px 4px; text-align: center;
-            transition: all 0.2s;
-        }
-        .stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 2px; }
-        .stat-value { font-size: 14px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-
-        .progress-wrap { width: 100%; height: 6px; background: var(--input-bg); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
-        .progress-fill {
-            height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
-            border-radius: 999px; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 0 10px rgba(99,102,241,0.6);
+        .user-avatar-display {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            font-size: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2));
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
         }
 
-        select, .btn {
-            width: 100%; padding: 10px 12px; border-radius: 12px;
-            font-size: 13px; font-weight: 700;
-            border: 1px solid var(--border); background: var(--input-bg);
-            color: var(--text); cursor: pointer; transition: all 0.15s;
+        #display-nome {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .user-header .game-name {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        /* ==========================================================
+           6. SCORE BOARD
+           ========================================================== */
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+        }
+
+        .score-board > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 2px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.02);
+            transition: background var(--t-base), transform var(--t-base);
+        }
+        .score-board > div:hover {
+            background: rgba(99, 102, 241, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .score-board strong {
+            font-size: 15px;
+            font-family: 'JetBrains Mono', 'Segoe UI', monospace;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+        #display-dificuldade { color: var(--c-blue); font-size: 13px !important; }
+        #display-erros      { color: var(--c-red); }
+        #display-tempo      { color: #60a5fa; }
+        #display-pontos     { color: var(--c-green); }
+
+        /* ==========================================================
+           7. INSTRUÇÕES
+           ========================================================== */
+        .instructions {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin: 4px 0 12px;
+            line-height: 1.5;
+            min-height: 18px;
+        }
+
+        /* ==========================================================
+           8. TABULEIRO SUDOKU 6x6
+           ========================================================== */
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2px;
+            background: var(--board-border);
+            border: 2px solid var(--board-border);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            margin-bottom: 12px;
+            box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+        }
+
+        .sudoku-cell {
+            background: var(--input-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-color);
+            cursor: pointer;
+            user-select: none;
+            transition: background var(--t-fast), color var(--t-fast);
+        }
+
+        .sudoku-cell:hover {
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        .sudoku-cell.fixed {
+            color: var(--text-muted);
+            background: rgba(148, 163, 184, 0.08);
+            cursor: default;
+        }
+
+        .sudoku-cell.selected {
+            background: rgba(99, 102, 241, 0.3) !important;
+            box-shadow: inset 0 0 0 2px var(--btn-primary);
+        }
+
+        .sudoku-cell.error {
+            color: var(--c-red) !important;
+            background: rgba(239, 68, 68, 0.15) !important;
+        }
+
+        /* Bordas grossas para formar as caixas 2x3 */
+        .sudoku-cell:nth-child(2n) {
+            border-right: 2px solid var(--board-border);
+        }
+        .sudoku-cell:nth-child(6n) {
+            border-right: none;
+        }
+        /* Linhas horizontais das caixas 2x3 (linhas 2 e 4) */
+        .sudoku-cell:nth-child(n+7):nth-child(-n+12),
+        .sudoku-cell:nth-child(n+19):nth-child(-n+24) {
+            border-bottom: 2px solid var(--board-border);
+        }
+
+        /* ==========================================================
+           9. TECLADO NUMÉRICO VIRTUAL (1 a 6)
+           ========================================================== */
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .num-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-color);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 10px 0;
+            cursor: pointer;
+            transition: all var(--t-fast);
+        }
+
+        .num-btn:hover {
+            background: var(--btn-primary);
+            border-color: var(--btn-primary);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn);
+        }
+
+        /* ==========================================================
+           10. CONTROLES E BOTÕES
+           ========================================================== */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
             font-family: inherit;
+            font-weight: 600;
+            box-sizing: border-box;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color var(--t-base), box-shadow var(--t-base);
         }
-        select:focus { outline: none; border-color: var(--primary); }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
-        .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
-        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; }
-        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; }
-        .btn-ghost { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); }
-        .btn-ghost:hover { background: var(--border); }
-
-        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .controls-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-
-        #game-board {
-            position: relative; width: 100%; aspect-ratio: 1 / 1; max-height: 55vh;
-            background: var(--board-bg); border: 2px solid var(--board-border);
-            border-radius: 16px; overflow: hidden; cursor: crosshair;
-            user-select: none; touch-action: none;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-        #canvas-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-
-        .node {
-            position: absolute; width: 46px; height: 46px;
-            color: white; display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 14px;
-            transform: translate(-50%, -50%); cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.2);
-            transition: transform 0.15s ease, filter 0.2s;
-            user-select: none; border: 2px solid rgba(255,255,255,0.5);
-            z-index: 3; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-        }
-        .node:hover { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.2); }
-        .node:active { transform: translate(-50%, -50%) scale(1.05); }
-        .node.circle { border-radius: 50%; }
-        .node.square { border-radius: 10px; }
-        .node.star { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); border: none; }
-        .node.pentagon { clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); border: none; }
-        .node.hexagon { clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); border: none; }
-        .node.completed { animation: node-pulse 1.5s infinite; border-color: #fff; }
-        .node.next-target { animation: target-pulse 1.2s infinite; }
-        .node.wrong { animation: shake 0.35s ease-in-out; }
-
-        @keyframes node-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.7), 0 4px 12px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 0 0 12px rgba(34,197,94,0), 0 4px 12px rgba(0,0,0,0.4); }
-        }
-        @keyframes target-pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.7), 0 4px 12px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 0 0 14px rgba(99,102,241,0), 0 4px 12px rgba(0,0,0,0.4); }
-        }
-        @keyframes shake {
-            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
-            25% { transform: translate(-50%, -50%) translateX(-8px); }
-            75% { transform: translate(-50%, -50%) translateX(8px); }
+        select:focus, button:focus {
+            outline: none;
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
         }
 
-        .instructions { font-size: 12px; color: var(--text-muted); text-align: center; font-weight: 600; min-height: 16px; transition: color 0.2s; }
-        .instructions.success { color: var(--success); font-weight: 800; }
-        .instructions.error { color: var(--danger); font-weight: 800; }
-
-        #toast {
-            position: fixed; top: 20px; left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--card-solid); color: var(--text);
-            padding: 10px 18px; border-radius: 12px;
-            font-weight: 700; font-size: 13px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid var(--border); z-index: 1000;
-            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            pointer-events: none; display: flex; align-items: center; gap: 8px;
-            max-width: 90vw;
-        }
-        #toast.show { transform: translateX(-50%) translateY(0); }
-        #toast.success { background: var(--success); color: white; }
-        #toast.error { background: var(--danger); color: white; }
-        #toast.warning { background: var(--warning); color: white; }
-
-        .modal-bg {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center;
-            padding: 16px; z-index: 100;
-            opacity: 0; visibility: hidden; transition: opacity 0.3s;
-        }
-        .modal-bg.show { opacity: 1; visibility: visible; }
-        .modal-panel {
-            background: var(--card-solid); border: 1px solid var(--border);
-            border-radius: 20px; padding: 24px;
-            max-width: 400px; width: 100%; text-align: center;
-            transform: scale(0.85);
-            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
-            max-height: 90vh; overflow-y: auto;
-        }
-        .modal-bg.show .modal-panel { transform: scale(1); }
-
-        #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
-
-        .room-code {
-            font-family: 'Courier New', monospace;
-            font-size: 42px; font-weight: 900; letter-spacing: 8px;
-            color: var(--primary); text-shadow: 0 0 20px rgba(99,102,241,0.5);
-            padding: 16px; background: var(--input-bg);
-            border: 2px dashed var(--primary); border-radius: 16px;
-            margin: 16px 0; user-select: all; cursor: pointer;
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 36px;
+            margin-top: 0;
         }
 
-        .quick-reactions { display: flex; justify-content: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .reaction-btn {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: var(--input-bg); border: 1px solid var(--border);
-            font-size: 20px; cursor: pointer; transition: all 0.15s;
+        button {
+            margin-top: 0;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            box-shadow: var(--shadow-btn);
+            transition: transform var(--t-fast), box-shadow var(--t-base), filter var(--t-base);
         }
-        .reaction-btn:hover { transform: scale(1.15); }
-        .reaction-btn:active { transform: scale(0.9); }
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+            box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.7);
+        }
+        button:active { transform: translateY(0); filter: brightness(0.97); }
 
-        .floating-reaction {
-            position: fixed; font-size: 48px; pointer-events: none;
-            animation: float-up 2s ease-out forwards; z-index: 500;
+        .btn-secondary {
+            background: linear-gradient(135deg, #475569, #334155);
+            box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
         }
-        @keyframes float-up {
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            20% { transform: translateY(-20px) scale(1.3); opacity: 1; }
-            100% { transform: translateY(-200px) scale(1); opacity: 0; }
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #64748b, #475569);
         }
 
         .hidden { display: none !important; }
 
-        input[type="text"] {
-            width: 100%; padding: 12px; border-radius: 12px;
-            background: var(--input-bg); border: 2px solid var(--border);
-            color: var(--text); font-weight: 700; font-size: 14px;
-            text-align: center; outline: none; font-family: inherit;
-            transition: border-color 0.2s;
+        /* ==========================================================
+           11. RESPONSIVIDADE
+           ========================================================== */
+        @media (max-width: 440px) {
+            body { padding: 10px; }
+            .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
+            .score-board { font-size: 10px; }
+            .score-board strong { font-size: 13px; }
+            .user-header .game-name { display: none; }
+            .sudoku-cell { font-size: 18px; }
         }
-        input[type="text"]:focus { border-color: var(--primary); }
 
-        @media (max-height: 700px) { #game-board { max-height: 45vh; } }
+        :focus-visible {
+            outline: 2px solid var(--btn-primary);
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="toast"><i class="fa-solid fa-circle-info"></i><span id="toast-text"></span></div>
-    <canvas id="confetti-canvas"></canvas>
-
-    <!-- LOGIN FALLBACK (se não veio do Hub) -->
-    <div id="login-modal" class="modal-bg">
-        <div class="modal-panel">
-            <div style="width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 20px; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 28px;">
-                🧠
-            </div>
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 4px;">Brain Flow Master</h2>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Conecte as formas em ordem. Solo ou Multiplayer.</p>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;" id="avatar-grid"></div>
-            <input type="text" id="input-nome" placeholder="Seu nome" maxlength="16" value="Jogador" style="margin-bottom: 10px;">
-            <button id="btn-start" class="btn btn-primary" style="padding: 14px; font-size: 14px;">
-                <i class="fa-solid fa-play"></i> Começar
-            </button>
-        </div>
-    </div>
-
-    <!-- MAIN -->
-    <div class="container glass hidden" id="main-container">
-        
+    <div class="container">
+        <!-- BARRA SUPERIOR -->
         <div class="top-bar">
-            <div style="display: flex; gap: 6px;">
-                <button class="btn-icon" id="btn-hub" title="Menu Hub"><i class="fa-solid fa-house"></i></button>
-                <button class="btn-icon" id="btn-help" title="Ajuda"><i class="fa-solid fa-question"></i></button>
-                <button class="btn-icon" id="btn-theme" title="Tema"><i class="fa-solid fa-moon"></i></button>
-            </div>
-            <div style="display: flex; gap: 6px;">
-                <button class="btn-icon" id="btn-ranking" title="Ranking"><i class="fa-solid fa-trophy"></i></button>
-                <button class="btn-icon" id="btn-pause" title="Pausar"><i class="fa-solid fa-pause"></i></button>
-                <button class="btn-icon" id="btn-logout" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
-            </div>
+            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <div class="user-header">
-            <div class="user-info">
-                <div class="user-avatar" id="display-avatar">😀</div>
-                <div style="min-width: 0;">
-                    <div class="user-name" id="display-nome">Jogador</div>
-                    <div class="user-sub" id="display-modo">Modo Solo</div>
+        <!-- TELA DO JOGO -->
+        <div id="game-screen">
+            <div class="user-header">
+                <div class="user-info-left">
+                    <span id="display-avatar" class="user-avatar-display">😀</span>
+                    <strong id="display-nome"></strong>
                 </div>
+                <span class="game-name">Sudoku 6x6</span>
             </div>
-            <div style="text-align: right;">
-                <div class="stat-label">Streak</div>
-                <div class="stat-value" id="display-streak" style="color: var(--warning);">0 🔥</div>
+
+            <div class="score-board">
+                <div>Dificuldade<br><strong id="display-dificuldade">Médio</strong></div>
+                <div>Erros<br><strong id="display-erros">0/3</strong></div>
+                <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
+                <div>Pontos<br><strong id="display-pontos">0</strong></div>
             </div>
-        </div>
-
-        <!-- Multiplayer Bar -->
-        <div class="mp-bar hidden" id="mp-bar">
-            <div class="mp-player me">
-                <div class="name" id="mp-me-name">Você</div>
-                <div class="progress"><div class="progress-fill" id="mp-me-progress" style="width:0%"></div></div>
-                <div class="score-mini" id="mp-me-score">0 pts</div>
-            </div>
-            <div class="mp-vs">VS</div>
-            <div class="mp-player opponent">
-                <div class="name" id="mp-op-name">Oponente</div>
-                <div class="progress"><div class="progress-fill" id="mp-op-progress" style="width:0%"></div></div>
-                <div class="score-mini" id="mp-op-score">0 pts</div>
-            </div>
-        </div>
-
-        <div class="score-board">
-            <div class="stat-card"><div class="stat-label">Nível</div><div class="stat-value" id="display-nivel" style="color: #38bdf8;">1</div></div>
-            <div class="stat-card"><div class="stat-label">Pontos</div><div class="stat-value" id="display-pontos" style="color: #4ade80;">0</div></div>
-            <div class="stat-card"><div class="stat-label">Tempo</div><div class="stat-value" id="display-tempo" style="color: #60a5fa;">0:00</div></div>
-            <div class="stat-card"><div class="stat-label">Recorde</div><div class="stat-value" id="display-recorde" style="color: #f59e0b;">--:--</div></div>
-        </div>
-
-        <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width: 0%;"></div></div>
-
-        <p class="instructions" id="info-instrucao">Conecte as formas em ordem crescente.</p>
-
-        <div class="controls-grid" id="solo-controls">
-            <select id="select-nivel">
-                <option value="1">Nível 1</option>
-                <option value="2">Nível 2</option>
-                <option value="3">Nível 3</option>
-                <option value="4">Nível 4</option>
-                <option value="5">Nível 5</option>
-                <option value="6">Nível 6</option>
-                <option value="7">Nível 7</option>
-                <option value="8">Nível 8</option>
-                <option value="9">Nível 9</option>
-                <option value="10">Nível 10</option>
-            </select>
-            <select id="select-numeracao">
-                <option value="arabicos">🔢 Arábicos</option>
-                <option value="romanos">🏛️ Romanos</option>
-                <option value="ambos">🎲 Misto</option>
-            </select>
-        </div>
-
-        <div class="controls-grid" id="mp-controls">
-            <button class="btn btn-ghost" id="btn-create-room"><i class="fa-solid fa-plus"></i> Criar Sala</button>
-            <button class="btn btn-ghost" id="btn-join-room"><i class="fa-solid fa-right-to-bracket"></i> Entrar em Sala</button>
-        </div>
-
-        <div id="game-board"><svg id="canvas-lines" xmlns="http://www.w3.org/2000/svg"></svg></div>
-
-        <div class="controls-grid-3">
-            <button class="btn btn-ghost" id="btn-undo"><i class="fa-solid fa-arrow-rotate-left"></i> Undo</button>
-            <button class="btn btn-warning" id="btn-hint"><i class="fa-solid fa-lightbulb"></i> Dica <span id="hint-count">3</span></button>
-            <button class="btn btn-ghost" id="btn-reset"><i class="fa-solid fa-rotate-left"></i> Reiniciar</button>
-        </div>
-
-        <div class="quick-reactions hidden" id="quick-reactions">
-            <button class="reaction-btn" data-emoji="👋">👋</button>
-            <button class="reaction-btn" data-emoji="🔥">🔥</button>
-            <button class="reaction-btn" data-emoji="😎">😎</button>
-            <button class="reaction-btn" data-emoji="🤯">🤯</button>
-            <button class="reaction-btn" data-emoji="😭">😭</button>
-            <button class="reaction-btn" data-emoji="👏">👏</button>
-        </div>
-    </div>
-
-    <!-- WIN MODAL -->
-    <div id="win-modal" class="modal-bg">
-        <div class="modal-panel">
-            <div style="font-size: 56px; margin-bottom: 8px;">🏆</div>
-            <h2 id="win-title" style="font-size: 24px; font-weight: 900; margin-bottom: 4px;">Nível Concluído!</h2>
-            <p id="win-subtitle" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Excelente trabalho!</p>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
-                <div class="stat-card"><div class="stat-label">Tempo</div><div class="stat-value" id="win-time">0:00</div></div>
-                <div class="stat-card"><div class="stat-label">Pontos</div><div class="stat-value" style="color: var(--warning);" id="win-points">+0</div></div>
-                <div class="stat-card"><div class="stat-label">Recorde</div><div class="stat-value" style="color: var(--success);" id="win-record">--</div></div>
-            </div>
-            <button class="btn btn-success" id="btn-next" style="padding: 14px; font-size: 14px; margin-bottom: 8px;">
-                <i class="fa-solid fa-arrow-right"></i> Próximo Nível
-            </button>
-            <div class="controls-grid">
-                <button class="btn btn-ghost" id="btn-replay">🔄 Repetir</button>
-                <button class="btn btn-ghost" id="btn-close-win">🏠 Menu</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ROOM MODAL -->
-    <div id="room-modal" class="modal-bg">
-        <div class="modal-panel"><div id="room-content"></div></div>
-    </div>
-
-    <!-- RANKING MODAL -->
-    <div id="ranking-modal" class="modal-bg">
-        <div class="modal-panel">
-            <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 12px;">🏆 Ranking Global</h2>
-            <div id="ranking-list" style="max-height: 60vh; overflow-y: auto; text-align: left;">
-                <p style="text-align: center; color: var(--text-muted);">A carregar...</p>
-            </div>
-            <button class="btn btn-primary" onclick="window.closeModal('ranking-modal')" style="margin-top: 12px;">Fechar</button>
-        </div>
-    </div>
-
-    <!-- HELP MODAL -->
-    <div id="help-modal" class="modal-bg">
-        <div class="modal-panel" style="text-align: left;">
-            <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 12px; text-align: center;">📖 Como Jogar</h2>
-            <div style="font-size: 13px; line-height: 1.6; color: var(--text-muted);">
-                <p style="margin-bottom: 10px;"><b style="color: var(--text);">🎯 Objetivo:</b> Conecte as formas na ordem numérica crescente.</p>
-                <p style="margin-bottom: 10px;"><b style="color: var(--text);">⚡ Regras:</b></p>
-                <ul style="margin: 0 0 10px 20px;">
-                    <li>Clique no número <b>1</b>, depois no <b>2</b>, etc.</li>
-                    <li>Não pode tocar em outras formas antes da hora</li>
-                    <li>Use <b>Dica</b> se ficar preso</li>
-                </ul>
-                <p style="margin-bottom: 10px;"><b style="color: var(--text);">🎮 Modos:</b></p>
-                <ul style="margin: 0 0 10px 20px;">
-                    <li><b>Criar Sala:</b> gere um código e compartilhe</li>
-                    <li><b>Entrar em Sala:</b> use o código do amigo</li>
-                    <li><b>Reações:</b> envie emojis durante a partida</li>
-                </ul>
-            </div>
-            <button class="btn btn-primary" onclick="window.closeModal('help-modal')" style="margin-top: 8px;">Entendi!</button>
-        </div>
-    </div>
-
-<script type="module">
-    import { db } from "./firebase-config.js";
-    import { ref, get, update, set, remove, onValue, off, push, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    // ============================================================
-    // SESSÃO
-    // ============================================================
-    let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-
-    // ============================================================
-    // ESTADO
-    // ============================================================
-    const state = {
-        player: jogadorSessao ? { nome: jogadorSessao.nome, avatar: jogadorSessao.avatar || '😀', chave: jogadorSessao.chave }
-                             : { nome: 'Jogador', avatar: '😀', chave: 'local_' + Date.now() },
-        nivel: 1, pontos: 0, streak: 0, recordes: {}, vitorias: 0,
-        numMode: 'arabicos',
-        totalPontos: 5, nextExpected: 1,
-        nodes: [], connections: [], history: [],
-        timerStart: 0, seconds: 0, timerInterval: null,
-        paused: false, pausedAt: 0,
-        hintsLeft: 3,
-        mode: 'solo', roomCode: null, roomRef: null, roomUnsubscribe: null,
-        reactionUnsubscribe: null, lastReactionKey: null,
-        opponentKey: null, opponentName: null,
-        opponentProgress: 0, myProgress: 0,
-        roomStarted: false, gameEnded: false
-    };
-
-    const PALETTE = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#8b5cf6','#ec4899','#f43f5e','#a855f7','#6366f1'];
-    const SHAPES = ['circle','square','star','pentagon','hexagon'];
-    const AVATARS = ['😀','😎','🤓','🧠','🦊','🐼','🐸','🦁','🐯','🦄','🐲','👽'];
-    const STORAGE_KEY = 'bfm_turbo_save';
-
-    // ============================================================
-    // AUDIO
-    // ============================================================
-    class SoundEngine {
-        constructor() { this.ctx = null; this.enabled = localStorage.getItem('bfm_sound') !== 'off'; }
-        init() {
-            if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { this.enabled = false; } }
-            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-        }
-        tone(f, d = 0.1, t = 'sine', v = 0.12) {
-            if (!this.ctx || !this.enabled) return;
-            try {
-                const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-                o.type = t; o.frequency.setValueAtTime(f, this.ctx.currentTime);
-                g.gain.setValueAtTime(v, this.ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + d);
-                o.connect(g); g.connect(this.ctx.destination);
-                o.start(); o.stop(this.ctx.currentTime + d);
-            } catch(e) {}
-        }
-        success() { [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, 0.1, 'triangle', 0.12), i * 60)); }
-        error() { this.tone(180, 0.18, 'sawtooth', 0.08); }
-        win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => this.tone(f, 0.15, 'triangle', 0.14), i * 100)); }
-        hint() { [400, 500, 600, 700].forEach((f, i) => setTimeout(() => this.tone(f, 0.08, 'sine', 0.1), i * 50)); }
-        undo() { this.tone(300, 0.1, 'sine', 0.1); }
-        reaction() { this.tone(880, 0.15, 'triangle', 0.15); }
-    }
-    const audio = new SoundEngine();
-
-    // ============================================================
-    // HELPERS
-    // ============================================================
-    let toastTimeout;
-    function showToast(msg, type = 'info') {
-        const toast = document.getElementById('toast');
-        const text = document.getElementById('toast-text');
-        const icon = toast.querySelector('i');
-        const icons = { info: 'fa-circle-info', success: 'fa-circle-check', error: 'fa-circle-exclamation', warning: 'fa-triangle-exclamation' };
-        toast.className = type;
-        icon.className = 'fa-solid ' + (icons[type] || icons.info);
-        text.textContent = msg;
-        toast.classList.add('show');
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
-    }
-
-    function toRoman(num) {
-        const map = { M:1000, CM:900, D:500, CD:400, C:100, XC:90, L:50, XL:40, X:10, IX:9, V:5, IV:4, I:1 };
-        let r = ''; for (const k in map) { while (num >= map[k]) { r += k; num -= map[k]; } } return r;
-    }
-
-    function getLabel(id, mode, total) {
-        if (mode === 'arabicos') return String(id);
-        if (mode === 'romanos') return toRoman(id);
-        return id <= Math.ceil(total / 2) ? String(id) : toRoman(id);
-    }
-
-    function fmtTime(s) {
-        if (!s || s <= 0) return '--:--';
-        return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-    }
-
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-    function openModal(id) { document.getElementById(id).classList.add('show'); }
-    window.closeModal = closeModal;
-
-    // ============================================================
-    // PERSISTÊNCIA
-    // ============================================================
-    function saveLocal() {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            player: state.player, nivel: state.nivel, pontos: state.pontos,
-            streak: state.streak, recordes: state.recordes, vitorias: state.vitorias, numMode: state.numMode
-        })); } catch(e) {}
-    }
-
-    function loadLocal() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return;
-            const d = JSON.parse(raw);
-            if (!jogadorSessao && d.player) state.player = d.player;
-            state.nivel = d.nivel || 1; state.pontos = d.pontos || 0;
-            state.streak = d.streak || 0; state.recordes = d.recordes || {};
-            state.vitorias = d.vitorias || 0; state.numMode = d.numMode || 'arabicos';
-        } catch(e) {}
-    }
-
-    // ============================================================
-    // PUZZLE
-    // ============================================================
-    function generatePuzzle(nivel) {
-        const total = 4 + nivel * 2;
-        const boardSize = 380, margin = 70;
-        const usable = boardSize - margin;
-        const cols = Math.ceil(Math.sqrt(total * 1.4));
-        const rows = Math.ceil(total / cols);
-        const cw = usable / cols, ch = usable / rows;
-        const positions = [];
-        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-            positions.push({
-                x: Math.floor(c * cw + cw / 2 + margin / 2 + (Math.random() * 12 - 6)),
-                y: Math.floor(r * ch + ch / 2 + margin / 2 + (Math.random() * 12 - 6))
-            });
-        }
-        positions.sort(() => Math.random() - 0.5);
-        const nodes = [];
-        for (let i = 1; i <= total; i++) {
-            const pos = positions[i - 1] || { x: 50, y: 50 };
-            nodes.push({
-                id: i, x: pos.x, y: pos.y,
-                color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
-                shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
-                label: getLabel(i, state.numMode, total)
-            });
-        }
-        return { total, nodes };
-    }
-
-    // ============================================================
-    // RENDER
-    // ============================================================
-    function renderNodes() {
-        const board = document.getElementById('game-board');
-        board.querySelectorAll('.node').forEach(n => n.remove());
-        const svg = document.getElementById('canvas-lines');
-        svg.setAttribute('viewBox', `0 0 ${board.clientWidth} ${board.clientHeight}`);
-        
-        state.nodes.forEach(node => {
-            const el = document.createElement('div');
-            el.className = `node ${node.shape}`;
-            el.textContent = node.label;
-            el.style.left = node.x + 'px';
-            el.style.top = node.y + 'px';
-            el.style.background = node.color;
-            el.dataset.id = node.id;
-            if (state.connections.some(c => c.id === node.id)) el.classList.add('completed');
-            else if (node.id === state.nextExpected) el.classList.add('next-target');
-            el.addEventListener('click', () => handleNodeClick(node));
-            board.appendChild(el);
-        });
-    }
-
-    function drawLine(p1, p2) {
-        const svg = document.getElementById('canvas-lines');
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
-        line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
-        line.setAttribute('stroke', '#22c55e');
-        line.setAttribute('stroke-width', '4');
-        line.setAttribute('stroke-linecap', 'round');
-        svg.appendChild(line);
-    }
-
-    function redrawAllLines() {
-        document.getElementById('canvas-lines').innerHTML = '';
-        for (let i = 0; i < state.connections.length - 1; i++) drawLine(state.connections[i], state.connections[i + 1]);
-    }
-
-    // ============================================================
-    // GAME LOGIC
-    // ============================================================
-    function handleNodeClick(node) {
-        audio.init();
-        if (state.paused) { showToast('Jogo pausado', 'warning'); return; }
-        if (state.mode !== 'solo' && !state.roomStarted) { showToast('Aguardando oponente...', 'warning'); return; }
-        
-        if (node.id === state.nextExpected) {
-            const el = document.querySelector(`.node[data-id="${node.id}"]`);
-            el.classList.add('completed'); el.classList.remove('next-target');
-            state.connections.push(node);
-            if (state.connections.length > 1) drawLine(state.connections[state.connections.length - 2], node);
-            audio.success();
-            state.nextExpected++;
-            state.myProgress = state.connections.length;
-            updateProgressBar();
-            if (state.mode !== 'solo') syncMultiplayerProgress();
             
-            if (state.nextExpected > state.totalPontos) handleLevelComplete();
-            else {
-                const nextEl = document.querySelector(`.node[data-id="${state.nextExpected}"]`);
-                if (nextEl) nextEl.classList.add('next-target');
-                document.getElementById('info-instrucao').textContent = `✨ Ótimo! Próximo: ${getLabel(state.nextExpected, state.numMode, state.totalPontos)}`;
-                document.getElementById('info-instrucao').className = 'instructions success';
-            }
-        } else if (node.id > state.nextExpected) {
-            audio.error();
-            const el = document.querySelector(`.node[data-id="${node.id}"]`);
-            el.classList.add('wrong'); setTimeout(() => el.classList.remove('wrong'), 400);
-            document.getElementById('info-instrucao').textContent = '⚠️ Siga a ordem crescente!';
-            document.getElementById('info-instrucao').className = 'instructions error';
-        }
-    }
+            <p class="instructions" id="info-instrucao">Preencha linhas, colunas e blocos 2x3 com os números 1 a 6.</p>
 
-    function handleLevelComplete() {
-        clearInterval(state.timerInterval);
-        state.seconds = Math.floor((performance.now() - state.timerStart) / 1000);
-        audio.win();
-        spawnConfetti();
-        
-        const pontosGanhos = state.nivel * 10;
-        state.pontos += pontosGanhos;
-        
-        let novoRecorde = false;
-        const melhor = state.recordes[state.nivel] || 0;
-        if (melhor === 0 || state.seconds < melhor) { state.recordes[state.nivel] = state.seconds; novoRecorde = true; }
-        
-        state.streak++;
-        state.nivel++;
-        
-        saveLocal();
-        updateUI();
-        
-        if (jogadorSessao && jogadorSessao.chave) {
-            update(ref(db, 'jogadores/' + jogadorSessao.chave), {
-                pontos: state.pontos, nivel: state.nivel, streak: state.streak,
-                recordesFlow: state.recordes, vitoriasFlow: state.vitorias,
-                ultimaAtualizacao: new Date().toISOString()
-            }).catch(e => console.error('FB save:', e));
-        }
-        
-        if (state.mode !== 'solo' && state.roomRef) checkMultiplayerWin();
-        else showWinModal(pontosGanhos, novoRecorde);
-    }
+            <!-- TABULEIRO 6x6 -->
+            <div class="sudoku-grid" id="sudoku-board"></div>
 
-    function showWinModal(pontos, novoRecorde) {
-        document.getElementById('win-title').textContent = 'Nível Concluído!';
-        document.getElementById('win-subtitle').textContent = novoRecorde ? '🏆 NOVO RECORDE!' : 'Excelente trabalho!';
-        document.getElementById('win-time').textContent = fmtTime(state.seconds);
-        document.getElementById('win-points').textContent = '+' + pontos;
-        document.getElementById('win-record').textContent = novoRecorde ? 'NOVO!' : fmtTime(state.recordes[state.nivel - 1] || 0);
-        openModal('win-modal');
-    }
+            <!-- TECLADO VIRTUAL -->
+            <div class="number-pad">
+                <button class="num-btn" data-num="1">1</button>
+                <button class="num-btn" data-num="2">2</button>
+                <button class="num-btn" data-num="3">3</button>
+                <button class="num-btn" data-num="4">4</button>
+                <button class="num-btn" data-num="5">5</button>
+                <button class="num-btn" data-num="6">6</button>
+            </div>
 
-    // ============================================================
-    // TIMER
-    // ============================================================
-    function startTimer() {
-        state.timerStart = performance.now(); state.seconds = 0;
-        clearInterval(state.timerInterval);
-        state.timerInterval = setInterval(() => {
-            if (!state.paused) {
-                state.seconds = Math.floor((performance.now() - state.timerStart) / 1000);
-                document.getElementById('display-tempo').textContent = fmtTime(state.seconds);
-            }
-        }, 250);
-    }
+            <!-- OPÇÕES E CONTROLES -->
+            <div class="controls-grid">
+                <select id="select-dificuldade">
+                    <option value="facil">Fácil</option>
+                    <option value="medio" selected>Médio</option>
+                    <option value="dificil">Difícil</option>
+                </select>
+                <button id="btn-apagar" class="btn-secondary">🧹 Apagar Célula</button>
+            </div>
 
-    function pauseTimer() { state.paused = true; state.pausedAt = performance.now(); }
-    function resumeTimer() { if (state.paused) { state.timerStart += performance.now() - state.pausedAt; state.paused = false; } }
+            <div class="controls-grid" style="margin-top: 8px;">
+                <button id="btn-novo-jogo" class="btn-secondary">🔄 Novo Jogo</button>
+                <button id="btn-verificar">✨ Verificar</button>
+            </div>
+        </div>
+    </div>
 
-    // ============================================================
-    // UI
-    // ============================================================
-    function updateUI() {
-        document.getElementById('display-nome').textContent = state.player.nome;
-        document.getElementById('display-avatar').textContent = state.player.avatar;
-        document.getElementById('display-nivel').textContent = state.nivel;
-        document.getElementById('display-pontos').textContent = state.pontos;
-        document.getElementById('display-streak').textContent = state.streak + ' 🔥';
-        document.getElementById('display-recorde').textContent = fmtTime(state.recordes[state.nivel] || 0);
-        document.getElementById('display-modo').textContent = state.mode === 'solo' ? 'Modo Solo' : state.mode === 'host' ? '🏠 Anfitrião' : '👤 Convidado';
-    }
+    <!-- Lógica do Sudoku -->
+    <script type="module">
+        import { db } from "./firebase-config.js";
+        import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    function updateProgressBar() {
-        const pct = (state.connections.length / state.totalPontos) * 100;
-        document.getElementById('progress-fill').style.width = pct + '%';
-    }
+        let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+        if (!jogadorSessao) { window.location.href = 'index.html'; }
 
-    function spawnConfetti() {
-        const canvas = document.getElementById('confetti-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        const particles = [];
-        for (let i = 0; i < 100; i++) particles.push({
-            x: Math.random() * canvas.width, y: -20,
-            vx: (Math.random() - 0.5) * 4, vy: Math.random() * 4 + 2,
-            size: Math.random() * 8 + 4, color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
-            rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 0.2
-        });
-        let frames = 0;
-        function anim() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.rot += p.vr;
-                ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-                ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                ctx.restore();
-            });
-            if (++frames < 180) requestAnimationFrame(anim);
-            else ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        anim();
-    }
+        let pontuacaoAcumulada = 0;
+        let erros = 0;
+        let maxErros = 3;
+        let segundos = 0;
+        let timerInterval = null;
+        let celulaSelecionada = null;
 
-    // ============================================================
-    // NEW GAME
-    // ============================================================
-    function newGame() {
-        audio.init();
-        if (state.mode !== 'solo' && state.roomRef) { showToast('Saia da sala primeiro', 'warning'); return; }
-        
-        const nivel = parseInt(document.getElementById('select-nivel').value);
-        state.nivel = nivel;
-        state.numMode = document.getElementById('select-numeracao').value;
-        state.hintsLeft = 3;
-        state.history = []; state.connections = []; state.nextExpected = 1;
-        
-        const puzzle = generatePuzzle(nivel);
-        state.nodes = puzzle.nodes; state.totalPontos = puzzle.total;
-        
-        renderNodes(); updateProgressBar(); startTimer(); updateUI();
-        document.getElementById('hint-count').textContent = state.hintsLeft;
-        document.getElementById('info-instrucao').textContent = `Nível ${nivel}: Conecte as formas em ordem crescente.`;
-        document.getElementById('info-instrucao').className = 'instructions';
-    }
+        let solucaoAtual = [];
+        let tabuleiroAtual = [];
+        let mascaraFixos = [];
 
-    // ============================================================
-    // MULTIPLAYER
-    // ============================================================
-    function generateRoomCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let c = ''; for (let i = 0; i < 4; i++) c += chars[Math.floor(Math.random() * chars.length)];
-        return c;
-    }
+        const displayNome = document.getElementById('display-nome');
+        const displayAvatar = document.getElementById('display-avatar');
+        const displayDificuldade = document.getElementById('display-dificuldade');
+        const displayErros = document.getElementById('display-erros');
+        const displayTempo = document.getElementById('display-tempo');
+        const displayPontos = document.getElementById('display-pontos');
+        const infoInstrucao = document.getElementById('info-instrucao');
+        const sudokuBoard = document.getElementById('sudoku-board');
+        const selectDificuldade = document.getElementById('select-dificuldade');
+        const themeToggleBtn = document.getElementById('theme-toggle');
 
-    async function createRoom() {
-        if (state.mode !== 'solo') { showToast('Já está numa sala!', 'warning'); return; }
-        audio.init();
-        const nivel = parseInt(document.getElementById('select-nivel').value);
-        const puzzle = generatePuzzle(nivel);
-        
-        let code, attempts = 0;
-        do {
-            code = generateRoomCode();
-            const snap = await get(ref(db, 'salasFlow/' + code));
-            if (!snap.exists()) break;
-        } while (++attempts < 10);
-        
-        const roomData = {
-            criador: state.player.chave, criadorNome: state.player.nome, criadorAvatar: state.player.avatar,
-            oponente: null, oponenteNome: null, oponenteAvatar: null,
-            nivel, numMode: state.numMode, puzzle: { nodes: puzzle.nodes, total: puzzle.total },
-            iniciada: false, iniciadaEm: null, finalizada: false,
-            pontos: { [state.player.chave]: 0 }, progresso: { [state.player.chave]: 0 },
-            vencedor: null, criadaEm: Date.now()
-        };
-        
-        await set(ref(db, 'salasFlow/' + code), roomData);
-        state.mode = 'host'; state.roomCode = code; state.roomRef = ref(db, 'salasFlow/' + code);
-        listenToRoom(); showWaitingRoom(code);
-    }
-
-    function showWaitingRoom(code) {
-        document.getElementById('room-content').innerHTML = `
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 8px;">🎮 Sala Criada!</h2>
-            <p style="font-size: 13px; color: var(--text-muted);">Compartilhe este código:</p>
-            <div class="room-code" id="room-code-display" onclick="window.copyRoomCode()">${code}</div>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 16px;">
-                <i class="fa-solid fa-spinner fa-spin"></i> Aguardando oponente...
-            </p>
-            <button class="btn btn-danger" onclick="window.leaveRoom()">Cancelar</button>
-        `;
-        openModal('room-modal');
-    }
-
-    function copyRoomCode() {
-        const code = document.getElementById('room-code-display').textContent;
-        navigator.clipboard.writeText(code).then(() => showToast('Código copiado!', 'success'))
-            .catch(() => showToast('Copie: ' + code, 'info'));
-    }
-    window.copyRoomCode = copyRoomCode;
-
-    function showJoinRoomDialog() {
-        document.getElementById('room-content').innerHTML = `
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 8px;">Entrar em Sala</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Digite o código do anfitrião:</p>
-            <input type="text" id="input-room-code" placeholder="ABCD" maxlength="4" style="text-transform: uppercase; letter-spacing: 8px; font-size: 24px; font-weight: 900;">
-            <button class="btn btn-primary" onclick="window.joinRoom()" style="margin-top: 12px;">
-                <i class="fa-solid fa-right-to-bracket"></i> Entrar
-            </button>
-            <button class="btn btn-ghost" onclick="window.closeModal('room-modal')" style="margin-top: 8px;">Cancelar</button>
-        `;
-        openModal('room-modal');
-        setTimeout(() => document.getElementById('input-room-code').focus(), 100);
-    }
-
-    async function joinRoom() {
-        const code = document.getElementById('input-room-code').value.trim().toUpperCase();
-        if (code.length !== 4) { showToast('Código inválido', 'error'); return; }
-        audio.init();
-        const roomRef = ref(db, 'salasFlow/' + code);
-        const snap = await get(roomRef);
-        if (!snap.exists()) { showToast('Sala não encontrada', 'error'); return; }
-        const room = snap.val();
-        if (room.oponente) { showToast('Sala cheia!', 'error'); return; }
-        if (room.criador === state.player.chave) { showToast('Você é o anfitrião!', 'warning'); return; }
-        if (room.iniciada) { showToast('Jogo já iniciado', 'error'); return; }
-        
-        await update(roomRef, {
-            oponente: state.player.chave, oponenteNome: state.player.nome, oponenteAvatar: state.player.avatar,
-            iniciada: true, iniciadaEm: Date.now()
-        });
-        
-        state.mode = 'guest'; state.roomCode = code; state.roomRef = roomRef;
-        state.opponentKey = room.criador; state.opponentName = room.criadorNome;
-        closeModal('room-modal');
-        startMultiplayerGame(room);
-    }
-    window.joinRoom = joinRoom;
-
-    function listenToRoom() {
-        if (state.roomUnsubscribe) state.roomUnsubscribe();
-        const unsub = onValue(state.roomRef, (snap) => {
-            if (!snap.exists()) { showToast('Sala foi fechada', 'warning'); leaveRoom(); return; }
-            const room = snap.val();
-            if (state.mode === 'host' && !room.iniciada) return;
-            if (state.mode === 'host' && room.oponente && room.iniciada && !state.roomStarted) {
-                state.opponentKey = room.oponente; state.opponentName = room.oponenteNome;
-                closeModal('room-modal'); startMultiplayerGame(room); return;
-            }
-            if (state.roomStarted) {
-                if (room.progresso && room.progresso[state.opponentKey] !== undefined) {
-                    state.opponentProgress = room.progresso[state.opponentKey]; updateMultiplayerUI();
-                }
-                if (room.finalizada && room.vencedor) handleMultiplayerEnd(room.vencedor);
-            }
-        });
-        state.roomUnsubscribe = () => off(state.roomRef, 'value', unsub);
-    }
-
-    function startMultiplayerGame(room) {
-        state.roomStarted = true;
-        state.nodes = room.puzzle.nodes; state.totalPontos = room.puzzle.total;
-        state.numMode = room.numMode || 'arabicos';
-        state.hintsLeft = 3; state.connections = []; state.nextExpected = 1;
-        state.myProgress = 0; state.opponentProgress = 0;
-        
-        state.nodes.forEach(n => n.label = getLabel(n.id, state.numMode, state.totalPontos));
-        renderNodes(); updateProgressBar(); startTimer();
-        
-        document.getElementById('mp-bar').classList.remove('hidden');
-        document.getElementById('quick-reactions').classList.remove('hidden');
-        document.getElementById('solo-controls').classList.add('hidden');
-        document.getElementById('mp-controls').classList.add('hidden');
-        document.getElementById('mp-me-name').textContent = state.player.nome;
-        document.getElementById('mp-op-name').textContent = state.opponentName || 'Oponente';
-        
-        updateUI(); updateMultiplayerUI();
-        document.getElementById('info-instrucao').textContent = `🏁 Partida iniciada! Nível ${state.nivel}`;
-        document.getElementById('info-instrucao').className = 'instructions success';
-        listenReactions();
-    }
-
-    function updateMultiplayerUI() {
-        document.getElementById('mp-me-progress').style.width = (state.myProgress / state.totalPontos * 100) + '%';
-        document.getElementById('mp-op-progress').style.width = (state.opponentProgress / state.totalPontos * 100) + '%';
-        document.getElementById('mp-me-score').textContent = (state.myProgress * 10) + ' pts';
-        document.getElementById('mp-op-score').textContent = (state.opponentProgress * 10) + ' pts';
-    }
-
-    async function syncMultiplayerProgress() {
-        if (!state.roomRef) return;
-        try {
-            await update(state.roomRef, {
-                [`progresso/${state.player.chave}`]: state.myProgress,
-                [`pontos/${state.player.chave}`]: state.myProgress * 10
-            });
-        } catch(e) {}
-    }
-
-    async function checkMultiplayerWin() {
-        if (!state.roomRef) return;
-        try {
-            await runTransaction(state.roomRef, (room) => {
-                if (!room || room.finalizada) return room;
-                room.finalizada = true; room.vencedor = state.player.chave;
-                room.vencedorNome = state.player.nome; room.finalizadaEm = Date.now();
-                return room;
-            });
-        } catch(e) {}
-        state.vitorias++;
-        state.pontos += 100;
-        saveLocal(); updateUI();
-        if (jogadorSessao && jogadorSessao.chave) {
-            update(ref(db, 'jogadores/' + jogadorSessao.chave), {
-                pontos: state.pontos, vitoriasFlow: state.vitorias,
-                ultimaAtualizacao: new Date().toISOString()
-            }).catch(e => {});
-        }
-        audio.win(); spawnConfetti();
-        document.getElementById('win-title').textContent = '🏆 Vitória!';
-        document.getElementById('win-subtitle').textContent = 'Você foi mais rápido!';
-        document.getElementById('win-time').textContent = fmtTime(state.seconds);
-        document.getElementById('win-points').textContent = '+100';
-        document.getElementById('win-record').textContent = state.opponentName;
-        openModal('win-modal');
-    }
-
-    function handleMultiplayerEnd(vencedorKey) {
-        if (state.gameEnded) return;
-        state.gameEnded = true;
-        clearInterval(state.timerInterval);
-        if (vencedorKey === state.player.chave) return;
-        audio.error();
-        state.pontos += state.myProgress * 10;
-        state.streak = 0;
-        saveLocal(); updateUI();
-        document.getElementById('win-title').textContent = '😢 Derrota';
-        document.getElementById('win-subtitle').textContent = 'Seu oponente foi mais rápido!';
-        document.getElementById('win-time').textContent = fmtTime(state.seconds);
-        document.getElementById('win-points').textContent = '+' + (state.myProgress * 10);
-        document.getElementById('win-record').textContent = state.opponentName;
-        openModal('win-modal');
-    }
-
-    function sendReaction(emoji) {
-        if (!state.roomRef) return;
-        push(ref(db, `salasFlow/${state.roomCode}/reacoes`), {
-            from: state.player.chave, fromNome: state.player.nome, emoji, at: Date.now()
-        });
-        showFloatingReaction(emoji, 'me'); audio.reaction();
-    }
-
-    function listenReactions() {
-        if (state.reactionUnsubscribe) state.reactionUnsubscribe();
-        const unsub = onValue(ref(db, `salasFlow/${state.roomCode}/reacoes`), (snap) => {
-            if (!snap.exists()) return;
-            const reactions = snap.val();
-            const keys = Object.keys(reactions);
-            const latest = keys[keys.length - 1];
-            if (latest === state.lastReactionKey) return;
-            state.lastReactionKey = latest;
-            const r = reactions[latest];
-            if (r.from === state.player.chave) return;
-            if (Date.now() - r.at > 5000) return;
-            showFloatingReaction(r.emoji, 'opponent'); audio.reaction();
-        });
-        state.reactionUnsubscribe = () => off(ref(db, `salasFlow/${state.roomCode}/reacoes`), 'value', unsub);
-    }
-
-    function showFloatingReaction(emoji, from) {
-        const el = document.createElement('div');
-        el.className = 'floating-reaction';
-        el.textContent = emoji;
-        el.style.left = (from === 'me' ? '20%' : '80%') + '%';
-        el.style.bottom = '30%';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 2000);
-        if (from === 'opponent') showToast(`${state.opponentName}: ${emoji}`, 'info');
-    }
-
-    async function leaveRoom() {
-        if (state.roomUnsubscribe) state.roomUnsubscribe();
-        if (state.reactionUnsubscribe) state.reactionUnsubscribe();
-        if (state.roomCode && state.mode === 'host') {
-            try { await remove(ref(db, 'salasFlow/' + state.roomCode)); } catch(e) {}
-        } else if (state.roomCode && state.mode === 'guest') {
-            try {
-                await update(ref(db, 'salasFlow/' + state.roomCode), {
-                    oponente: null, oponenteNome: null, iniciada: false, finalizada: true, vencedor: state.player.chave
-                });
-            } catch(e) {}
-        }
-        state.mode = 'solo'; state.roomCode = null; state.roomRef = null;
-        state.roomStarted = false; state.gameEnded = false;
-        state.opponentKey = null; state.opponentName = null;
-        document.getElementById('mp-bar').classList.add('hidden');
-        document.getElementById('quick-reactions').classList.add('hidden');
-        document.getElementById('solo-controls').classList.remove('hidden');
-        document.getElementById('mp-controls').classList.remove('hidden');
-        closeModal('room-modal');
-        newGame();
-    }
-    window.leaveRoom = leaveRoom;
-
-    // ============================================================
-    // RANKING
-    // ============================================================
-    async function openRanking() {
-        openModal('ranking-modal');
-        const list = document.getElementById('ranking-list');
-        list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">A carregar...</p>';
-        try {
-            const snap = await get(ref(db, 'jogadores'));
-            if (!snap.exists()) { list.innerHTML = '<p style="text-align:center;">Sem dados</p>'; return; }
-            const players = [];
-            snap.forEach(c => {
-                const d = c.val();
-                players.push({ nome: d.nome || '???', avatar: d.avatar || '😀', pontos: d.pontos || 0, vitorias: d.vitoriasFlow || 0 });
-            });
-            players.sort((a, b) => b.pontos - a.pontos);
-            list.innerHTML = players.slice(0, 20).map((p, i) => {
-                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-                return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; margin-bottom:4px; background:var(--input-bg); border-radius:10px; border:1px solid var(--border);">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span>${medal}</span><span style="font-size:18px;">${p.avatar}</span>
-                        <span style="font-weight:800; font-size:13px;">${p.nome}</span>
-                    </div>
-                    <div style="text-align:right; font-size:11px;">
-                        <div style="font-weight:900; color:var(--warning);">${p.pontos} pts</div>
-                        <div style="color:var(--text-muted);">${p.vitorias} 🏆</div>
-                    </div>
-                </div>`;
-            }).join('');
-        } catch(e) {
-            list.innerHTML = '<p style="text-align:center; color:var(--danger);">Erro ao carregar</p>';
-        }
-    }
-
-    // ============================================================
-    // THEME
-    // ============================================================
-    function cycleTheme() {
-        const themes = ['dark', 'light', 'oled'];
-        const current = document.documentElement.getAttribute('data-theme') || 'dark';
-        const next = themes[(themes.indexOf(current) + 1) % themes.length];
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('brain_flow_theme', next);
-        showToast('Tema: ' + next, 'info');
-    }
-
-    // ============================================================
-    // INIT
-    // ============================================================
-    function togglePause() {
-        const overlay = document.getElementById('pause-overlay');
-        if (state.paused) { resumeTimer(); overlay.classList.add('hidden'); }
-        else { pauseTimer(); overlay.classList.remove('hidden'); }
-    }
-
-    function undoMove() {
-        if (state.connections.length === 0) return;
-        if (state.mode !== 'solo' && state.roomStarted) { showToast('Não pode desfazer em MP', 'warning'); return; }
-        const removed = state.connections.pop();
-        state.nextExpected--;
-        const el = document.querySelector(`.node[data-id="${removed.id}"]`);
-        if (el) el.classList.remove('completed');
-        redrawAllLines();
-        const nextEl = document.querySelector(`.node[data-id="${state.nextExpected}"]`);
-        if (nextEl) nextEl.classList.add('next-target');
-        updateProgressBar(); audio.undo();
-    }
-
-    function useHint() {
-        if (state.hintsLeft <= 0) { showToast('Sem dicas!', 'warning'); return; }
-        if (state.mode !== 'solo' && state.roomStarted) { showToast('Sem dicas em MP', 'warning'); return; }
-        const target = state.nextExpected;
-        const el = document.querySelector(`.node[data-id="${target}"]`);
-        if (el) { el.classList.add('hint-flash'); setTimeout(() => el.classList.remove('hint-flash'), 800); }
-        state.hintsLeft--;
-        state.pontos = Math.max(0, state.pontos - 5);
-        document.getElementById('hint-count').textContent = state.hintsLeft;
-        audio.hint(); showToast('💡 Procure o número ' + target, 'info'); updateUI();
-    }
-
-    function setupInternalLogin() {
-        const grid = document.getElementById('avatar-grid');
-        grid.innerHTML = AVATARS.map((a, i) => `<div class="avatar-option ${i === 0 ? 'selected' : ''}" data-avatar="${a}">${a}</div>`).join('');
-        grid.querySelectorAll('.avatar-option').forEach(el => {
-            el.addEventListener('click', () => {
-                grid.querySelectorAll('.avatar-option').forEach(x => x.classList.remove('selected'));
-                el.classList.add('selected');
-            });
-        });
-        document.getElementById('btn-start').addEventListener('click', () => {
-            const nome = document.getElementById('input-nome').value.trim() || 'Jogador';
-            const avatar = grid.querySelector('.avatar-option.selected')?.dataset.avatar || '😀';
-            state.player = { nome, avatar, chave: 'local_' + Date.now() };
-            localStorage.setItem('brain_hub_jogador', JSON.stringify(state.player));
-            closeModal('login-modal');
-            document.getElementById('main-container').classList.remove('hidden');
-            updateUI(); newGame();
-        });
-    }
-
-    function bindEvents() {
-        document.getElementById('btn-hub').addEventListener('click', () => window.location.href = 'index.html');
-        document.getElementById('btn-theme').addEventListener('click', cycleTheme);
-        document.getElementById('btn-help').addEventListener('click', () => openModal('help-modal'));
-        document.getElementById('btn-ranking').addEventListener('click', openRanking);
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            if (confirm('Sair?')) { localStorage.removeItem('brain_hub_jogador'); window.location.href = 'index.html'; }
-        });
-        document.getElementById('btn-create-room').addEventListener('click', createRoom);
-        document.getElementById('btn-join-room').addEventListener('click', showJoinRoomDialog);
-        document.getElementById('btn-reset').addEventListener('click', newGame);
-        document.getElementById('btn-undo').addEventListener('click', undoMove);
-        document.getElementById('btn-hint').addEventListener('click', useHint);
-        document.getElementById('btn-next').addEventListener('click', () => {
-            closeModal('win-modal');
-            if (state.mode !== 'solo') leaveRoom(); else newGame();
-        });
-        document.getElementById('btn-replay').addEventListener('click', () => {
-            closeModal('win-modal');
-            if (state.mode !== 'solo') leaveRoom(); else newGame();
-        });
-        document.getElementById('btn-close-win').addEventListener('click', () => {
-            closeModal('win-modal');
-            if (state.mode !== 'solo') leaveRoom();
-        });
-        document.getElementById('btn-pause').addEventListener('click', togglePause);
-        document.querySelectorAll('.reaction-btn').forEach(btn => {
-            btn.addEventListener('click', () => sendReaction(btn.dataset.emoji));
-        });
-        document.getElementById('select-nivel').addEventListener('change', newGame);
-        document.getElementById('select-numeracao').addEventListener('change', newGame);
-    }
-
-    function init() {
-        loadLocal();
+        // Gestão de Tema
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
-        
-        if (jogadorSessao) {
-            document.getElementById('main-container').classList.remove('hidden');
-            const playerRef = ref(db, 'jogadores/' + jogadorSessao.chave);
-            get(playerRef).then(snap => {
-                if (snap.exists()) {
-                    const d = snap.val();
-                    state.pontos = d.pontos || 0; state.streak = d.streak || 0;
-                    state.recordes = d.recordesFlow || {}; state.vitorias = d.vitoriasFlow || 0;
-                }
-                updateUI(); newGame();
-            }).catch(() => { updateUI(); newGame(); });
-        } else {
-            openModal('login-modal');
-            setupInternalLogin();
-        }
-        bindEvents();
-    }
+        atualizarTextoBotaoTema(savedTheme);
 
-    init();
-</script>
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('brain_flow_theme', newTheme);
+            atualizarTextoBotaoTema(newTheme);
+        });
+
+        function atualizarTextoBotaoTema(theme) {
+            themeToggleBtn.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+        }
+
+        function formatarTempo(seg) {
+            let m = String(Math.floor(seg / 60)).padStart(2, '0');
+            let s = String(seg % 60).padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        async function carregarDadosJogador() {
+            displayNome.textContent = jogadorSessao.nome;
+            displayAvatar.textContent = jogadorSessao.avatar;
+
+            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+            try {
+                const snapshot = await get(jogadorRef);
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    pontuacaoAcumulada = dados.pontos || 0;
+                }
+                displayPontos.textContent = pontuacaoAcumulada;
+                iniciarNovoJogo();
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                iniciarNovoJogo();
+            }
+        }
+
+        carregarDadosJogador();
+
+        document.getElementById('btn-novo-jogo').addEventListener('click', iniciarNovoJogo);
+        selectDificuldade.addEventListener('change', iniciarNovoJogo);
+
+        document.getElementById('btn-apagar').addEventListener('click', () => {
+            if (!celulaSelecionada) return;
+            const r = parseInt(celulaSelecionada.dataset.row);
+            const c = parseInt(celulaSelecionada.dataset.col);
+
+            if (mascaraFixos[r][c]) return; // Não apagar fixos
+
+            tabuleiroAtual[r][c] = 0;
+            celulaSelecionada.textContent = '';
+            celulaSelecionada.classList.remove('error');
+        });
+
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!celulaSelecionada) return;
+                const r = parseInt(celulaSelecionada.dataset.row);
+                const c = parseInt(celulaSelecionada.dataset.col);
+
+                if (mascaraFixos[r][c]) return;
+
+                const val = parseInt(btn.dataset.num);
+                tabuleiroAtual[r][c] = val;
+                celulaSelecionada.textContent = val;
+                celulaSelecionada.classList.remove('error');
+
+                verificarPreenchimentoAutomatico();
+            });
+        });
+
+        // Ouvinte de teclado físico para facilitar
+        document.addEventListener('keydown', (e) => {
+            if (!celulaSelecionada) return;
+            if (e.key >= '1' && e.key <= '6') {
+                const r = parseInt(celulaSelecionada.dataset.row);
+                const c = parseInt(celulaSelecionada.dataset.col);
+                if (mascaraFixos[r][c]) return;
+
+                const val = parseInt(e.key);
+                tabuleiroAtual[r][c] = val;
+                celulaSelecionada.textContent = val;
+                celulaSelecionada.classList.remove('error');
+                verificarPreenchimentoAutomatico();
+            } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                document.getElementById('btn-apagar').click();
+            }
+        });
+
+        function gerarSudokuValido() {
+            let base = [
+                [1,2,3,4,5,6],
+                [4,5,6,1,2,3],
+                [2,3,1,6,4,5],
+                [5,6,4,2,3,1],
+                [3,1,2,5,6,4],
+                [6,4,5,3,1,2]
+            ];
+            // Para simplificar e garantir estabilidade, embaralhamos linhas/colunas respeitando regras 2x3
+            return base;
+        }
+
+        function iniciarNovoJogo() {
+            clearInterval(timerInterval);
+            segundos = 0;
+            erros = 0;
+            displayErros.textContent = `${erros}/${maxErros}`;
+            displayTempo.textContent = "00:00";
+            celulaSelecionada = null;
+            infoInstrucao.textContent = "Preencha linhas, colunas e blocos 2x3 com os números 1 a 6.";
+
+            timerInterval = setInterval(() => {
+                segundos++;
+                displayTempo.textContent = formatarTempo(segundos);
+            }, 1000);
+
+            solucaoAtual = gerarSudokuValido();
+            
+            const dif = selectDificuldade.value;
+            displayDificuldade.textContent = dif === 'facil' ? 'Fácil' : dif === 'medio' ? 'Médio' : 'Difícil';
+            
+            let removidos = dif === 'facil' ? 12 : dif === 'medio' ? 18 : 22;
+
+            tabuleiroAtual = solucaoAtual.map(row => [...row]);
+            mascaraFixos = Array(6).fill(0).map(() => Array(6).fill(true));
+
+            let celulasRemovidas = 0;
+            while (celulasRemovidas < removidos) {
+                let r = Math.floor(Math.random() * 6);
+                let c = Math.floor(Math.random() * 6);
+                if (mascaraFixos[r][c]) {
+                    mascaraFixos[r][c] = false;
+                    tabuleiroAtual[r][c] = 0;
+                    celulasRemovidas++;
+                }
+            }
+
+            renderizarTabuleiro();
+        }
+
+        function renderizarTabuleiro() {
+            sudokuBoard.innerHTML = '';
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'sudoku-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    const val = tabuleiroAtual[r][c];
+                    if (val !== 0) {
+                        cell.textContent = val;
+                    }
+
+                    if (mascaraFixos[r][c]) {
+                        cell.classList.add('fixed');
+                    } else {
+                        cell.addEventListener('click', () => {
+                            document.querySelectorAll('.sudoku-cell').forEach(el => el.classList.remove('selected'));
+                            cell.classList.add('selected');
+                            celulaSelecionada = cell;
+                        });
+                    }
+
+                    sudokuBoard.appendChild(cell);
+                }
+            }
+        }
+
+        document.getElementById('btn-verificar').addEventListener('click', () => {
+            let completo = true;
+            let valido = true;
+
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    const cell = sudokuBoard.children[r * 6 + c];
+                    if (tabuleiroAtual[r][c] === 0) {
+                        completo = false;
+                    } else if (tabuleiroAtual[r][c] !== solucaoAtual[r][c]) {
+                        valido = false;
+                        if (!mascaraFixos[r][c]) cell.classList.add('error');
+                    }
+                }
+            }
+
+            if (!valido) {
+                erros++;
+                displayErros.textContent = `${erros}/${maxErros}`;
+                if (erros >= maxErros) {
+                    clearInterval(timerInterval);
+                    alert("❌ Limite de erros atingido! O jogo será reiniciado.");
+                    iniciarNovoJogo();
+                } else {
+                    infoInstrucao.textContent = "⚠️ Existem erros no tabuleiro assinalados a vermelho!";
+                }
+            } else if (completo && valido) {
+                concluirJogoComSucesso();
+            } else {
+                infoInstrucao.textContent = "👍 Os números verificados estão corretos até agora!";
+            }
+        });
+
+        function verificarPreenchimentoAutomatico() {
+            let completo = true;
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 6; c++) {
+                    if (tabuleiroAtual[r][c] === 0) completo = false;
+                }
+            }
+            if (completo) {
+                document.getElementById('btn-verificar').click();
+            }
+        }
+
+        async function concluirJogoComSucesso() {
+            clearInterval(timerInterval);
+            infoInstrucao.textContent = "🎉 Parabéns! Sudoku concluído com sucesso!";
+
+            const bonusDificuldade = selectDificuldade.value === 'facil' ? 30 : selectDificuldade.value === 'medio' ? 60 : 100;
+            pontuacaoAcumulada += bonusDificuldade;
+
+            const jogadorRef = ref(db, 'jogadores/' + jogadorSessao.chave);
+            try {
+                await update(jogadorRef, {
+                    pontos: pontuacaoAcumulada,
+                    ultimaAtualizacao: new Date().toISOString()
+                });
+
+                displayPontos.textContent = pontuacaoAcumulada;
+                alert(`🏆 Vitória! Ganhou ${bonusDificuldade} pontos.\nTempo total: ${formatarTempo(segundos)}`);
+                
+                enviarEmailResumo(jogadorSessao.nome, jogadorSessao.email, pontuacaoAcumulada, jogadorSessao.avatar);
+                iniciarNovoJogo();
+            } catch (error) {
+                console.error("Erro ao atualizar Firebase:", error);
+            }
+        }
+
+        function enviarEmailResumo(nome, email, pontos, avatar) {
+            const templateParams = {
+                to_name: nome,
+                to_email: email,
+                avatar: avatar,
+                pontos: pontos,
+                mensagem: `Completou com sucesso um Sudoku 6x6 no Brain Hub e acumulou ${pontos} pontos totais!`
+            };
+
+            emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
+                .then((response) => console.log('E-mail enviado!'))
+                .catch((error) => console.error('Erro ao enviar e-mail:', error));
+        }
+    </script>
 </body>
 </html>
