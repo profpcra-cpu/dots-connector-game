@@ -255,9 +255,6 @@
             min-height: 18px;
         }
 
-        /* ==========================================================
-           TABULEIRO
-           ========================================================== */
         #game-board {
             position: relative;
             width: 100%;
@@ -304,9 +301,28 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ==========================================================
-           NÓS
-           ========================================================== */
+        /* SVG DE LINHAS — CORREÇÃO CRÍTICA */
+        #canvas-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: visible;
+        }
+
+        #canvas-lines line {
+            filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.75));
+            animation: lineDraw 0.35s ease-out;
+        }
+
+        @keyframes lineDraw {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
         .node {
             position: absolute;
             width: var(--node-size);
@@ -328,6 +344,7 @@
             border: 2px solid rgba(255, 255, 255, 0.75);
             animation: nodeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+            z-index: 3;
         }
 
         @keyframes nodeIn {
@@ -349,7 +366,6 @@
         .node.star     { border-radius: 12px; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
         .node.pentagon { border-radius: 10px; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
 
-        /* Nó já ligado */
         .node.completed {
             background: #22c55e !important;
             border-color: #ffffff;
@@ -359,7 +375,6 @@
                 0 6px 14px -4px rgba(0, 0, 0, 0.55);
         }
 
-        /* Próximo nó esperado — pulsa para indicar */
         .node.next-target {
             animation: nextTargetPulse 1.6s ease-in-out infinite;
             border-color: #38bdf8;
@@ -380,7 +395,6 @@
             }
         }
 
-        /* Nó errado — shake */
         .node.error {
             animation: shake 0.4s ease;
             box-shadow:
@@ -393,32 +407,6 @@
             75%      { transform: translate(calc(-50% + 4px), -50%); }
         }
 
-        /* ==========================================================
-           SVG DE LINHAS
-           ========================================================== */
-        #canvas-lines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        #canvas-lines line {
-            filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.7));
-            animation: lineDraw 0.35s ease-out;
-        }
-
-        @keyframes lineDraw {
-            from { opacity: 0; stroke-width: 0; }
-            to   { opacity: 1; }
-        }
-
-        /* ==========================================================
-           CONTROLES
-           ========================================================== */
         input, select {
             width: 100%;
             padding: 11px 12px;
@@ -533,7 +521,7 @@
             <p class="instructions" id="info-instrucao">Clique nos nós em ordem crescente sem cruzar linhas.</p>
 
             <div id="game-board">
-                <svg id="canvas-lines"></svg>
+                <svg id="canvas-lines" xmlns="http://www.w3.org/2000/svg"></svg>
             </div>
 
             <div class="controls-grid">
@@ -576,6 +564,7 @@
         let proximoNumeroEsperado = 1;
         let coordenadasNodes = [];
         let ligacoesFeitas = [];
+        let ultimoNoLigado = null;
         let segundos = 0;
         let timerInterval = null;
         let recordesNivel = {};
@@ -599,7 +588,7 @@
         const displayRecorde = document.getElementById('display-recorde');
         const infoInstrucao = document.getElementById('info-instrucao');
         const gameBoard = document.getElementById('game-board');
-        const canvasLines = document.getElementById('canvas-lines');
+        let canvasLines = document.getElementById('canvas-lines');
         const btnAvancar = document.getElementById('btn-avancar');
         const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
         const selectMudarNivel = document.getElementById('select-mudar-nivel');
@@ -655,11 +644,7 @@
         }
 
         /* ==========================================================
-           GEOMETRIA — interseção de segmentos
-           ==========================================================
-           Dois segmentos AB e CD se cruzam se as orientações dos
-           triângulos ABC e ABD forem opostas E as de CDA e CDB
-           também.
+           GEOMETRIA
            ========================================================== */
         function orientacao(a, b, c) {
             const v = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
@@ -677,7 +662,6 @@
             const o2 = orientacao(p1, p2, p4);
             const o3 = orientacao(p3, p4, p1);
             const o4 = orientacao(p3, p4, p2);
-
             if (o1 !== o2 && o3 !== o4) return true;
             if (o1 === 0 && onSegmento(p1, p2, p3)) return true;
             if (o2 === 0 && onSegmento(p1, p2, p4)) return true;
@@ -686,34 +670,26 @@
             return false;
         }
 
-        /* Verifica se um novo segmento cruzaria algum já existente */
+        function compartilhamNo(a1, a2, b1, b2) {
+            const tol = NODE_DIAMETER;
+            const perto = (p, q) => Math.hypot(p.x - q.x, p.y - q.y) < tol;
+            return perto(a1, b1) || perto(a1, b2) || perto(a2, b1) || perto(a2, b2);
+        }
+
         function cruzariaAlgum(novoP1, novoP2) {
             for (const seg of ligacoesFeitas) {
-                // Ignora segmentos que compartilham extremidade com o novo
-                // (conexões consecutivas partilham um nó)
-                const compartilhaExtremidade =
-                    (Math.hypot(seg.p1.x - novoP1.x, seg.p1.y - novoP1.y) < 1) ||
-                    (Math.hypot(seg.p2.x - novoP2.x, seg.p2.y - novoP2.y) < 1) ||
-                    (Math.hypot(seg.p1.x - novoP2.x, seg.p1.y - novoP2.y) < 1) ||
-                    (Math.hypot(seg.p2.x - novoP1.x, seg.p2.y - novoP1.y) < 1);
-                if (compartilhaExtremidade) continue;
-
+                if (compartilhamNo(novoP1, novoP2, seg.p1, seg.p2)) continue;
                 if (segmentosSeCruzam(novoP1, novoP2, seg.p1, seg.p2)) return true;
             }
             return false;
         }
 
         /* ==========================================================
-           POSICIONAMENTO — Poisson Disk + validação de rota
-           ==========================================================
-           Gera posições sem sobreposição e, em seguida, verifica se
-           existe uma rota 1→2→...→N sem cruzamentos. Se não existir,
-           regenera (até 20 tentativas).
+           POSICIONAMENTO
            ========================================================== */
         function gerarPosicoesSemSobreposicao(total, boardWidth, boardHeight) {
             const nodeRadius = NODE_DIAMETER / 2;
             const minDistBase = NODE_DIAMETER + NODE_PADDING;
-
             const usableW = boardWidth - 2 * (nodeRadius + BORDER_PADDING);
             const usableH = boardHeight - 2 * (nodeRadius + BORDER_PADDING);
             const offsetX = nodeRadius + BORDER_PADDING;
@@ -739,7 +715,6 @@
             const aceitas = [];
             let tentativa = 0;
             const MAX_TENTATIVAS = 30;
-
             while (aceitas.length < total && tentativa < MAX_TENTATIVAS) {
                 tentativa++;
                 for (const c of candidatas) {
@@ -759,31 +734,59 @@
                     }
                 }
             }
-
             while (aceitas.length < total) {
                 aceitas.push({
                     x: offsetX + Math.random() * usableW,
                     y: offsetY + Math.random() * usableH
                 });
             }
-
             return aceitas.slice(0, total);
         }
 
-        /* Verifica se existe uma rota sem cruzamento entre os nós 1..N */
         function existeRotaSemCruzamento(posicoes) {
             const segmentos = [];
             for (let i = 0; i < posicoes.length - 1; i++) {
                 const seg = { p1: posicoes[i], p2: posicoes[i + 1] };
                 for (const anterior of segmentos) {
-                    const compartilha = anterior.p1 === seg.p1 || anterior.p1 === seg.p2 ||
-                                       anterior.p2 === seg.p1 || anterior.p2 === seg.p2;
-                    if (compartilha) continue;
+                    if (compartilhamNo(seg.p1, seg.p2, anterior.p1, anterior.p2)) continue;
                     if (segmentosSeCruzam(seg.p1, seg.p2, anterior.p1, anterior.p2)) return false;
                 }
                 segmentos.push(seg);
             }
             return true;
+        }
+
+        /* ==========================================================
+           SVG DE LINHAS — CORREÇÃO CRÍTICA
+           ==========================================================
+           Um <svg> sem viewBox tem coordenadas internas 300×150
+           por padrão. As nossas linhas chegam a y=340, ficando
+           FORA do viewport — invisíveis. Aqui recriamos o SVG
+           com viewBox dinâmico = dimensões do tabuleiro.
+           ========================================================== */
+        function garantirSvgValido() {
+            const w = gameBoard.clientWidth || 500;
+            const h = gameBoard.clientHeight || 340;
+
+            const svgAntigo = document.getElementById('canvas-lines');
+            if (svgAntigo) svgAntigo.remove();
+
+            const novoSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            novoSvg.setAttribute('id', 'canvas-lines');
+            novoSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            novoSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+            novoSvg.setAttribute('preserveAspectRatio', 'none');
+            novoSvg.style.position = 'absolute';
+            novoSvg.style.top = '0';
+            novoSvg.style.left = '0';
+            novoSvg.style.width = '100%';
+            novoSvg.style.height = '100%';
+            novoSvg.style.pointerEvents = 'none';
+            novoSvg.style.zIndex = '2';
+            novoSvg.style.overflow = 'visible';
+
+            gameBoard.insertBefore(novoSvg, gameBoard.firstChild);
+            canvasLines = novoSvg;
         }
 
         /* ==========================================================
@@ -801,18 +804,18 @@
 
             const modoNumeracao = selectTipoNumeracao.value;
             ligacoesFeitas = [];
+            ultimoNoLigado = null;
             btnAvancar.classList.add('hidden');
             infoInstrucao.textContent = `Nível ${nivelAtual}: Clique nos nós em ordem crescente.`;
 
             document.querySelectorAll('.node').forEach(el => el.remove());
-            canvasLines.innerHTML = '';
+            garantirSvgValido();
 
             coordenadasNodes = [];
 
             const boardWidth = gameBoard.clientWidth;
             const boardHeight = gameBoard.clientHeight;
 
-            // Tenta gerar uma configuração com rota válida (até 25 tentativas)
             let posicoes = null;
             for (let tentativa = 0; tentativa < 25; tentativa++) {
                 const candidatas = gerarPosicoesSemSobreposicao(totalPontosNivel, boardWidth, boardHeight);
@@ -821,7 +824,6 @@
                     break;
                 }
             }
-            // Fallback: aceita a última mesmo com cruzamento
             if (!posicoes) {
                 posicoes = gerarPosicoesSemSobreposicao(totalPontosNivel, boardWidth, boardHeight);
             }
@@ -851,12 +853,10 @@
                 node.style.backgroundColor = p.cor;
                 node.dataset.id = p.id;
                 node.style.animationDelay = `${idx * 40}ms`;
-
                 node.addEventListener('click', () => lidarComCliqueNode(p, node, modoNumeracao));
                 gameBoard.appendChild(node);
             });
 
-            // Marca o nó 1 como próximo esperado
             marcarProximoAlvo();
             iniciarTimer();
         }
@@ -868,50 +868,52 @@
         }
 
         /* ==========================================================
-           INTERAÇÃO DO JOGADOR
+           INTERAÇÃO
            ========================================================== */
         function lidarComCliqueNode(nodeObj, elementoNode, modoNumeracao) {
             if (nivelConcluido) return;
 
-            // Clique correto
-            if (nodeObj.id === proximoNumeroEsperado) {
-                // Verifica se a nova linha cruzaria alguma existente
-                if (ligacoesFeitas.length > 0) {
-                    const anterior = ligacoesFeitas[ligacoesFeitas.length - 1];
-                    if (cruzariaAlgum({ x: anterior.x, y: anterior.y }, { x: nodeObj.x, y: nodeObj.y })) {
-                        // Erro: cruzamento
-                        elementoNode.classList.add('error');
-                        setTimeout(() => elementoNode.classList.remove('error'), 400);
-                        infoInstrucao.textContent = `⚠️ Esta ligação cruzaria uma linha já feita.`;
-                        return;
-                    }
+            if (nodeObj.id !== proximoNumeroEsperado) {
+                if (nodeObj.id > proximoNumeroEsperado) {
+                    elementoNode.classList.add('error');
+                    setTimeout(() => elementoNode.classList.remove('error'), 400);
+                    infoInstrucao.textContent = `⚠️ Siga a ordem! Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
                 }
+                return;
+            }
 
-                elementoNode.classList.add('completed');
-                elementoNode.classList.remove('next-target');
-                ligacoesFeitas.push(nodeObj);
-
-                if (proximoNumeroEsperado > 1) {
-                    const anterior = ligacoesFeitas[ligacoesFeitas.length - 2];
-                    desenharLinha(anterior, nodeObj);
-                }
-
-                proximoNumeroEsperado++;
-
-                if (proximoNumeroEsperado <= totalPontosNivel) {
-                    infoInstrucao.textContent = `✨ Ótimo! Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
-                    marcarProximoAlvo();
-                } else {
-                    concluirNivelComSucesso();
+            if (ultimoNoLigado) {
+                if (cruzariaAlgum(
+                    { x: ultimoNoLigado.x, y: ultimoNoLigado.y },
+                    { x: nodeObj.x, y: nodeObj.y }
+                )) {
+                    elementoNode.classList.add('error');
+                    setTimeout(() => elementoNode.classList.remove('error'), 400);
+                    infoInstrucao.textContent = `⚠️ Esta ligação cruzaria uma linha já feita.`;
+                    return;
                 }
             }
-            // Clique fora de ordem
-            else if (nodeObj.id > proximoNumeroEsperado) {
-                elementoNode.classList.add('error');
-                setTimeout(() => elementoNode.classList.remove('error'), 400);
-                infoInstrucao.textContent = `⚠️ Siga a ordem! Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
+
+            elementoNode.classList.add('completed');
+            elementoNode.classList.remove('next-target');
+
+            if (ultimoNoLigado) {
+                desenharLinha(ultimoNoLigado, nodeObj);
+                ligacoesFeitas.push({
+                    p1: { x: ultimoNoLigado.x, y: ultimoNoLigado.y },
+                    p2: { x: nodeObj.x, y: nodeObj.y }
+                });
             }
-            // Clique em nó já feito — ignora silenciosamente
+
+            ultimoNoLigado = nodeObj;
+            proximoNumeroEsperado++;
+
+            if (proximoNumeroEsperado <= totalPontosNivel) {
+                infoInstrucao.textContent = `✨ Ótimo! Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
+                marcarProximoAlvo();
+            } else {
+                concluirNivelComSucesso();
+            }
         }
 
         function desenharLinha(p1, p2) {
@@ -921,8 +923,9 @@
             line.setAttribute('x2', p2.x);
             line.setAttribute('y2', p2.y);
             line.setAttribute('stroke', '#22c55e');
-            line.setAttribute('stroke-width', '4');
+            line.setAttribute('stroke-width', '5');
             line.setAttribute('stroke-linecap', 'round');
+            line.setAttribute('vector-effect', 'non-scaling-stroke');
             canvasLines.appendChild(line);
         }
 
@@ -942,7 +945,7 @@
         }
 
         /* ==========================================================
-           CONCLUSÃO DO NÍVEL
+           CONCLUSÃO
            ========================================================== */
         async function concluirNivelComSucesso() {
             nivelConcluido = true;
@@ -958,9 +961,7 @@
                 novoRecorde = true;
             }
 
-            // Avança o nível (na próxima ronda)
             const nivelParaSalvar = nivelAtual + 1;
-
             try {
                 await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
                     pontos: pontuacaoAcumulada,
@@ -982,9 +983,7 @@
 
             enviarEmailResumo(jogadorSessao.nome, jogadorSessao.email, nivelParaSalvar, pontuacaoAcumulada, jogadorSessao.avatar);
 
-            // Atualiza o estado interno para a próxima ronda
             nivelAtual = nivelParaSalvar;
-
             btnAvancar.textContent = `Avançar para Nível ${nivelAtual} 🚀`;
             btnAvancar.classList.remove('hidden');
         }
@@ -998,7 +997,6 @@
                 pontos: pontos,
                 mensagem: `Parabéns! O seu nível atual é ${nivel} e acumulou ${pontos} pontos no Brain Link.`
             };
-
             emailjs.send('SEU_SERVICE_ID', 'SEU_TEMPLATE_ID', templateParams)
                 .then(() => console.log('E-mail enviado.'))
                 .catch((error) => console.error('Erro ao enviar e-mail:', error));
@@ -1010,7 +1008,6 @@
         async function carregarDadosJogador() {
             displayNome.textContent = jogadorSessao.nome;
             displayAvatar.textContent = jogadorSessao.avatar;
-
             try {
                 const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
                 if (snap.exists()) {
@@ -1022,7 +1019,6 @@
             } catch (error) {
                 console.warn("Modo offline:", error);
             }
-
             displayPontos.textContent = pontuacaoAcumulada;
             displayNivel.textContent = nivelAtual;
             iniciarNovoJogoRonda();
@@ -1030,13 +1026,7 @@
 
         carregarDadosJogador();
 
-        /* ==========================================================
-           EVENTOS DE UI
-           ========================================================== */
-        btnReiniciarNivel.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
-        });
-
+        btnReiniciarNivel.addEventListener('click', () => iniciarNovoJogoRonda());
         selectMudarNivel.addEventListener('change', (e) => {
             const novoNivel = parseInt(e.target.value);
             if (novoNivel) {
@@ -1045,13 +1035,15 @@
                 iniciarNovoJogoRonda();
             }
         });
+        selectTipoNumeracao.addEventListener('change', () => iniciarNovoJogoRonda());
+        btnAvancar.addEventListener('click', () => iniciarNovoJogoRonda());
 
-        selectTipoNumeracao.addEventListener('change', () => {
-            iniciarNovoJogoRonda();
-        });
-
-        btnAvancar.addEventListener('click', () => {
-            iniciarNovoJogoRonda();
+        window.addEventListener('resize', () => {
+            if (canvasLines) {
+                const w = gameBoard.clientWidth;
+                const h = gameBoard.clientHeight;
+                canvasLines.setAttribute('viewBox', `0 0 ${w} ${h}`);
+            }
         });
     </script>
 </body>
