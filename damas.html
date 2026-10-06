@@ -240,11 +240,13 @@
             position: relative;
             cursor: pointer;
             user-select: none;
+            /* Garante que a célula tenha tamanho mínimo */
+            min-width: 0;
+            min-height: 0;
         }
         .square.light { background-color: var(--board-light); }
         .square.dark { background-color: var(--board-dark); }
         
-        /* Estilos de Seleção e Destaque */
         .square.selected { 
             background-color: rgba(99, 102, 241, 0.55) !important; 
             box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.8);
@@ -314,7 +316,6 @@
             transform: translate(-50%, -50%);
         }
         
-        /* Efeito de peça selecionada */
         .square.selected .piece {
             transform: scale(1.1);
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
@@ -427,21 +428,29 @@
         import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         /* ==========================================================
-           HELPERS DE SERIALIZAÇÃO
+           HELPERS DE SERIALIZAÇÃO (CORRIGIDO)
            ========================================================== */
         function tabuleiroParaFirebase(t) {
-            return t.map(row => row.slice());
+            // Garante que é um array de arrays
+            if (!Array.isArray(t)) return criarTabuleiroInicial();
+            return t.map(row => Array.isArray(row) ? row.slice() : []);
         }
 
         function firebaseParaTabuleiro(raw) {
+            // Se não vier nada, cria o inicial
             if (!raw) return criarTabuleiroInicial();
+            
+            // Se for array, retorna
             if (Array.isArray(raw)) {
                 return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
             }
+            
+            // Se for objeto (formato Firebase), reconstrói
             const t = [];
             for (let r = 0; r < 8; r++) {
                 const linhaRaw = raw[r] || raw[String(r)] || {};
                 const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
+                // Normaliza para 8 colunas com null
                 while (linha.length < 8) linha.push(null);
                 t.push(linha.slice(0, 8));
             }
@@ -461,8 +470,8 @@
            ESTADO
            ========================================================== */
         let idSalaAtual = null;
-        let minhaCor = null;            // 'white' | 'red'
-        let tabuleiro = [];
+        let minhaCor = null;            
+        let tabuleiro = []; // Inicializa vazio
         let celulaSelecionada = null;
         let movimentosValidos = [];
         let turnoAtual = 'white';
@@ -581,6 +590,7 @@
 
             idSalaAtual = codigo;
             minhaCor = cor;
+            // Se o tabuleiro não existir no Firebase, cria um
             tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
             turnoAtual = dados.turno || 'white';
             jogoEncerrado = false;
@@ -601,7 +611,7 @@
         document.getElementById('btn-criar-sala').addEventListener('click', async () => {
             idSalaAtual = 'DAMAS-' + Math.floor(1000 + Math.random() * 9000);
             minhaCor = 'white';
-            tabuleiro = criarTabuleiroInicial();
+            tabuleiro = criarTabuleiroInicial(); // Cria o tabuleiro localmente
             turnoAtual = 'white';
             jogoEncerrado = false;
 
@@ -609,7 +619,7 @@
             await set(salaRef, {
                 status: 'jogando',
                 turno: 'white',
-                tabuleiro: tabuleiroParaFirebase(tabuleiro),
+                tabuleiro: tabuleiroParaFirebase(tabuleiro), // Salva no Firebase
                 jogadores: {
                     [jogadorSessao.chave]: { nome: jogadorSessao.nome, cor: 'white' }
                 },
@@ -680,6 +690,8 @@
             document.getElementById('display-sala-tag').textContent = `Sala: ${idSalaAtual}`;
             document.getElementById('info-minha-cor').textContent =
                 minhaCor === 'white' ? '⚪ Brancas' : '🔴 Vermelhas';
+            
+            // FORÇA a renderização inicial
             renderizarTabuleiro();
         }
 
@@ -700,13 +712,20 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO (COM DESTAQUES VISUAIS)
+           RENDERIZAÇÃO (CORRIGIDA)
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
+            if (!grid) return;
+            
             grid.innerHTML = '';
 
-            // Verifica se há captura obrigatória global para a cor atual
+            // Se o tabuleiro estiver vazio (bug), cria um novo
+            if (!tabuleiro || tabuleiro.length === 0) {
+                console.warn("Tabuleiro vazio detetado. Recriando...");
+                tabuleiro = criarTabuleiroInicial();
+            }
+
             capturaObrigatoriaGlobal = verificarCapturaObrigatoria(turnoAtual);
 
             for (let r = 0; r < 8; r++) {
@@ -717,12 +736,10 @@
                     square.dataset.row = r;
                     square.dataset.col = c;
 
-                    // Destaque da peça selecionada
                     if (celulaSelecionada && celulaSelecionada.r === r && celulaSelecionada.c === c) {
                         square.classList.add('selected');
                     }
                     
-                    // Destaque dos movimentos possíveis
                     const mov = movimentosValidos.find(m => m.r === r && m.c === c);
                     if (mov) {
                         square.classList.add(mov.captura ? 'capture-target' : 'highlight');
@@ -745,7 +762,6 @@
                 }
             }
 
-            // ---- Status ----
             const statusEl = document.getElementById('turno-status');
             if (jogoEncerrado) {
                 statusEl.textContent = '🏁 Jogo encerrado';
@@ -769,9 +785,7 @@
 
             const peca = tabuleiro[r][c];
 
-            // Seleciona peça própria
             if (peca && peca.startsWith(minhaCor)) {
-                // Se houver captura obrigatória global, só permite selecionar peças que podem capturar
                 if (capturaObrigatoriaGlobal) {
                     const movsPossiveis = calcularMovimentos(r, c);
                     const temCaptura = movsPossiveis.some(m => m.captura);
@@ -787,13 +801,11 @@
                 return;
             }
 
-            // Executa movimento
             if (celulaSelecionada && movimentosValidos.some(m => m.r === r && m.c === c)) {
                 executarMovimento(celulaSelecionada.r, celulaSelecionada.c, r, c);
                 return;
             }
 
-            // Clique vazio → limpa seleção
             celulaSelecionada = null;
             movimentosValidos = [];
             renderizarTabuleiro();
@@ -813,7 +825,6 @@
             const direcoesFrente = cor === 'white' ? [-1] : [+1];
             const direcoesCaptura = [-1, +1];
 
-            // 1. Movimentos Simples
             if (isDama) {
                 for (const dr of direcoesCaptura) {
                     for (const dc of [-1, +1]) {
@@ -839,7 +850,6 @@
                 }
             }
 
-            // 2. Capturas
             if (isDama) {
                 for (const dr of direcoesCaptura) {
                     for (const dc of [-1, +1]) {
@@ -998,7 +1008,7 @@
         }
 
         /* ==========================================================
-           FIREBASE LISTENER
+           FIREBASE LISTENER (CORRIGIDO)
            ========================================================== */
         function escutarFirebase() {
             if (unsubscribeFirebase) unsubscribeFirebase();
@@ -1008,13 +1018,24 @@
                 if (!snapshot.exists()) return;
                 const dados = snapshot.val();
 
-                // Se o oponente se moveu, limpa a seleção local para evitar bugs
-                if (dados.turno !== turnoAtual || dados.tabuleiro !== tabuleiro) {
+                // Se o tabuleiro no Firebase estiver vazio, usa o local
+                let novoTabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
+                
+                // Se o novoTabuleiro vier nulo/vazio e o local tiver dados, mantém o local
+                if ((!novoTabuleiro || novoTabuleiro.length === 0) && tabuleiro.length > 0) {
+                    novoTabuleiro = tabuleiro;
+                }
+
+                // Se o turno mudou ou o tabuleiro mudou, limpa a seleção
+                const turnoMudou = dados.turno !== turnoAtual;
+                const tabuleiroMudou = JSON.stringify(novoTabuleiro) !== JSON.stringify(tabuleiro);
+
+                if (turnoMudou || tabuleiroMudou) {
                     celulaSelecionada = null;
                     movimentosValidos = [];
                 }
 
-                tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
+                tabuleiro = novoTabuleiro;
                 turnoAtual = dados.turno || 'white';
                 jogoEncerrado = dados.status === 'encerrado';
 
