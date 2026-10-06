@@ -665,17 +665,18 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO COM PERSPECTIVA E DESTAQUE DE PEÇAS MÓVEIS
+           RENDERIZAÇÃO CORRIGIDA PARA O CELULAR
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
             grid.innerHTML = '';
 
-            // Inverte a visualização para o jogador vermelho para que suas peças fiquem embaixo no celular
+            // Se for vermelho, invertemos a perspectiva visual (as suas peças ficam embaixo)
             const inverter = minhaCor === 'red';
 
             for (let i = 0; i < 8; i++) {
                 for (let j = 0; j < 8; j++) {
+                    // Mapeia a linha e coluna visual para a coordenada real do tabuleiro
                     const r = inverter ? 7 - i : i;
                     const c = inverter ? 7 - j : j;
 
@@ -728,7 +729,6 @@
                 statusEl.textContent = 'Vez do oponente...';
             }
         }
-
         /* ==========================================================
            CLIQUE
            ========================================================== */
