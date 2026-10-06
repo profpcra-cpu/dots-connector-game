@@ -279,6 +279,17 @@
             transform: translate(-50%, -50%);
         }
 
+        /* Destaque visual para peças que possuem movimentos possíveis no turno */
+        .piece.movel {
+            box-shadow: 0 0 12px 2px var(--c-blue);
+            animation: pulsarPeca 1.5s infinite alternate;
+        }
+
+        @keyframes pulsarPeca {
+            from { transform: scale(1); }
+            to { transform: scale(1.06); }
+        }
+
         .instructions {
             font-size: 12px;
             color: var(--text-muted);
@@ -385,7 +396,6 @@
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) { window.location.href = 'index.html'; }
 
-        // Garante identificador de chave seguro para o Firebase
         if (!jogadorSessao.chave) {
             jogadorSessao.chave = 'user_' + btoa(unescape(encodeURIComponent(jogadorSessao.nome))).replace(/=/g, '');
         }
@@ -397,7 +407,7 @@
            ESTADO
            ========================================================== */
         let idSalaAtual = null;
-        let minhaCor = null;            // 'white' | 'red'
+        let minhaCor = null;
         let tabuleiro = [];
         let celulaSelecionada = null;
         let movimentosValidos = [];
@@ -655,7 +665,7 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO
+           RENDERIZAÇÃO COM DESTAQUE DE PEÇAS MÓVEIS
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
@@ -682,7 +692,17 @@
                         const pieceEl = document.createElement('div');
                         const corClasse = peca.startsWith('white') ? 'white' : 'red';
                         const isDama = peca.includes('king') ? ' king' : '';
-                        pieceEl.className = `piece ${corClasse}${isDama}`;
+                        
+                        // Verifica se a peça pertence ao jogador atual e possui movimentos válidos
+                        let temMov = false;
+                        if (!jogoEncerrado && turnoAtual === minhaCor && corClasse === minhaCor) {
+                            const movimentosDaPeca = calcularMovimentosPara(r, c, minhaCor);
+                            if (movimentosDaPeca.length > 0) {
+                                temMov = true;
+                            }
+                        }
+
+                        pieceEl.className = `piece ${corClasse}${isDama}${temMov ? ' movel' : ''}`;
                         square.appendChild(pieceEl);
                     }
 
@@ -718,8 +738,15 @@
             const peca = tabuleiro[r][c];
 
             if (peca && peca.startsWith(minhaCor)) {
+                // Valida se a peça realmente tem movimentos antes de selecionar
+                const movimentosDaPeca = calcularMovimentosPara(r, c, minhaCor);
+                if (movimentosDaPeca.length === 0) {
+                    document.getElementById('info-instrucao').textContent = '⚠️ Esta peça não possui movimentos válidos!';
+                    return;
+                }
+
                 celulaSelecionada = { r, c };
-                movimentosValidos = calcularMovimentos(r, c);
+                movimentosValidos = movimentosDaPeca;
                 renderizarTabuleiro();
                 return;
             }
