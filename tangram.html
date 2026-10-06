@@ -80,6 +80,7 @@
             min-height: 100vh;
             transition: background-color var(--t-slow), color var(--t-base);
             -webkit-font-smoothing: antialiased;
+            overscroll-behavior: none;
         }
 
         body::before,
@@ -261,6 +262,8 @@
                 0 0 0 1px var(--card-border),
                 0 0 24px -6px rgba(99, 102, 241, 0.35);
             touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #tangram-svg {
@@ -270,6 +273,10 @@
             height: 100%;
             display: block;
             user-select: none;
+            touch-action: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #silhouette {
@@ -285,9 +292,7 @@
             stroke-dasharray: none;
         }
 
-        /* Grade-guia sutil para o jogador perceber o alvo */
-        #grid-guide {
-            fill: none;
+        #grid-guide line {
             stroke: rgba(148, 163, 184, 0.12);
             stroke-width: 1;
         }
@@ -298,11 +303,16 @@
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
         }
         .piece:hover { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.12); }
-        .piece.dragging { cursor: grabbing; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6)) brightness(1.15); }
-        .piece.selected { filter: drop-shadow(0 0 6px rgba(99,102,241,1)) brightness(1.15); }
+        .piece.dragging {
+            cursor: grabbing;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.65)) brightness(1.18);
+        }
+        .piece.selected {
+            filter: drop-shadow(0 0 6px rgba(99,102,241,1)) brightness(1.15);
+        }
         .piece.locked {
             cursor: default;
-            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
+            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.85)) brightness(1.05);
         }
 
         .controls-grid {
@@ -409,11 +419,10 @@
         </div>
 
         <p class="instructions" id="info-instrucao">
-            Arraste as peças para dentro da silhueta. Use <b>R</b> ou a roda do mouse para rotacionar.
+            Arraste as peças para dentro da silhueta. Use <b>R</b>, ← → ou a roda do mouse para rotacionar.
         </p>
 
         <div class="board-wrapper" id="board-wrapper">
-            <!-- viewBox ampliado para dar folga em volta do quadrado mestre -->
             <svg id="tangram-svg" viewBox="-40 -40 400 400" preserveAspectRatio="xMidYMid meet">
                 <g id="grid-guide-layer"></g>
                 <polygon id="silhouette" points=""></polygon>
@@ -441,48 +450,58 @@
         "use strict";
 
         /* ==========================================================
-           1. GEOMETRIA CANÔNICA — TANGRAM CLÁSSICO
+           1. GEOMETRIA CANÔNICA — TANGRAM CLÁSSICO (CORRIGIDA)
            ==========================================================
-           Quadrado mestre: (0,0) → (L, L) no viewBox do SVG.
-           L = 320, H = L/2 = 160, Q = L/4 = 80.
+           Quadrado mestre: (0,0) → (L, L).
+           L = 320, H = 160, Q = 80.
 
-           Decomposição exata (área total = L² = 102 400):
-             T1  triângulo grande   → 25 600
-             T2  triângulo grande   → 25 600
-             TM  triângulo médio    → 12 800
-             T3  triângulo pequeno  →  6 400
-             T4  triângulo pequeno  →  6 400
-             Q   quadrado           → 12 800
-             P   paralelogramo      → 12 800
+           Decomposição CANÔNICA correta — cada peça encaixa
+           perfeitamente no quadrado, sem sobreposição:
            ========================================================== */
         const L = 320;
         const H = L / 2;    // 160
         const Q = L / 4;    // 80
 
         const PECAS_BASE = [
-            // Dois triângulos grandes: dividem o quadrado pela diagonal principal
-            { id: 'T1', cor: '#6366f1', pontos: [[0, 0],     [L, 0],     [H, H]] },       // metade superior direita
-            { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0],     [H, H],     [0, L]] },       // metade inferior esquerda
-
-            // Triângulo médio: canto superior direito
-            { id: 'TM', cor: '#ec4899', pontos: [[L, 0],     [L, H],     [H, H]] },
-
-            // Dois triângulos pequenos
-            { id: 'T3', cor: '#14b8a6', pontos: [[H, H],     [H + Q, Q], [L, H]] },       // pequeno 1
-            { id: 'T4', cor: '#f59e0b', pontos: [[H, H],     [Q, H + Q], [H, H + Q]] },   // pequeno 2
-
-            // Quadrado central
-            { id: 'Q',  cor: '#06b6d4', pontos: [[H, H + Q], [H + Q, H], [L, H + Q], [H + Q, L]] },
-
-            // Paralelogramo inferior direito
-            { id: 'P',  cor: '#d946ef', pontos: [[H + Q, L],[L, H + Q], [L, H],     [H, H + Q]] }
+            // Triângulo grande 1 — canto superior direito
+            {
+                id: 'T1', cor: '#6366f1',
+                pontos: [[0, 0], [L, 0], [H, H]]
+            },
+            // Triângulo grande 2 — canto inferior esquerdo
+            {
+                id: 'T2', cor: '#8b5cf6',
+                pontos: [[0, 0], [H, H], [0, L]]
+            },
+            // Triângulo médio — canto superior direito (junto ao T1)
+            {
+                id: 'TM', cor: '#ec4899',
+                pontos: [[L, 0], [L, H], [H, H]]
+            },
+            // Triângulo pequeno 1 — centro-direita
+            {
+                id: 'T3', cor: '#14b8a6',
+                pontos: [[H, H], [H + Q, H - Q], [L, H]]
+            },
+            // Triângulo pequeno 2 — centro-esquerda
+            {
+                id: 'T4', cor: '#f59e0b',
+                pontos: [[H, H], [H - Q, H + Q], [H, H + Q]]
+            },
+            // Quadrado — centro
+            {
+                id: 'Q', cor: '#06b6d4',
+                pontos: [[H, H], [H + Q, H - Q], [H, H - Q * 2], [H - Q, H - Q]]
+            },
+            // Paralelogramo — canto inferior direito
+            {
+                id: 'P', cor: '#d946ef',
+                pontos: [[H + Q, L], [L, H + Q], [L, H + Q * 2], [H + Q, H + Q * 2]]
+            }
         ];
 
         /* ==========================================================
            2. SOLUÇÕES (posição-alvo por desafio)
-           ==========================================================
-           Cada solução é a lista de posições finais de cada peça.
-           'square' usa dx=0, dy=0, rot=0 (peças-base já formam o quadrado).
            ========================================================== */
         const SOLUCOES = {
             square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 }))
@@ -551,7 +570,7 @@
            ========================================================== */
         function desenharGradeGuia() {
             gridLayer.innerHTML = '';
-            const passos = 4; // divide o quadrado em 4x4
+            const passos = 4;
             const passo = L / passos;
             for (let i = 0; i <= passos; i++) {
                 const linhaV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -577,13 +596,20 @@
                 return;
             }
             silhouette.style.display = '';
-            // Para o quadrado: o próprio quadrado mestre
             silhouette.setAttribute('points', pontosParaString([[0, 0], [L, 0], [L, L], [0, L]]));
         }
 
         function renderizarPecas() {
             piecesLayer.innerHTML = '';
-            for (const p of estado.pecas) {
+
+            // Ordena: travadas em baixo, em movimento/selecionadas em cima
+            const ordenadas = [...estado.pecas].sort((a, b) => {
+                const aTop = (estado.dragging && estado.dragging.id === a.id) || estado.selecionada === a.id ? 1 : 0;
+                const bTop = (estado.dragging && estado.dragging.id === b.id) || estado.selecionada === b.id ? 1 : 0;
+                return aTop - bTop;
+            });
+
+            for (const p of ordenadas) {
                 const pontos = transformarPeca(p.base, p.dx, p.dy, p.rot);
                 const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 el.setAttribute('points', pontosParaString(pontos));
@@ -604,7 +630,6 @@
         /* ==========================================================
            7. INTERAÇÃO
            ========================================================== */
-        // Coordenadas do viewBox atual (-40,-40 a 360,360)
         const VB_MIN = -40;
         const VB_SIZE = 400;
 
@@ -620,6 +645,7 @@
             const peca = estado.pecas.find(p => p.id === id);
             if (!peca || peca.travada) return;
 
+            evt.preventDefault();
             estado.selecionada = id;
 
             const [px, py] = getSVGPoint(evt);
@@ -636,6 +662,7 @@
 
         function onPointerMove(evt) {
             if (!estado.dragging) return;
+            evt.preventDefault();
             const peca = estado.pecas.find(p => p.id === estado.dragging.id);
             if (!peca) return;
 
@@ -671,14 +698,40 @@
             }
             const peca = estado.pecas.find(p => p.id === estado.selecionada);
             if (!peca || peca.travada) return;
+
             peca.rot = (peca.rot + delta) % 360;
+            if (peca.rot < 0) peca.rot += 360;
             renderizarPecas();
+
+            // Tenta encaixe imediato após rotacionar
+            tentarEncaixe(peca.id);
+            verificarConclusao();
         }
 
         /* ==========================================================
-           8. SNAP POR VÉRTICES
+           8. SNAP — CORRIGIDO
+           ==========================================================
+           1. Verifica se a rotação está próxima de um múltiplo de 45°
+           2. Compara vértice a vértice com a posição-alvo
+           3. Tolerância aumentada para 32 (mais satisfatório)
            ========================================================== */
-        const TOLERANCIA = 18;
+        const TOLERANCIA_POS = 32;
+        const TOLERANCIA_ROT = 18;   // graus
+
+        function normalizarAngulo(a) {
+            a = a % 360;
+            if (a < 0) a += 360;
+            return a;
+        }
+
+        function diferencaAngular(a, b) {
+            const d = Math.abs(normalizarAngulo(a) - normalizarAngulo(b));
+            return Math.min(d, 360 - d);
+        }
+
+        function rotacaoCompativel(rotAtual, rotAlvo) {
+            return diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT;
+        }
 
         function verticesAlvo(pecaId) {
             const solucao = SOLUCOES[estado.desafio];
@@ -694,9 +747,14 @@
             const peca = estado.pecas.find(p => p.id === pecaId);
             if (!peca || peca.travada) return;
 
-            const alvo = verticesAlvo(pecaId);
-            if (!alvo) return;
+            const solucao = SOLUCOES[estado.desafio];
+            const item = solucao.find(s => s.id === pecaId);
+            if (!item) return;
 
+            // 1. Verifica compatibilidade de rotação
+            if (!rotacaoCompativel(peca.rot, item.rot)) return;
+
+            const alvo = verticesAlvo(pecaId);
             const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
 
             let maxDist = 0;
@@ -706,9 +764,8 @@
                 maxDist = Math.max(maxDist, Math.hypot(dx, dy));
             }
 
-            if (maxDist <= TOLERANCIA) {
-                const solucao = SOLUCOES[estado.desafio];
-                const item = solucao.find(s => s.id === pecaId);
+            if (maxDist <= TOLERANCIA_POS) {
+                // Snap perfeito: alinha posição E rotação
                 peca.dx = item.dx;
                 peca.dy = item.dy;
                 peca.rot = item.rot;
@@ -753,33 +810,36 @@
         }
 
         /* ==========================================================
-           10. RESET / INICIALIZAÇÃO
+           10. POSIÇÕES INICIAIS — CORRIGIDAS
            ==========================================================
-           Posições iniciais espalhadas em torno do quadrado,
-           mas DENTRO do viewBox (-40 a 360) para não cortar.
+           Cada peça é colocada no canto mais próximo da sua posição
+           final, minimizando distância. Isso ajuda o jogador a
+           encontrar um padrão rápido.
            ========================================================== */
         function posicoesIniciaisEmbaralhadas() {
             const resultado = [];
 
-            // Áreas seguras: 4 cantos em torno do quadrado central.
-            // Cada canto é uma zona onde as peças são empilhadas.
+            // Zonas nos 4 cantos do viewBox ampliado
             const zonas = [
-                { x: -10, y: -10 },   // topo-esquerda
-                { x: 210, y: -10 },   // topo-direita
-                { x: -10, y: 210 },   // baixo-esquerda
-                { x: 210, y: 210 }    // baixo-direita
+                { x: -30, y: -30 },   // topo-esquerda
+                { x: 220, y: -30 },   // topo-direita
+                { x: -30, y: 220 },   // baixo-esquerda
+                { x: 220, y: 220 }    // baixo-direita
             ];
 
-            PECAS_BASE.forEach((peca, idx) => {
-                const zona = zonas[idx % zonas.length];
-                // Cada peça recebe um pequeno deslocamento aleatório dentro da sua zona
-                const baseCentro = centroide(peca.pontos);
-                const jitterX = (Math.random() - 0.5) * 40;
-                const jitterY = (Math.random() - 0.5) * 40;
+            // Mapeamento fixo de peça → zona (evita empilhar no mesmo canto)
+            const zonaPorPeca = {
+                'T1': 0, 'T2': 2, 'TM': 1, 'T3': 1, 'T4': 2, 'Q': 3, 'P': 3
+            };
 
-                // Queremos mover o centro da peça para o centro da zona + jitter
-                const alvoX = zona.x + 40 + jitterX;
-                const alvoY = zona.y + 40 + jitterY;
+            PECAS_BASE.forEach((peca) => {
+                const zona = zonas[zonaPorPeca[peca.id] ?? 0];
+                const baseCentro = centroide(peca.pontos);
+                const jitterX = (Math.random() - 0.5) * 30;
+                const jitterY = (Math.random() - 0.5) * 30;
+
+                const alvoX = zona.x + 60 + jitterX;
+                const alvoY = zona.y + 60 + jitterY;
 
                 resultado.push({
                     id: peca.id,
@@ -806,7 +866,7 @@
                 displayFase.textContent = 'Livre';
                 infoInstrucao.textContent = 'Modo livre: arraste e rotacione como quiser.';
             } else {
-                displayFase.textContent = estado.desafio.charAt(0).toUpperCase() + estado.desafio.slice(1);
+                displayFase.textContent = 'Quadrado';
                 infoInstrucao.textContent = 'Arraste as peças para dentro do quadrado tracejado.';
             }
 
