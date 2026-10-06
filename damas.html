@@ -191,13 +191,11 @@
     </div>
 
     <script type="module">
-        // 1. IMPORTAÇÃO DO FIREBASE
         import { db } from "./firebase-config.js";
         import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         console.log("🔥 Script do jogo carregado. A iniciar...");
 
-        // 2. VERIFICAÇÃO DE SESSÃO
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) {
             console.warn("⚠️ Nenhum jogador na sessão. Redirecionando para index.html");
@@ -208,10 +206,9 @@
             document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
         }
 
-        // 3. ESTADO
         let idSalaAtual = null;
         let minhaCor = null;
-        let tabuleiro = [];
+        let tabuleiro = []; // Inicializa como array vazio
         let celulaSelecionada = null;
         let movimentosValidos = [];
         let turnoAtual = 'white';
@@ -219,7 +216,6 @@
         let unsubscribeFirebase = null;
         let capturaObrigatoriaGlobal = false;
 
-        // 4. FUNÇÕES AUXILIARES
         function criarTabuleiroInicial() {
             const t = Array.from({ length: 8 }, () => Array(8).fill(null));
             for (let r = 0; r < 3; r++) {
@@ -253,18 +249,20 @@
             return t;
         }
 
-        // 5. RENDERIZAÇÃO
+        // ==========================================================
+        // CORREÇÃO DO BUG: Verificação de segurança no início
+        // ==========================================================
         function renderizarTabuleiro() {
-            console.log("🎨 A renderizar tabuleiro...");
             const grid = document.getElementById('checkers-board');
             if (!grid) return;
-            grid.innerHTML = '';
 
-            if (!tabuleiro || tabuleiro.length === 0) {
-                console.warn("⚠️ Tabuleiro vazio. A recriar...");
+            // CORREÇÃO: Se o tabuleiro estiver vazio, undefined ou inválido, cria um novo
+            if (!tabuleiro || !Array.isArray(tabuleiro) || tabuleiro.length !== 8) {
+                console.warn("⚠️ Tabuleiro inválido detetado. A recriar...");
                 tabuleiro = criarTabuleiroInicial();
             }
 
+            grid.innerHTML = '';
             capturaObrigatoriaGlobal = verificarCapturaObrigatoria(turnoAtual);
 
             for (let r = 0; r < 8; r++) {
@@ -299,9 +297,8 @@
             else statusEl.textContent = 'Vez do oponente...';
         }
 
-        // 6. LÓGICA DE MOVIMENTOS (Simplificada para teste)
         function calcularMovimentos(r, c) {
-            const peca = tabuleiro[r][c];
+            const peca = tabuleiro[r]?.[c]; // CORREÇÃO: Optional chaining
             if (!peca) return [];
             const isDama = peca.includes('king');
             const cor = peca.startsWith('white') ? 'white' : 'red';
@@ -309,7 +306,6 @@
             const direcoesFrente = cor === 'white' ? [-1] : [+1];
             const direcoesCaptura = [-1, +1];
 
-            // Movimentos simples
             if (isDama) {
                 for (const dr of direcoesCaptura) for (const dc of [-1, +1]) {
                     let nr = r + dr, nc = c + dc;
@@ -326,7 +322,6 @@
                 }
             }
 
-            // Capturas
             if (isDama) {
                 for (const dr of direcoesCaptura) for (const dc of [-1, +1]) {
                     let nr = r + dr, nc = c + dc; let pecaInimiga = null;
@@ -351,23 +346,34 @@
             return capturas.length > 0 ? capturas : movimentos;
         }
 
+        // ==========================================================
+        // CORREÇÃO DO BUG: Verificação de segurança
+        // ==========================================================
         function verificarCapturaObrigatoria(cor) {
-            for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-                const p = tabuleiro[r][c];
-                if (p && p.startsWith(cor)) {
-                    const movs = calcularMovimentos(r, c);
-                    if (movs.some(m => m.captura)) return true;
+            // CORREÇÃO: Se o tabuleiro não estiver pronto, retorna false
+            if (!tabuleiro || !Array.isArray(tabuleiro) || tabuleiro.length !== 8) {
+                return false;
+            }
+
+            for (let r = 0; r < 8; r++) {
+                // CORREÇÃO: Verifica se a linha existe antes de acessar
+                if (!tabuleiro[r]) continue;
+                
+                for (let c = 0; c < 8; c++) {
+                    const p = tabuleiro[r][c];
+                    if (p && p.startsWith(cor)) {
+                        const movs = calcularMovimentos(r, c);
+                        if (movs.some(m => m.captura)) return true;
+                    }
                 }
             }
             return false;
         }
 
-        // 7. INTERAÇÃO
         function clicarCasa(r, c) {
             if (jogoEncerrado) return;
             if (turnoAtual !== minhaCor) { document.getElementById('info-instrucao').textContent = '⏳ Aguarde a sua vez!'; return; }
-            const peca = tabuleiro[r][c];
-
+            const peca = tabuleiro[r]?.[c];
             if (peca && peca.startsWith(minhaCor)) {
                 if (capturaObrigatoriaGlobal) {
                     const movsPossiveis = calcularMovimentos(r, c);
@@ -469,15 +475,18 @@
             return false;
         }
 
-        // 8. FIREBASE
         function escutarFirebase() {
             if (unsubscribeFirebase) unsubscribeFirebase();
             const salaRef = ref(db, 'salas_damas/' + idSalaAtual);
             unsubscribeFirebase = onValue(salaRef, (snapshot) => {
                 if (!snapshot.exists()) return;
                 const dados = snapshot.val();
+                
+                // CORREÇÃO: Garante que o tabuleiro é válido antes de continuar
                 let novoTabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
-                if ((!novoTabuleiro || novoTabuleiro.length === 0) && tabuleiro.length > 0) novoTabuleiro = tabuleiro;
+                if (!novoTabuleiro || !Array.isArray(novoTabuleiro) || novoTabuleiro.length !== 8) {
+                    novoTabuleiro = criarTabuleiroInicial();
+                }
 
                 const turnoMudou = dados.turno !== turnoAtual;
                 const tabuleiroMudou = JSON.stringify(novoTabuleiro) !== JSON.stringify(tabuleiro);
@@ -497,7 +506,6 @@
             });
         }
 
-        // 9. INICIALIZAÇÃO E EVENTOS
         document.getElementById('btn-criar-sala').addEventListener('click', async () => {
             console.log("🚀 A criar sala...");
             idSalaAtual = 'DAMAS-' + Math.floor(1000 + Math.random() * 9000);
@@ -574,7 +582,6 @@
             window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
         });
 
-        // Tema
         const themeToggleBtn = document.getElementById('theme-toggle');
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -587,14 +594,12 @@
             themeToggleBtn.textContent = newTheme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
         });
 
-        // Auto-entrar se houver URL
         const urlParams = new URLSearchParams(window.location.search);
         const salaUrl = urlParams.get('sala');
         const corUrl = urlParams.get('cor');
         if (salaUrl && corUrl) {
             console.log("🔗 Detetado link de convite. A entrar automaticamente...");
             document.getElementById('input-codigo-sala').value = salaUrl;
-            // Simula clique no botão de entrar após um pequeno delay para garantir que o DOM carregou
             setTimeout(() => document.getElementById('btn-entrar-sala').click(), 500);
         }
 
