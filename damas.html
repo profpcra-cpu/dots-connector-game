@@ -120,17 +120,13 @@
     <div id="checkers-board"></div>
 
     <script>
-        // Variáveis de Estado do Jogo
         let tabuleiro = criarTabuleiroInicial();
-        let turnoAtual = 'white'; // 'white' começa
-        let minhaCor = 'white';   // Defina conforme a atribuição do jogador na sala
+        let turnoAtual = 'white'; 
+        let minhaCor = 'white';   // Defina 'white' para o jogador 1 e 'red' para o jogador 2
         let celulaSelecionada = null;
         let movimentosValidos = [];
         let jogoEncerrado = false;
 
-        /* ==========================================================
-           1. CRIAÇÃO DO TABULEIRO INICIAL (Casas escuras alternadas)
-           ========================================================== */
         function criarTabuleiroInicial() {
             const t = Array.from({ length: 8 }, () => Array(8).fill(null));
             for (let r = 0; r < 3; r++) {
@@ -146,9 +142,6 @@
             return t;
         }
 
-        /* ==========================================================
-           2. CÁLCULO DE MOVIMENTOS E CAPTURAS
-           ========================================================== */
         function calcularMovimentos(r, c) {
             const peca = tabuleiro[r]?.[c];
             if (!peca) return [];
@@ -157,10 +150,9 @@
             const isDama = peca.includes('king');
             const cor = peca.startsWith('white') ? 'white' : 'red';
             
-            // Direções permitidas
             const direcoes = [];
-            if (cor === 'white' || isDama) direcoes.push(-1); // Para cima
-            if (cor === 'red' || isDama) direcoes.push(1);   // Para baixo
+            if (cor === 'white' || isDama) direcoes.push(-1); 
+            if (cor === 'red' || isDama) direcoes.push(1);   
 
             const colunasOffset = [-1, 1];
 
@@ -172,10 +164,8 @@
                     if (nextR >= 0 && nextR < 8 && nextC >= 0 && nextC < 8) {
                         const destino = tabuleiro[nextR][nextC];
                         if (!destino) {
-                            // Movimento simples livre (se não for dama a caminhar para trás sem regra específica, o loop de direções já filtra)
                             movimentos.push({ r: nextR, c: nextC, captura: false });
                         } else if (!destino.startsWith(cor)) {
-                            // Possível captura
                             const jumpR = nextR + dr;
                             const jumpC = nextC + dc;
                             if (jumpR >= 0 && jumpR < 8 && jumpC >= 0 && jumpC < 8 && !tabuleiro[jumpR][jumpC]) {
@@ -194,11 +184,13 @@
             return movimentos && movimentos.length > 0;
         }
 
-        /* ==========================================================
-           3. FLUXO DE CLIQUES E VALIDAÇÃO ESTRITA
-           ========================================================== */
-        function clicarCasa(r, c) {
+        function clicarCasa(rVisual, cVisual) {
             if (jogoEncerrado) return;
+
+            // Converte as coordenadas visuais da tela para as coordenadas reais da matriz
+            const inverter = (minhaCor === 'red');
+            const r = inverter ? 7 - rVisual : rVisual;
+            const c = inverter ? 7 - cVisual : cVisual;
 
             if (turnoAtual !== minhaCor) {
                 document.getElementById('info-instrucao').textContent = '⏳ Aguarde o turno do oponente!';
@@ -207,11 +199,9 @@
 
             const peca = tabuleiro[r]?.[c];
 
-            // Clicou numa peça própria
             if (peca && peca.startsWith(minhaCor)) {
-                // Valida estritamente se a peça possui movimentos disponíveis
                 if (!pecaTemMovimentos(r, c)) {
-                    document.getElementById('info-instrucao').textContent = '⚠️ Esta peça está bloqueada!';
+                    document.getElementById('info-instrucao').textContent = '⚠️️ Esta peça está bloqueada!';
                     return; 
                 }
 
@@ -222,42 +212,33 @@
                 return;
             }
 
-            // Clicou em uma casa de destino válida com uma peça já selecionada
             if (celulaSelecionada && movimentosValidos.some(m => m.r === r && m.c === c)) {
                 executarMovimento(celulaSelecionada.r, celulaSelecionada.c, r, c);
                 return;
             }
 
-            // Se clicar em qualquer outro lugar inválido, limpa a seleção
             celulaSelecionada = null;
             movimentosValidos = [];
             renderizarTabuleiro();
         }
 
-        /* ==========================================================
-           4. EXECUÇÃO DO MOVIMENTO
-           ========================================================== */
         function executarMovimento(origemR, origemC, destinoR, destinoC) {
             const movimento = movimentosValidos.find(m => m.r === destinoR && m.c === destinoC);
             if (!movimento) return;
 
-            // Move a peça na matriz
             tabuleiro[destinoR][destinoC] = tabuleiro[origemR][origemC];
             tabuleiro[origemR][origemC] = null;
 
-            // Se foi captura, remove a peça adversária
             if (movimento.captura) {
                 tabuleiro[movimento.pecaCapturada.r][movimento.pecaCapturada.c] = null;
             }
 
-            // Promoção a Dama (King)
             if (tabuleiro[destinoR][destinoC] === 'white' && destinoR === 0) {
                 tabuleiro[destinoR][destinoC] = 'white_king';
             } else if (tabuleiro[destinoR][destinoC] === 'red' && destinoR === 7) {
                 tabuleiro[destinoR][destinoC] = 'red_king';
             }
 
-            // Limpa seleções e alterna o turno
             celulaSelecionada = null;
             movimentosValidos = [];
             turnoAtual = (turnoAtual === 'white') ? 'red' : 'white';
@@ -265,27 +246,28 @@
             renderizarTabuleiro();
         }
 
-        /* ==========================================================
-           5. RENDERIZAÇÃO VISUAL DO TABULEIRO
-           ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
             grid.innerHTML = '';
 
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
+            // Se o jogador for 'red', o tabuleiro é invertido visualmente para ele ver as peças dele embaixo
+            const inverter = (minhaCor === 'red');
+
+            for (let rVis = 0; rVis < 8; rVis++) {
+                for (let cVis = 0; cVis < 8; cVis++) {
+                    const r = inverter ? 7 - rVis : rVis;
+                    const c = inverter ? 7 - cVis : cVis;
+
                     const square = document.createElement('div');
                     const isDark = (r + c) % 2 === 1;
                     square.className = `square ${isDark ? 'dark' : 'light'}`;
-                    square.dataset.row = r;
-                    square.dataset.col = c;
+                    square.dataset.row = rVis;
+                    square.dataset.col = cVis;
 
-                    // Destaca casa selecionada
                     if (celulaSelecionada && celulaSelecionada.r === r && celulaSelecionada.c === c) {
                         square.classList.add('selected');
                     }
 
-                    // Destaca caminhos de destino válidos
                     const mov = movimentosValidos.find(m => m.r === r && m.c === c);
                     if (mov) {
                         square.classList.add(mov.captura ? 'capture-target' : 'highlight');
@@ -298,7 +280,6 @@
                         const isDama = peca.includes('king') ? ' king' : '';
                         pieceEl.className = `piece ${corClasse}${isDama}`;
 
-                        // Identifica visualmente se a peça tem movimentos disponíveis no turno atual
                         if (turnoAtual === minhaCor && peca.startsWith(minhaCor)) {
                             if (pecaTemMovimentos(r, c)) {
                                 pieceEl.classList.add('movel');
@@ -308,23 +289,21 @@
                         square.appendChild(pieceEl);
                     }
 
-                    square.addEventListener('click', () => clicarCasa(r, c));
+                    square.addEventListener('click', () => clicarCasa(rVis, cVis));
                     grid.appendChild(square);
                 }
             }
 
-            // Atualiza status na tela
             const statusEl = document.getElementById('turno-status');
             if (jogoEncerrado) {
                 statusEl.textContent = '🏁 Fim de Jogo';
             } else if (turnoAtual === minhaCor) {
-                statusEl.textContent = '🟢 Sua vez de jogar!';
+                statusEl.textContent = `🟢 Sua vez (${minhaCor === 'white' ? 'Brancas' : 'Vermelhas'})!`;
             } else {
                 statusEl.textContent = '⏳ Turno do oponente...';
             }
         }
 
-        // Inicializa o tabuleiro na primeira carga
         renderizarTabuleiro();
     </script>
 </body>
