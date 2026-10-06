@@ -279,17 +279,6 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Destaque visual para peças que possuem movimentos possíveis no turno */
-        .piece.movel {
-            box-shadow: 0 0 12px 2px var(--c-blue);
-            animation: pulsarPeca 1.5s infinite alternate;
-        }
-
-        @keyframes pulsarPeca {
-            from { transform: scale(1); }
-            to { transform: scale(1.06); }
-        }
-
         .instructions {
             font-size: 12px;
             color: var(--text-muted);
@@ -391,14 +380,38 @@
         import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         /* ==========================================================
+           HELPERS DE SERIALIZAÇÃO (corrige bug de array→objeto)
+           ========================================================== */
+        function tabuleiroParaFirebase(t) {
+            // Retorna array normal — Firebase serializa como quiser,
+            // mas na leitura reconstruímos.
+            return t.map(row => row.slice());
+        }
+
+        function firebaseParaTabuleiro(raw) {
+            if (!raw) return criarTabuleiroInicial();
+            if (Array.isArray(raw)) {
+                // Já é array (raro, mas possível)
+                return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
+            }
+            // Objeto do Firebase → reconstrói array 8x8
+            const linhas = Object.keys(raw).sort((a, b) => Number(a) - Number(b));
+            const t = [];
+            for (let r = 0; r < 8; r++) {
+                const linhaRaw = raw[r] || raw[String(r)] || {};
+                const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
+                // Normaliza para 8 colunas
+                while (linha.length < 8) linha.push(null);
+                t.push(linha.slice(0, 8));
+            }
+            return t;
+        }
+
+        /* ==========================================================
            SESSÃO DO JOGADOR
            ========================================================== */
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) { window.location.href = 'index.html'; }
-
-        if (!jogadorSessao.chave) {
-            jogadorSessao.chave = 'user_' + btoa(unescape(encodeURIComponent(jogadorSessao.nome))).replace(/=/g, '');
-        }
 
         document.getElementById('lobby-nome').textContent = jogadorSessao.nome;
         document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
@@ -407,7 +420,7 @@
            ESTADO
            ========================================================== */
         let idSalaAtual = null;
-        let minhaCor = null;
+        let minhaCor = null;            // 'white' | 'red'
         let tabuleiro = [];
         let celulaSelecionada = null;
         let movimentosValidos = [];
@@ -437,6 +450,10 @@
 
         /* ==========================================================
            TABULEIRO INICIAL
+           ==========================================================
+           Vermelhas (red) em cima (r=0..2), Brancas (white) embaixo (r=5..7).
+           - Brancas se movem para CIMA (-1) e começam.
+           - Vermelhas se movem para BAIXO (+1).
            ========================================================== */
         function criarTabuleiroInicial() {
             const t = Array.from({ length: 8 }, () => Array(8).fill(null));
@@ -453,27 +470,8 @@
             return t;
         }
 
-        function tabuleiroParaFirebase(t) {
-            return t.map(row => row.slice());
-        }
-
-        function firebaseParaTabuleiro(raw) {
-            if (!raw) return criarTabuleiroInicial();
-            if (Array.isArray(raw)) {
-                return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
-            }
-            const t = [];
-            for (let r = 0; r < 8; r++) {
-                const linhaRaw = raw[r] || raw[String(r)] || {};
-                const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
-                while (linha.length < 8) linha.push(null);
-                t.push(linha.slice(0, 8));
-            }
-            return t;
-        }
-
         /* ==========================================================
-           PERSISTÊNCIA DE SESSÃO
+           PERSISTÊNCIA DE SESSÃO (corrige bug #8 e #11)
            ========================================================== */
         function salvarSessao() {
             if (!idSalaAtual || !minhaCor) return;
@@ -501,10 +499,12 @@
             document.getElementById('display-nome').textContent = jogadorSessao.nome;
             document.getElementById('display-avatar').textContent = jogadorSessao.avatar;
 
+            // 1. Tenta URL
             const urlParams = new URLSearchParams(window.location.search);
             const salaUrl = urlParams.get('sala');
             const corUrl = urlParams.get('cor');
 
+            // 2. Tenta localStorage
             let sessaoSalva = null;
             try {
                 sessaoSalva = JSON.parse(localStorage.getItem('brain_damas_sessao'));
@@ -530,8 +530,10 @@
             const dados = snapshot.val();
             const jogadores = dados.jogadores || {};
 
+            // Verifica se o jogador ainda está na sala
             const jaEsta = jogadores[jogadorSessao.chave];
             if (!jaEsta) {
+                // Se a vaga da cor estiver livre, entra
                 const corOcupada = Object.values(jogadores).some(j => j.cor === cor);
                 if (corOcupada) {
                     limparSessao();
@@ -547,7 +549,7 @@
             minhaCor = cor;
             tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
             turnoAtual = dados.turno || 'white';
-            jogoEncerrado = dados.status === 'encerrado';
+            jogoEncerrado = false;
 
             entrarInterfaceJogo();
             escutarFirebase();
@@ -600,43 +602,40 @@
             const dados = snapshot.val();
             const jogadores = dados.jogadores || {};
 
-            if (jogadores[jogadorSessao.chave]) {
+            // ---- Bug #8 corrigido: se já estamos na sala, reaproveita a cor ----
+            const jaEsta = jogadores[jogadorSessao.chave];
+            if (jaEsta) {
                 idSalaAtual = codigo;
-                minhaCor = jogadores[jogadorSessao.chave].cor;
+                minhaCor = jaEsta.cor;
                 tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
                 turnoAtual = dados.turno || 'white';
-                jogoEncerrado = dados.status === 'encerrado';
                 salvarSessao();
                 entrarInterfaceJogo();
                 escutarFirebase();
                 return;
             }
 
-            const chavesJogadores = Object.keys(jogadores);
-            if (chavesJogadores.length >= 2) {
+            // ---- Sala cheia? ----
+            const totalJogadores = Object.keys(jogadores).length;
+            if (totalJogadores >= 2) {
                 alert('Sala já cheia! Peça ao host para criar uma nova.');
                 return;
             }
 
-            const primeiraCor = jogadores[chavesJogadores[0]].cor;
-            minhaCor = primeiraCor === 'white' ? 'red' : 'white';
-
+            // Convidado entra como 'red'
             idSalaAtual = codigo;
+            minhaCor = 'red';
             tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
             turnoAtual = dados.turno || 'white';
 
             await update(ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}`), {
                 nome: jogadorSessao.nome,
-                cor: minhaCor
+                cor: 'red'
             });
 
             salvarSessao();
             entrarInterfaceJogo();
             escutarFirebase();
-
-            if (minhaCor === 'white') {
-                document.getElementById('div-whatsapp').classList.remove('hidden');
-            }
         }
 
         function entrarInterfaceJogo() {
@@ -654,7 +653,7 @@
         document.getElementById('btn-whatsapp').addEventListener('click', () => {
             const url = new URL(window.location.href);
             url.searchParams.set('sala', idSalaAtual);
-            url.searchParams.delete('cor');
+            url.searchParams.delete('cor'); // convidado entra como red
             const link = url.toString();
             const msg = encodeURIComponent(
                 `♟️ Vamos disputar uma partida de Damas no Brain Hub?\n\n` +
@@ -665,7 +664,7 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO COM DESTAQUE DE PEÇAS MÓVEIS
+           RENDERIZAÇÃO
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
@@ -692,17 +691,7 @@
                         const pieceEl = document.createElement('div');
                         const corClasse = peca.startsWith('white') ? 'white' : 'red';
                         const isDama = peca.includes('king') ? ' king' : '';
-                        
-                        // Verifica se a peça pertence ao jogador atual e possui movimentos válidos
-                        let temMov = false;
-                        if (!jogoEncerrado && turnoAtual === minhaCor && corClasse === minhaCor) {
-                            const movimentosDaPeca = calcularMovimentosPara(r, c, minhaCor);
-                            if (movimentosDaPeca.length > 0) {
-                                temMov = true;
-                            }
-                        }
-
-                        pieceEl.className = `piece ${corClasse}${isDama}${temMov ? ' movel' : ''}`;
+                        pieceEl.className = `piece ${corClasse}${isDama}`;
                         square.appendChild(pieceEl);
                     }
 
@@ -714,6 +703,7 @@
                 }
             }
 
+            // ---- Status ----
             const statusEl = document.getElementById('turno-status');
             if (jogoEncerrado) {
                 statusEl.textContent = '🏁 Jogo encerrado';
@@ -737,32 +727,35 @@
 
             const peca = tabuleiro[r][c];
 
+            // Seleciona peça própria
             if (peca && peca.startsWith(minhaCor)) {
-                // Valida se a peça realmente tem movimentos antes de selecionar
-                const movimentosDaPeca = calcularMovimentosPara(r, c, minhaCor);
-                if (movimentosDaPeca.length === 0) {
-                    document.getElementById('info-instrucao').textContent = '⚠️ Esta peça não possui movimentos válidos!';
-                    return;
-                }
-
                 celulaSelecionada = { r, c };
-                movimentosValidos = movimentosDaPeca;
+                movimentosValidos = calcularMovimentos(r, c);
                 renderizarTabuleiro();
                 return;
             }
 
+            // Executa movimento
             if (celulaSelecionada && movimentosValidos.some(m => m.r === r && m.c === c)) {
                 executarMovimento(celulaSelecionada.r, celulaSelecionada.c, r, c);
                 return;
             }
 
+            // Clique vazio → limpa seleção
             celulaSelecionada = null;
             movimentosValidos = [];
             renderizarTabuleiro();
         }
 
         /* ==========================================================
-           CÁLCULO DE MOVIMENTOS
+           CÁLCULO DE MOVIMENTOS (corrige bug #2: damas deslizantes)
+           ==========================================================
+           Regras brasileiras:
+           - Peça comum: move 1 casa para frente; captura em qualquer direção.
+           - Dama: move quantas casas quiser na diagonal (caminho livre);
+                   captura a distância, desde que haja exatamente 1 adversária
+                   no caminho e a casa de pouso esteja livre.
+           - Captura é obrigatória quando existe (regra oficial).
            ========================================================== */
         function calcularMovimentos(r, c) {
             const peca = tabuleiro[r][c];
@@ -772,6 +765,8 @@
             const cor = peca.startsWith('white') ? 'white' : 'red';
 
             const movimentos = [];
+
+            // Direções: peça comum move só para frente; dama move em 4 diagonais.
             const direcoesFrente = cor === 'white' ? [-1] : [+1];
             const direcoesDama = [-1, +1];
 
@@ -786,13 +781,14 @@
                                 if (!capturada) {
                                     movimentos.push({ r: nr, c: nc });
                                 } else {
+                                    // Pouso depois de captura
                                     movimentos.push({ r: nr, c: nc, captura: capturada });
-                                    break;
+                                    break; // só uma captura por vez
                                 }
                             } else if (alvo.startsWith(cor)) {
-                                break;
+                                break; // peça própria bloqueia
                             } else {
-                                if (capturada) break;
+                                if (capturada) break; // duas adversárias seguidas: para
                                 capturada = { r: nr, c: nc };
                             }
                             nr += dr; nc += dc;
@@ -800,6 +796,7 @@
                     }
                 }
             } else {
+                // Peça comum: 1 casa para frente (movimento simples)
                 for (const dr of direcoesFrente) {
                     for (const dc of [-1, +1]) {
                         const nr = r + dr, nc = c + dc;
@@ -808,6 +805,7 @@
                         }
                     }
                 }
+                // Captura: 2 casas em qualquer diagonal (frente ou trás)
                 for (const dr of [-1, +1]) {
                     for (const dc of [-1, +1]) {
                         const mr = r + dr, mc = c + dc;
@@ -822,6 +820,7 @@
                 }
             }
 
+            // ---- Captura obrigatória (regra brasileira) ----
             const capturas = movimentos.filter(m => m.captura);
             if (capturas.length > 0) return capturas;
             return movimentos;
@@ -842,16 +841,19 @@
                 tabuleiro[mov.captura.r][mov.captura.c] = null;
             }
 
+            // Promoção a dama
             if (pecaMovida === 'white' && paraR === 0) tabuleiro[paraR][paraC] = 'white-king';
             if (pecaMovida === 'red'   && paraR === 7) tabuleiro[paraR][paraC] = 'red-king';
 
             celulaSelecionada = null;
             movimentosValidos = [];
 
+            // Alterna turno
             turnoAtual = turnoAtual === 'white' ? 'red' : 'white';
 
             renderizarTabuleiro();
 
+            // Verifica fim de jogo
             const oponente = turnoAtual;
             if (!temPecas(oponente)) {
                 jogoEncerrado = true;
@@ -865,6 +867,7 @@
                     `🏁 Oponente sem movimentos. Vitória das ${minhaCor === 'white' ? 'brancas' : 'vermelhas'}.`;
             }
 
+            // Sincroniza com Firebase
             try {
                 await update(ref(db, `salas_damas/${idSalaAtual}`), {
                     tabuleiro: tabuleiroParaFirebase(tabuleiro),
@@ -893,6 +896,7 @@
                 for (let c = 0; c < 8; c++) {
                     const p = tabuleiro[r][c];
                     if (p && p.startsWith(cor)) {
+                        // Salva contexto e simula cálculo para 'cor'
                         const movs = calcularMovimentosPara(r, c, cor);
                         if (movs.length > 0) return true;
                     }
@@ -912,7 +916,7 @@
         }
 
         /* ==========================================================
-           FIREBASE LISTENER
+           FIREBASE LISTENER (corrige bug #5: array↔objeto)
            ========================================================== */
         function escutarFirebase() {
             if (unsubscribeFirebase) unsubscribeFirebase();
@@ -926,6 +930,7 @@
                 turnoAtual = dados.turno || 'white';
                 jogoEncerrado = dados.status === 'encerrado';
 
+                // Avisa quando o oponente entra
                 const jogadores = dados.jogadores || {};
                 if (Object.keys(jogadores).length === 2) {
                     document.getElementById('info-instrucao').textContent =
