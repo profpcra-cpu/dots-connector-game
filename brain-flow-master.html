@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Flow — Numberlink com Estrelas</title>
+    <title>Brain Flow — Numberlink com Estrelas Dinâmicas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -103,16 +103,16 @@
 
         .score-board {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 6px;
             background: var(--input-bg);
             padding: 10px;
             border-radius: var(--radius-md);
             margin-bottom: 12px;
-            font-size: 11px;
+            font-size: 10px;
             border: 1px solid var(--border-color);
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             font-weight: 600;
             color: var(--text-muted);
         }
@@ -123,7 +123,7 @@
             gap: 4px;
         }
         .score-board strong {
-            font-size: 15px;
+            font-size: 14px;
             font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
             letter-spacing: 0;
@@ -134,6 +134,7 @@
         #display-pontos { color: var(--c-green); }
         #display-tempo  { color: #60a5fa; }
         #display-recorde{ color: var(--c-amber); }
+        #display-estrelas { color: var(--star-color); }
 
         .instructions {
             font-size: 12.5px;
@@ -200,7 +201,6 @@
             75%      { transform: translateX(2px); }
         }
 
-        /* Endpoint (número) */
         .endpoint {
             width: 68%;
             height: 68%;
@@ -228,7 +228,6 @@
                 0 0 20px rgba(255, 255, 255, 0.6);
         }
 
-        /* Rastro da trilha */
         .cell.trail {
             background: var(--trail-color, transparent);
             z-index: 2;
@@ -247,7 +246,6 @@
         }
         .cell.trail.connected::after { background: #fff; opacity: 1; }
 
-        /* Trilha em construção */
         .cell.trail.live::after {
             animation: trailPulse 0.9s ease-in-out infinite;
         }
@@ -277,19 +275,16 @@
             50%      { transform: scale(1.12); filter: drop-shadow(0 0 12px var(--star-glow)); }
         }
 
-        /* Estrela capturada — fica opaca e sem brilho */
         .cell.star-capturada .star {
             filter: grayscale(1) brightness(0.55);
             animation: none;
             opacity: 0.55;
         }
 
-        /* Célula com trilha + estrela → trilha visível, mas estrela cinza por cima */
         .cell.trail .star {
             mix-blend-mode: luminosity;
         }
 
-        /* Endpoint "por baixo" de uma trilha (atravessado com estrela) */
         .cell.trail.atravessado::after {
             box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
         }
@@ -298,7 +293,6 @@
             border-color: rgba(255, 255, 255, 0.95);
         }
 
-        /* Célula-caminho sobreposta ao endpoint: a trilha é desenhada com transparência */
         .cell.trail.over-endpoint {
             background: linear-gradient(135deg,
                 var(--trail-color) 0%,
@@ -360,10 +354,11 @@
             <div>Pontos<br><strong id="display-pontos">0</strong></div>
             <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
             <div>Recorde<br><strong id="display-recorde">--:--</strong></div>
+            <div>⭐<br><strong id="display-estrelas">0/0</strong></div>
         </div>
 
         <p class="instructions" id="info-instrucao">
-            Arraste para ligar os números iguais. ⭐ Capture uma estrela para atravessar uma bola de outra cor.
+            Arraste para ligar os números. ⭐ Capture estrelas para atravessar bolas de outras cores.
         </p>
 
         <div id="game-board-wrapper">
@@ -374,9 +369,9 @@
             <select id="select-mudar-nivel">
                 <option value="" disabled selected>Selecionar Nível...</option>
                 <option value="1">Nível 1 — 5×5</option>
-                <option value="2">Nível 2 — 6×6 (⭐1)</option>
-                <option value="3">Nível 3 — 7×7 (⭐2)</option>
-                <option value="4">Nível 4 — 8×8 (⭐3)</option>
+                <option value="2">Nível 2 — 6×6</option>
+                <option value="3">Nível 3 — 7×7</option>
+                <option value="4">Nível 4 — 8×8</option>
             </select>
             <button id="btn-reiniciar-nivel" class="btn-secondary">🔄 Reiniciar</button>
         </div>
@@ -395,17 +390,14 @@
         if (!jogadorSessao) { window.location.href = 'index.html'; }
 
         /* ==========================================================
-           PUZZLES — agora com estrelas
+           PUZZLES BASE — sem estrelas definidas manualmente
            ==========================================================
-           estrelas: lista de {r, c} — células especiais que podem
-           ser capturadas durante o trajeto. Cada par só pode ter
-           UMA captura ativa. Após capturar, o par pode atravessar
-           UM endpoint adversário (por captura).
+           As estrelas serão calculadas e injetadas dinamicamente
+           pela função `analisarEBalancearEstrelas(puzzle)`.
            ========================================================== */
         const PUZZLES = {
             1: {
                 tamanho: 5,
-                estrelas: [],
                 pares: [
                     { cor: '#ef4444', a: { r: 0, c: 0 }, b: { r: 3, c: 1 } },
                     { cor: '#3b82f6', a: { r: 0, c: 2 }, b: { r: 3, c: 2 } },
@@ -416,7 +408,6 @@
             },
             2: {
                 tamanho: 6,
-                estrelas: [{ r: 2, c: 3 }],
                 pares: [
                     { cor: '#ef4444', a: { r: 0, c: 0 }, b: { r: 4, c: 0 } },
                     { cor: '#3b82f6', a: { r: 0, c: 5 }, b: { r: 5, c: 2 } },
@@ -428,7 +419,6 @@
             },
             3: {
                 tamanho: 7,
-                estrelas: [{ r: 1, c: 4 }, { r: 5, c: 2 }],
                 pares: [
                     { cor: '#ef4444', a: { r: 0, c: 0 }, b: { r: 0, c: 6 } },
                     { cor: '#3b82f6', a: { r: 0, c: 3 }, b: { r: 6, c: 3 } },
@@ -441,7 +431,6 @@
             },
             4: {
                 tamanho: 8,
-                estrelas: [{ r: 1, c: 3 }, { r: 4, c: 1 }, { r: 6, c: 5 }],
                 pares: [
                     { cor: '#ef4444', a: { r: 0, c: 0 }, b: { r: 7, c: 0 } },
                     { cor: '#3b82f6', a: { r: 0, c: 3 }, b: { r: 3, c: 6 } },
@@ -456,6 +445,174 @@
         };
 
         /* ==========================================================
+           ANALISADOR DE BLOQUEIOS — CORAÇÃO DA NOVA LÓGICA
+           ==========================================================
+           1. Para cada par, conta endpoints adversários que estão
+              "na linha reta" entre os seus dois extremos.
+           2. Soma os bloqueios de todos os pares.
+           3. Calcula estrelasNecessarias com base na soma.
+           4. Escolhe células livres próximas aos bloqueios para
+              posicionar as estrelas automaticamente.
+           ========================================================== */
+
+        /**
+         * Distância de um ponto P à reta definida por A e B.
+         * Retorna null se a projeção do ponto não cai dentro do segmento AB.
+         */
+        function distanciaPontoAReta(P, A, B) {
+            const dx = B.c - A.c;
+            const dy = B.r - A.r;
+            const lenSq = dx * dx + dy * dy;
+            if (lenSq === 0) return null;
+            const t = ((P.c - A.c) * dx + (P.r - A.r) * dy) / lenSq;
+            if (t < 0.05 || t > 0.95) return null;   // fora do segmento
+            const projC = A.c + t * dx;
+            const projR = A.r + t * dy;
+            return Math.hypot(P.c - projC, P.r - projR);
+        }
+
+        /**
+         * Conta quantos endpoints adversários bloqueiam o par.
+         * Um endpoint "bloqueia" se estiver a menos de 0.6 células
+         * da reta entre os dois extremos do par.
+         */
+        function contarBloqueiosDoPar(par, todosPares) {
+            const bloqueios = [];
+            const A = par.a, B = par.b;
+            for (const outro of todosPares) {
+                if (outro.id === par.id) continue;
+                const dists = [
+                    { pt: outro.a, parId: outro.id },
+                    { pt: outro.b, parId: outro.id }
+                ];
+                for (const { pt } of dists) {
+                    const d = distanciaPontoAReta(pt, A, B);
+                    if (d !== null && d < 0.6) {
+                        bloqueios.push({ r: pt.r, c: pt.c, parId: outro.id });
+                    }
+                }
+            }
+            return bloqueios;
+        }
+
+        /**
+         * Analisa o puzzle, conta bloqueios e retorna:
+         *  - totalBloqueios: número total de bloqueios identificados
+         *  - estrelasNecessarias: número de estrelas a injetar
+         *  - pontosIdeais: células candidatas para colocar estrelas
+         */
+        function analisarEBalancearEstrelas(puzzle) {
+            const n = puzzle.tamanho;
+            const pares = puzzle.pares.map((p, i) => ({ ...p, id: i }));
+
+            // Mapa de células ocupadas por endpoints
+            const ocupadas = new Set();
+            for (const par of pares) {
+                ocupadas.add(`${par.a.r},${par.a.c}`);
+                ocupadas.add(`${par.b.r},${par.b.c}`);
+            }
+
+            // Conta bloqueios por par
+            const bloqueiosPorPar = {};
+            let totalBloqueios = 0;
+            for (const par of pares) {
+                const bl = contarBloqueiosDoPar(par, pares);
+                bloqueiosPorPar[par.id] = bl;
+                totalBloqueios += bl.length;
+            }
+
+            // Calcula estrelas necessárias
+            // Regra: cada estrela permite atravessar 1 endpoint.
+            // Como uma estrela pode servir para 2+ pares diferentes,
+            // aplicamos um fator de partilha de 1.8.
+            // Mínimo: 1 estrela se houver qualquer bloqueio.
+            let estrelasNecessarias = 0;
+            if (totalBloqueios > 0) {
+                estrelasNecessarias = Math.max(1, Math.ceil(totalBloqueios / 1.8));
+            }
+
+            // Candidatos para colocar estrelas: células livres adjacentes aos bloqueios
+            const candidatos = [];
+            const visitadas = new Set();
+            for (const parId in bloqueiosPorPar) {
+                for (const bl of bloqueiosPorPar[parId]) {
+                    // A célula do bloqueio é um endpoint. Olhamos as 4 vizinhas
+                    const vizinhos = [
+                        { r: bl.r - 1, c: bl.c },
+                        { r: bl.r + 1, c: bl.c },
+                        { r: bl.r, c: bl.c - 1 },
+                        { r: bl.r, c: bl.c + 1 }
+                    ];
+                    for (const v of vizinhos) {
+                        if (v.r < 0 || v.r >= n || v.c < 0 || v.c >= n) continue;
+                        const key = `${v.r},${v.c}`;
+                        if (visitadas.has(key)) continue;
+                        if (ocupadas.has(key)) continue;
+                        visitadas.add(key);
+                        candidatos.push(v);
+                    }
+                    // Também considera a segunda vizinhança
+                    const vizinhos2 = [
+                        { r: bl.r - 2, c: bl.c },
+                        { r: bl.r + 2, c: bl.c },
+                        { r: bl.r, c: bl.c - 2 },
+                        { r: bl.r, c: bl.c + 2 }
+                    ];
+                    for (const v of vizinhos2) {
+                        if (v.r < 0 || v.r >= n || v.c < 0 || v.c >= n) continue;
+                        const key = `${v.r},${v.c}`;
+                        if (visitadas.has(key)) continue;
+                        if (ocupadas.has(key)) continue;
+                        visitadas.add(key);
+                        candidatos.push(v);
+                    }
+                }
+            }
+
+            // Se não há bloqueios suficientes para gerar candidatos,
+            // distribui aleatoriamente no tabuleiro
+            if (candidatos.length < estrelasNecessarias) {
+                for (let r = 0; r < n && candidatos.length < estrelasNecessarias * 3; r++) {
+                    for (let c = 0; c < n && candidatos.length < estrelasNecessarias * 3; c++) {
+                        const key = `${r},${c}`;
+                        if (visitadas.has(key)) continue;
+                        if (ocupadas.has(key)) continue;
+                        visitadas.add(key);
+                        candidatos.push({ r, c });
+                    }
+                }
+            }
+
+            // Escolhe as estrelas finais — espalhadas pelos candidatos
+            const estrelas = [];
+            const escolhidas = new Set();
+            // Embaralha candidatos
+            for (let i = candidatos.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [candidatos[i], candidatos[j]] = [candidatos[j], candidatos[i]];
+            }
+            for (const cand of candidatos) {
+                if (estrelas.length >= estrelasNecessarias) break;
+                const key = `${cand.r},${cand.c}`;
+                if (escolhidas.has(key)) continue;
+                // Evita estrelas adjacentes
+                const muitoProxima = estrelas.some(e =>
+                    Math.abs(e.r - cand.r) + Math.abs(e.c - cand.c) < 2
+                );
+                if (muitoProxima) continue;
+                escolhidas.add(key);
+                estrelas.push(cand);
+            }
+
+            return {
+                estrelas,
+                totalBloqueios,
+                estrelasNecessarias,
+                bloqueiosPorPar
+            };
+        }
+
+        /* ==========================================================
            ESTADO
            ========================================================== */
         const estado = {
@@ -463,17 +620,18 @@
             tamanho: 5,
             grid: [],
             pares: [],
-            estrelas: [],             // [{r, c, id}]
-            trilhas: {},              // parId → [{r,c}, ...]
-            estrelasPorPar: {},       // parId → Set(estrelaId) — capturadas
-            estrelasUsadasGlobal: {}, // estrelaId → parId que a capturou (para impedir 2 trilhas na mesma estrela)
-            endpointsAtravessados: {}, // parId → Set("r,c") — endpoints atravessados com estrela
+            estrelas: [],
+            trilhas: {},
+            estrelasPorPar: {},
+            estrelasUsadasGlobal: {},
+            endpointsAtravessados: {},
             desenhando: null,
             pontos: 0,
             segundos: 0,
             timer: null,
             recordes: {},
-            concluido: false
+            concluido: false,
+            analise: null
         };
 
         /* ==========================================================
@@ -484,6 +642,7 @@
         const displayPontos = document.getElementById('display-pontos');
         const displayTempo = document.getElementById('display-tempo');
         const displayRecorde = document.getElementById('display-recorde');
+        const displayEstrelas = document.getElementById('display-estrelas');
         const infoInstrucao = document.getElementById('info-instrucao');
         const btnAvancar = document.getElementById('btn-avancar');
         const btnReiniciar = document.getElementById('btn-reiniciar-nivel');
@@ -508,18 +667,20 @@
             if (!s) return '--:--';
             return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
         }
-
         function keyRC(r, c) { return `${r},${c}`; }
 
         /* ==========================================================
-           INICIALIZAÇÃO
+           INICIALIZAÇÃO COM CÁLCULO DE ESTRELAS
            ========================================================== */
         function iniciarPuzzle(nivel) {
-            const puzzle = PUZZLES[nivel] || PUZZLES[1];
+            const puzzleBase = PUZZLES[nivel] || PUZZLES[1];
+            const analise = analisarEBalancearEstrelas(puzzleBase);
+
             estado.nivel = nivel;
-            estado.tamanho = puzzle.tamanho;
-            estado.pares = puzzle.pares.map((p, i) => ({ ...p, id: i }));
-            estado.estrelas = (puzzle.estrelas || []).map((s, i) => ({ ...s, id: i }));
+            estado.tamanho = puzzleBase.tamanho;
+            estado.pares = puzzleBase.pares.map((p, i) => ({ ...p, id: i }));
+            estado.estrelas = analise.estrelas.map((s, i) => ({ ...s, id: i }));
+            estado.analise = analise;
             estado.trilhas = {};
             estado.estrelasPorPar = {};
             estado.estrelasUsadasGlobal = {};
@@ -528,8 +689,8 @@
             estado.concluido = false;
 
             // Grid base
-            estado.grid = Array.from({ length: puzzle.tamanho }, () =>
-                Array.from({ length: puzzle.tamanho }, () => ({
+            estado.grid = Array.from({ length: puzzleBase.tamanho }, () =>
+                Array.from({ length: puzzleBase.tamanho }, () => ({
                     cor: null, parId: null, tipo: 'vazio',
                     temEstrela: false, estrelaId: null
                 }))
@@ -541,13 +702,19 @@
                 estado.grid[par.b.r][par.b.c] = { cor: par.cor, parId: par.id, tipo: 'endpoint', temEstrela: false, estrelaId: null };
             }
 
-            // Estrelas
+            // Estrelas calculadas
             for (const est of estado.estrelas) {
-                // Não coloca estrela em endpoint (não faz sentido)
                 if (estado.grid[est.r][est.c].tipo === 'endpoint') continue;
                 estado.grid[est.r][est.c].temEstrela = true;
                 estado.grid[est.r][est.c].estrelaId = est.id;
             }
+
+            // Atualiza o display de estrelas
+            displayEstrelas.textContent = `0/${estado.estrelas.length}`;
+
+            // Log de análise para debug
+            console.log(`📊 Nível ${nivel} — Bloqueios: ${analise.totalBloqueios}, Estrelas calculadas: ${analise.estrelasNecessarias}`);
+            console.table(analise.bloqueiosPorPar);
 
             displayNivel.textContent = nivel;
             btnAvancar.classList.add('hidden');
@@ -590,26 +757,22 @@
                     cell.innerHTML = '';
                     cell.style.removeProperty('--trail-color');
 
-                    // Se tem estrela capturada por alguém, aplica estado
                     const capturada = dado.temEstrela && estado.estrelasUsadasGlobal[dado.estrelaId] !== undefined;
                     if (capturada) cell.classList.add('star-capturada');
 
                     if (dado.tipo === 'endpoint') {
                         const conectado = estado.trilhas[dado.parId] ? ' connected' : '';
-                        // Verifica se está atravessado por alguma trilha
                         const atravessado = Object.values(estado.endpointsAtravessados)
                             .some(set => set.has(keyRC(r, c)));
                         if (atravessado) cell.classList.add('atravessado');
 
                         cell.innerHTML = `<div class="endpoint${conectado}" style="background:${dado.cor}"></div>`;
-                        // Se há trilha sobre este endpoint, aplica estilo de sobreposição
                         if (atravessado) cell.classList.add('over-endpoint');
                     } else if (dado.tipo === 'trilha') {
                         cell.classList.add('trail');
                         cell.style.setProperty('--trail-color', dado.cor);
                     }
 
-                    // Estrela visual
                     if (dado.temEstrela) {
                         const star = document.createElement('div');
                         star.className = 'star';
@@ -637,7 +800,6 @@
                 }
             }
 
-            // Feedback trilha em construção
             if (estado.desenhando && estado.desenhando.trail.length > 1) {
                 for (const p of estado.desenhando.trail) {
                     if (estado.grid[p.r][p.c].tipo === 'trilha') {
@@ -646,6 +808,11 @@
                     }
                 }
             }
+
+            // Atualiza contador de estrelas
+            const total = estado.estrelas.length;
+            const capturadas = Object.keys(estado.estrelasUsadasGlobal).length;
+            displayEstrelas.textContent = `${capturadas}/${total}`;
         }
 
         /* ==========================================================
@@ -722,13 +889,11 @@
            LÓGICA DE TRILHA + ESTRELAS
            ========================================================== */
         function iniciarTrilha(parId, cor, r, c) {
-            // Se já existe trilha deste par, remove-a (e devolve estrelas)
             if (estado.trilhas[parId]) {
                 devolverEstrelasDoPar(parId);
                 limparTrilhaDoGrid(estado.trilhas[parId]);
                 delete estado.trilhas[parId];
             }
-            // Limpa capturas anteriores deste par (caso tenha feito e desfeito)
             estado.estrelasPorPar[parId] = new Set();
             estado.endpointsAtravessados[parId] = new Set();
 
@@ -742,7 +907,6 @@
         }
 
         function devolverEstrelasDoPar(parId) {
-            // Remove do uso global todas as estrelas que este par capturou
             const capturadas = estado.estrelasPorPar[parId];
             if (capturadas) {
                 for (const estId of capturadas) {
@@ -763,19 +927,16 @@
                 const anterior = trail[trail.length - 2];
                 if (anterior.r === r && anterior.c === c) {
                     trail.pop();
-                    // Remove marca no grid
                     const removida = estado.grid[ultima.r][ultima.c];
                     if (removida.tipo === 'trilha') {
                         removida.tipo = 'vazio';
                         removida.cor = null;
                         removida.parId = null;
                     }
-                    // Se era estrela, devolve
                     if (removida.temEstrela && d.estrelasCapturadasNesteTrajeto.has(removida.estrelaId)) {
                         d.estrelasCapturadasNesteTrajeto.delete(removida.estrelaId);
                         delete estado.estrelasUsadasGlobal[removida.estrelaId];
                     }
-                    // Se era endpoint atravessado, remove
                     const key = keyRC(ultima.r, ultima.c);
                     if (d.endpointsAtravessadosNesteTrajeto.has(key)) {
                         d.endpointsAtravessadosNesteTrajeto.delete(key);
@@ -785,10 +946,8 @@
                 }
             }
 
-            // Só ortogonal adjacente
             const dr = Math.abs(r - ultima.r), dc = Math.abs(c - ultima.c);
             if (dr + dc !== 1) {
-                // Backtrack para célula já na trilha
                 const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
                 if (idxMesma >= 0) {
                     for (let i = idxMesma + 1; i < trail.length; i++) {
@@ -814,7 +973,7 @@
 
             const alvo = estado.grid[r][c];
 
-            // ---- Endpoint do MESMO par → conecta ----
+            // Endpoint do MESMO par → conecta
             if (alvo.tipo === 'endpoint' && alvo.parId === d.parId) {
                 trail.push({ r, c });
                 estado.trilhas[d.parId] = [...trail];
@@ -826,13 +985,11 @@
                 return;
             }
 
-            // ---- Endpoint de OUTRO par ----
+            // Endpoint de OUTRO par
             if (alvo.tipo === 'endpoint') {
                 if (podeAtravessar(d)) {
-                    // Atravessa consumindo a captura
                     trail.push({ r, c });
                     d.endpointsAtravessadosNesteTrajeto.add(keyRC(r, c));
-                    // Marca visualmente como "por baixo"
                     alvo.atravessadoPor = d.parId;
                     atualizarVisual();
                     return;
@@ -843,7 +1000,7 @@
                 }
             }
 
-            // ---- Célula normal: já é trilha deste par → backtrack ----
+            // Já é trilha deste par → backtrack
             const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
             if (idxMesma >= 0) {
                 for (let i = idxMesma + 1; i < trail.length; i++) {
@@ -862,21 +1019,19 @@
                 return;
             }
 
-            // ---- Trilha de OUTRO par → bloqueia SEMPRE ----
+            // Trilha de outro par → bloqueia
             if (alvo.tipo === 'trilha') {
                 piscarErro(r, c);
                 infoInstrucao.textContent = '⚠️ Não pode cruzar trilhas de outras cores!';
                 return;
             }
 
-            // ---- Célula vazia: adiciona à trilha ----
+            // Célula vazia: adiciona
             trail.push({ r, c });
             estado.grid[r][c].tipo = 'trilha';
             estado.grid[r][c].cor = d.cor;
             estado.grid[r][c].parId = d.parId;
 
-            // Se a célula tem estrela e ainda não foi capturada por ninguém,
-            // captura-a para este par
             if (alvo.temEstrela && estado.estrelasUsadasGlobal[alvo.estrelaId] === undefined) {
                 estado.estrelasUsadasGlobal[alvo.estrelaId] = d.parId;
                 d.estrelasCapturadasNesteTrajeto.add(alvo.estrelaId);
@@ -886,9 +1041,7 @@
             atualizarVisual();
         }
 
-        /* Retorna true se o par tem pelo menos 1 estrela capturada ainda não gasta */
         function podeAtravessar(d) {
-            // Estrelas capturadas - endpoints já atravessados
             const capturadas = d.estrelasCapturadasNesteTrajeto.size;
             const usadas = d.endpointsAtravessadosNesteTrajeto.size;
             return capturadas > usadas;
@@ -909,7 +1062,6 @@
                 estado.estrelasPorPar[d.parId] = new Set(d.estrelasCapturadasNesteTrajeto);
                 estado.endpointsAtravessados[d.parId] = new Set(d.endpointsAtravessadosNesteTrajeto);
             } else {
-                // Reverte: devolve estrelas capturadas e limpa trilha
                 for (const estId of d.estrelasCapturadasNesteTrajeto) {
                     delete estado.estrelasUsadasGlobal[estId];
                 }
@@ -940,7 +1092,6 @@
                     cel.cor = null;
                     cel.parId = null;
                 }
-                // Limpa marca de atravessado
                 if (cel.atravessadoPor !== undefined) {
                     delete cel.atravessadoPor;
                 }
@@ -962,7 +1113,6 @@
             const n = estado.tamanho;
             const qtdPares = estado.pares.length;
 
-            // Todos os pares ligados?
             let paresLigados = 0;
             for (const par of estado.pares) {
                 const t = estado.trilhas[par.id];
@@ -975,7 +1125,6 @@
             }
             if (paresLigados !== qtdPares) return;
 
-            // Todas as células preenchidas?
             let vazias = 0;
             for (let r = 0; r < n; r++) {
                 for (let c = 0; c < n; c++) {
