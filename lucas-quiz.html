@@ -3,170 +3,1149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Hub - Evangelho de Lucas: Quiz Teológico</title>
+    <title>Evangelho de Lucas — Quiz Teológico Progressivo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Crimson+Pro:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0b1020;
-            --card-bg: rgba(30, 41, 59, 0.8);
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.85);
             --card-border: rgba(148, 163, 184, 0.15);
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
+            --text-scripture: #fde68a;
+            --border-color: rgba(148, 163, 184, 0.18);
+            --input-bg: rgba(15, 23, 42, 0.7);
             --btn-primary: #6366f1;
+            --btn-accent: #8b5cf6;
+            --success-color: #4ade80;
+            --error-color: #ef4444;
+            --amber: #f59e0b;
             --radius-lg: 20px;
             --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 20px 60px -20px rgba(0,0,0,0.65);
+            --t-base: 0.25s ease;
         }
         [data-theme="light"] {
-            --bg-color: #eef2ff;
-            --card-bg: rgba(255, 255, 255, 0.92);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --text-color: #0f172a;
-            --text-muted: #475569;
+            --bg-color: #fef9f3;
+            --bg-gradient-1: #fef3c7;
+            --bg-gradient-2: #fef9f3;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(120, 53, 15, 0.1);
+            --text-color: #1c1917;
+            --text-muted: #57534e;
+            --text-scripture: #92400e;
+            --border-color: rgba(120, 53, 15, 0.12);
+            --input-bg: rgba(255, 255, 255, 0.96);
+            --btn-primary: #b45309;
+            --btn-accent: #92400e;
+            --shadow-card: 0 20px 60px -20px rgba(120, 53, 15, 0.22);
         }
+        *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-color);
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
         .container {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-lg);
-            padding: 28px;
+            padding: 24px;
             width: 100%;
-            max-width: 600px;
-            box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+            max-width: 720px;
+            box-shadow: var(--shadow-card);
+            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .back-link {
             color: var(--btn-primary);
             text-decoration: none;
-            font-weight: 600;
-            font-size: 13.5px;
-            display: inline-block;
-            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            transition: all var(--t-base);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        h1 { font-size: 20px; margin: 0 0 6px 0; }
-        .question-text { font-size: 15px; font-weight: 600; margin: 16px 0; }
-        .options-list { display: flex; flex-direction: column; gap: 10px; }
-        .option-btn {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--card-border);
-            color: var(--text-color);
+        .back-link:hover { transform: translateY(-1px); border-color: var(--btn-primary); }
+        .btn-small {
+            width: auto;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--t-base);
+            font-family: inherit;
+        }
+        .btn-small:hover { color: var(--text-color); border-color: var(--btn-primary); }
+
+        h1 {
+            font-size: 21px;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        p.subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0 0 18px 0;
+            line-height: 1.5;
+        }
+
+        /* ==========================================================
+           PROGRESSO
+           ========================================================== */
+        .progress-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+        .progress-step {
+            flex: 1;
+            height: 5px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            transition: all var(--t-base);
+        }
+        .progress-step.correct {
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            border-color: transparent;
+        }
+        .progress-step.wrong {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border-color: transparent;
+        }
+        .progress-step.active {
+            background: linear-gradient(135deg, var(--amber), #fbbf24);
+            border-color: transparent;
+            animation: pulseStep 1.6s ease-in-out infinite;
+        }
+        @keyframes pulseStep {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }
+            50%      { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        }
+
+        /* ==========================================================
+           RODADA
+           ========================================================== */
+        .round-header {
+            background: linear-gradient(135deg,
+                rgba(99, 102, 241, 0.14),
+                rgba(139, 92, 246, 0.10));
+            border: 1px solid rgba(99, 102, 241, 0.28);
+            border-radius: var(--radius-md);
             padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .round-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--btn-primary);
+            margin-bottom: 3px;
+        }
+        .round-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-color);
+            margin-bottom: 2px;
+        }
+        .round-verse {
+            font-family: 'Crimson Pro', serif;
+            font-size: 13.5px;
+            font-style: italic;
+            color: var(--text-scripture);
+            line-height: 1.45;
+        }
+
+        /* ==========================================================
+           PERGUNTA
+           ========================================================== */
+        .question-text {
+            font-size: 15.5px;
+            font-weight: 700;
+            line-height: 1.5;
+            margin: 6px 0 16px 0;
+            color: var(--text-color);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .option-btn {
+            background: var(--input-bg);
+            border: 1.5px solid var(--border-color);
+            color: var(--text-color);
+            padding: 13px 16px;
             border-radius: var(--radius-md);
             text-align: left;
             font-size: 13.5px;
+            line-height: 1.45;
             font-family: inherit;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--t-base);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            position: relative;
         }
-        .option-btn:hover { border-color: var(--btn-primary); background: rgba(99, 102, 241, 0.1); }
-        .option-btn.correct { background: rgba(74, 222, 128, 0.2); border-color: #4ade80; color: #4ade80; }
-        .option-btn.wrong { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444; }
-        .quiz-footer { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-muted); }
+        .option-btn .letter {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.18);
+            color: var(--btn-primary);
+            font-weight: 800;
+            font-size: 11.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+            transition: all var(--t-base);
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--btn-primary);
+            background: rgba(99, 102, 241, 0.09);
+            transform: translateX(2px);
+        }
+        .option-btn:hover:not(:disabled) .letter {
+            background: var(--btn-primary);
+            color: #fff;
+        }
+        .option-btn.correct {
+            background: rgba(74, 222, 128, 0.15);
+            border-color: var(--success-color);
+            color: var(--success-color);
+            font-weight: 700;
+        }
+        .option-btn.correct .letter {
+            background: var(--success-color);
+            color: #fff;
+        }
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--error-color);
+            color: var(--error-color);
+            font-weight: 700;
+        }
+        .option-btn.wrong .letter {
+            background: var(--error-color);
+            color: #fff;
+        }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.85; }
+        .option-btn.dimmed {
+            opacity: 0.4;
+        }
+
+        /* ==========================================================
+           FOOTER / SCORE
+           ========================================================== */
+        .quiz-footer {
+            margin-top: 18px;
+            padding: 12px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .quiz-footer .score-value {
+            color: var(--success-color);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 15px;
+        }
+        .quiz-footer .round-info strong { color: var(--btn-primary); }
+
+        /* ==========================================================
+           OVERLAY — EXPLICAÇÃO APÓS RESPOSTA
+           ========================================================== */
+        .explain-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .explain-overlay.show { display: flex; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .explain-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 26px 24px;
+            max-width: 540px;
+            width: 100%;
+            box-shadow: 0 30px 80px -20px rgba(0,0,0,0.9);
+            animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 92vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .explain-card .feedback-icon {
+            font-size: 40px;
+            text-align: center;
+            margin-bottom: 6px;
+            animation: pop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes pop {
+            0%   { transform: scale(0); }
+            60%  { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        .explain-card .feedback-title {
+            text-align: center;
+            font-size: 19px;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+        }
+        .explain-card .feedback-title.correct { color: var(--success-color); }
+        .explain-card .feedback-title.wrong { color: var(--error-color); }
+        .explain-card .feedback-subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        .block {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            background: var(--input-bg);
+            border-left: 3px solid var(--btn-primary);
+        }
+        .block.scripture {
+            border-left-color: var(--amber);
+            background: rgba(245, 158, 11, 0.08);
+        }
+        .block.prayer {
+            border-left-color: var(--success-color);
+            background: rgba(74, 222, 128, 0.08);
+        }
+        .block-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .scripture-text {
+            font-family: 'Crimson Pro', serif;
+            font-size: 15px;
+            font-style: italic;
+            line-height: 1.55;
+            color: var(--text-scripture);
+        }
+        .reference {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            text-align: right;
+            font-weight: 600;
+        }
+        .explanation {
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--text-color);
+        }
+        .prayer-text {
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--text-color);
+            font-style: italic;
+        }
+        .explain-card button.continue {
+            width: 100%;
+            padding: 13px;
+            margin-top: 8px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            transition: transform var(--t-base), filter var(--t-base);
+        }
+        .explain-card button.continue:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        /* ==========================================================
+           TELA FINAL
+           ========================================================== */
+        .final-screen {
+            text-align: center;
+            padding: 16px 0;
+            display: none;
+        }
+        .final-screen.show { display: block; animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .final-screen .crown {
+            font-size: 56px;
+            margin-bottom: 12px;
+            animation: pop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .final-screen h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            background: linear-gradient(135deg, var(--amber), #fbbf24, var(--btn-primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .final-screen .final-score {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+        .final-screen .final-score strong {
+            color: var(--success-color);
+            font-size: 20px;
+        }
+        .final-screen .final-verse {
+            font-family: 'Crimson Pro', serif;
+            font-size: 17px;
+            font-style: italic;
+            color: var(--text-scripture);
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto 8px;
+        }
+        .final-screen .final-ref {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 22px;
+        }
+        .final-screen .share-btn {
+            width: auto;
+            padding: 12px 22px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            transition: transform var(--t-base), filter var(--t-base);
+        }
+        .final-screen .share-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+        .final-screen .restart-btn {
+            width: auto;
+            padding: 12px 22px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: var(--input-bg);
+            margin-left: 8px;
+            transition: all var(--t-base);
+        }
+        .final-screen .restart-btn:hover {
+            color: var(--text-color);
+            border-color: var(--btn-primary);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Voltar ao Brain Hub</a>
-        <h1>❓ Evangelho de Lucas: Quiz Teológico</h1>
+        <div class="top-bar">
+            <a href="index.html" class="back-link">← Menu Hub</a>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+
+        <h1>❓ Evangelho de Lucas — Quiz Teológico</h1>
+        <p class="subtitle">
+            Quatro rodadas para conhecer, entender e viver o terceiro Evangelho.
+            Cada resposta traz Escritura, explicação e oração.
+        </p>
+
+        <div class="progress-bar" id="progress-bar"></div>
+
+        <div class="round-header" id="round-header">
+            <div class="round-label" id="round-label">Rodada 1</div>
+            <div class="round-title" id="round-title">—</div>
+            <div class="round-verse" id="round-verse">—</div>
+        </div>
+
         <div id="quiz-box">
             <div class="question-text" id="question">A carregar pergunta...</div>
             <div class="options-list" id="options"></div>
             <div class="quiz-footer">
-                <span id="progress">Questão 1 de 4</span>
-                <span id="score">Pontuação: 0</span>
+                <span class="round-info">Rodada <strong id="footer-round">1</strong>/4 — Questão <strong id="footer-q">1</strong>/5</span>
+                <span>Acertos: <span class="score-value" id="footer-score">0</span></span>
             </div>
+        </div>
+
+        <div class="final-screen" id="final-screen">
+            <div class="crown">✝️</div>
+            <h2>Percorrestes o Quiz de Lucas</h2>
+            <p class="final-score">
+                Acertaste <strong id="final-score">0</strong> de 20 perguntas
+            </p>
+            <p class="final-verse">
+                "Não nos ardia o coração, quando ele nos falava pelo caminho?"
+            </p>
+            <p class="final-ref">— Lucas 24,32</p>
+            <button class="share-btn" id="btn-share">💬 Compartilhar Reflexão</button>
+            <button class="restart-btn" id="btn-restart">🔄 Recomeçar</button>
+        </div>
+    </div>
+
+    <!-- OVERLAY DE EXPLICAÇÃO -->
+    <div class="explain-overlay" id="explain-overlay">
+        <div class="explain-card">
+            <div class="feedback-icon" id="explain-icon">✨</div>
+            <h2 class="feedback-title correct" id="explain-title">Aleluia!</h2>
+            <div class="feedback-subtitle" id="explain-subtitle">—</div>
+
+            <div class="block scripture">
+                <div class="block-label">📖 Escritura</div>
+                <div class="scripture-text" id="explain-scripture">—</div>
+                <div class="reference" id="explain-reference">—</div>
+            </div>
+
+            <div class="block">
+                <div class="block-label">💡 Explicação</div>
+                <div class="explanation" id="explain-text">—</div>
+            </div>
+
+            <div class="block prayer">
+                <div class="block-label">🧎 Oração</div>
+                <div class="prayer-text" id="explain-prayer">—</div>
+            </div>
+
+            <button class="continue" id="explain-continue">Continuar →</button>
         </div>
     </div>
 
     <script>
-        const questoes = [
+        /* ==========================================================
+           DADOS — 4 RODADAS × 5 PERGUNTAS = 20 PERGUNTAS
+           ==========================================================
+           Cada pergunta tem:
+             pergunta:     texto da pergunta
+             opcoes:       array de 4 opções
+             correta:      índice (0-3)
+             scripture:    citação bíblica
+             reference:    referência (Lc X,Y)
+             explanation:  por que a resposta é essa — texto pastoral
+             prayer:       oração curta
+           ========================================================== */
+        const RODADAS = [
+            /* ============================================================
+               RODADA 1 — O TEXTO
+               ============================================================ */
             {
-                pergunta: "Qual é uma das principais ênfases teológicas exclusivas do Evangelho de Lucas?",
-                opcoes: ["O cumprimento estrito das leis levíticas", "O universalismo da salvação e a misericórdia para com todos os povos", "A reconstrução física do Templo de Jerusalém", "A genealogia focada exclusivamente nos reis de Israel"],
-                correta: 1
+                titulo: "Rodada 1 — O Texto",
+                ancoragem: "\"Visto que muitos empreenderam compor uma narrativa... também a mim pareceu bem, depois de investigar tudo com cuidado desde o princípio, escrevê-lo de forma ordenada para ti, ó Teófilo.\" — Lucas 1,1-3",
+                perguntas: [
+                    {
+                        pergunta: "A quem Lucas dedica o seu Evangelho, mencionando o nome explicitamente?",
+                        opcoes: [
+                            "Aos Romanos, representados por Pôncio Pilatos",
+                            "A Teófilo, cujo nome significa 'amigo de Deus'",
+                            "Aos sacerdotes do Templo de Jerusalém",
+                            "Aos discípulos que estavam com Jesus desde o Jordão"
+                        ],
+                        correta: 1,
+                        scripture: "\"Igualmente a mim pareceu bem, depois de investigar tudo com cuidado desde o princípio, escrevê-lo de forma ordenada para ti, ó excelentíssimo Teófilo.\"",
+                        reference: "Lucas 1,3",
+                        explanation: "Lucas escreve para Teófilo — provavelmente um cristão de origem grega, talvez um patrono que financiou a cópia do Evangelho. O nome significa 'amigo de Deus', mas ele é um personagem real. Isso nos lembra que o Evangelho não é abstrato — foi escrito para alguém concreto, com nome, história e fé.",
+                        prayer: "Senhor, obrigado por escreveres o Evangelho também para mim — pelo meu nome, pela minha história."
+                    },
+                    {
+                        pergunta: "Qual é a profissão tradicionalmente atribuída a Lucas, autor do terceiro Evangelho?",
+                        opcoes: [
+                            "Pescador, como Pedro",
+                            "Médico, conforme Paulo o chama",
+                            "Cobrador de impostos, como Mateus",
+                            "Fariseu convertido, como Paulo"
+                        ],
+                        correta: 1,
+                        scripture: "\"Saúda-vos Lucas, o médico amado.\"",
+                        reference: "Colossenses 4,14",
+                        explanation: "Paulo chama Lucas de 'médico amado'. Isso explica o olhar do terceiro Evangelho: a atenção aos doentes, aos feridos, aos que precisam de cura. Lucas vê Jesus como o médico das almas — aquele que veio 'curar os quebrantados de coração'.",
+                        prayer: "Senhor, sê o médico das minhas feridas escondidas — aquelas que só tu conheces."
+                    },
+                    {
+                        pergunta: "Quantos capítulos tem o Evangelho de Lucas, sendo o mais longo do Novo Testamento?",
+                        opcoes: [
+                            "16 capítulos",
+                            "21 capítulos",
+                            "24 capítulos",
+                            "28 capítulos"
+                        ],
+                        correta: 2,
+                        scripture: "\"...para que conheças a solidez daquilo em que foste instruído.\"",
+                        reference: "Lucas 1,4",
+                        explanation: "Lucas tem 24 capítulos — o mais longo do Novo Testamento. Junto com Atos dos Apóstolos (também escrito por ele), forma uma obra em dois volumes que cobre da anunciação de João Batista até a chegada do Evangelho a Roma. É um projeto literário e teológico de grande fôlego.",
+                        prayer: "Senhor, dá-me perseverança para percorrer com paciência os caminhos da tua Palavra."
+                    },
+                    {
+                        pergunta: "Como Lucas apresenta a genealogia de Jesus, diferente dos outros evangelhos?",
+                        opcoes: [
+                            "Começa em Abraão e vai até Jesus",
+                            "Começa em Jesus e remonta até Adão, filho de Deus",
+                            "Só menciona José e Maria",
+                            "Omite a genealogia completamente"
+                        ],
+                        correta: 1,
+                        scripture: "\"...filho de Enos, filho de Sete, filho de Adão, filho de Deus.\"",
+                        reference: "Lucas 3,38",
+                        explanation: "Mateus começa em Abraão (o pai do povo judeu) e vai até Jesus. Lucas faz o caminho inverso: parte de Jesus e sobe até Adão — e mais além, até 'Deus'. É a genealogia universal: Jesus é o Filho do Homem para toda a humanidade, não apenas para os judeus.",
+                        prayer: "Senhor, obrigado porque em Cristo também eu sou teu filho, sem distinção de origem ou história."
+                    },
+                    {
+                        pergunta: "Qual parábola exclusiva de Lucas retrata o amor incondicional do pai que corre ao encontro do filho?",
+                        opcoes: [
+                            "A parábola do bom pastor",
+                            "A parábola do filho pródigo",
+                            "A parábola dos talentos",
+                            "A parábola do grão de mostarda"
+                        ],
+                        correta: 1,
+                        scripture: "\"Mas, quando ainda estava longe, seu pai o viu e, movido de compaixão, correu, lançou-se-lhe ao pescoço e o beijou.\"",
+                        reference: "Lucas 15,20",
+                        explanation: "O 'filho pródigo' é exclusivo de Lucas — e é uma das parábolas mais amadas do Evangelho. O detalhe mais comovente é que o pai CORRE. Na cultura judaica, um homem respeitável não corria. Ao correr, o pai se humilha publicamente para abraçar o filho antes que ele termine o discurso. É o retrato mais radical do amor de Deus.",
+                        prayer: "Pai, obrigado porque correste ao meu encontro antes mesmo que eu chegasse a ti."
+                    }
+                ]
             },
+
+            /* ============================================================
+               RODADA 2 — A TEOLOGIA
+               ============================================================ */
             {
-                pergunta: "Que grupo marginalizado da sociedade da época recebe destaque particular na narrativa de Lucas?",
-                opcoes: ["Apenas os sacerdotes do sinédrio", "Os comerciantes de tecidos finos", "As mulheres, os pobres, os cobradores de impostos e os samaritanos", "Os legionários romanos"],
-                correta: 2
+                titulo: "Rodada 2 — A Teologia",
+                ancoragem: "\"O Espírito do Senhor está sobre mim, porque me ungiu para evangelizar os pobres.\" — Lucas 4,18",
+                perguntas: [
+                    {
+                        pergunta: "Qual é a grande ênfase teológica exclusiva do Evangelho de Lucas em relação aos outros evangelhos?",
+                        opcoes: [
+                            "O cumprimento estrito das leis levíticas",
+                            "O universalismo da salvação e a misericórdia para com todos",
+                            "A reconstrução física do Templo de Jerusalém",
+                            "A genealogia focada exclusivamente nos reis de Israel"
+                        ],
+                        correta: 1,
+                        scripture: "\"Vai por todo o mundo e prega o Evangelho a toda criatura.\"",
+                        reference: "Marcos 16,15 (cf. Lucas 24,47)",
+                        explanation: "Lucas insiste que a salvação é para TODOS: judeus e gregos, pobres e ricos, homens e mulheres, samaritanos e romanos. É o evangelho da misericórdia universal. Enquanto Mateus escreve para judeus, Marcos para romanos e João para gregos, Lucas escreve para o mundo inteiro.",
+                        prayer: "Senhor, que o meu coração seja tão largo quanto o teu — sem excluir ninguém do teu amor."
+                    },
+                    {
+                        pergunta: "No programa messiânico de Nazaré (Lc 4,16-21), a quem Jesus diz ter sido enviado primeiro?",
+                        opcoes: [
+                            "Aos sacerdotes e escribas",
+                            "Aos pobres, cativos, cegos e oprimidos",
+                            "Aos reis e governadores de Israel",
+                            "Aos justos que guardam a Lei"
+                        ],
+                        correta: 1,
+                        scripture: "\"O Espírito do Senhor está sobre mim, porque me ungiu para evangelizar os pobres; enviou-me para proclamar libertação aos cativos e restauração da vista aos cegos, para libertar os oprimidos.\"",
+                        reference: "Lucas 4,18",
+                        explanation: "Jesus escolhe Isaías 61 como o seu 'manifesto'. Não é um discurso religioso genérico — é uma agenda concreta: pobres, cativos, cegos, oprimidos. Lucas mostra que a missão messiânica começa pelos que ninguém quer ver. E Jesus termina: 'Hoje se cumpriu esta Escritura'.",
+                        prayer: "Senhor, faz-me instrumento da tua libertação para os que vivem cativos — física e espiritualmente."
+                    },
+                    {
+                        pergunta: "Qual grupo marginalizado recebe destaque particular e revolucionário na narrativa de Lucas?",
+                        opcoes: [
+                            "Apenas os sacerdotes do Sinédrio",
+                            "As mulheres, os pobres, os cobradores de impostos e os samaritanos",
+                            "Os comerciantes de tecidos finos",
+                            "Os legionários romanos"
+                        ],
+                        correta: 1,
+                        scripture: "\"As mulheres que tinham sido curadas de espíritos maus e de doenças seguiam-no e serviam-no com os seus bens.\"",
+                        reference: "Lucas 8,2-3",
+                        explanation: "Lucas dá nome às mulheres: Maria Madalena, Joana, Susana. Dá voz aos samaritanos (parábola do Bom Samaritano). Dignifica os publicanos (Zaqueu). Num mundo que os silenciava, Lucas os coloca no centro. É um Evangelho dos esquecidos — e por isso um Evangelho para o nosso tempo.",
+                        prayer: "Senhor, abre os meus olhos para os que hoje são silenciados e marginalizados — e dá-me coragem de caminhar com eles."
+                    },
+                    {
+                        pergunta: "Como Lucas retrata a figura de Maria, a mãe de Jesus, de forma única entre os evangelhos?",
+                        opcoes: [
+                            "Como uma mulher silenciosa que quase não aparece",
+                            "Como modelo de fé, discípula que escuta e guarda a Palavra",
+                            "Como uma rainha poderosa que dirige a comunidade",
+                            "Como uma figura secundária mencionada apenas no nascimento"
+                        ],
+                        correta: 1,
+                        scripture: "\"Maria guardava todas estas coisas, meditando-as no seu coração.\"",
+                        reference: "Lucas 2,19",
+                        explanation: "Lucas dedica a Maria os capítulos 1 e 2 inteiros, com o Magnificat (1,46-55) — um dos maiores cânticos da Escritura. Maria é apresentada como a primeira discípula: escuta, medita, guarda, responde. É modelo de fé para todo cristão, antes mesmo de ser mãe.",
+                        prayer: "Maria, ensina-me a guardar a Palavra no coração — e a deixá-la transformar-me por dentro."
+                    },
+                    {
+                        pergunta: "Qual é o tema central da parábola do Bom Samaritano, exclusiva de Lucas?",
+                        opcoes: [
+                            "O dever de guardar o sábado",
+                            "A superioridade dos samaritanos sobre os judeus",
+                            "A misericórdia que atravessa fronteiras religiosas e étnicas",
+                            "A obrigação de peregrinar a Jerusalém"
+                        ],
+                        correta: 2,
+                        scripture: "\"Qual dos três foi o próximo do homem que caiu nas mãos dos assaltantes? — Aquele que usou de misericórdia para com ele.\"",
+                        reference: "Lucas 10,36",
+                        explanation: "Jesus inverte a pergunta. Não é 'quem é o meu próximo?', mas 'de quem eu me faço próximo?'. O sacerdote e o levita passam ao largo — o samaritano, considerado herege, para e cuida. Lucas nos ensina que o amor precede a identidade religiosa. O próximo é quem se aproxima.",
+                        prayer: "Senhor, dá-me olhos de samaritano — que eu veja o caído antes de ver o meu próprio caminho."
+                    }
+                ]
             },
+
+            /* ============================================================
+               RODADA 3 — O ESPÍRITO
+               ============================================================ */
             {
-                pergunta: "Parábolas famosas como o 'Bom Samaritano' e o 'Filho Pródigo' encontram-se principalmente em qual evangelho?",
-                opcoes: ["Evangelho de Mateus", "Evangelho de Marcos", "Evangelho de Lucas", "Evangelho de João"],
-                correta: 2
+                titulo: "Rodada 3 — O Espírito e a Oração",
+                ancoragem: "\"Jesus retirava-se para lugares desertos e aí orava.\" — Lucas 5,16",
+                perguntas: [
+                    {
+                        pergunta: "Qual elemento espiritual é fortemente registrado por Lucas ao longo da jornada de Jesus?",
+                        opcoes: [
+                            "A prática constante da oração e a ação do Espírito Santo",
+                            "A realização de rituais secretos no Templo",
+                            "O isolamento total nas montanhas sem pregação",
+                            "A fundação de partidos políticos messiânicos"
+                        ],
+                        correta: 0,
+                        scripture: "\"Mas ele retirava-se para lugares desertos e aí orava.\"",
+                        reference: "Lucas 5,16",
+                        explanation: "Em Lucas, Jesus ora em TODOS os momentos decisivos: no batismo (3,21), na escolha dos Doze (6,12), antes da transfiguração (9,28-29), no Getsêmani (22,41-44). E o Espírito Santo aparece em cada virada da história: na anunciação, no batismo, no deserto, na alegria, no Pentecostes. Oração e Espírito são as duas asas do Evangelho de Lucas.",
+                        prayer: "Senhor, ensina-me a orar e a caminhar no Espírito — sem um sem o outro não há vida cristã."
+                    },
+                    {
+                        pergunta: "Sob que forma visível o Espírito Santo desce sobre Jesus no seu batismo, segundo Lucas?",
+                        opcoes: [
+                            "Uma labareda de fogo",
+                            "Uma pomba",
+                            "Uma nuvem brilhante",
+                            "Um anjo alado"
+                        ],
+                        correta: 1,
+                        scripture: "\"O Espírito Santo desceu sobre ele em forma corporal, como uma pomba.\"",
+                        reference: "Lucas 3,22",
+                        explanation: "Lucas é o único a dizer 'em forma corporal' — como se visse o Espírito em corpo, em pomba. É o sinal visível da unção messiânica. A pomba também nos lembra o Espírito que pairava sobre as águas no Gênesis — o mesmo Espírito que agora cria uma nova humanidade em Cristo.",
+                        prayer: "Espírito Santo, desce sobre mim com a tua mansidão e faz-me nova criatura."
+                    },
+                    {
+                        pergunta: "O que os discípulos pedem a Jesus quando o veem orar, segundo Lucas 11,1?",
+                        opcoes: [
+                            "Que os ensine a pregar",
+                            "Que os ensine a orar",
+                            "Que os ensine a curar doentes",
+                            "Que os ensine a interpretar a Lei"
+                        ],
+                        correta: 1,
+                        scripture: "\"Senhor, ensina-nos a orar, como também João ensinou aos seus discípulos.\"",
+                        reference: "Lucas 11,1",
+                        explanation: "Os discípulos não pedem milagres, nem sermões, nem poder. Pedem: 'ensina-nos a orar'. Viram Jesus orar e perceberam que ali estava o segredo. Lucas mostra que a oração não é técnica — é relação. E Jesus responde com o Pai-Nosso, a oração mais curta e mais completa que existe.",
+                        prayer: "Senhor, ensina-me a orar como filho — sem medo, sem artifício, sem vãs repetições."
+                    },
+                    {
+                        pergunta: "Onde Jesus ora de forma mais intensa, suando como gotas de sangue, segundo Lucas?",
+                        opcoes: [
+                            "No Monte das Bem-aventuranças",
+                            "No Templo de Jerusalém",
+                            "No Getsêmani",
+                            "No deserto da Judeia"
+                        ],
+                        correta: 2,
+                        scripture: "\"E, estando em agonia, orava ainda mais intensamente; e o seu suor tornou-se como gotas de sangue que caíam no chão.\"",
+                        reference: "Lucas 22,44",
+                        explanation: "O Getsêmani é o lugar da oração mais humana e mais honesta do Evangelho. Jesus diz o que sente: 'afasta de mim este cálice'. Mas entrega o que não entende: 'não se faça a minha vontade'. Lucas é o único a registrar o suor de sangue — sinal de sofrimento extremo. É o retrato da oração na dor.",
+                        prayer: "Pai, quando eu não entender os teus caminhos, dá-me um coração que ainda saiba dizer: faça-se a tua vontade."
+                    },
+                    {
+                        pergunta: "O que Jesus promete aos discípulos antes de ascender, no final do Evangelho de Lucas?",
+                        opcoes: [
+                            "Riquezas e poder terreno",
+                            "Que serão revestidos com o poder do alto",
+                            "Que não sofrerão perseguições",
+                            "Que reconstruirão o Templo"
+                        ],
+                        correta: 1,
+                        scripture: "\"Eis que envio sobre vós a promessa de meu Pai; permanecei na cidade até que sejais revestidos do poder do alto.\"",
+                        reference: "Lucas 24,49",
+                        explanation: "A última promessa de Jesus em Lucas não é força humana — é o Espírito Santo. Antes de enviar, ele manda esperar. A missão cristã não é obra apenas nossa: somos enviados, mas não sozinhos. O Espírito precede, acompanha e sustenta. Lucas nos ensina a esperar antes de agir.",
+                        prayer: "Espírito Santo, reveste-me de força para testemunhar com a vida aquilo que professo com os lábios."
+                    }
+                ]
             },
+
+            /* ============================================================
+               RODADA 4 — A PRÁTICA
+               ============================================================ */
             {
-                pergunta: "Qual elemento espiritual e prático é fortemente registrado por Lucas ao longo da jornada de Jesus?",
-                opcoes: ["A prática constante da oração e a ação do Espírito Santo", "A realização de rituais secretos", "O isolamento total nas montanhas sem pregação", "A fundação de partidos políticos"],
-                correta: 0
+                titulo: "Rodada 4 — A Prática",
+                ancoragem: "\"Não nos ardia o coração, quando ele nos falava pelo caminho?\" — Lucas 24,32",
+                perguntas: [
+                    {
+                        pergunta: "O que os discípulos de Emaús fazem imediatamente após reconhecerem Jesus no partir do pão?",
+                        opcoes: [
+                            "Ficam em casa em silêncio, meditando",
+                            "Voltam correndo a Jerusalém para anunciar",
+                            "Vão para a Galileia esperar instruções",
+                            "Escrevem um evangelho próprio"
+                        ],
+                        correta: 1,
+                        scripture: "\"Levantando-se na mesma hora, voltaram para Jerusalém e encontraram reunidos os onze.\"",
+                        reference: "Lucas 24,33",
+                        explanation: "Emaús é o coração do Evangelho de Lucas: dois discípulos tristes, um caminho, uma Escritura explicada, um pão partido, um coração ardendo. E quando reconhecem Jesus, não ficam parados — voltam correndo. A alegria da ressurreição é centrífuga: empurra para fora, para o anúncio. Quem encontra o Ressuscitado não consegue ficar calado.",
+                        prayer: "Senhor, que eu não retenha só para mim a alegria do encontro contigo — que eu a anuncie."
+                    },
+                    {
+                        pergunta: "Na parábola do Bom Samaritano, quem são os dois primeiros a passar ao largo do ferido?",
+                        opcoes: [
+                            "Um soldado romano e um publicano",
+                            "Um sacerdote e um levita",
+                            "Dois fariseus",
+                            "Dois comerciantes samaritanos"
+                        ],
+                        correta: 1,
+                        scripture: "\"Certo homem descia de Jerusalém para Jericó e caiu nas mãos de assaltantes... Por coincidência, descia por aquele caminho certo sacerdote, e, vendo-o, passou de largo. Igualmente um levita.\"",
+                        reference: "Lucas 10,30-32",
+                        explanation: "Jesus escolhe propositalmente os dois mais religiosos — sacerdote e levita — para mostrar que a religiosidade pode cegar. Talvez tivessem pressa, medo de impureza, ou simples indiferença. Lucas nos avisa: não basta ser religioso; é preciso ver o caído e parar. A verdadeira religião é a que se aproxima.",
+                        prayer: "Senhor, livra-me da religião que passa ao largo — e ensina-me a parar diante do sofrimento."
+                    },
+                    {
+                        pergunta: "O que Zaqueu faz após receber Jesus em sua casa, mostrando conversão concreta?",
+                        opcoes: [
+                            "Promete nunca mais trabalhar",
+                            "Devolve o quádruplo do que roubou e dá metade dos bens aos pobres",
+                            "Vai embora da cidade",
+                            "Torna-se sacerdote do Templo"
+                        ],
+                        correta: 1,
+                        scripture: "\"Zaqueu, levantando-se, disse ao Senhor: Senhor, vou dar metade dos meus bens aos pobres; e, se defraudei alguém em alguma coisa, vou restituir-lhe quatro vezes mais.\"",
+                        reference: "Lucas 19,8",
+                        explanation: "Zaqueu é o retrato da conversão que toca a carteira, não apenas a emoção. Ele não apenas promete — restitui concretamente. Lucas coloca este episódio no final do ministério público de Jesus. É a prova de que a salvação transforma a vida por dentro E por fora. Fé sem obras é estéril.",
+                        prayer: "Senhor, que a minha conversão seja concreta como a de Zaqueu — que toque os meus bens, não só o meu coração."
+                    },
+                    {
+                        pergunta: "Qual é a atitude de Maria de Betânia que Jesus elogia, em contraste com Marta?",
+                        opcoes: [
+                            "Servir melhor do que Marta na cozinha",
+                            "Escolher a 'melhor parte': sentar-se aos pés de Jesus e ouvir",
+                            "Ir pregar nas aldeias vizinhas",
+                            "Cuidar dos pobres da comunidade"
+                        ],
+                        correta: 1,
+                        scripture: "\"Marta, Marta, andas inquieta e te preocupas com muitas coisas. Entretanto, pouco é necessário, ou mesmo uma só coisa; Maria, pois, escolheu a boa parte, e esta não lhe será tirada.\"",
+                        reference: "Lucas 10,41-42",
+                        explanation: "Jesus não condena Marta por servir — condena a ANSIEDADE do servir. Maria escolhe a 'boa parte': sentar-se aos pés do Mestre e escutar. Lucas ensina que a ação sem escuta vira ativismo. Antes de fazer para Deus, é preciso estar com Deus. A oração é a raiz da missão.",
+                        prayer: "Senhor, ensina-me a escolher a melhor parte — a escuta antes da ação, a presença antes do serviço."
+                    },
+                    {
+                        pergunta: "Como o Evangelho de Lucas termina, preparando o livro de Atos?",
+                        opcoes: [
+                            "Com Jesus desaparecendo definitivamente",
+                            "Com os discípulos voltando a Jerusalém com grande alegria, louvando a Deus",
+                            "Com Pedro negando a fé",
+                            "Com a morte de Maria Madalena"
+                        ],
+                        correta: 1,
+                        scripture: "\"E eles, depois de o adorarem, voltaram para Jerusalém com grande alegria. E estavam sempre no templo, louvando a Deus.\"",
+                        reference: "Lucas 24,52-53",
+                        explanation: "A Ascensão, em Lucas, não é despedida triste — é envio alegre. Os discípulos voltam com grande alegria e permanecem no Templo louvando. É a antessala do Pentecostes. Lucas prepara Atos: a história continua, o Espírito virá, a missão começará. O Evangelho não termina num ponto final — termina numa vírgula.",
+                        prayer: "Senhor, que a minha vida seja vivida com a alegria de quem sabe que a história continua — e que o Espírito vem."
+                    }
+                ]
             }
         ];
 
-        let atual = 0;
-        let pontos = 0;
+        /* ==========================================================
+           ESTADO
+           ========================================================== */
+        let rodadaAtual = 0;
+        let perguntaAtual = 0;
+        let acertos = 0;
+        let totalRespondidas = 0;
+        const TOTAL_POR_RODADA = 5;
+        const TOTAL_PERGUNTAS = RODADAS.length * TOTAL_POR_RODADA;
 
-        const qElement = document.getElementById('question');
-        const oElement = document.getElementById('options');
-        const pElement = document.getElementById('progress');
-        const sElement = document.getElementById('score');
+        /* ==========================================================
+           DOM
+           ========================================================== */
+        const progressBar = document.getElementById('progress-bar');
+        const roundLabel = document.getElementById('round-label');
+        const roundTitle = document.getElementById('round-title');
+        const roundVerse = document.getElementById('round-verse');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const footerRound = document.getElementById('footer-round');
+        const footerQ = document.getElementById('footer-q');
+        const footerScore = document.getElementById('footer-score');
+        const quizBox = document.getElementById('quiz-box');
+        const finalScreen = document.getElementById('final-screen');
+        const finalScore = document.getElementById('final-score');
+        const explainOverlay = document.getElementById('explain-overlay');
+        const explainIcon = document.getElementById('explain-icon');
+        const explainTitle = document.getElementById('explain-title');
+        const explainSubtitle = document.getElementById('explain-subtitle');
+        const explainScripture = document.getElementById('explain-scripture');
+        const explainReference = document.getElementById('explain-reference');
+        const explainText = document.getElementById('explain-text');
+        const explainPrayer = document.getElementById('explain-prayer');
+        const explainContinue = document.getElementById('explain-continue');
+        const themeToggle = document.getElementById('theme-toggle');
 
-        function carregarQuestao() {
-            if (atual >= questoes.length) {
-                document.getElementById('quiz-box').innerHTML = `
-                    <h2 style="color: var(--btn-primary); text-align: center;">Quiz Concluído! 🎉</h2>
-                    <p style="text-align: center; font-size: 15px;">Sua pontuação final foi: <strong>${pontos} de ${questoes.length * 25} pontos</strong></p>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="index.html" style="background: var(--btn-primary); color: #fff; padding: 10px 20px; border-radius: 999px; text-decoration: none; font-weight: 600;">Voltar ao Hub</a>
-                    </div>
-                `;
-                return;
+        /* ==========================================================
+           TEMA
+           ========================================================== */
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? '🌙 Tema' : '☀️ Tema';
+        themeToggle.addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+            themeToggle.textContent = next === 'dark' ? '🌙 Tema' : '☀️ Tema';
+        });
+
+        /* ==========================================================
+           RENDER PROGRESSO
+           ========================================================== */
+        function renderProgressBar() {
+            progressBar.innerHTML = '';
+            for (let i = 0; i < TOTAL_PERGUNTAS; i++) {
+                const step = document.createElement('div');
+                step.className = 'progress-step';
+                if (i < totalRespondidas) {
+                    // Já respondida — cor definida em resultados
+                    if (resultados[i] === true) step.classList.add('correct');
+                    else if (resultados[i] === false) step.classList.add('wrong');
+                } else if (i === totalRespondidas) {
+                    step.classList.add('active');
+                }
+                progressBar.appendChild(step);
             }
+        }
 
-            const q = questoes[atual];
-            qElement.textContent = q.pergunta;
-            oElement.innerHTML = '';
-            pElement.textContent = `Questão ${atual + 1} de ${questoes.length}`;
+        // Guarda o resultado de cada pergunta (true=acerto, false=erro)
+        let resultados = new Array(TOTAL_PERGUNTAS).fill(null);
+
+        /* ==========================================================
+           RENDER RODADA
+           ========================================================== */
+        function renderRoundHeader() {
+            const r = RODADAS[rodadaAtual];
+            roundLabel.textContent = `Rodada ${rodadaAtual + 1} de ${RODADAS.length}`;
+            roundTitle.textContent = r.titulo;
+            roundVerse.textContent = r.ancoragem;
+        }
+
+        /* ==========================================================
+           CARREGAR PERGUNTA
+           ========================================================== */
+        function carregarPergunta() {
+            const r = RODADAS[rodadaAtual];
+            const q = r.perguntas[perguntaAtual];
+
+            questionEl.textContent = q.pergunta;
+            optionsEl.innerHTML = '';
+
+            const letras = ['A', 'B', 'C', 'D'];
 
             q.opcoes.forEach((opcao, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.textContent =opcao;
-                btn.onclick = () => verificarResposta(index, btn);
-                oElement.appendChild(btn);
+                btn.innerHTML = `<span class="letter">${letras[index]}</span><span>${opcao}</span>`;
+                btn.addEventListener('click', () => verificarResposta(index, btn, q));
+                optionsEl.appendChild(btn);
             });
+
+            footerRound.textContent = rodadaAtual + 1;
+            footerQ.textContent = perguntaAtual + 1;
+            footerScore.textContent = acertos;
+
+            renderProgressBar();
         }
 
-        function verificarResposta(selecionada, btn) {
-            const correta = questoes[atual].correta;
+        /* ==========================================================
+           VERIFICAR RESPOSTA
+           ========================================================== */
+        function verificarResposta(selecionada, btnSelecionado, q) {
             const botoes = document.querySelectorAll('.option-btn');
             botoes.forEach(b => b.disabled = true);
 
-            if (selecionada === correta) {
-                btn.classList.add('correct');
-                pontos += 25;
-                sElement.textContent = `Pontuação: ${pontos}`;
+            const acertou = selecionada === q.correta;
+            const indiceGlobal = rodadaAtual * TOTAL_POR_RODADA + perguntaAtual;
+            resultados[indiceGlobal] = acertou;
+
+            if (acertou) {
+                acertos++;
+                btnSelecionado.classList.add('correct');
             } else {
-                btn.classList.add('wrong');
-                botoes[correta].classList.add('correct');
+                btnSelecionado.classList.add('wrong');
+                botoes[q.correta].classList.add('correct');
+                // Escurece as demais
+                botoes.forEach((b, i) => {
+                    if (i !== selecionada && i !== q.correta) b.classList.add('dimmed');
+                });
             }
 
+            totalRespondidas++;
+            footerScore.textContent = acertos;
+            renderProgressBar();
+
+            // Mostra overlay após um pequeno delay para dar tempo de ver o feedback
             setTimeout(() => {
-                atual++;
-                carregarQuestao();
-            }, 1400);
+                mostrarExplicacao(q, acertou);
+            }, 700);
         }
 
-        carregarQuestao();
+        /* ==========================================================
+           OVERLAY DE EXPLICAÇÃO
+           ========================================================== */
+        function mostrarExplicacao(q, acertou) {
+            explainIcon.textContent = acertou ? '✨' : '📖';
+            explainTitle.textContent = acertou ? 'Aleluia! Palavra iluminada.' : 'Não era essa — mas a Palavra ensina.';
+            explainTitle.className = `feedback-title ${acertou ? 'correct' : 'wrong'}`;
+            explainSubtitle.textContent = acertou
+                ? 'Que o Espírito continue a abrir o teu entendimento.'
+                : `A resposta correta está destacada. Releia com atenção — a Palavra é caminho.`;
+            explainScripture.textContent = q.scripture;
+            explainReference.textContent = `— ${q.reference}`;
+            explainText.textContent = q.explanation;
+            explainPrayer.textContent = q.prayer;
+            explainOverlay.classList.add('show');
+        }
+
+        explainContinue.addEventListener('click', () => {
+            explainOverlay.classList.remove('show');
+            avancar();
+        });
+
+        /* ==========================================================
+           AVANÇO
+           ========================================================== */
+        function avancar() {
+            perguntaAtual++;
+            if (perguntaAtual >= TOTAL_POR_RODADA) {
+                // Fim da rodada
+                perguntaAtual = 0;
+                rodadaAtual++;
+                if (rodadaAtual >= RODADAS.length) {
+                    finalizarJogo();
+                    return;
+                }
+                renderRoundHeader();
+            }
+            carregarPergunta();
+        }
+
+        function finalizarJogo() {
+            quizBox.style.display = 'none';
+            document.getElementById('round-header').style.display = 'none';
+            finalScore.textContent = acertos;
+            finalScreen.classList.add('show');
+        }
+
+        /* ==========================================================
+           COMPARTILHAMENTO
+           ========================================================== */
+        document.getElementById('btn-share').addEventListener('click', () => {
+            const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador') || 'null');
+            const nome = jogador?.nome || 'Um peregrino';
+            const msg = encodeURIComponent(
+                `❓ ${nome} percorreu o Quiz Teológico do Evangelho de Lucas.\n\n` +
+                `Acertos: ${acertos}/${TOTAL_PERGUNTAS}\n\n` +
+                `"Não nos ardia o coração, quando ele nos falava pelo caminho?" — Lc 24,32\n\n` +
+                `Faça também o percurso: ${window.location.href}`
+            );
+            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+        });
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            rodadaAtual = 0;
+            perguntaAtual = 0;
+            acertos = 0;
+            totalRespondidas = 0;
+            resultados = new Array(TOTAL_PERGUNTAS).fill(null);
+            finalScreen.classList.remove('show');
+            quizBox.style.display = '';
+            document.getElementById('round-header').style.display = '';
+            renderRoundHeader();
+            carregarPergunta();
+        });
+
+        /* ==========================================================
+           BOOT
+           ========================================================== */
+        renderRoundHeader();
+        carregarPergunta();
     </script>
 </body>
 </html>
