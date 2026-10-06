@@ -3,190 +3,1109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Hub - Evangelho de Lucas: Associação de Conceitos</title>
+    <title>Evangelho de Lucas — Associação Progressiva</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Crimson+Pro:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0b1020;
-            --card-bg: rgba(30, 41, 59, 0.8);
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
+            --card-bg: rgba(30, 41, 59, 0.85);
             --card-border: rgba(148, 163, 184, 0.15);
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
+            --text-scripture: #fde68a;
+            --border-color: rgba(148, 163, 184, 0.18);
+            --input-bg: rgba(15, 23, 42, 0.7);
             --btn-primary: #6366f1;
+            --btn-accent: #8b5cf6;
+            --btn-success: #10b981;
             --success-color: #4ade80;
+            --error-color: #ef4444;
+            --amber: #f59e0b;
             --radius-lg: 20px;
             --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 20px 60px -20px rgba(0,0,0,0.65);
+            --t-base: 0.25s ease;
         }
         [data-theme="light"] {
-            --bg-color: #eef2ff;
-            --card-bg: rgba(255, 255, 255, 0.92);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --text-color: #0f172a;
-            --text-muted: #475569;
+            --bg-color: #fef9f3;
+            --bg-gradient-1: #fef3c7;
+            --bg-gradient-2: #fef9f3;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(120, 53, 15, 0.1);
+            --text-color: #1c1917;
+            --text-muted: #57534e;
+            --text-scripture: #92400e;
+            --border-color: rgba(120, 53, 15, 0.12);
+            --input-bg: rgba(255, 255, 255, 0.96);
+            --btn-primary: #b45309;
+            --btn-accent: #92400e;
+            --shadow-card: 0 20px 60px -20px rgba(120, 53, 15, 0.22);
         }
+        *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-color);
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
         .container {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-lg);
-            padding: 28px;
+            padding: 24px;
             width: 100%;
-            max-width: 680px;
-            box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+            max-width: 900px;
+            box-shadow: var(--shadow-card);
+            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .back-link {
             color: var(--btn-primary);
             text-decoration: none;
-            font-weight: 600;
-            font-size: 13.5px;
-            display: inline-block;
-            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            transition: all var(--t-base);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        h1 { font-size: 20px; margin: 0 0 6px 0; }
-        p.subtitle { font-size: 13px; color: var(--text-muted); margin: 0 0 20px 0; }
-        
+        .back-link:hover { transform: translateY(-1px); border-color: var(--btn-primary); }
+        .btn-small {
+            width: auto;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--t-base);
+            font-family: inherit;
+        }
+        .btn-small:hover { color: var(--text-color); border-color: var(--btn-primary); }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        p.subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0 0 18px 0;
+            line-height: 1.5;
+        }
+
+        /* ==========================================================
+           PROGRESSO
+           ========================================================== */
+        .progress-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+        .progress-step {
+            flex: 1;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: all var(--t-base);
+        }
+        .progress-step.completed {
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            border-color: transparent;
+        }
+        .progress-step.active {
+            background: linear-gradient(135deg, var(--amber), #fbbf24);
+            border-color: transparent;
+            animation: pulseStep 1.6s ease-in-out infinite;
+        }
+        @keyframes pulseStep {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }
+            50%      { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        }
+
+        /* ==========================================================
+           RODADA HEADER
+           ========================================================== */
+        .round-header {
+            background: linear-gradient(135deg,
+                rgba(99, 102, 241, 0.14),
+                rgba(139, 92, 246, 0.10));
+            border: 1px solid rgba(99, 102, 241, 0.28);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .round-header .round-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--btn-primary);
+            margin-bottom: 3px;
+        }
+        .round-header .round-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-color);
+            margin-bottom: 2px;
+        }
+        .round-header .round-verse {
+            font-family: 'Crimson Pro', serif;
+            font-size: 13.5px;
+            font-style: italic;
+            color: var(--text-scripture);
+            line-height: 1.45;
+        }
+
+        /* ==========================================================
+           GRID DO JOGO
+           ========================================================== */
         .game-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
-        @media (max-width: 600px) {
-            .game-grid { grid-template-columns: 1fr; }
+        @media (max-width: 700px) {
+            .game-grid { grid-template-columns: 1fr; gap: 20px; }
         }
         .column {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
+        .col-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--btn-primary);
+            margin: 0 0 4px 0;
+            padding-left: 2px;
+        }
+
         .item-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--card-border);
-            padding: 12px 14px;
+            background: var(--input-bg);
+            border: 1.5px solid var(--border-color);
+            padding: 11px 13px;
             border-radius: var(--radius-md);
             font-size: 13px;
+            line-height: 1.45;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--t-base);
             user-select: none;
+            position: relative;
         }
-        .item-card:hover { border-color: var(--btn-primary); }
+        .item-card:hover {
+            border-color: var(--btn-primary);
+            transform: translateX(2px);
+        }
         .item-card.selected {
             border-color: var(--btn-primary);
-            background: rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.18);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
         }
         .item-card.matched {
             border-color: var(--success-color);
-            background: rgba(74, 222, 128, 0.15);
+            background: rgba(74, 222, 128, 0.13);
             color: var(--success-color);
             cursor: default;
+            pointer-events: none;
         }
-        .score-board {
-            margin-top: 20px;
+        .item-card.matched::before {
+            content: "✓";
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            font-weight: 800;
+            color: var(--success-color);
+        }
+        .item-card.error {
+            border-color: var(--error-color) !important;
+            animation: shakeCard 0.35s ease;
+        }
+        @keyframes shakeCard {
+            0%, 100% { transform: translateX(0); }
+            25%      { transform: translateX(-4px); }
+            75%      { transform: translateX(4px); }
+        }
+
+        /* ==========================================================
+           CARTÃO DEVOCIONAL (após acerto)
+           ========================================================== */
+        .devotional-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .devotional-overlay.show { display: flex; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .devotional-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 26px 24px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 30px 80px -20px rgba(0,0,0,0.9);
+            animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .devotional-card .check {
+            font-size: 32px;
             text-align: center;
-            font-weight: 600;
-            font-size: 14px;
+            margin-bottom: 8px;
+            animation: pop 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes pop {
+            0%   { transform: scale(0); }
+            60%  { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        .devotional-card h2 {
+            font-size: 19px;
+            font-weight: 800;
+            text-align: center;
+            margin: 0 0 6px 0;
+            color: var(--text-color);
+        }
+        .devotional-card .term-name {
+            text-align: center;
+            font-size: 13px;
+            color: var(--btn-primary);
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .devotional-card .block {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            background: var(--input-bg);
+            border-left: 3px solid var(--btn-primary);
+        }
+        .devotional-card .block.scripture {
+            border-left-color: var(--amber);
+            background: rgba(245, 158, 11, 0.08);
+        }
+        .devotional-card .block.prayer {
+            border-left-color: var(--success-color);
+            background: rgba(74, 222, 128, 0.08);
+        }
+        .devotional-card .block-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
             color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .devotional-card .scripture-text {
+            font-family: 'Crimson Pro', serif;
+            font-size: 15px;
+            font-style: italic;
+            line-height: 1.55;
+            color: var(--text-scripture);
+        }
+        .devotional-card .reference {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            text-align: right;
+            font-weight: 600;
+        }
+        .devotional-card .reflection {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+        .devotional-card .prayer-text {
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--text-color);
+            font-style: italic;
+        }
+        .devotional-card button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 8px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            transition: transform var(--t-base), filter var(--t-base);
+        }
+        .devotional-card button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        /* ==========================================================
+           FOOTER / STATUS
+           ========================================================== */
+        .score-board {
+            margin-top: 18px;
+            padding: 12px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .score-board .score-main {
+            color: var(--text-muted);
+        }
+        .score-board .score-main strong {
+            color: var(--success-color);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 15px;
+        }
+        .score-board .score-round {
+            color: var(--text-muted);
+        }
+        .score-board .score-round strong {
+            color: var(--btn-primary);
+        }
+
+        /* ==========================================================
+           TELA FINAL
+           ========================================================== */
+        .final-screen {
+            text-align: center;
+            padding: 20px 0;
+            display: none;
+        }
+        .final-screen.show { display: block; animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .final-screen .crown {
+            font-size: 56px;
+            margin-bottom: 12px;
+            animation: pop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .final-screen h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+            background: linear-gradient(135deg, var(--amber), #fbbf24, var(--btn-primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .final-screen .final-verse {
+            font-family: 'Crimson Pro', serif;
+            font-size: 17px;
+            font-style: italic;
+            color: var(--text-scripture);
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto 12px;
+        }
+        .final-screen .final-ref {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .final-screen .share-btn {
+            width: auto;
+            padding: 12px 22px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            transition: transform var(--t-base), filter var(--t-base);
+        }
+        .final-screen .share-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+        .final-screen .restart-btn {
+            width: auto;
+            padding: 12px 22px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: var(--input-bg);
+            margin-left: 8px;
+            transition: all var(--t-base);
+        }
+        .final-screen .restart-btn:hover {
+            color: var(--text-color);
+            border-color: var(--btn-primary);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Voltar ao Brain Hub</a>
-        <h1>📜 Evangelho de Lucas: Associação de Conceitos</h1>
-        <p class="subtitle">Clique em um pilar teológico à esquerda e depois na definição correspondente à direita.</p>
+        <div class="top-bar">
+            <a href="index.html" class="back-link">← Menu Hub</a>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
 
-        <div class="game-grid">
+        <h1>📜 Evangelho de Lucas — Associação Progressiva</h1>
+        <p class="subtitle">
+            Cinco rodadas para percorrer o coração do terceiro Evangelho.
+            Clique no pilar à esquerda e depois na definição correspondente à direita.
+        </p>
+
+        <div class="progress-bar" id="progress-bar"></div>
+
+        <div class="round-header" id="round-header">
+            <div class="round-label" id="round-label">Rodada 1</div>
+            <div class="round-title" id="round-title">—</div>
+            <div class="round-verse" id="round-verse">—</div>
+        </div>
+
+        <div class="game-grid" id="game-grid">
             <div class="column" id="terms-column">
-                <h3 style="font-size: 14px; margin: 0 0 4px 0; color: var(--btn-primary);">Pilares</h3>
+                <h3 class="col-title">Pilar Teológico</h3>
             </div>
             <div class="column" id="defs-column">
-                <h3 style="font-size: 14px; margin: 0 0 4px 0; color: var(--btn-primary);">Definições</h3>
+                <h3 class="col-title">Definição</h3>
             </div>
         </div>
 
-        <div class="score-board" id="score-text">Associações corretas: 0 / 4</div>
+        <div class="score-board">
+            <div class="score-main">Associações: <strong id="score-text">0</strong> / 25</div>
+            <div class="score-round">Rodada <strong id="score-round">1/5</strong></div>
+        </div>
+
+        <div class="final-screen" id="final-screen">
+            <div class="crown">✝️</div>
+            <h2>Percorrestes o Evangelho de Lucas</h2>
+            <p class="final-verse" id="final-verse">
+                "Não nos ardia o coração, quando ele nos falava pelo caminho?"
+            </p>
+            <p class="final-ref">— Lucas 24,32</p>
+            <button class="share-btn" id="btn-share">💬 Compartilhar Reflexão</button>
+            <button class="restart-btn" id="btn-restart">🔄 Recomeçar</button>
+        </div>
+    </div>
+
+    <!-- CARTÃO DEVOCIONAL -->
+    <div class="devotional-overlay" id="devotional-overlay">
+        <div class="devotional-card">
+            <div class="check">✨</div>
+            <h2>Palavra Iluminada</h2>
+            <div class="term-name" id="dev-term">—</div>
+
+            <div class="block scripture">
+                <div class="block-label">📖 Escritura</div>
+                <div class="scripture-text" id="dev-scripture">—</div>
+                <div class="reference" id="dev-reference">—</div>
+            </div>
+
+            <div class="block">
+                <div class="block-label">💡 Reflexão</div>
+                <div class="reflection" id="dev-reflection">—</div>
+            </div>
+
+            <div class="block prayer">
+                <div class="block-label">🧎 Oração</div>
+                <div class="prayer-text" id="dev-prayer">—</div>
+            </div>
+
+            <button id="dev-continue">Continuar o Caminho →</button>
+        </div>
     </div>
 
     <script>
-        const dados = [
-            { id: 1, term: "Universalismo da Salvação", def: "O alcance da mensagem divina estende-se a toda a humanidade, sem distinções sociais ou raciais." },
-            { id: 2, term: "A Misericórdia Divina", def: "Foco intenso no perdão, acolhimento aos arrependidos e parábolas exclusivas da graça." },
-            { id: 3, term: "Atenção aos Vulneráveis", def: "Valorização proeminente dos marginalizados, pobres, samaritanos e mulheres." },
-            { id: 4, term: "Oração e Espírito Santo", def: "Ênfase na vida de oração de Cristo e na atuação dinâmica na história." }
+        /* ==========================================================
+           DADOS — 5 RODADAS × 5 PARES = 25 ASSOCIAÇÕES
+           ==========================================================
+           Cada rodada tem:
+             - título temático
+             - passagem-âncora
+             - 5 pares termo↔definição
+           Cada par tem:
+             - term (o pilar)
+             - def (a definição teológica)
+             - scripture (passagem bíblica)
+             - reference (referência)
+             - reflection (reflexão pastoral)
+             - prayer (oração curta)
+           ========================================================== */
+        const RODADAS = [
+            /* ============================================================
+               RODADA 1 — O FILHO DO HOMEM
+               ============================================================ */
+            {
+                titulo: "Rodada 1 — O Filho do Homem",
+                ancoragem: "\"O Filho do Homem veio buscar e salvar o que estava perdido.\" — Lucas 19,10",
+                pares: [
+                    {
+                        term: "Filho do Homem",
+                        def: "Título preferido de Jesus no Evangelho de Lucas — expressa a sua humanidade solidária e a sua missão messiânica de resgatar o perdido.",
+                        scripture: "\"As raposas têm tocas e as aves do céu têm ninhos, mas o Filho do Homem não tem onde reclinar a cabeça.\"",
+                        reference: "Lucas 9,58",
+                        reflection: "Lucas apresenta Jesus como o Filho do Homem que se aproxima dos que não têm nada — nem mesmo um travesseiro. É a encarnação radical do Deus que se faz peregrino.",
+                        prayer: "Senhor Jesus, Filho do Homem, ensina-me a confiar em ti mesmo quando não tenho onde repousar."
+                    },
+                    {
+                        term: "Nascimento em Belém",
+                        def: "Jesus nasce na cidade de Davi, mas é anunciado primeiro aos pastores — os mais simples e marginalizados da sociedade da época.",
+                        scripture: "\"Hoje, na cidade de Davi, nasceu-vos um Salvador, que é o Cristo Senhor.\"",
+                        reference: "Lucas 2,11",
+                        reflection: "O primeiro anúncio do Messias não foi feito a reis, mas a pastores que velavam no campo. Lucas mostra desde o início que o Evangelho chega primeiro aos pequenos.",
+                        prayer: "Pai, que eu saiba reconhecer-te nos pequenos e nos humildes, onde tu escolheste nascer."
+                    },
+                    {
+                        term: "Batismo no Jordão",
+                        def: "Jesus é batizado por João, e o Espírito Santo desce sobre ele — momento em que o Pai declara: 'Tu és o meu Filho amado'.",
+                        scripture: "\"Tu és o meu Filho amado; em ti pus o meu agrado.\"",
+                        reference: "Lucas 3,22",
+                        reflection: "Antes de qualquer milagre, antes de qualquer ensino, Jesus é amado pelo Pai. A identidade precede a missão — e isso é o fundamento da vida cristã.",
+                        prayer: "Pai, que eu saiba viver como filho amado, antes de querer fazer qualquer coisa por ti."
+                    },
+                    {
+                        term: "A Tentação no Deserto",
+                        def: "Jesus enfrenta o diabo durante quarenta dias e vence — recusando atalhos de poder, fama e segurança. O caminho do Messias é o da obediência.",
+                        scripture: "\"Não tentarás o Senhor teu Deus.\"",
+                        reference: "Lucas 4,12",
+                        reflection: "O deserto é lugar de prova, mas também de encontro. Jesus vence porque está cheio do Espírito e ancorado na Palavra — não em estratégias humanas.",
+                        prayer: "Senhor, nas minhas tentações, dá-me o teu Espírito e a tua Palavra para escolher o caminho do Pai."
+                    },
+                    {
+                        term: "Transfiguração",
+                        def: "No monte, com Moisés e Elias, Jesus revela a sua glória — e o Pai confirma: 'Este é o meu Filho, escutai-o'. Prepara os discípulos para a cruz.",
+                        scripture: "\"Este é o meu Filho, o Escolhido; escutai-o.\"",
+                        reference: "Lucas 9,35",
+                        reflection: "A glória precede a cruz. Lucas insiste: antes de Jerusalém, o monte. Antes do sofrimento, a certeza de que Jesus é o Filho amado.",
+                        prayer: "Senhor, transfigura também o meu coração, para que eu possa escutar-te em cada passo."
+                    }
+                ]
+            },
+
+            /* ============================================================
+               RODADA 2 — O ESPÍRITO SANTO
+               ============================================================ */
+            {
+                titulo: "Rodada 2 — O Espírito Santo",
+                ancoragem: "\"O Espírito do Senhor está sobre mim, porque me ungiu.\" — Lucas 4,18",
+                pares: [
+                    {
+                        term: "O Espírito na Anunciação",
+                        def: "Maria concebe por obra do Espírito Santo — o mesmo Espírito que pairava sobre as águas no Gênesis agora cria uma nova humanidade em Nazaré.",
+                        scripture: "\"O Espírito Santo virá sobre ti e o poder do Altíssimo te cobrirá com a sua sombra.\"",
+                        reference: "Lucas 1,35",
+                        reflection: "Lucas coloca o Espírito no início de tudo. Antes de Jesus, o Espírito. Antes da missão, a ação silenciosa e criadora de Deus.",
+                        prayer: "Espírito Santo, cobre também a minha vida com a tua sombra e cria em mim um coração novo."
+                    },
+                    {
+                        term: "O Espírito no Batismo",
+                        def: "Sob a forma de pomba, o Espírito desce sobre Jesus — sinal visível da unção messiânica que inaugura a sua missão pública.",
+                        scripture: "\"O Espírito Santo desceu sobre ele em forma corporal, como uma pomba.\"",
+                        reference: "Lucas 3,22",
+                        reflection: "No batismo de Jesus, Lucas mostra que a missão não é projeto pessoal, mas impulso do Espírito. Foi ungido e só depois começou a pregar.",
+                        prayer: "Espírito Santo, unge também os meus passos e os meus trabalhos, para que sejam missão e não apenas ocupação."
+                    },
+                    {
+                        term: "Jesus é conduzido ao Deserto",
+                        def: "É o Espírito que empurra Jesus para o deserto. O próprio confronto com o mal é dirigido por Deus — não é acidente, é pedagogia.",
+                        scripture: "\"Jesus, cheio do Espírito Santo, voltou do Jordão e foi conduzido pelo Espírito ao deserto.\"",
+                        reference: "Lucas 4,1",
+                        reflection: "Nem todo deserto é punição. Muitas vezes é o Espírito que nos leva para lá, para nos ensinar a depender só do Pai.",
+                        prayer: "Espírito Santo, quando me conduzires ao deserto, dá-me a certeza da tua companhia."
+                    },
+                    {
+                        term: "A Alegria no Espírito",
+                        def: "Jesus exulta no Espírito e louva o Pai por ter escondido as coisas dos sábios e revelado aos pequenos — a lógica invertida do Reino.",
+                        scripture: "\"Eu te louvo, Pai, Senhor do céu e da terra, porque escondeste estas coisas aos sábios e entendidos e as revelaste aos pequeninos.\"",
+                        reference: "Lucas 10,21",
+                        reflection: "A verdadeira alegria cristã nasce do Espírito, não das circunstâncias. É a alegria dos pequenos que sabem acolher o mistério.",
+                        prayer: "Senhor, dá-me a alegria dos pequenos — a alegria que nasce do Espírito e não do sucesso."
+                    },
+                    {
+                        term: "A Promessa do Espírito",
+                        def: "Antes de ascender, Jesus promete enviar o Espírito sobre os discípulos — eles serão revestidos de poder para testemunhar até os confins da terra.",
+                        scripture: "\"Vós sereis revestidos de poder, do alto, quando o Espírito Santo descer sobre vós.\"",
+                        reference: "Lucas 24,49",
+                        reflection: "A missão cristã nunca é obra apenas humana. Somos enviados, mas não sozinhos. O Espírito precede, acompanha e sustenta.",
+                        prayer: "Espírito Santo, reveste-me de força para testemunhar com a vida aquilo que professo com os lábios."
+                    }
+                ]
+            },
+
+            /* ============================================================
+               RODADA 3 — A ORAÇÃO
+               ============================================================ */
+            {
+                titulo: "Rodada 3 — A Oração",
+                ancoragem: "\"Ele retirava-se para lugares solitários e aí orava.\" — Lucas 5,16",
+                pares: [
+                    {
+                        term: "Jesus Ora no Batismo",
+                        def: "Enquanto Jesus ora, o céu se abre e o Espírito desce. A oração é o espaço onde a identidade do Filho é revelada.",
+                        scripture: "\"Aconteceu que, enquanto orava, o céu se abriu.\"",
+                        reference: "Lucas 3,21",
+                        reflection: "Antes de qualquer milagre, Jesus ora. A oração precede o ministério. Lucas nos diz: sem oração não há revelação verdadeira.",
+                        prayer: "Pai, ensina-me a orar antes de agir, para que a minha vida seja uma resposta ao teu chamado."
+                    },
+                    {
+                        term: "Retiro para Orar",
+                        def: "Mesmo cercado por multidões, Jesus busca o silêncio. A oração é hábito disciplinado, não impulso ocasional.",
+                        scripture: "\"Mas ele retirava-se para lugares desertos e aí orava.\"",
+                        reference: "Lucas 5,16",
+                        reflection: "No Evangelho de Lucas, o silêncio é o lugar onde Jesus renova a missão. A multidão não pode roubar o tempo com o Pai.",
+                        prayer: "Senhor, ajuda-me a guardar tempo para ti, mesmo quando tudo me pressiona a fazer."
+                    },
+                    {
+                        term: "Oração na Escolha dos Apóstolos",
+                        def: "Antes de escolher os Doze, Jesus passa a noite inteira em oração. As decisões importantes exigem oração longa.",
+                        scripture: "\"Naqueles dias, Jesus foi para o monte a fim de orar, e passou a noite orando a Deus.\"",
+                        reference: "Lucas 6,12",
+                        reflection: "Quem ora a noite inteira não escolhe por impulso. Lucas mostra que as grandes decisões da comunidade nascem do encontro com o Pai.",
+                        prayer: "Senhor, antes das minhas decisões, quero passar tempo contigo, para escolher como tu escolherias."
+                    },
+                    {
+                        term: "Ensina-nos a Orar",
+                        def: "Os discípulos pedem: 'Ensina-nos a orar'. Jesus responde com o Pai-Nosso — oração filial, confiante, breve e completa.",
+                        scripture: "\"Senhor, ensina-nos a orar.\"",
+                        reference: "Lucas 11,1",
+                        reflection: "A oração cristã não é técnica, é relação. O Pai-Nosso, em Lucas, é ainda mais curto e radical: pede o essencial e confia no resto.",
+                        prayer: "Senhor, ensina-me a orar como filho — sem medo, sem artifício, sem vãs repetições."
+                    },
+                    {
+                        term: "Oração no Getsêmani",
+                        def: "Diante da cruz, Jesus ora com suor de sangue. A oração não elimina a provação, mas a transforma em entrega.",
+                        scripture: "\"Pai, se quiseres, afasta de mim este cálice; contudo, não se faça a minha vontade, mas a tua.\"",
+                        reference: "Lucas 22,42",
+                        reflection: "O Getsêmani é a oração mais honesta do Evangelho: Jesus diz o que sente e entrega o que não entende. É o modelo da oração na dor.",
+                        prayer: "Pai, quando não entender os teus caminhos, dá-me um coração que ainda assim diga: faça-se a tua vontade."
+                    }
+                ]
+            },
+
+            /* ============================================================
+               RODADA 4 — OS MARGINALIZADOS
+               ============================================================ */
+            {
+                titulo: "Rodada 4 — Os Marginalizados",
+                ancoragem: "\"Ele me enviou a anunciar a boa-nova aos pobres.\" — Lucas 4,18",
+                pares: [
+                    {
+                        term: "Os Pobres",
+                        def: "No programa messiânico de Nazaré, Jesus declara que a boa-nova é primeiro para os pobres — não como pena, mas como dignidade restaurada.",
+                        scripture: "\"O Espírito do Senhor está sobre mim, porque me ungiu para anunciar a boa-nova aos pobres.\"",
+                        reference: "Lucas 4,18",
+                        reflection: "Lucas é o evangelho dos pobres. Desde o Magnificat (Lc 1,46-55), a opção preferencial pelos pobres não é ideologia — é revelação.",
+                        prayer: "Senhor, abre os meus olhos para os pobres que me rodeiam e os meus ouvidos para a sua voz."
+                    },
+                    {
+                        term: "As Mulheres",
+                        def: "Mulheres acompanham Jesus, sustentam a missão com os seus bens e são testemunhas da ressurreição — algo revolucionário no contexto do século I.",
+                        scripture: "\"As mulheres que tinham sido curadas de espíritos maus e de doenças seguiam-no e serviam com os seus bens.\"",
+                        reference: "Lucas 8,2-3",
+                        reflection: "Lucas dá nome às mulheres. Num mundo que as silenciava, ele as coloca no centro do discipulado e no primeiro anúncio da Páscoa.",
+                        prayer: "Senhor, obrigado pelas mulheres que sustentam a fé no silêncio e na fidelidade."
+                    },
+                    {
+                        term: "O Bom Samaritano",
+                        def: "Parábola exclusiva de Lucas: o próximo não é o que partilha a minha religião, mas o que se aproxima do caído. O samaritano é o herético que se faz próximo.",
+                        scripture: "\"Qual dos três foi o próximo do homem que caiu nas mãos dos assaltantes? — Aquele que usou de misericórdia para com ele.\"",
+                        reference: "Lucas 10,36-37",
+                        reflection: "Jesus desloca a pergunta: não é 'quem é o meu próximo?', mas 'de quem eu me faço próximo?'. O amor precede a identidade religiosa.",
+                        prayer: "Senhor, dá-me olhos de samaritano — que eu veja o caído antes de ver o meu caminho."
+                    },
+                    {
+                        term: "O Filho Pródigo",
+                        def: "Parábola exclusiva de Lucas: o pai corre ao encontro do filho que volta. Deus é retratado como Pai que espera, corre e festeja — antes de qualquer merecimento.",
+                        scripture: "\"Mas o pai disse aos seus servos: Trazei depressa a melhor túnica, e vesti-o; ponde-lhe um anel no dedo e sandálias nos pés.\"",
+                        reference: "Lucas 15,22",
+                        reflection: "Lucas pinta Deus como Pai que não espera pelo discurso de arrependimento — corre antes. É o retrato mais radical da misericórdia em todo o Evangelho.",
+                        prayer: "Pai, obrigado porque correste ao meu encontro antes que eu terminasse o meu pedido de perdão."
+                    },
+                    {
+                        term: "Zaqueu",
+                        def: "Publicano rico, chefe dos cobradores de impostos, é chamado por Jesus e responde com conversão concreta — devolve o quádruplo do que roubou.",
+                        scripture: "\"Hoje a salvação entrou nesta casa, porque também este é filho de Abraão.\"",
+                        reference: "Lucas 19,9",
+                        reflection: "Lucas coloca Zaqueu no final do ministério público de Jesus. É o retrato da salvação que chega ao mais improvável — e transforma a vida em restituição.",
+                        prayer: "Senhor, que a minha conversão seja concreta como a de Zaqueu — que toque a minha carteira e não apenas a minha emoção."
+                    }
+                ]
+            },
+
+            /* ============================================================
+               RODADA 5 — A ALEGRIA E A SALVAÇÃO
+               ============================================================ */
+            {
+                titulo: "Rodada 5 — A Alegria e a Salvação",
+                ancoragem: "\"Hoje a salvação entrou nesta casa.\" — Lucas 19,9",
+                pares: [
+                    {
+                        term: "O Magnificat",
+                        def: "Maria proclama que Deus derrubou os poderosos e exaltou os humildes. A salvação é revolução de valores — começa na mais simples das mulheres.",
+                        scripture: "\"A minha alma engrandece o Senhor, e o meu espírito exulta em Deus, meu Salvador.\"",
+                        reference: "Lucas 1,46-47",
+                        reflection: "O primeiro cântico do Evangelho é de uma mulher grávida, num canto de aldeia. Lucas mostra que a salvação começa pequena e subversiva.",
+                        prayer: "Senhor, faz-me cantar como Maria — com alma inteira, mesmo quando tudo parece pequeno."
+                    },
+                    {
+                        term: "A Alegria do Perdão",
+                        def: "A pecadora que unge os pés de Jesus recebe o perdão e ouve: 'A tua fé te salvou; vai em paz'. A alegria nasce da gratuidade, não do mérito.",
+                        scripture: "\"Por isso, eu te digo: perdoados lhe são os seus muitos pecados, porque muito amou.\"",
+                        reference: "Lucas 7,47",
+                        reflection: "Lucas mostra que o amor precede o perdão e o perdão precede a paz. Quem foi muito perdoado, muito ama — e muito se alegra.",
+                        prayer: "Senhor, dá-me a consciência do muito que me foi perdoado, para que eu possa amar muito."
+                    },
+                    {
+                        term: "Emaús",
+                        def: "Dois discípulos caminham tristes até que o Ressuscitado se junta a eles e explica as Escrituras. Só no partir do pão os seus olhos se abrem.",
+                        scripture: "\"Não nos ardia o coração, quando ele nos falava pelo caminho e nos explicava as Escrituras?\"",
+                        reference: "Lucas 24,32",
+                        reflection: "Emaús é o resumo do Evangelho de Lucas: caminho, Escritura, pão, coração ardendo. A fé cristã é um caminho antes de ser uma doutrina.",
+                        prayer: "Senhor, caminha comigo nas minhas tristezas e faz arder o meu coração ao escutar a tua Palavra."
+                    },
+                    {
+                        term: "A Ascensão",
+                        def: "Jesus sobe ao céu, mas não abandona os discípulos — eles voltam a Jerusalém com grande alegria, porque a presença se tornou missão.",
+                        scripture: "\"Eles, depois de o adorarem, voltaram para Jerusalém com grande alegria.\"",
+                        reference: "Lucas 24,52",
+                        reflection: "A Ascensão, em Lucas, não é despedida triste — é envio alegre. O Ressuscitado não desaparece: ele se torna mais próximo pelo Espírito.",
+                        prayer: "Senhor, que a minha vida seja vivida com a alegria de quem sabe que tu não te foste embora."
+                    },
+                    {
+                        term: "O Caminho de Emaús Reverso",
+                        def: "Depois do encontro, os discípulos correm de volta a Jerusalém para anunciar. A alegria da salvação torna-se testemunho imediato.",
+                        scripture: "\"Levantando-se na mesma hora, voltaram para Jerusalém e contaram o que tinha acontecido no caminho.\"",
+                        reference: "Lucas 24,33",
+                        reflection: "Quem encontra o Ressuscitado não fica em casa. Lucas mostra que a salvação é centrífuga: empurra para fora, para o anúncio.",
+                        prayer: "Senhor, faze de mim um mensageiro da alegria que encontrei — sem hesitar, sem demorar."
+                    }
+                ]
+            }
         ];
 
-        let selectedTerm = null;
-        let matchedCount = 0;
+        /* ==========================================================
+           ESTADO
+           ========================================================== */
+        let rodadaAtual = 0;             // 0..4
+        let paresDaRodada = [];          // 5 pares misturados
+        let termoSelecionado = null;     // elemento DOM
+        let totalAssociacoes = 0;        // acumulado (0..25)
+        let matchedNaRodada = 0;
 
+        const TOTAL_POR_RODADA = 5;
+
+        /* ==========================================================
+           DOM
+           ========================================================== */
         const termsCol = document.getElementById('terms-column');
         const defsCol = document.getElementById('defs-column');
+        const progressBar = document.getElementById('progress-bar');
+        const roundLabel = document.getElementById('round-label');
+        const roundTitle = document.getElementById('round-title');
+        const roundVerse = document.getElementById('round-verse');
         const scoreText = document.getElementById('score-text');
+        const scoreRound = document.getElementById('score-round');
+        const gameGrid = document.getElementById('game-grid');
+        const finalScreen = document.getElementById('final-screen');
+        const devotionalOverlay = document.getElementById('devotional-overlay');
+        const devTerm = document.getElementById('dev-term');
+        const devScripture = document.getElementById('dev-scripture');
+        const devReference = document.getElementById('dev-reference');
+        const devReflection = document.getElementById('dev-reflection');
+        const devPrayer = document.getElementById('dev-prayer');
+        const btnContinue = document.getElementById('dev-continue');
+        const themeToggle = document.getElementById('theme-toggle');
 
-        function initGame() {
-            const shuffledTerms = [...dados].sort(() => Math.random() - 0.5);
-            const shuffledDefs = [...dados].sort(() => Math.random() - 0.5);
+        /* ==========================================================
+           TEMA
+           ========================================================== */
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+            themeToggle.textContent = next === 'dark' ? '🌙 Tema' : '☀️ Tema';
+        });
+        themeToggle.textContent = savedTheme === 'dark' ? '🌙 Tema' : '☀️ Tema';
 
-            shuffledTerms.forEach(item => {
+        /* ==========================================================
+           RENDER
+           ========================================================== */
+        function renderProgressBar() {
+            progressBar.innerHTML = '';
+            RODADAS.forEach((_, idx) => {
+                const step = document.createElement('div');
+                step.className = 'progress-step';
+                if (idx < rodadaAtual) step.classList.add('completed');
+                else if (idx === rodadaAtual) step.classList.add('active');
+                progressBar.appendChild(step);
+            });
+        }
+
+        function renderRoundHeader() {
+            const r = RODADAS[rodadaAtual];
+            roundLabel.textContent = `Rodada ${rodadaAtual + 1} de ${RODADAS.length}`;
+            roundTitle.textContent = r.titulo;
+            roundVerse.textContent = r.ancoragem;
+        }
+
+        function renderRodada() {
+            const r = RODADAS[rodadaAtual];
+
+            // Limpa colunas (mantendo o título h3)
+            termsCol.querySelectorAll('.item-card').forEach(el => el.remove());
+            defsCol.querySelectorAll('.item-card').forEach(el => el.remove());
+
+            // Embaralha pares
+            const pares = r.pares.map((p, i) => ({ ...p, id: `${rodadaAtual}-${i}` }));
+            paresDaRodada = pares;
+            const shuffledTerms = [...pares].sort(() => Math.random() - 0.5);
+            const shuffledDefs = [...pares].sort(() => Math.random() - 0.5);
+
+            shuffledTerms.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'item-card';
-                div.textContent = item.term;
-                div.dataset.id = item.id;
+                div.textContent = p.term;
+                div.dataset.id = p.id;
+                div.dataset.side = 'term';
                 div.addEventListener('click', () => selectTermCard(div));
                 termsCol.appendChild(div);
             });
 
-            shuffledDefs.forEach(item => {
+            shuffledDefs.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'item-card';
-                div.textContent = item.def;
-                div.dataset.id = item.id;
+                div.textContent = p.def;
+                div.dataset.id = p.id;
+                div.dataset.side = 'def';
                 div.addEventListener('click', () => selectDefCard(div));
                 defsCol.appendChild(div);
             });
+
+            termoSelecionado = null;
+            matchedNaRodada = 0;
+
+            renderProgressBar();
+            renderRoundHeader();
+            atualizarScore();
         }
 
+        function atualizarScore() {
+            scoreText.textContent = totalAssociacoes;
+            scoreRound.textContent = `${rodadaAtual + 1}/${RODADAS.length}`;
+        }
+
+        /* ==========================================================
+           INTERAÇÃO
+           ========================================================== */
         function selectTermCard(card) {
             if (card.classList.contains('matched')) return;
-            document.querySelectorAll('#terms-column .item-card').forEach(c => c.classList.remove('selected'));
+            termsCol.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
-            selectedTerm = card;
+            termoSelecionado = card;
         }
 
         function selectDefCard(card) {
-            if (card.classList.contains('matched') || !selectedTerm) return;
-            
-            const termId = selectedTerm.dataset.id;
+            if (card.classList.contains('matched') || !termoSelecionado) return;
+
+            const termId = termoSelecionado.dataset.id;
             const defId = card.dataset.id;
 
             if (termId === defId) {
-                selectedTerm.classList.remove('selected');
-                selectedTerm.classList.add('matched');
+                const par = paresDaRodada.find(p => p.id === termId);
+                termoSelecionado.classList.remove('selected');
+                termoSelecionado.classList.add('matched');
                 card.classList.add('matched');
-                selectedTerm = null;
-                matchedCount++;
-                scoreText.textContent = `Associações corretas: ${matchedCount} / 4`;
 
-                if (matchedCount === 4) {
-                    setTimeout(() => alert('Parabéns! Completou todas as associações do Evangelho de Lucas com sucesso!'), 300);
-                }
+                totalAssociacoes++;
+                matchedNaRodada++;
+                atualizarScore();
+
+                const termoSalvo = termoSelecionado;
+                termoSelecionado = null;
+
+                // Mostra cartão devocional
+                mostrarDevocional(par, () => {
+                    // Após o cartão, verifica se a rodada acabou
+                    if (matchedNaRodada === TOTAL_POR_RODADA) {
+                        // Pequena pausa antes de avançar
+                        setTimeout(() => proximaRodada(), 250);
+                    }
+                });
             } else {
-                card.style.borderColor = '#ef4444';
-                setTimeout(() => card.style.borderColor = '', 400);
+                card.classList.add('error');
+                setTimeout(() => card.classList.remove('error'), 400);
+                // Dica bíblica suave
+                infoDicaErro(card);
             }
         }
 
-        initGame();
+        function infoDicaErro(card) {
+            // Não revela a resposta, mas mostra a referência bíblica do par selecionado
+            if (!termoSelecionado) return;
+            const parSelecionado = paresDaRodada.find(p => p.id === termoSelecionado.dataset.id);
+            if (!parSelecionado) return;
+            // Mostra uma dica curta no canto da coluna de definições
+            const dica = document.createElement('div');
+            dica.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(99, 102, 241, 0.95);
+                color: #fff;
+                padding: 10px 16px;
+                border-radius: 10px;
+                font-size: 12.5px;
+                font-weight: 600;
+                z-index: 200;
+                box-shadow: 0 10px 30px -10px rgba(0,0,0,0.6);
+                animation: fadeIn 0.3s ease;
+            `;
+            dica.textContent = `💡 Dica: a definição correta cita ${parSelecionado.reference}`;
+            document.body.appendChild(dica);
+            setTimeout(() => dica.remove(), 2600);
+        }
+
+        /* ==========================================================
+           CARTÃO DEVOCIONAL
+           ========================================================== */
+        let callbackDevocional = null;
+
+        function mostrarDevocional(par, callback) {
+            devTerm.textContent = par.term;
+            devScripture.textContent = par.scripture;
+            devReference.textContent = `— ${par.reference}`;
+            devReflection.textContent = par.reflection;
+            devPrayer.textContent = par.prayer;
+            callbackDevocional = callback;
+            devotionalOverlay.classList.add('show');
+        }
+
+        btnContinue.addEventListener('click', () => {
+            devotionalOverlay.classList.remove('show');
+            if (callbackDevocional) {
+                const cb = callbackDevocional;
+                callbackDevocional = null;
+                cb();
+            }
+        });
+
+        /* ==========================================================
+           PROGRESSÃO DE RODADAS
+           ========================================================== */
+        function proximaRodada() {
+            rodadaAtual++;
+            if (rodadaAtual >= RODADAS.length) {
+                finalizarJogo();
+            } else {
+                renderRodada();
+            }
+        }
+
+        function finalizarJogo() {
+            gameGrid.style.display = 'none';
+            document.querySelector('.round-header').style.display = 'none';
+            document.querySelector('.score-board').style.display = 'none';
+            progressBar.querySelectorAll('.progress-step').forEach(s => {
+                s.classList.remove('active');
+                s.classList.add('completed');
+            });
+            finalScreen.classList.add('show');
+        }
+
+        /* ==========================================================
+           COMPARTILHAMENTO
+           ========================================================== */
+        document.getElementById('btn-share').addEventListener('click', () => {
+            const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador') || 'null');
+            const nome = jogador?.nome || 'Um peregrino';
+            const msg = encodeURIComponent(
+                `📜 ${nome} percorreu as cinco rodadas do Evangelho de Lucas.\n\n` +
+                `"Não nos ardia o coração, quando ele nos falava pelo caminho?" — Lc 24,32\n\n` +
+                `Faça também o percurso: ${window.location.href}`
+            );
+            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+        });
+
+        document.getElementById('btn-restart').addEventListener('click', () => {
+            rodadaAtual = 0;
+            totalAssociacoes = 0;
+            finalScreen.classList.remove('show');
+            gameGrid.style.display = '';
+            document.querySelector('.round-header').style.display = '';
+            document.querySelector('.score-board').style.display = '';
+            renderRodada();
+        });
+
+        /* ==========================================================
+           BOOT
+           ========================================================== */
+        renderRodada();
     </script>
 </body>
 </html>
