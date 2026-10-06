@@ -45,6 +45,7 @@
             color: var(--text-color);
             margin: 0; padding: 16px;
             display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
         .container {
             position: relative; background: var(--card-bg); backdrop-filter: blur(18px);
@@ -55,8 +56,9 @@
         .btn-small {
             padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
             background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;
+            transition: all 0.25s ease;
         }
-        .btn-small:hover { color: var(--text-color); }
+        .btn-small:hover { color: var(--text-color); border-color: var(--border-strong); }
         .brain-meter {
             display: flex; justify-content: space-between; align-items: center;
             background: var(--input-bg); padding: 8px 14px; border-radius: 12px; margin-bottom: 12px;
@@ -68,7 +70,11 @@
             font-size: 11px; text-transform: uppercase; font-weight: 600; border: 1px solid var(--border-color);
         }
         .score-board strong { font-size: 14px; font-family: 'JetBrains Mono', monospace; }
-        .instructions { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
+        .instructions { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; min-height: 18px; }
+
+        /* ==========================================================
+           TABULEIRO
+           ========================================================== */
         #game-board {
             position: relative; width: 100%; height: 310px;
             background: var(--board-bg); border: 6px solid var(--board-border);
@@ -76,25 +82,70 @@
             box-shadow: inset 0 0 15px rgba(0,0,0,0.25), 0 10px 25px rgba(0,0,0,0.4);
             touch-action: none; user-select: none;
         }
+
+        /* SVG com viewBox dinâmico — CORREÇÃO #1 */
+        #canvas-lines {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 2;
+            overflow: visible;
+        }
+
+        #canvas-lines path {
+            filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.35));
+            animation: lineDraw 0.25s ease-out;
+        }
+        @keyframes lineDraw {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
         .node {
             position: absolute; width: var(--node-size); height: var(--node-size); border-radius: 50%;
             display: flex; align-items: center; justify-content: center; cursor: pointer;
-            transform: translate(-50%, -50%); box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);
+            transform: translate(-50%, -50%);
+            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3);
             border: 2px solid rgba(255,255,255,0.7); z-index: 3;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
         }
         .node::after {
             content: ""; position: absolute; top: 5px; left: 7px; width: 9px; height: 5px;
             background: rgba(255,255,255,0.6); border-radius: 50%; transform: rotate(-30deg);
         }
-        #canvas-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .node:hover {
+            transform: translate(-50%, -50%) scale(1.12);
+        }
+        .node.concluido {
+            box-shadow:
+                inset -4px -4px 8px rgba(0,0,0,0.4),
+                0 0 0 4px rgba(255, 255, 255, 0.7),
+                0 0 20px rgba(255, 255, 255, 0.5);
+            animation: nodePulse 1.5s ease-in-out infinite;
+        }
+        @keyframes nodePulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50%      { transform: translate(-50%, -50%) scale(1.08); }
+        }
+        .node.error {
+            animation: shake 0.35s ease;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%); }
+            25%      { transform: translate(calc(-50% - 4px), -50%); }
+            75%      { transform: translate(calc(-50% + 4px), -50%); }
+        }
+
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         select, button {
             width: 100%; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
             background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); cursor: pointer;
+            font-family: inherit; transition: all 0.25s ease;
         }
+        select:focus { outline: none; border-color: var(--btn-primary); box-shadow: 0 0 0 4px rgba(99,102,241,0.18); }
         button { background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent)); color: white; border: none; }
-        button:hover { filter: brightness(1.1); }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .btn-secondary { background: #475569; }
+        .btn-secondary:hover { background: #334155; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -117,7 +168,7 @@
         </div>
         <p class="instructions" id="info-instrucao">Arraste de uma bola até a outra da mesma cor sem cruzar linhas!</p>
         <div id="game-board">
-            <svg id="canvas-lines"></svg>
+            <svg id="canvas-lines" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
         <div class="controls-grid">
             <select id="select-mudar-nivel">
@@ -136,29 +187,47 @@
         import { db } from "./firebase-config.js";
         import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        /* ==========================================================
+           SESSÃO E ESTADO
+           ========================================================== */
         let jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) { window.location.href = 'index.html'; }
 
-        let pontuacaoAcumulada = 0, nivelAtual = 1, segundos = 0, timerInterval = null, recordesNivel = {};
+        let pontuacaoAcumulada = 0;
+        let nivelAtual = 1;
+        let segundos = 0;
+        let timerInterval = null;
+        let recordesNivel = {};
+        let nivelConcluido = false;
+
         const coresPares = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899', '#8b5cf6'];
+        const NODE_DIAMETER = 42;
+        const NODE_PADDING = 18;
+
         let paresDoNivel = [];
-        let trilhosConcluidos = {}; // { parId: [ {x, y}, ... ] }
+        let trilhosConcluidos = {};   // { parId: [{x, y}, ...] }
         let desenhandoCorId = null;
         let caminhoAtual = [];
 
+        /* ==========================================================
+           DOM
+           ========================================================== */
         const displayNivel = document.getElementById('display-nivel');
         const displayPontos = document.getElementById('display-pontos');
         const displayTempo = document.getElementById('display-tempo');
         const displayRecorde = document.getElementById('display-recorde');
         const infoInstrucao = document.getElementById('info-instrucao');
         const gameBoard = document.getElementById('game-board');
-        const canvasLines = document.getElementById('canvas-lines');
+        let canvasLines = document.getElementById('canvas-lines');
         const btnAvancar = document.getElementById('btn-avancar');
         const btnReiniciarNivel = document.getElementById('btn-reiniciar-nivel');
         const selectMudarNivel = document.getElementById('select-mudar-nivel');
         const themeToggleBtn = document.getElementById('theme-toggle');
         const qiCerebro = document.getElementById('qi-cerebro');
 
+        /* ==========================================================
+           TEMA
+           ========================================================== */
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
         themeToggleBtn.addEventListener('click', () => {
@@ -168,11 +237,82 @@
             localStorage.setItem('brain_flow_theme', next);
         });
 
+        /* ==========================================================
+           UTILITÁRIOS
+           ========================================================== */
         function formatarTempo(seg) {
             if (!seg) return "--:--";
             return `${String(Math.floor(seg / 60)).padStart(2, '0')}:${String(seg % 60).padStart(2, '0')}`;
         }
 
+        /* ==========================================================
+           GEOMETRIA — interseção de segmentos (CORREÇÃO #2)
+           ========================================================== */
+        function orientacao(a, b, c) {
+            const v = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+            if (Math.abs(v) < 1e-9) return 0;
+            return v > 0 ? 1 : -1;
+        }
+        function onSegmento(a, b, c) {
+            return Math.min(a.x, b.x) <= c.x && c.x <= Math.max(a.x, b.x) &&
+                   Math.min(a.y, b.y) <= c.y && c.y <= Math.max(a.y, b.y);
+        }
+        function segmentosSeCruzam(p1, p2, p3, p4) {
+            const o1 = orientacao(p1, p2, p3);
+            const o2 = orientacao(p1, p2, p4);
+            const o3 = orientacao(p3, p4, p1);
+            const o4 = orientacao(p3, p4, p2);
+            if (o1 !== o2 && o3 !== o4) return true;
+            if (o1 === 0 && onSegmento(p1, p2, p3)) return true;
+            if (o2 === 0 && onSegmento(p1, p2, p4)) return true;
+            if (o3 === 0 && onSegmento(p3, p4, p1)) return true;
+            if (o4 === 0 && onSegmento(p3, p4, p2)) return true;
+            return false;
+        }
+
+        /* Verifica se um segmento cruza alguma trilha CONCLUÍDA de outra cor */
+        function cruzariaOutraTrilha(p1, p2, parIdIgnorar) {
+            for (const id in trilhosConcluidos) {
+                if (parseInt(id) === parIdIgnorar) continue;
+                const trilha = trilhosConcluidos[id];
+                for (let i = 0; i < trilha.length - 1; i++) {
+                    if (segmentosSeCruzam(p1, p2, trilha[i], trilha[i + 1])) return true;
+                }
+            }
+            return false;
+        }
+
+        /* ==========================================================
+           SVG — viewBox dinâmico (CORREÇÃO #1)
+           ========================================================== */
+        function garantirSvgValido() {
+            const w = gameBoard.clientWidth || 440;
+            const h = gameBoard.clientHeight || 310;
+
+            const antigo = document.getElementById('canvas-lines');
+            if (antigo) antigo.remove();
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('id', 'canvas-lines');
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+            svg.setAttribute('preserveAspectRatio', 'none');
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.pointerEvents = 'none';
+            svg.style.zIndex = '2';
+            svg.style.overflow = 'visible';
+
+            gameBoard.insertBefore(svg, gameBoard.firstChild);
+            canvasLines = svg;
+        }
+
+        /* ==========================================================
+           CARREGAMENTO DE DADOS
+           ========================================================== */
         async function carregarDados() {
             try {
                 const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
@@ -182,96 +322,177 @@
                     nivelAtual = dados.nivel || 1;
                     recordesNivel = dados.recordesFlow || {};
                 }
-                displayPontos.textContent = pontuacaoAcumulada;
-                displayNivel.textContent = nivelAtual;
-                qiCerebro.textContent = 70 + (nivelAtual * 5);
-                iniciarRonda();
-            } catch (e) { iniciarRonda(); }
+            } catch (e) {
+                console.warn("Modo offline:", e);
+            }
+            displayPontos.textContent = pontuacaoAcumulada;
+            displayNivel.textContent = nivelAtual;
+            qiCerebro.textContent = 70 + (nivelAtual * 5);
+            iniciarRonda();
         }
         carregarDados();
 
-        btnReiniciarNivel.addEventListener('click', () => iniciarRonda());
-        selectMudarNivel.addEventListener('change', (e) => {
-            nivelAtual = parseInt(e.target.value);
-            selectMudarNivel.value = "";
-            iniciarRonda();
-        });
+        /* ==========================================================
+           GERAÇÃO DE POSIÇÕES (CORREÇÃO #4)
+           ==========================================================
+           Usa Poisson-disk simplificado com relachamento para
+           garantir que as bolas nunca fiquem em cima uma da outra,
+           mesmo em níveis com muitas bolas.
+           ========================================================== */
+        function gerarPosicoes(total, w, h) {
+            const radius = NODE_DIAMETER / 2;
+            const minDistBase = NODE_DIAMETER + NODE_PADDING;
 
+            const usableW = w - 2 * (radius + 4);
+            const usableH = h - 2 * (radius + 4);
+            const offsetX = radius + 4;
+            const offsetY = radius + 4;
+
+            // Distância mínima adaptativa conforme o nº de bolas
+            const areaPerNode = (usableW * usableH) / total;
+            const minDistTeorico = Math.sqrt(areaPerNode) * 0.75;
+            let minDist = Math.max(minDistTeorico, minDistBase * 0.9);
+
+            const tentar = () => {
+                const aceitas = [];
+                for (let i = 0; i < total; i++) {
+                    let ok = false, tentativa = 0;
+                    while (!ok && tentativa < 200) {
+                        const x = offsetX + Math.random() * usableW;
+                        const y = offsetY + Math.random() * usableH;
+                        ok = true;
+                        for (const a of aceitas) {
+                            if (Math.hypot(a.x - x, a.y - y) < minDist) { ok = false; break; }
+                        }
+                        if (ok) aceitas.push({ x, y });
+                        tentativa++;
+                    }
+                    if (!ok) return null;   // falhou
+                }
+                return aceitas;
+            };
+
+            // Tenta com relaxamento progressivo
+            let resultado = null;
+            let tentativas = 0;
+            while (!resultado && tentativas < 10) {
+                resultado = tentar();
+                if (!resultado) minDist *= 0.85;
+                tentativas++;
+            }
+            // Fallback extremo
+            if (!resultado) {
+                resultado = [];
+                for (let i = 0; i < total; i++) {
+                    resultado.push({
+                        x: offsetX + Math.random() * usableW,
+                        y: offsetY + Math.random() * usableH
+                    });
+                }
+            }
+            return resultado;
+        }
+
+        /* ==========================================================
+           INICIAR RONDA
+           ========================================================== */
         function iniciarRonda() {
-            clearInterval(timerInterval);
+            pararTimer();
             segundos = 0;
             displayTempo.textContent = "00:00";
             displayRecorde.textContent = formatarTempo(recordesNivel[nivelAtual] || 0);
+            nivelConcluido = false;
 
-            timerInterval = setInterval(() => { segundos++; displayTempo.textContent = formatarTempo(segundos); }, 1000);
             btnAvancar.classList.add('hidden');
-            infoInstrucao.textContent = `Nível ${nivelAtual}: Conecte as cores arrastando o dedo/rato!`;
-            
+            infoInstrucao.textContent = `Nível ${nivelAtual}: Arraste de uma bola à outra da mesma cor.`;
+
             document.querySelectorAll('.node').forEach(el => el.remove());
-            canvasLines.innerHTML = '';
+            garantirSvgValido();
             trilhosConcluidos = {};
             desenhandoCorId = null;
             caminhoAtual = [];
 
-            const w = gameBoard.clientWidth - 50, h = gameBoard.clientHeight - 50;
+            const w = gameBoard.clientWidth;
+            const h = gameBoard.clientHeight;
             const qtd = Math.min(2 + nivelAtual, 5);
-            paresDoNivel = [];
-            let usadas = [];
 
+            // Gera TODAS as posições de uma vez (2 bolas por par) → CORREÇÃO #4
+            const totalBolas = qtd * 2;
+            const posicoes = gerarPosicoes(totalBolas, w, h);
+
+            paresDoNivel = [];
             for (let i = 0; i < qtd; i++) {
-                let p1 = gerarPos(w, h, usadas), p2 = gerarPos(w, h, usadas);
-                paresDoNivel.push({ id: i, cor: coresPares[i % coresPares.length], p1, p2 });
+                paresDoNivel.push({
+                    id: i,
+                    cor: coresPares[i % coresPares.length],
+                    p1: posicoes[i * 2],
+                    p2: posicoes[i * 2 + 1]
+                });
             }
 
             paresDoNivel.forEach(par => {
                 criarBola(par.p1.x, par.p1.y, par.cor, par.id);
                 criarBola(par.p2.x, par.p2.y, par.cor, par.id);
             });
-        }
 
-        function gerarPos(w, h, usadas) {
-            let x, y, ok, t = 0;
-            do {
-                x = Math.floor(Math.random() * (w - 40)) + 25;
-                y = Math.floor(Math.random() * (h - 40)) + 25;
-                ok = true;
-                for (let u of usadas) if (Math.hypot(u.x - x, u.y - y) < 65) ok = false;
-                t++;
-            } while (!ok && t < 100);
-            usadas.push({ x, y });
-            return { x, y };
+            iniciarTimer();
         }
 
         function criarBola(x, y, cor, parId) {
             const node = document.createElement('div');
             node.className = 'node';
-            node.style.left = `${x}px`; node.style.top = `${y}px`;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
             node.style.backgroundColor = cor;
             node.dataset.parId = parId;
-            node.dataset.x = x; node.dataset.y = y;
-
+            node.dataset.x = x;
+            node.dataset.y = y;
             node.addEventListener('pointerdown', (e) => iniciarDesenho(e, parId, cor, x, y));
             gameBoard.appendChild(node);
         }
 
+        /* ==========================================================
+           DESENHO DAS TRILHAS
+           ========================================================== */
         function iniciarDesenho(e, parId, cor, x, y) {
+            if (nivelConcluido) return;
             e.preventDefault();
-            // Se já estiver completo, limpa para refazer
-            if (trilhosConcluidos[parId]) delete trilhosConcluidos[parId];
+            e.stopPropagation();
+
+            // Se já existe trilha deste par, permite refazer
+            if (trilhosConcluidos[parId]) {
+                delete trilhosConcluidos[parId];
+                document.querySelectorAll(`.node[data-par-id="${parId}"]`).forEach(n => n.classList.remove('concluido'));
+            }
+
             desenhandoCorId = parId;
             caminhoAtual = [{ x, y }];
-             redesenharTudo();
+
+            try { gameBoard.setPointerCapture(e.pointerId); } catch (_) {}
+            redesenharTudo();
         }
 
         gameBoard.addEventListener('pointermove', (e) => {
             if (desenhandoCorId === null) return;
+            e.preventDefault();
+
             const rect = gameBoard.getBoundingClientRect();
             let x = e.clientX - rect.left;
             let y = e.clientY - rect.top;
-            
-            // Limitar aos limites do tabuleiro
             x = Math.max(15, Math.min(gameBoard.clientWidth - 15, x));
             y = Math.max(15, Math.min(gameBoard.clientHeight - 15, y));
+
+            const ultimo = caminhoAtual[caminhoAtual.length - 1];
+
+            // Ignora movimentos menores que 4px (evita pontos redundantes)
+            if (Math.hypot(x - ultimo.x, y - ultimo.y) < 4) return;
+
+            // Verifica cruzamento com trilhas concluídas — CORREÇÃO #2
+            if (cruzariaOutraTrilha(ultimo, { x, y }, desenhandoCorId)) {
+                // Bloqueia: não adiciona o ponto
+                infoInstrucao.textContent = '⚠️ Não pode cruzar outras trilhas!';
+                return;
+            }
 
             caminhoAtual.push({ x, y });
             redesenharTudo();
@@ -279,80 +500,169 @@
 
         gameBoard.addEventListener('pointerup', (e) => {
             if (desenhandoCorId === null) return;
-            
-            // Verificar se soltou em cima da bola destino do mesmo par
+            e.preventDefault();
+
+            // Verifica se soltou sobre a bola PAR do mesmo id (e não a de origem)
             const elemSob = document.elementFromPoint(e.clientX, e.clientY);
             if (elemSob && elemSob.classList.contains('node')) {
                 const destinoParId = parseInt(elemSob.dataset.parId);
-                if (destinoParId === desenhandoCorId) {
-                    const dx = parseFloat(elemSob.dataset.x);
-                    const dy = parseFloat(elemSob.dataset.y);
-                    caminhoAtual.push({ x: dx, y: dy });
-                    trilhosConcluidos[desenhandoCorId] = [...caminhoAtual];
-                    verificarVitoria();
+                const destinoX = parseFloat(elemSob.dataset.x);
+                const destinoY = parseFloat(elemSob.dataset.y);
+                const origem = caminhoAtual[0];
+
+                // Mesma cor E não é a mesma bola de origem
+                const mesmaOrigem = Math.hypot(origem.x - destinoX, origem.y - destinoY) < 5;
+                if (destinoParId === desenhandoCorId && !mesmaOrigem) {
+                    // Verifica se o segmento final não cruza
+                    const penultimo = caminhoAtual[caminhoAtual.length - 1];
+                    if (!cruzariaOutraTrilha(penultimo, { x: destinoX, y: destinoY }, desenhandoCorId)) {
+                        caminhoAtual.push({ x: destinoX, y: destinoY });
+                        trilhosConcluidos[desenhandoCorId] = [...caminhoAtual];
+
+                        // Marca as duas bolas como concluídas
+                        document.querySelectorAll(`.node[data-par-id="${desenhandoCorId}"]`)
+                            .forEach(n => n.classList.add('concluido'));
+
+                        // Feedback
+                        infoInstrucao.textContent = `✅ Cor ligada! Faltam ${paresDoNivel.length - Object.keys(trilhosConcluidos).length}.`;
+
+                        verificarVitoria();
+                    }
                 }
             }
+
             desenhandoCorId = null;
             caminhoAtual = [];
             redesenharTudo();
         });
 
+        gameBoard.addEventListener('pointercancel', () => {
+            desenhandoCorId = null;
+            caminhoAtual = [];
+            redesenharTudo();
+        });
+
+        /* ==========================================================
+           RENDERIZAÇÃO
+           ========================================================== */
         function redesenharTudo() {
             canvasLines.innerHTML = '';
-            // Desenhar trilhos completos
-            for (let id in trilhosConcluidos) {
-                let pts = trilhosConcluidos[id];
-                let cor = paresDoNivel.find(p => p.id == id).cor;
-                adicionarCaminhoSVG(pts, cor);
+
+            for (const id in trilhosConcluidos) {
+                const pts = trilhosConcluidos[id];
+                const par = paresDoNivel.find(p => p.id == id);
+                if (!par) continue;
+                adicionarCaminhoSVG(pts, par.cor, false);
             }
-            // Desenhar caminho atual em curso
+
             if (desenhandoCorId !== null && caminhoAtual.length > 1) {
-                let cor = paresDoNivel.find(p => p.id == desenhandoCorId).cor;
-                adicionarCaminhoSVG(caminhoAtual, cor, true);
+                const par = paresDoNivel.find(p => p.id === desenhandoCorId);
+                if (par) adicionarCaminhoSVG(caminhoAtual, par.cor, true);
             }
         }
 
         function adicionarCaminhoSVG(pts, cor, tracejado = false) {
             if (pts.length < 2) return;
+
             let d = `M ${pts[0].x} ${pts[0].y}`;
             for (let i = 1; i < pts.length; i++) {
                 d += ` L ${pts[i].x} ${pts[i].y}`;
             }
+
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', d);
             path.setAttribute('stroke', cor);
-            path.setAttribute('stroke-width', '7');
+            path.setAttribute('stroke-width', '8');
             path.setAttribute('fill', 'none');
             path.setAttribute('stroke-linecap', 'round');
             path.setAttribute('stroke-linejoin', 'round');
-            if (tracejado) path.setAttribute('stroke-dasharray', '6,6');
+            if (tracejado) path.setAttribute('stroke-dasharray', '8,6');
             canvasLines.appendChild(path);
         }
 
+        /* ==========================================================
+           VERIFICAÇÃO DE VITÓRIA
+           ========================================================== */
         async function verificarVitoria() {
             if (Object.keys(trilhosConcluidos).length === paresDoNivel.length) {
-                clearInterval(timerInterval);
-                infoInstrucao.textContent = `🎉 Nível ${nivelAtual} Concluído com Sucesso!`;
-                pontuacaoAcumulada += nivelAtual * 20;
+                nivelConcluido = true;
+                pararTimer();
+                infoInstrucao.textContent = `🎉 Nível ${nivelAtual} concluído em ${formatarTempo(segundos)}!`;
 
-                let melhor = recordesNivel[nivelAtual] || 0;
-                if (!melhor || segundos < melhor) recordesNivel[nivelAtual] = segundos;
-                nivelAtual++;
+                const ganho = nivelAtual * 20 + Math.max(0, 100 - segundos);
+                pontuacaoAcumulada += ganho;
+
+                let novoRecorde = false;
+                if (!recordesNivel[nivelAtual] || segundos < recordesNivel[nivelAtual]) {
+                    recordesNivel[nivelAtual] = segundos;
+                    novoRecorde = true;
+                }
+
+                const nivelParaSalvar = nivelAtual + 1;
 
                 try {
                     await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
-                        pontos: pontuacaoAcumulada, nivel: nivelAtual, recordesFlow: recordesNivel
+                        pontos: pontuacaoAcumulada,
+                        nivel: nivelParaSalvar,
+                        recordesFlow: recordesNivel,
+                        ultimaAtualizacao: new Date().toISOString()
                     });
-                } catch (e) {}
+                } catch (e) {
+                    console.error('Erro ao salvar:', e);
+                }
 
                 displayPontos.textContent = pontuacaoAcumulada;
-                displayNivel.textContent = nivelAtual;
-                displayRecorde.textContent = formatarTempo(recordesNivel[nivelAtual - 1]);
+                displayNivel.textContent = nivelParaSalvar;
+                displayRecorde.textContent = formatarTempo(recordesNivel[nivelAtual]);
+                qiCerebro.textContent = 70 + (nivelParaSalvar * 5);
+
+                // Atualiza o nível para a próxima ronda
+                nivelAtual = nivelParaSalvar;
+
                 btnAvancar.classList.remove('hidden');
+                btnAvancar.textContent = `Avançar para Nível ${nivelAtual} 🚀`;
             }
         }
 
+        /* ==========================================================
+           TIMER (CORREÇÃO #5)
+           ========================================================== */
+        function iniciarTimer() {
+            pararTimer();
+            timerInterval = setInterval(() => {
+                if (nivelConcluido) return;
+                segundos++;
+                displayTempo.textContent = formatarTempo(segundos);
+            }, 1000);
+        }
+        function pararTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        /* ==========================================================
+           EVENTOS
+           ========================================================== */
+        btnReiniciarNivel.addEventListener('click', () => iniciarRonda());
+
+        selectMudarNivel.addEventListener('change', (e) => {
+            const n = parseInt(e.target.value);
+            if (n) {
+                nivelAtual = n;
+                selectMudarNivel.value = "";
+                iniciarRonda();
+            }
+        });
+
         btnAvancar.addEventListener('click', () => iniciarRonda());
+
+        window.addEventListener('resize', () => {
+            if (canvasLines) {
+                const w = gameBoard.clientWidth;
+                const h = gameBoard.clientHeight;
+                canvasLines.setAttribute('viewBox', `0 0 ${w} ${h}`);
+            }
+        });
     </script>
 </body>
 </html>
