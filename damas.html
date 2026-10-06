@@ -657,7 +657,7 @@
             window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
         });
 
-        // Tema
+        // Gestão de Tema
         const themeToggleBtn = document.getElementById('theme-toggle');
         const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -670,14 +670,6 @@
             localStorage.setItem('brain_flow_theme', newTheme);
             themeToggleBtn.textContent = newTheme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
         });
-
-        // Auto-entrar via URL de convite
-        const urlParams = new URLSearchParams(window.location.search);
-        const salaUrl = urlParams.get('sala');
-        if (salaUrl) {
-            document.getElementById('input-codigo-sala').value = salaUrl;
-            setTimeout(() => document.getElementById('btn-entrar-sala').click(), 400);
-        }
     </script>
 </body>
 </html>
