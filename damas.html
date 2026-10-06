@@ -17,35 +17,27 @@
             --card-bg: rgba(30, 41, 59, 0.7);
             --card-border: rgba(148, 163, 184, 0.15);
             --card-glow: rgba(99, 102, 241, 0.25);
-
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
             --text-subtle: #64748b;
-
             --border-color: rgba(148, 163, 184, 0.18);
             --border-strong: rgba(148, 163, 184, 0.35);
             --input-bg: rgba(15, 23, 42, 0.7);
-
             --btn-primary: #6366f1;
-            --btn-primary-hover: #818cf8;
             --btn-accent: #8b5cf6;
             --btn-whatsapp: #22c55e;
-
             --board-light: #e2e8f0;
             --board-dark: #334155;
             --board-border: rgba(148, 163, 184, 0.45);
-
             --c-green: #4ade80;
             --c-blue: #38bdf8;
             --c-amber: #f59e0b;
             --c-red: #ef4444;
-
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 20px;
             --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
             --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
-
             --t-fast: 0.15s ease;
             --t-base: 0.25s ease;
             --t-slow: 0.4s ease;
@@ -57,20 +49,13 @@
             --bg-gradient-2: #f8fafc;
             --card-bg: rgba(255, 255, 255, 0.88);
             --card-border: rgba(15, 23, 42, 0.08);
-            --card-glow: rgba(99, 102, 241, 0.15);
-
             --text-color: #0f172a;
             --text-muted: #475569;
-            --text-subtle: #64748b;
-
             --border-color: rgba(15, 23, 42, 0.1);
-            --border-strong: rgba(15, 23, 42, 0.25);
             --input-bg: rgba(255, 255, 255, 0.95);
-
             --board-light: #cbd5e1;
             --board-dark: #64748b;
             --board-border: rgba(15, 23, 42, 0.25);
-
             --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
         }
 
@@ -240,12 +225,47 @@
             position: relative;
             cursor: pointer;
             user-select: none;
+            min-width: 0;
+            min-height: 0;
         }
         .square.light { background-color: var(--board-light); }
         .square.dark { background-color: var(--board-dark); }
-        .square.selected { background-color: rgba(99, 102, 241, 0.55) !important; }
-        .square.highlight { background-color: rgba(74, 222, 128, 0.5) !important; }
-        .square.capture-target { background-color: rgba(239, 68, 68, 0.55) !important; }
+        
+        .square.selected { 
+            background-color: rgba(99, 102, 241, 0.55) !important; 
+            box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.8);
+        }
+        .square.highlight { 
+            background-color: rgba(74, 222, 128, 0.4) !important; 
+        }
+        .square.highlight::after {
+            content: "";
+            width: 30%;
+            height: 30%;
+            border-radius: 50%;
+            background-color: rgba(74, 222, 128, 0.9);
+            position: absolute;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+        .square.capture-target { 
+            background-color: rgba(239, 68, 68, 0.4) !important; 
+            box-shadow: inset 0 0 0 3px rgba(239, 68, 68, 0.8);
+        }
+        .square.capture-target::after {
+            content: "X";
+            color: rgba(239, 68, 68, 0.9);
+            font-weight: 900;
+            font-size: 20px;
+            position: absolute;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
 
         .piece {
             width: 76%;
@@ -257,8 +277,9 @@
             justify-content: center;
             font-size: 11px;
             font-weight: 700;
-            transition: transform var(--t-fast);
+            transition: transform var(--t-fast), box-shadow var(--t-fast);
             position: relative;
+            z-index: 2;
         }
         .piece.white {
             background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5e1);
@@ -277,6 +298,17 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+        
+        .square.selected .piece {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            animation: selectedPulse 1s infinite alternate;
+        }
+
+        @keyframes selectedPulse {
+            from { box-shadow: 0 0 10px rgba(255, 255, 255, 0.6); }
+            to { box-shadow: 0 0 20px rgba(255, 255, 255, 1); }
         }
 
         .instructions {
@@ -379,28 +411,25 @@
         import { db } from "./firebase-config.js";
         import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        console.log("🔥 Script do jogo carregado. A iniciar...");
+
         /* ==========================================================
-           HELPERS DE SERIALIZAÇÃO (corrige bug de array→objeto)
+           HELPERS DE SERIALIZAÇÃO
            ========================================================== */
         function tabuleiroParaFirebase(t) {
-            // Retorna array normal — Firebase serializa como quiser,
-            // mas na leitura reconstruímos.
-            return t.map(row => row.slice());
+            if (!Array.isArray(t)) return criarTabuleiroInicial();
+            return t.map(row => Array.isArray(row) ? row.slice() : []);
         }
 
         function firebaseParaTabuleiro(raw) {
             if (!raw) return criarTabuleiroInicial();
             if (Array.isArray(raw)) {
-                // Já é array (raro, mas possível)
                 return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
             }
-            // Objeto do Firebase → reconstrói array 8x8
-            const linhas = Object.keys(raw).sort((a, b) => Number(a) - Number(b));
             const t = [];
             for (let r = 0; r < 8; r++) {
                 const linhaRaw = raw[r] || raw[String(r)] || {};
                 const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
-                // Normaliza para 8 colunas
                 while (linha.length < 8) linha.push(null);
                 t.push(linha.slice(0, 8));
             }
@@ -411,22 +440,27 @@
            SESSÃO DO JOGADOR
            ========================================================== */
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-        if (!jogadorSessao) { window.location.href = 'index.html'; }
-
-        document.getElementById('lobby-nome').textContent = jogadorSessao.nome;
-        document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
+        if (!jogadorSessao) {
+            console.warn("⚠️ Nenhum jogador na sessão. Redirecionando para index.html");
+            window.location.href = 'index.html';
+        } else {
+            console.log("👤 Jogador logado:", jogadorSessao.nome);
+            document.getElementById('lobby-nome').textContent = jogadorSessao.nome;
+            document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
+        }
 
         /* ==========================================================
            ESTADO
            ========================================================== */
         let idSalaAtual = null;
-        let minhaCor = null;            // 'white' | 'red'
+        let minhaCor = null;
         let tabuleiro = [];
         let celulaSelecionada = null;
         let movimentosValidos = [];
         let turnoAtual = 'white';
         let jogoEncerrado = false;
         let unsubscribeFirebase = null;
+        let capturaObrigatoriaGlobal = false;
 
         /* ==========================================================
            TEMA
@@ -450,10 +484,6 @@
 
         /* ==========================================================
            TABULEIRO INICIAL
-           ==========================================================
-           Vermelhas (red) em cima (r=0..2), Brancas (white) embaixo (r=5..7).
-           - Brancas se movem para CIMA (-1) e começam.
-           - Vermelhas se movem para BAIXO (+1).
            ========================================================== */
         function criarTabuleiroInicial() {
             const t = Array.from({ length: 8 }, () => Array(8).fill(null));
@@ -471,7 +501,7 @@
         }
 
         /* ==========================================================
-           PERSISTÊNCIA DE SESSÃO (corrige bug #8 e #11)
+           PERSISTÊNCIA DE SESSÃO
            ========================================================== */
         function salvarSessao() {
             if (!idSalaAtual || !minhaCor) return;
@@ -499,12 +529,10 @@
             document.getElementById('display-nome').textContent = jogadorSessao.nome;
             document.getElementById('display-avatar').textContent = jogadorSessao.avatar;
 
-            // 1. Tenta URL
             const urlParams = new URLSearchParams(window.location.search);
             const salaUrl = urlParams.get('sala');
             const corUrl = urlParams.get('cor');
 
-            // 2. Tenta localStorage
             let sessaoSalva = null;
             try {
                 sessaoSalva = JSON.parse(localStorage.getItem('brain_damas_sessao'));
@@ -530,10 +558,8 @@
             const dados = snapshot.val();
             const jogadores = dados.jogadores || {};
 
-            // Verifica se o jogador ainda está na sala
             const jaEsta = jogadores[jogadorSessao.chave];
             if (!jaEsta) {
-                // Se a vaga da cor estiver livre, entra
                 const corOcupada = Object.values(jogadores).some(j => j.cor === cor);
                 if (corOcupada) {
                     limparSessao();
@@ -565,27 +591,33 @@
            LOBBY — CRIAR / ENTRAR
            ========================================================== */
         document.getElementById('btn-criar-sala').addEventListener('click', async () => {
+            console.log("🚀 A criar sala...");
             idSalaAtual = 'DAMAS-' + Math.floor(1000 + Math.random() * 9000);
             minhaCor = 'white';
             tabuleiro = criarTabuleiroInicial();
             turnoAtual = 'white';
             jogoEncerrado = false;
 
-            const salaRef = ref(db, 'salas_damas/' + idSalaAtual);
-            await set(salaRef, {
-                status: 'jogando',
-                turno: 'white',
-                tabuleiro: tabuleiroParaFirebase(tabuleiro),
-                jogadores: {
-                    [jogadorSessao.chave]: { nome: jogadorSessao.nome, cor: 'white' }
-                },
-                criadaEm: new Date().toISOString()
-            });
-
-            salvarSessao();
-            entrarInterfaceJogo();
-            document.getElementById('div-whatsapp').classList.remove('hidden');
-            escutarFirebase();
+            try {
+                const salaRef = ref(db, 'salas_damas/' + idSalaAtual);
+                await set(salaRef, {
+                    status: 'jogando',
+                    turno: 'white',
+                    tabuleiro: tabuleiroParaFirebase(tabuleiro),
+                    jogadores: {
+                        [jogadorSessao.chave]: { nome: jogadorSessao.nome, cor: 'white' }
+                    },
+                    criadaEm: new Date().toISOString()
+                });
+                console.log("✅ Sala criada:", idSalaAtual);
+                salvarSessao();
+                entrarInterfaceJogo();
+                document.getElementById('div-whatsapp').classList.remove('hidden');
+                escutarFirebase();
+            } catch (e) {
+                console.error("❌ Erro ao criar sala:", e);
+                alert("Erro ao criar sala. Verifique a consola.");
+            }
         });
 
         document.getElementById('btn-entrar-sala').addEventListener('click', () => {
@@ -595,47 +627,50 @@
         });
 
         async function entrarNaSala(codigo) {
-            const salaRef = ref(db, 'salas_damas/' + codigo);
-            const snapshot = await get(salaRef);
-            if (!snapshot.exists()) { alert('Sala não encontrada!'); return; }
+            try {
+                console.log("🔗 A entrar na sala:", codigo);
+                const salaRef = ref(db, 'salas_damas/' + codigo);
+                const snapshot = await get(salaRef);
+                if (!snapshot.exists()) { alert('Sala não encontrada!'); return; }
 
-            const dados = snapshot.val();
-            const jogadores = dados.jogadores || {};
+                const dados = snapshot.val();
+                const jogadores = dados.jogadores || {};
 
-            // ---- Bug #8 corrigido: se já estamos na sala, reaproveita a cor ----
-            const jaEsta = jogadores[jogadorSessao.chave];
-            if (jaEsta) {
+                const jaEsta = jogadores[jogadorSessao.chave];
+                if (jaEsta) {
+                    idSalaAtual = codigo;
+                    minhaCor = jaEsta.cor;
+                    tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
+                    turnoAtual = dados.turno || 'white';
+                    salvarSessao();
+                    entrarInterfaceJogo();
+                    escutarFirebase();
+                    return;
+                }
+
+                const totalJogadores = Object.keys(jogadores).length;
+                if (totalJogadores >= 2) {
+                    alert('Sala já cheia! Peça ao host para criar uma nova.');
+                    return;
+                }
+
                 idSalaAtual = codigo;
-                minhaCor = jaEsta.cor;
+                minhaCor = 'red';
                 tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
                 turnoAtual = dados.turno || 'white';
+
+                await update(ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}`), {
+                    nome: jogadorSessao.nome,
+                    cor: 'red'
+                });
+
                 salvarSessao();
                 entrarInterfaceJogo();
                 escutarFirebase();
-                return;
+            } catch (error) {
+                console.error("❌ Erro ao entrar:", error);
+                alert("Erro de conexão.");
             }
-
-            // ---- Sala cheia? ----
-            const totalJogadores = Object.keys(jogadores).length;
-            if (totalJogadores >= 2) {
-                alert('Sala já cheia! Peça ao host para criar uma nova.');
-                return;
-            }
-
-            // Convidado entra como 'red'
-            idSalaAtual = codigo;
-            minhaCor = 'red';
-            tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
-            turnoAtual = dados.turno || 'white';
-
-            await update(ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}`), {
-                nome: jogadorSessao.nome,
-                cor: 'red'
-            });
-
-            salvarSessao();
-            entrarInterfaceJogo();
-            escutarFirebase();
         }
 
         function entrarInterfaceJogo() {
@@ -653,7 +688,7 @@
         document.getElementById('btn-whatsapp').addEventListener('click', () => {
             const url = new URL(window.location.href);
             url.searchParams.set('sala', idSalaAtual);
-            url.searchParams.delete('cor'); // convidado entra como red
+            url.searchParams.delete('cor');
             const link = url.toString();
             const msg = encodeURIComponent(
                 `♟️ Vamos disputar uma partida de Damas no Brain Hub?\n\n` +
@@ -664,11 +699,20 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO
+           RENDERIZAÇÃO (COM PROTEÇÃO CONTRA ERRO UNDEFINED)
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
+            if (!grid) return;
+
+            // PROTEÇÃO: Se o tabuleiro for inválido, recria
+            if (!tabuleiro || !Array.isArray(tabuleiro) || tabuleiro.length !== 8) {
+                console.warn("⚠️ Tabuleiro inválido. A recriar...");
+                tabuleiro = criarTabuleiroInicial();
+            }
+
             grid.innerHTML = '';
+            capturaObrigatoriaGlobal = verificarCapturaObrigatoria(turnoAtual);
 
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
@@ -703,7 +747,6 @@
                 }
             }
 
-            // ---- Status ----
             const statusEl = document.getElementById('turno-status');
             if (jogoEncerrado) {
                 statusEl.textContent = '🏁 Jogo encerrado';
@@ -725,78 +768,64 @@
                 return;
             }
 
-            const peca = tabuleiro[r][c];
+            const peca = tabuleiro[r]?.[c];
 
-            // Seleciona peça própria
             if (peca && peca.startsWith(minhaCor)) {
+                // Se houver captura obrigatória global, só permite selecionar peças que podem capturar
+                if (capturaObrigatoriaGlobal) {
+                    const movsPossiveis = calcularMovimentos(r, c);
+                    if (!movsPossiveis.some(m => m.captura)) {
+                        document.getElementById('info-instrucao').textContent = '⚠️ Captura obrigatória! Escolha outra peça.';
+                        return;
+                    }
+                }
+
                 celulaSelecionada = { r, c };
                 movimentosValidos = calcularMovimentos(r, c);
                 renderizarTabuleiro();
                 return;
             }
 
-            // Executa movimento
             if (celulaSelecionada && movimentosValidos.some(m => m.r === r && m.c === c)) {
                 executarMovimento(celulaSelecionada.r, celulaSelecionada.c, r, c);
                 return;
             }
 
-            // Clique vazio → limpa seleção
             celulaSelecionada = null;
             movimentosValidos = [];
             renderizarTabuleiro();
         }
 
         /* ==========================================================
-           CÁLCULO DE MOVIMENTOS (corrige bug #2: damas deslizantes)
-           ==========================================================
-           Regras brasileiras:
-           - Peça comum: move 1 casa para frente; captura em qualquer direção.
-           - Dama: move quantas casas quiser na diagonal (caminho livre);
-                   captura a distância, desde que haja exatamente 1 adversária
-                   no caminho e a casa de pouso esteja livre.
-           - Captura é obrigatória quando existe (regra oficial).
+           CÁLCULO DE MOVIMENTOS
            ========================================================== */
         function calcularMovimentos(r, c) {
-            const peca = tabuleiro[r][c];
+            const peca = tabuleiro[r]?.[c];
             if (!peca) return [];
 
             const isDama = peca.includes('king');
             const cor = peca.startsWith('white') ? 'white' : 'red';
-
             const movimentos = [];
 
-            // Direções: peça comum move só para frente; dama move em 4 diagonais.
             const direcoesFrente = cor === 'white' ? [-1] : [+1];
-            const direcoesDama = [-1, +1];
+            const direcoesCaptura = [-1, +1];
 
+            // 1. Movimentos Simples
             if (isDama) {
-                for (const dr of direcoesDama) {
+                for (const dr of direcoesCaptura) {
                     for (const dc of [-1, +1]) {
                         let nr = r + dr, nc = c + dc;
-                        let capturada = null;
                         while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
-                            const alvo = tabuleiro[nr][nc];
-                            if (!alvo) {
-                                if (!capturada) {
-                                    movimentos.push({ r: nr, c: nc });
-                                } else {
-                                    // Pouso depois de captura
-                                    movimentos.push({ r: nr, c: nc, captura: capturada });
-                                    break; // só uma captura por vez
-                                }
-                            } else if (alvo.startsWith(cor)) {
-                                break; // peça própria bloqueia
+                            if (!tabuleiro[nr][nc]) {
+                                movimentos.push({ r: nr, c: nc });
                             } else {
-                                if (capturada) break; // duas adversárias seguidas: para
-                                capturada = { r: nr, c: nc };
+                                break;
                             }
                             nr += dr; nc += dc;
                         }
                     }
                 }
             } else {
-                // Peça comum: 1 casa para frente (movimento simples)
                 for (const dr of direcoesFrente) {
                     for (const dc of [-1, +1]) {
                         const nr = r + dr, nc = c + dc;
@@ -805,9 +834,33 @@
                         }
                     }
                 }
-                // Captura: 2 casas em qualquer diagonal (frente ou trás)
-                for (const dr of [-1, +1]) {
+            }
+
+            // 2. Capturas
+            if (isDama) {
+                for (const dr of direcoesCaptura) {
                     for (const dc of [-1, +1]) {
+                        let nr = r + dr, nc = c + dc;
+                        let pecaInimiga = null;
+                        while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                            const alvo = tabuleiro[nr][nc];
+                            if (!alvo) {
+                                if (pecaInimiga) {
+                                    movimentos.push({ r: nr, c: nc, captura: pecaInimiga });
+                                }
+                            } else if (alvo.startsWith(cor)) {
+                                break;
+                            } else {
+                                if (pecaInimiga) break;
+                                pecaInimiga = { r: nr, c: nc };
+                            }
+                            nr += dr; nc += dc;
+                        }
+                    }
+                }
+            } else {
+                for (const dr of direcoesCaptura) {
+                    for (const dc of direcoesCaptura) {
                         const mr = r + dr, mc = c + dc;
                         const jr = r + 2 * dr, jc = c + 2 * dc;
                         if (jr < 0 || jr >= 8 || jc < 0 || jc >= 8) continue;
@@ -820,14 +873,35 @@
                 }
             }
 
-            // ---- Captura obrigatória (regra brasileira) ----
             const capturas = movimentos.filter(m => m.captura);
             if (capturas.length > 0) return capturas;
             return movimentos;
         }
 
         /* ==========================================================
-           EXECUTAR MOVIMENTO
+           VERIFICAÇÃO DE CAPTURA OBRIGATÓRIA GLOBAL
+           ========================================================== */
+        function verificarCapturaObrigatoria(cor) {
+            // PROTEÇÃO CONTRA ERRO UNDEFINED
+            if (!tabuleiro || !Array.isArray(tabuleiro) || tabuleiro.length !== 8) {
+                return false;
+            }
+
+            for (let r = 0; r < 8; r++) {
+                if (!tabuleiro[r]) continue;
+                for (let c = 0; c < 8; c++) {
+                    const p = tabuleiro[r][c];
+                    if (p && p.startsWith(cor)) {
+                        const movs = calcularMovimentos(r, c);
+                        if (movs.some(m => m.captura)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /* ==========================================================
+           EXECUTAR MOVIMENTO (COM CAPTURA MÚLTIPLA)
            ========================================================== */
         async function executarMovimento(deR, deC, paraR, paraC) {
             const mov = movimentosValidos.find(m => m.r === paraR && m.c === paraC);
@@ -837,37 +911,53 @@
             tabuleiro[paraR][paraC] = pecaMovida;
             tabuleiro[deR][deC] = null;
 
+            let fezCaptura = false;
             if (mov.captura) {
                 tabuleiro[mov.captura.r][mov.captura.c] = null;
+                fezCaptura = true;
             }
 
-            // Promoção a dama
             if (pecaMovida === 'white' && paraR === 0) tabuleiro[paraR][paraC] = 'white-king';
-            if (pecaMovida === 'red'   && paraR === 7) tabuleiro[paraR][paraC] = 'red-king';
+            if (pecaMovida === 'red' && paraR === 7) tabuleiro[paraR][paraC] = 'red-king';
 
             celulaSelecionada = null;
             movimentosValidos = [];
 
-            // Alterna turno
-            turnoAtual = turnoAtual === 'white' ? 'red' : 'white';
+            // Verifica se há mais capturas disponíveis para esta peça (Turno Extra)
+            let continuarCaptura = false;
+            if (fezCaptura) {
+                const proximosMovs = calcularMovimentos(paraR, paraC);
+                if (proximosMovs.some(m => m.captura)) {
+                    continuarCaptura = true;
+                }
+            }
+
+            if (continuarCaptura) {
+                celulaSelecionada = { r: paraR, c: paraC };
+                movimentosValidos = calcularMovimentos(paraR, paraC);
+                document.getElementById('info-instrucao').textContent = '🔥 Captura múltipla disponível! Continue jogando.';
+            } else {
+                turnoAtual = turnoAtual === 'white' ? 'red' : 'white';
+                document.getElementById('info-instrucao').textContent = 'Toque em sua peça e depois na casa de destino válida.';
+            }
 
             renderizarTabuleiro();
 
-            // Verifica fim de jogo
-            const oponente = turnoAtual;
-            if (!temPecas(oponente)) {
-                jogoEncerrado = true;
-                const vencedor = oponente === 'white' ? 'red' : 'white';
-                document.getElementById('info-instrucao').textContent =
-                    `🏁 Fim de jogo! Vitória das ${vencedor === 'white' ? 'brancas' : 'vermelhas'}.`;
-                setTimeout(() => alert(`🏆 Vitória das ${vencedor === 'white' ? 'brancas' : 'vermelhas'}!`), 100);
-            } else if (!temMovimentos(oponente)) {
-                jogoEncerrado = true;
-                document.getElementById('info-instrucao').textContent =
-                    `🏁 Oponente sem movimentos. Vitória das ${minhaCor === 'white' ? 'brancas' : 'vermelhas'}.`;
+            if (!continuarCaptura) {
+                const oponente = turnoAtual;
+                if (!temPecas(oponente)) {
+                    jogoEncerrado = true;
+                    const vencedor = oponente === 'white' ? 'red' : 'white';
+                    document.getElementById('info-instrucao').textContent =
+                        `🏁 Fim de jogo! Vitória das ${vencedor === 'white' ? 'brancas' : 'vermelhas'}.`;
+                    setTimeout(() => alert(`🏆 Vitória das ${vencedor === 'white' ? 'brancas' : 'vermelhas'}!`), 100);
+                } else if (!temMovimentos(oponente)) {
+                    jogoEncerrado = true;
+                    document.getElementById('info-instrucao').textContent =
+                        `🏁 Oponente sem movimentos. Vitória das ${minhaCor === 'white' ? 'brancas' : 'vermelhas'}.`;
+                }
             }
 
-            // Sincroniza com Firebase
             try {
                 await update(ref(db, `salas_damas/${idSalaAtual}`), {
                     tabuleiro: tabuleiroParaFirebase(tabuleiro),
@@ -884,7 +974,7 @@
         function temPecas(cor) {
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const p = tabuleiro[r][c];
+                    const p = tabuleiro[r]?.[c];
                     if (p && p.startsWith(cor)) return true;
                 }
             }
@@ -894,9 +984,8 @@
         function temMovimentos(cor) {
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
-                    const p = tabuleiro[r][c];
+                    const p = tabuleiro[r]?.[c];
                     if (p && p.startsWith(cor)) {
-                        // Salva contexto e simula cálculo para 'cor'
                         const movs = calcularMovimentosPara(r, c, cor);
                         if (movs.length > 0) return true;
                     }
@@ -906,7 +995,7 @@
         }
 
         function calcularMovimentosPara(r, c, cor) {
-            const peca = tabuleiro[r][c];
+            const peca = tabuleiro[r]?.[c];
             if (!peca || !peca.startsWith(cor)) return [];
             const backup = minhaCor;
             minhaCor = cor;
@@ -916,7 +1005,7 @@
         }
 
         /* ==========================================================
-           FIREBASE LISTENER (corrige bug #5: array↔objeto)
+           FIREBASE LISTENER (COM PROTEÇÃO)
            ========================================================== */
         function escutarFirebase() {
             if (unsubscribeFirebase) unsubscribeFirebase();
@@ -926,16 +1015,32 @@
                 if (!snapshot.exists()) return;
                 const dados = snapshot.val();
 
-                tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
+                // PROTEÇÃO: Garante que o tabuleiro é válido
+                let novoTabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
+                if (!novoTabuleiro || !Array.isArray(novoTabuleiro) || novoTabuleiro.length !== 8) {
+                    novoTabuleiro = criarTabuleiroInicial();
+                }
+
+                // Se o turno mudou ou o tabuleiro mudou, limpa a seleção
+                const turnoMudou = dados.turno !== turnoAtual;
+                const tabuleiroMudou = JSON.stringify(novoTabuleiro) !== JSON.stringify(tabuleiro);
+
+                if (turnoMudou || tabuleiroMudou) {
+                    celulaSelecionada = null;
+                    movimentosValidos = [];
+                }
+
+                tabuleiro = novoTabuleiro;
                 turnoAtual = dados.turno || 'white';
                 jogoEncerrado = dados.status === 'encerrado';
 
-                // Avisa quando o oponente entra
                 const jogadores = dados.jogadores || {};
                 if (Object.keys(jogadores).length === 2) {
-                    document.getElementById('info-instrucao').textContent =
-                        '✅ Oponente conectado! ' +
-                        (turnoAtual === minhaCor ? 'Sua vez.' : 'Aguarde a jogada dele.');
+                    if (!celulaSelecionada) {
+                        document.getElementById('info-instrucao').textContent =
+                            '✅ Oponente conectado! ' +
+                            (turnoAtual === minhaCor ? 'Sua vez.' : 'Aguarde a jogada dele.');
+                    }
                 } else if (minhaCor === 'white') {
                     document.getElementById('info-instrucao').textContent =
                         '⏳ Aguardando o oponente entrar na sala...';
