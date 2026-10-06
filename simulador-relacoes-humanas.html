@@ -3,185 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Hub - Simulador: Relações Humanas e Gestão de Conflitos</title>
+    <title>Paulo — Simulador de Relações e Conflitos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Crimson+Pro:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0b1020;
+            --bg-gradient-1: #1e1b4b;
+            --bg-gradient-2: #0b1020;
             --card-bg: rgba(30, 41, 59, 0.85);
             --card-border: rgba(148, 163, 184, 0.15);
             --text-color: #f8fafc;
             --text-muted: #94a3b8;
+            --text-scripture: #fde68a;
+            --border-color: rgba(148, 163, 184, 0.18);
+            --input-bg: rgba(15, 23, 42, 0.7);
             --btn-primary: #6366f1;
+            --btn-accent: #8b5cf6;
             --success-color: #4ade80;
+            --error-color: #ef4444;
+            --amber: #f59e0b;
             --radius-lg: 20px;
             --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 20px 60px -20px rgba(0,0,0,0.65);
+            --t-base: 0.25s ease;
         }
         [data-theme="light"] {
-            --bg-color: #eef2ff;
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --text-color: #0f172a;
-            --text-muted: #475569;
+            --bg-color: #fef9f3;
+            --bg-gradient-1: #fef3c7;
+            --bg-gradient-2: #fef9f3;
+            --card-bg: rgba(255, 255, 255, 0.94);
+            --card-border: rgba(120, 53, 15, 0.1);
+            --text-color: #1c1917;
+            --text-muted: #57534e;
+            --text-scripture: #92400e;
+            --border-color: rgba(120, 53, 15, 0.12);
+            --input-bg: rgba(255, 255, 255, 0.96);
+            --btn-primary: #b45309;
+            --btn-accent: #92400e;
+            --shadow-card: 0 20px 60px -20px rgba(120, 53, 15, 0.22);
         }
+        *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-color);
+            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+            background-attachment: fixed;
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
         .container {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-lg);
-            padding: 30px;
+            padding: 24px;
             width: 100%;
-            max-width: 650px;
-            box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+            max-width: 780px;
+            box-shadow: var(--shadow-card);
+            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .back-link {
-            color: var(--btn-primary); text-decoration: none; font-weight: 600;
-            font-size: 13.5px; display: inline-block; margin-bottom: 16px;
+            color: var(--btn-primary);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            transition: all var(--t-base);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        h1 { font-size: 20px; margin: 0 0 6px 0; }
+        .back-link:hover { transform: translateY(-1px); border-color: var(--btn-primary); }
+        .btn-small {
+            width: auto;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--t-base);
+            font-family: inherit;
+        }
+        .btn-small:hover { color: var(--text-color); border-color: var(--btn-primary); }
+
+        h1 {
+            font-size: 21px;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        p.subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0 0 18px 0;
+            line-height: 1.5;
+        }
+
+        /* ==========================================================
+           PROGRESSO
+           ========================================================== */
+        .progress-bar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 18px;
+        }
+        .progress-step {
+            flex: 1;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            transition: all var(--t-base);
+        }
+        .progress-step.completed {
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            border-color: transparent;
+        }
+        .progress-step.active {
+            background: linear-gradient(135deg, var(--amber), #fbbf24);
+            border-color: transparent;
+            animation: pulseStep 1.6s ease-in-out infinite;
+        }
+        @keyframes pulseStep {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }
+            50%      { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+        }
+
+        /* ==========================================================
+           CABEÇALHO DO CENÁRIO
+           ========================================================== */
+        .scenario-header {
+            background: linear-gradient(135deg,
+                rgba(99, 102, 241, 0.14),
+                rgba(139, 92, 246, 0.10));
+            border: 1px solid rgba(99, 102, 241, 0.28);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .scenario-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--btn-primary);
+            margin-bottom: 3px;
+        }
+        .scenario-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-color);
+            margin-bottom: 2px;
+        }
+        .scenario-personagens {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* ==========================================================
+           TEXTO DO CENÁRIO
+           ========================================================== */
         .scenario-box {
-            background: rgba(15, 23, 42, 0.5); border: 1px solid var(--card-border);
-            padding: 18px; border-radius: var(--radius-md); margin: 16px 0;
-            font-size: 14.5Line; line-height: 1.5; color: var(--text-color);
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--btn-primary);
+            padding: 18px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: var(--text-color);
+            text-align: left;
         }
-        .choices-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+        .scenario-box strong { color: var(--text-scripture); font-weight: 800; }
+
+        /* Citação bíblica dentro do cenário */
+        .scripture-quote {
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid var(--amber);
+            border-radius: var(--radius-sm);
+            font-family: 'Crimson Pro', serif;
+            font-size: 15px;
+            font-style: italic;
+            color: var(--text-scripture);
+            line-height: 1.5;
+        }
+        .scripture-quote .ref {
+            display: block;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 11.5px;
+            font-style: normal;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* ==========================================================
+           OPÇÕES
+           ========================================================== */
+        .choices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
         .choice-btn {
-            background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border);
-            color: var(--text-color); padding: 14px 16px; border-radius: var(--radius-md);
-            text-align: left; font-size: 13.5px; font-family: inherit; cursor: pointer;
-            transition: all 0.2s ease;
+            background: var(--input-bg);
+            border: 1.5px solid var(--border-color);
+            color: var(--text-color);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            text-align: left;
+            font-size: 13.5px;
+            font-family: inherit;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: all var(--t-base);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
         }
-        .choice-btn:hover { border-color: var(--btn-primary); background: rgba(99, 102, 241, 0.12); transform: translateY(-1px); }
+        .choice-btn .letter {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.18);
+            color: var(--btn-primary);
+            font-weight: 800;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
+            transition: all var(--t-base);
+        }
+        .choice-btn:hover {
+            border-color: var(--btn-primary);
+            background: rgba(99, 102, 241, 0.09);
+            transform: translateY(-1px);
+        }
+        .choice-btn:hover .letter {
+            background: var(--btn-primary);
+            color: #fff;
+        }
+
+        /* ==========================================================
+           STATUS BAR
+           ========================================================== */
         .status-bar {
-            margin-top: 20px; display: flex; justify-content: space-between;
-            font-size: 12.5px; color: var(--text-muted); border-top: 1px solid var(--card-border); padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            gap: 10px;
+            flex-wrap: wrap;
         }
+        .status-bar .score-value {
+            color: var(--success-color);
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .status-bar .score-value.partial { color: var(--amber); }
+        .status-bar .score-value.low { color: var(--error-color); }
+
+        /* ==========================================================
+           FIM — CARTÃO DE CONCLUSÃO
+           ========================================================== */
+        .final-card {
+            padding: 20px 22px;
+            background: linear-gradient(135deg,
+                rgba(99, 102, 241, 0.12),
+                rgba(139, 92, 246, 0.08));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .final-card .final-icon {
+            font-size: 44px;
+            text-align: center;
+            display: block;
+            margin-bottom: 8px;
+            animation: pop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes pop {
+            0%   { transform: scale(0); }
+            60%  { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        .final-card h2 {
+            font-size: 20px;
+            font-weight: 800;
+            text-align: center;
+            margin: 0 0 12px 0;
+            background: linear-gradient(135deg, var(--amber), #fbbf24, var(--btn-primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .final-card .final-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin-bottom: 14px;
+        }
+        .final-card .final-text strong { color: var(--text-scripture); }
+
+        .final-verse {
+            padding: 14px 16px;
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid var(--amber);
+            border-radius: var(--radius-sm);
+            font-family: 'Crimson Pro', serif;
+            font-size: 15.5px;
+            font-style: italic;
+            color: var(--text-scripture);
+            line-height: 1.55;
+            margin-bottom: 14px;
+        }
+        .final-verse .ref {
+            display: block;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 11.5px;
+            font-style: normal;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .final-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .final-actions button {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--t-base);
+        }
+        .final-actions .btn-restart {
+            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+            color: #fff;
+        }
+        .final-actions .btn-restart:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        .final-actions .btn-share {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #fff;
+        }
+        .final-actions .btn-share:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        .final-actions .btn-hub {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+        .final-actions .btn-hub:hover { color: var(--text-color); border-color: var(--btn-primary); }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Voltar ao Hub</a>
-        <h1>🧭 Simulador: Relações Humanas no Ambiente Institucional</h1>
-        <div id="game-container">
-            <div class="scenario-box" id="scenario-text">A carregar cenário...</div>
-            <div class="choices-list" id="choices-list"></div>
-            <div class="status-bar">
-                <span id="step-indicator">Passo 1 de 3</span>
-                <span id="score-indicator">Empatia / Práxis: 0 pts</span>
-            </div>
+        <div class="top-bar">
+            <a href="index.html" class="back-link">← Menu Hub</a>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+
+        <h1>📖 Paulo — Simulador de Relações e Conflitos</h1>
+        <p class="subtitle">
+            Seis decisões inspiradas nas cartas do apóstolo Paulo.
+            Cada caminho é ancorado na Escritura e nos seus companheiros de missão.
+        </p>
+
+        <div class="progress-bar" id="progress-bar"></div>
+
+        <div class="scenario-header" id="scenario-header">
+            <div class="scenario-label" id="scenario-label">Cenário 1</div>
+            <div class="scenario-title" id="scenario-title">—</div>
+            <div class="scenario-personagens" id="scenario-personagens">—</div>
+        </div>
+
+        <div class="scenario-box" id="scenario-text">A carregar cenário...</div>
+        <div class="choices-list" id="choices-list"></div>
+
+        <div class="status-bar">
+            <span id="step-indicator">Decisão 1 de 6</span>
+            <span>Discernimento paulino: <span class="score-value" id="score-indicator">0 pts</span></span>
         </div>
     </div>
 
     <script>
-        const etapas = {
+        /* ==========================================================
+           CENÁRIOS — 6 ETAPAS ANCORADAS NAS CARTAS DE PAULO
+           ==========================================================
+           Cada cenário tem:
+             titulo:       título curto
+             personagens:  quem está em cena
+             texto:        contexto narrativo
+             scripture:    citação paulina
+             reference:    referência
+             opcoes:       array de escolhas
+               → texto:    o que o jogador faz
+               → pontos:   valor formativo da escolha
+               → proximo:  próximo cenário ou 'fim'
+           ========================================================== */
+        const CENARIOS = {
             inicio: {
-                texto: "<strong>O Contexto:</strong> Você assumiu recentemente a coordenação de um setor educativo. Numa manhã intensa, dois colaboradores experientes entram em colapso devido a divergências na organização de um projeto crítico, gerando um clima de tensão na sala dos professores.<br><br><strong>O Dilema:</strong> Como você decide intervir nesta situação?",
+                titulo: "A comunidade dividida de Corinto",
+                personagens: "Paulo, os irmãos de Corinto, os grupos de Apolo e Cefas",
+                texto: `<strong>O Contexto:</strong> Correio urgente de Corinto. Alguns irmãos dizem ser "de Paulo", outros "de Apolo", outros "de Cefas". A comunidade está se fragmentando em partidos. Cada grupo reivindica a sua autoridade favorita. Paulo sente o peso da divisão crescer.<br><br><strong>O Dilema:</strong> Como o apóstolo deve intervir nesta divisão?`,
+                scripture: "Rogo-vos, irmãos, pelo nome de nosso Senhor Jesus Cristo, que faleis todos a mesma coisa e que não haja entre vós divisões; antes sejais inteiramente unidos, na mesma disposição mental e no mesmo parecer.",
+                reference: "1 Coríntios 1,10",
                 opcoes: [
-                    { texto: "A) Chamar ambos imediatamente para uma reunião formal e rígida, exigindo cumprimento estrito de conduta.", proximo: "rigido", pontos: 10 },
-                    { texto: "B) Conversar individualmente com cada um primeiro, escutando as suas perspetivas e sentimentos.", proximo: "escuta", pontos: 30 },
-                    { texto: "C) Evitar interferir diretamente, deixando que resolvam sozinhos para não demonstrar autoritarismo.", proximo: "omisso", pontos: 5 }
+                    {
+                        texto: "Impor a sua própria autoridade apostólica e exigir obediência ao grupo que o segue.",
+                        pontos: 5,
+                        proximo: "corinto_rigido"
+                    },
+                    {
+                        texto: "Lembrar que todos foram batizados em Cristo — não em Paulo, Apolo ou Cefas — e apelar à unidade em torno da cruz.",
+                        pontos: 40,
+                        proximo: "corinto_escuta"
+                    },
+                    {
+                        texto: "Ignorar o problema e seguir viagem, deixando que se resolvam sozinhos.",
+                        pontos: 5,
+                        proximo: "corinto_omisso"
+                    }
                 ]
             },
-            rigido: {
-                texto: "<strong>Desdobramento:</strong> A abordagem formal conteve o atrito visível imediato, mas gerou um clima de silêncio defensivo e distanciamento entre os membros da equipa.",
+
+            /* ---------- ramo rígido ---------- */
+            corinto_rigido: {
+                titulo: "A resposta dura do apóstolo",
+                personagens: "Paulo, os coríntios, a liderança local",
+                texto: `<strong>Desdobramento:</strong> A imposição da autoridade conteve o conflito por fora, mas semeou ressentimento. Alguns começam a dizer: "Paulo escreve cartas pesadas, mas pessoalmente é fraco" (cf. 2Cor 10,10). A comunidade obedece, mas não se reconcilia.`,
+                scripture: "Porque, ainda que eu vos entristeça com a minha carta, não me arrependo disso — pois vejo que aquela carta vos entristeceu, ainda que por pouco tempo.",
+                reference: "2 Coríntios 7,8",
                 opcoes: [
-                    { texto: "1. Manter a imposição de regras e focar apenas na entrega mecânica do projeto.", proximo: "fim_ruim", pontos: 5 },
-                    { texto: "2. Perceber que a rigidez não resolveu a raiz do problema e propor um círculo de diálogo restaurativo.", proximo: "escuta_tardia", pontos: 20 }
+                    {
+                        texto: "Manter a linha dura, insistindo na obediência sem trabalhar a reconciliação.",
+                        pontos: 5,
+                        proximo: "fim_critico"
+                    },
+                    {
+                        texto: "Reconhecer que a carta foi dura, mas escrever uma segunda carta mais amorosa, pedindo que se reconciliem.",
+                        pontos: 25,
+                        proximo: "fim_parcial"
+                    }
                 ]
             },
-            escuta: {
-                texto: "<strong>Desdobramento:</strong> Ao ouvir individualmente, você descobre que o conflito não era pessoal, mas sim acúmulo de sobrecarga de trabalho e falhas de comunicação. Ambos sentem-se valorizados por terem sido ouvidos com empatia.",
+
+            /* ---------- ramo escuta ---------- */
+            corinto_escuta: {
+                titulo: "Apelo à cruz, não ao partido",
+                personagens: "Paulo, os grupos em conflito, Estéfanas e a casa dele",
+                texto: `<strong>Desdobramento:</strong> Paulo escreve com sabedoria. Ele não se coloca acima do conflito — mas aponta para Cristo crucificado, o único fundamento (1Cor 3,11). Aos poucos, os irmãos começam a reconhecer que a divisão empobrece a todos. Estéfanas e sua casa assumem a frente da reconciliação.`,
+                scripture: "Porque ninguém pode pôr outro fundamento além do que já está posto, o qual é Jesus Cristo.",
+                reference: "1 Coríntios 3,11",
                 opcoes: [
-                    { texto: "1. Convidar ambos para uma roda de escuta mútua, mediando a reconstrução conjunta dos acordos de trabalho.", proximo: "fim_perfeito", pontos: 40 },
-                    { texto: "2. Decidir você mesmo a divisão de tarefas e ditar as regras sem reuni-los novamente.", proximo: "fim_parcial", pontos: 20 }
+                    {
+                        texto: "Enviar Timóteo para Corinto, para consolidar a reconciliação e ensinar o caminho de Cristo.",
+                        pontos: 40,
+                        proximo: "fim_exemplar"
+                    },
+                    {
+                        texto: "Alegrar-se pelo progresso, mas não enviar ninguém — deixar a comunidade se organizar sozinha.",
+                        pontos: 20,
+                        proximo: "fim_parcial"
+                    }
                 ]
             },
-            omisso: {
-                texto: "<strong>Desdobramento:</strong> Sem mediação, o mal-estar intensificou-se, espalhando boatos e dividindo a equipa em facções, o que comprometeu diretamente o andamento do projeto coletivo.",
+
+            /* ---------- ramo omisso ---------- */
+            corinto_omisso: {
+                titulo: "A viagem que não voltou",
+                personagens: "Paulo, Apolo, os coríntios",
+                texto: `<strong>Desdobramento:</strong> Sem intervenção, a divisão se aprofunda. Surgem problemas morais graves (1Cor 5) e disputas judiciais entre irmãos (1Cor 6). A comunidade perde credibilidade diante dos pagãos de Corinto.`,
+                scripture: "Porque Deus não é Deus de confusão, mas de paz.",
+                reference: "1 Coríntios 14,33",
                 opcoes: [
-                    { texto: "1. Intervir tardiamente de forma autoritária para apagar o incêndio institucional.", proximo: "fim_ruim", pontos: 5 }
+                    {
+                        texto: "Voltar atrás e intervir com firmeza, mesmo que tardiamente.",
+                        pontos: 15,
+                        proximo: "fim_parcial"
+                    },
+                    {
+                        texto: "Continuar o ministério em Éfeso e deixar Corinto para outra ocasião.",
+                        pontos: 5,
+                        proximo: "fim_critico"
+                    }
                 ]
             },
-            escuta_tardia: {
-                texto: "<strong>Desdobramento:</strong> Embora tenha demorado a adotar a escuta dialógica, a sua abertura permitiu que a equipa recuperasse parcialmente o fôlego e os laços de respeito mútuo.",
-                opcoes: [
-                    { texto: "Concluir a análise e refletir sobre a práxis gerencial.", proximo: "fim_parcial", pontos: 25 }
-                ]
-            },
-            fim_perfeito: {
+
+            /* ============================================================
+               FINS
+               ============================================================ */
+            fim_exemplar: {
                 fim: true,
-                texto: "🎉 <strong>Conclusão Exemplar:</strong> Através da escuta ativa, do diálogo horizontal e da mediação humanizada, você transformou um conflito destrutivo numa oportunidade de fortalecimento coletivo e parceria pedagógica!"
+                tipo: "exemplar",
+                titulo: "Discernimento paulino pleno",
+                texto: `<strong>Conclusão exemplar:</strong> Você aprendeu com Paulo que a autoridade não se impõe — ela se doa. Ao apontar para Cristo, enviar Timóteo, e trabalhar a reconciliação com ternura e firmeza, você seguiu o caminho que o próprio apóstolo descreve em 2Cor 1,24: <em>"não que dominemos a vossa fé, mas cooperamos para a vossa alegria"</em>.`,
+                scripture: "Não que dominemos a vossa fé, mas cooperamos para a vossa alegria; pois é pela fé que estais firmes.",
+                reference: "2 Coríntios 1,24"
             },
             fim_parcial: {
                 fim: true,
-                texto: "⚖️ <strong>Conclusão Parcial:</strong> O problema foi contido com sucesso moderado, mas ficou a lição de que o envolvimento contínuo e a autonomia negociada geram resultados muito mais sustentáveis a longo prazo."
+                tipo: "parcial",
+                titulo: "Discernimento em construção",
+                texto: `<strong>Conclusão parcial:</strong> O conflito foi contido com sabedoria moderada — houve escuta, houve correção, houve avanço. Mas faltou a insistência pastoral, o envio de um colaborador, o acompanhamento contínuo. Paulo fazia isso: escrevia, enviava, voltava, chorava, insistia. A comunidade se firma quando alguém persevera.`,
+                scripture: "Assim, pois, cada um de nós dará contas de si mesmo a Deus.",
+                reference: "Romanos 14,12"
             },
-            fim_ruim: {
+            fim_critico: {
                 fim: true,
-                texto: "⚠️ <strong>Conclusão Crítica:</strong> A gestão baseada estritamente no controle vertical ou na omissão falhou em resolver a raiz humana do problema. As relações de confiança na equipa precisarán de reconstrução futura."
+                tipo: "critico",
+                titulo: "A relação que se quebrou",
+                texto: `<strong>Conclusão crítica:</strong> A imposição endureceu o coração dos irmãos; a omissão os deixou à deriva. Em ambos os casos, faltou o que Paulo aprendeu no caminho de Damasco: a autoridade só é crível quando é oferecida em amor. <em>"Se eu não tiver amor, nada serei"</em> (1Cor 13,2). A comunhão ficou ferida — e precisará de tempo e lágrimas para ser reconstruída.`,
+                scripture: "Ainda que eu tenha o dom de profecia e saiba todos os mistérios, e ainda que tenha toda a fé... se não tiver amor, nada serei.",
+                reference: "1 Coríntios 13,2"
             }
         };
 
-        let atualChave = 'inicio';
+        /* ==========================================================
+           ESTADO
+           ========================================================== */
+        let cenarioAtual = 'inicio';
         let pontuacaoTotal = 0;
         let passoAtual = 1;
+        let historico = [];    // guarda os títulos dos cenários visitados
+        const TOTAL_ETAPAS = 6;
 
-        const textoEl = document.getElementById('scenario-text');
-        const listaEl = document.getElementById('choices-list');
-        const passoEl = document.getElementById('step-indicator');
-        const pontuacaoEl = document.getElementById('score-indicator');
+        /* ==========================================================
+           DOM
+           ========================================================== */
+        const scenarioLabel = document.getElementById('scenario-label');
+        const scenarioTitle = document.getElementById('scenario-title');
+        const scenarioPersonagens = document.getElementById('scenario-personagens');
+        const scenarioText = document.getElementById('scenario-text');
+        const choicesList = document.getElementById('choices-list');
+        const stepIndicator = document.getElementById('step-indicator');
+        const scoreIndicator = document.getElementById('score-indicator');
+        const progressBar = document.getElementById('progress-bar');
+        const themeToggle = document.getElementById('theme-toggle');
 
-        function carregarPasso(chave) {
-            const estado = etapas[chave];
-            textoEl.innerHTML = estado.texto;
-            listaEl.innerHTML = '';
+        /* ==========================================================
+           TEMA
+           ========================================================== */
+        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? '🌙 Tema' : '☀️ Tema';
+        themeToggle.addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('brain_flow_theme', next);
+            themeToggle.textContent = next === 'dark' ? '🌙 Tema' : '☀️ Tema';
+        });
 
-            if (estado.fim) {
-                passoEl.textContent = 'Simulação Concluída';
-                pontuacaoEl.textContent = `Pontuação Final: ${pontuacaoTotal} pts`;
-                
-                const btnVoltar = document.createElement('button');
-                btnVoltar.className = 'choice-btn';
-                btnVoltar.style.textAlign = 'center';
-                btnVoltar.style.fontWeight = '700';
-                btnVoltar.style.background = 'var(--btn-primary)';
-                btnVoltar.style.color = '#fff';
-                btnVoltar.textContent = '🔄 Reiniciar Simulação ou Voltar ao Hub';
-                btnVoltar.onclick = () => window.location.href = 'index.html';
-                listaEl.appendChild(btnVoltar);
+        /* ==========================================================
+           PROGRESSO
+           ========================================================== */
+        function renderProgress() {
+            progressBar.innerHTML = '';
+            for (let i = 0; i < TOTAL_ETAPAS; i++) {
+                const step = document.createElement('div');
+                step.className = 'progress-step';
+                if (i < passoAtual - 1) step.classList.add('completed');
+                else if (i === passoAtual - 1) step.classList.add('active');
+                progressBar.appendChild(step);
+            }
+        }
+
+        function corScore(valor) {
+            if (valor >= 80) return 'score-value';
+            if (valor >= 40) return 'score-value partial';
+            return 'score-value low';
+        }
+
+        /* ==========================================================
+           RENDER CENÁRIO
+           ========================================================== */
+        function renderCenario(chave) {
+            const c = CENARIOS[chave];
+            if (!c) return;
+
+            cenarioAtual = chave;
+
+            // Cabeçalho
+            scenarioLabel.textContent = c.fim
+                ? 'Conclusão'
+                : `Decisão ${passoAtual} de ${TOTAL_ETAPAS}`;
+            scenarioTitle.textContent = c.titulo || '—';
+            scenarioPersonagens.textContent = c.personagens
+                ? `Em cena: ${c.personagens}`
+                : '';
+
+            // Corpo
+            let html = `<div>${c.texto}</div>`;
+            if (c.scripture) {
+                html += `
+                    <div class="scripture-quote">
+                        "${c.scripture}"
+                        <span class="ref">— ${c.reference}</span>
+                    </div>`;
+            }
+            scenarioText.innerHTML = html;
+
+            // Opções
+            choicesList.innerHTML = '';
+
+            if (c.fim) {
+                // Cartão final
+                const letras = ['A', 'B', 'C'];
+                const finalCard = document.createElement('div');
+                finalCard.className = 'final-card';
+
+                const icon = c.tipo === 'exemplar' ? '🎉'
+                           : c.tipo === 'parcial' ? '⚖️'
+                           : '⚠️';
+
+                let finalHtml = `
+                    <span class="final-icon">${icon}</span>
+                    <h2>${c.titulo}</h2>
+                    <div class="final-text">${c.texto}</div>
+                `;
+                if (c.scripture) {
+                    finalHtml += `
+                        <div class="final-verse">
+                            "${c.scripture}"
+                            <span class="ref">— ${c.reference}</span>
+                        </div>`;
+                }
+                finalHtml += `
+                    <div class="final-actions">
+                        <button class="btn-restart" onclick="reiniciar()">🔄 Recomeçar</button>
+                        <button class="btn-share" id="btn-share">💬 Compartilhar</button>
+                        <button class="btn-hub" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+                    </div>
+                `;
+                finalCard.innerHTML = finalHtml;
+                choicesList.appendChild(finalCard);
+
+                // Atualiza status
+                stepIndicator.textContent = 'Simulação concluída';
+                scoreIndicator.textContent = `${pontuacaoTotal} pts`;
+                scoreIndicator.className = corScore(pontuacaoTotal);
+
+                // Botão share
+                const shareBtn = document.getElementById('btn-share');
+                if (shareBtn) {
+                    shareBtn.addEventListener('click', () => {
+                        const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador') || 'null');
+                        const nome = jogador?.nome || 'Um peregrino';
+                        const msg = encodeURIComponent(
+                            `📖 ${nome} percorreu o Simulador Paulino de Relações e Conflitos.\n\n` +
+                            `Discernimento final: ${pontuacaoTotal} pts\n\n` +
+                            `"Não que dominemos a vossa fé, mas cooperamos para a vossa alegria." — 2Cor 1,24\n\n` +
+                            `Faça também o percurso: ${window.location.href}`
+                        );
+                        window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+                    });
+                }
+
+                renderProgress();
                 return;
             }
 
-            passoEl.textContent = `Passo ${passoAtual} da Decisão`;
-            pontuacaoEl.textContent = `Empatia / Práxis: ${pontuacaoTotal} pts`;
-
-            estado.opcoes.forEach(opcao => {
+            // Não é fim — renderiza opções
+            const letras = ['A', 'B', 'C', 'D'];
+            c.opcoes.forEach((op, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'choice-btn';
-                btn.textContent = opcao.texto;
-                btn.onclick = () => {
-                    pontuacaoTotal += opcao.pontos;
+                btn.innerHTML = `<span class="letter">${letras[idx] || '•'}</span><span>${op.texto}</span>`;
+                btn.addEventListener('click', () => {
+                    pontuacaoTotal += op.pontos || 0;
                     passoAtual++;
-                    atualChave = opcao.proximo;
-                    carregarPasso(atualChave);
-                };
-                listaEl.appendChild(btn);
+                    historico.push(c.titulo);
+                    renderCenario(op.proximo);
+                });
+                choicesList.appendChild(btn);
             });
+
+            // Status
+            stepIndicator.textContent = `Decisão ${passoAtual} de ${TOTAL_ETAPAS}`;
+            scoreIndicator.textContent = `${pontuacaoTotal} pts`;
+            scoreIndicator.className = corScore(pontuacaoTotal);
+
+            renderProgress();
         }
 
-        carregarPasso(atualChave);
+        /* ==========================================================
+           REINICIAR
+           ========================================================== */
+        function reiniciar() {
+            cenarioAtual = 'inicio';
+            pontuacaoTotal = 0;
+            passoAtual = 1;
+            historico = [];
+            renderCenario('inicio');
+        }
+        window.reiniciar = reiniciar;
+
+        /* ==========================================================
+           BOOT
+           ========================================================== */
+        renderCenario('inicio');
     </script>
 </body>
 </html>
