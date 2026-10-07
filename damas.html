@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Damas - Duelo Multiplayer</title>
+    <title>Brain Damas - Modo Teste Local (Giro Automático)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,6 @@
             --btn-primary: #6366f1;
             --btn-primary-hover: #818cf8;
             --btn-accent: #8b5cf6;
-            --btn-whatsapp: #22c55e;
 
             --board-light: #e2e8f0;
             --board-dark: #334155;
@@ -231,6 +230,7 @@
             aspect-ratio: 1 / 1;
             margin-bottom: 12px;
             box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+            transition: transform 0.4s ease;
         }
 
         .square {
@@ -279,7 +279,7 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Efeito Hover/Pulsante para as peças móveis do jogador da vez */
+        /* Efeito Hover/Pulsante para as peças móveis do turno atual */
         .piece.movel {
             cursor: pointer;
             box-shadow: 0 0 12px 3px rgba(74, 222, 128, 0.8);
@@ -302,34 +302,21 @@
             min-height: 18px;
         }
 
-        button, input {
+        button {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid var(--border-color);
+            border: none;
             border-radius: var(--radius-md);
             font-size: 13.5px;
             font-family: inherit;
             font-weight: 600;
-            background: var(--input-bg);
-            color: var(--text-color);
-            cursor: pointer;
-            transition: all var(--t-base);
-        }
-        button {
-            border: none;
             color: #fff;
             background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
             box-shadow: var(--shadow-btn);
+            cursor: pointer;
+            transition: all var(--t-base);
         }
         button:hover { filter: brightness(1.08); transform: translateY(-1px); }
-        .btn-whatsapp {
-            background: linear-gradient(135deg, #16a34a, #22c55e);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-top: 6px;
-        }
 
         .hidden { display: none !important; }
     </style>
@@ -338,106 +325,40 @@
 
     <div class="container">
         <div class="top-bar">
-            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+            <button class="btn-small" onclick="window.location.reload()">🔄 Reiniciar Jogo</button>
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
-        <!-- LOBBY -->
-        <div id="lobby-screen">
-            <div class="user-header" style="justify-content: center;">
-                <div class="user-info-left">
-                    <span id="lobby-avatar" class="user-avatar-display">😀</span>
-                    <strong id="lobby-nome">Carregando...</strong>
-                </div>
-            </div>
-
-            <div class="lobby-box">
-                <h3>♟️ Jogo de Damas Multiplayer</h3>
-                <p>Jogue uma partida clássica de Damas 8x8 em turnos com um colega em tempo real. Crie sua sala e envie o convite pelo WhatsApp!</p>
-                <button id="btn-criar-sala">🚀 Criar Sala de Damas</button>
-            </div>
-
-            <div class="lobby-box" style="margin-bottom: 0;">
-                <h3>🔗 Entrar com Código</h3>
-                <div style="display: flex; gap: 6px;">
-                    <input type="text" id="input-codigo-sala" placeholder="Ex: DAMAS-7812" style="font-family: monospace;">
-                    <button id="btn-entrar-sala" style="width: 120px;">Entrar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TELA DO JOGO -->
-        <div id="game-screen" class="hidden">
+        <!-- TELA DO JOGO (Modo Teste Local / Hotseat) -->
+        <div id="game-screen">
             <div class="user-header">
                 <div class="user-info-left">
-                    <span id="display-avatar" class="user-avatar-display">😀</span>
-                    <strong id="display-nome"></strong>
+                    <span id="display-avatar" class="user-avatar-display">🎮</span>
+                    <strong id="display-nome">Modo Teste (Local)</strong>
                 </div>
-                <span id="display-sala-tag" style="font-size: 11px; background: rgba(99,102,241,0.15); padding: 4px 8px; border-radius: 6px; color: var(--c-blue);">Sala</span>
+                <span id="display-sala-tag" style="font-size: 11px; background: rgba(99,102,241,0.15); padding: 4px 8px; border-radius: 6px; color: var(--c-blue);">Hotseat</span>
             </div>
 
             <div class="match-info-bar">
-                <span>Sua Peça: <strong id="info-minha-cor" style="color: var(--c-blue);">--</strong></span>
-                <span id="turno-status">Aguardando...</span>
+                <span>Vez de: <strong id="info-minha-cor" style="color: var(--c-blue);">⚪ Brancas</strong></span>
+                <span id="turno-status">Sua vez!</span>
             </div>
 
-            <p class="instructions" id="info-instrucao">Toque em sua peça e depois na casa de destino válida.</p>
+            <p class="instructions" id="info-instrucao">Toque na sua peça e depois na casa de destino. O tabuleiro girará automaticamente a cada turno.</p>
 
             <div class="checkers-grid" id="checkers-board"></div>
-
-            <div id="div-whatsapp" class="hidden">
-                <button id="btn-whatsapp" class="btn-whatsapp">💬 Convidar Colega pelo WhatsApp</button>
-            </div>
         </div>
     </div>
 
-    <script type="module">
-        import { db } from "./firebase-config.js";
-        import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+    <script>
         /* ==========================================================
-           HELPERS DE SERIALIZAÇÃO
+           ESTADO DO JOGO LOCAL (TESTE)
            ========================================================== */
-        function tabuleiroParaFirebase(t) {
-            return t.map(row => row.slice());
-        }
-
-        function firebaseParaTabuleiro(raw) {
-            if (!raw) return criarTabuleiroInicial();
-            if (Array.isArray(raw)) {
-                return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
-            }
-            const linhas = Object.keys(raw).sort((a, b) => Number(a) - Number(b));
-            const t = [];
-            for (let r = 0; r < 8; r++) {
-                const linhaRaw = raw[r] || raw[String(r)] || {};
-                const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
-                while (linha.length < 8) linha.push(null);
-                t.push(linha.slice(0, 8));
-            }
-            return t;
-        }
-
-        /* ==========================================================
-           SESSÃO DO JOGADOR
-           ========================================================== */
-        const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-        if (!jogadorSessao) { window.location.href = 'index.html'; }
-
-        document.getElementById('lobby-nome').textContent = jogadorSessao.nome;
-        document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
-
-        /* ==========================================================
-           ESTADO
-           ========================================================== */
-        let idSalaAtual = null;
-        let minhaCor = null;            
-        let tabuleiro = [];
+        let tabuleiro = criarTabuleiroInicial();
+        let turnoAtual = 'white'; // 'white' ou 'red'
         let celulaSelecionada = null;
         let movimentosValidos = [];
-        let turnoAtual = 'white';
         let jogoEncerrado = false;
-        let unsubscribeFirebase = null;
 
         /* ==========================================================
            TEMA
@@ -478,199 +399,14 @@
         }
 
         /* ==========================================================
-           PERSISTÊNCIA DE SESSÃO
-           ========================================================== */
-        function salvarSessao() {
-            if (!idSalaAtual || !minhaCor) return;
-            const dados = { sala: idSalaAtual, cor: minhaCor };
-            localStorage.setItem('brain_damas_sessao', JSON.stringify(dados));
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('sala', idSalaAtual);
-            url.searchParams.set('cor', minhaCor);
-            window.history.replaceState({}, '', url.toString());
-        }
-
-        function limparSessao() {
-            localStorage.removeItem('brain_damas_sessao');
-            const url = new URL(window.location.href);
-            url.searchParams.delete('sala');
-            url.searchParams.delete('cor');
-            window.history.replaceState({}, '', url.toString());
-        }
-
-        /* ==========================================================
-           INICIALIZAÇÃO
-           ========================================================== */
-        async function inicializarPerfil() {
-            document.getElementById('display-nome').textContent = jogadorSessao.nome;
-            document.getElementById('display-avatar').textContent = jogadorSessao.avatar;
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const salaUrl = urlParams.get('sala');
-            const corUrl = urlParams.get('cor');
-
-            let sessaoSalva = null;
-            try {
-                sessaoSalva = JSON.parse(localStorage.getItem('brain_damas_sessao'));
-            } catch (_) {}
-
-            const sala = salaUrl || (sessaoSalva && sessaoSalva.sala);
-            const cor  = corUrl  || (sessaoSalva && sessaoSalva.cor);
-
-            if (sala && cor) {
-                document.getElementById('input-codigo-sala').value = sala;
-                await reentrarNaSala(sala, cor);
-            }
-        }
-
-        async function reentrarNaSala(codigo, cor) {
-            const salaRef = ref(db, 'salas_damas/' + codigo);
-            const snapshot = await get(salaRef);
-            if (!snapshot.exists()) {
-                limparSessao();
-                return;
-            }
-
-            const dados = snapshot.val();
-            const jogadores = dados.jogadores || {};
-
-            const jaEsta = jogadores[jogadorSessao.chave];
-            if (!jaEsta) {
-                const corOcupada = Object.values(jogadores).some(j => j.cor === cor);
-                if (corOcupada) {
-                    limparSessao();
-                    return;
-                }
-                await update(ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}`), {
-                    nome: jogadorSessao.nome,
-                    cor: cor
-                });
-            }
-
-            idSalaAtual = codigo;
-            minhaCor = cor;
-            tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
-            turnoAtual = dados.turno || 'white';
-            jogoEncerrado = false;
-
-            entrarInterfaceJogo();
-            escutarFirebase();
-
-            if (cor === 'white') {
-                document.getElementById('div-whatsapp').classList.remove('hidden');
-            }
-        }
-
-        inicializarPerfil();
-
-        /* ==========================================================
-           LOBBY — CRIAR / ENTRAR
-           ========================================================== */
-        document.getElementById('btn-criar-sala').addEventListener('click', async () => {
-            idSalaAtual = 'DAMAS-' + Math.floor(1000 + Math.random() * 9000);
-            minhaCor = 'white';
-            tabuleiro = criarTabuleiroInicial();
-            turnoAtual = 'white';
-            jogoEncerrado = false;
-
-            const salaRef = ref(db, 'salas_damas/' + idSalaAtual);
-            await set(salaRef, {
-                status: 'jogando',
-                turno: 'white',
-                tabuleiro: tabuleiroParaFirebase(tabuleiro),
-                jogadores: {
-                    [jogadorSessao.chave]: { nome: jogadorSessao.nome, cor: 'white' }
-                },
-                criadaEm: new Date().toISOString()
-            });
-
-            salvarSessao();
-            entrarInterfaceJogo();
-            document.getElementById('div-whatsapp').classList.remove('hidden');
-            escutarFirebase();
-        });
-
-        document.getElementById('btn-entrar-sala').addEventListener('click', () => {
-            const codigo = document.getElementById('input-codigo-sala').value.trim().toUpperCase();
-            if (!codigo) { alert('Digite o código da sala.'); return; }
-            entrarNaSala(codigo);
-        });
-
-        async function entrarNaSala(codigo) {
-            const salaRef = ref(db, 'salas_damas/' + codigo);
-            const snapshot = await get(salaRef);
-            if (!snapshot.exists()) { alert('Sala não encontrada!'); return; }
-
-            const dados = snapshot.val();
-            const jogadores = dados.jogadores || {};
-
-            const jaEsta = jogadores[jogadorSessao.chave];
-            if (jaEsta) {
-                idSalaAtual = codigo;
-                minhaCor = jaEsta.cor;
-                tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
-                turnoAtual = dados.turno || 'white';
-                salvarSessao();
-                entrarInterfaceJogo();
-                escutarFirebase();
-                return;
-            }
-
-            const totalJogadores = Object.keys(jogadores).length;
-            if (totalJogadores >= 2) {
-                alert('Sala já cheia! Peça ao host para criar uma nova.');
-                return;
-            }
-
-            idSalaAtual = codigo;
-            minhaCor = 'red';
-            tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
-            turnoAtual = dados.turno || 'white';
-
-            await update(ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}`), {
-                nome: jogadorSessao.nome,
-                cor: 'red'
-            });
-
-            salvarSessao();
-            entrarInterfaceJogo();
-            escutarFirebase();
-        }
-
-        function entrarInterfaceJogo() {
-            document.getElementById('lobby-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('display-sala-tag').textContent = `Sala: ${idSalaAtual}`;
-            document.getElementById('info-minha-cor').textContent =
-                minhaCor === 'white' ? '⚪ Brancas' : '🔴 Vermelhas';
-            renderizarTabuleiro();
-        }
-
-        /* ==========================================================
-           WHATSAPP
-           ========================================================== */
-        document.getElementById('btn-whatsapp').addEventListener('click', () => {
-            const url = new URL(window.location.href);
-            url.searchParams.set('sala', idSalaAtual);
-            url.searchParams.delete('cor'); 
-            const link = url.toString();
-            const msg = encodeURIComponent(
-                `♟️ Vamos disputar uma partida de Damas no Brain Hub?\n\n` +
-                `Entre na sala pelo link: ${link}\n` +
-                `Código: ${idSalaAtual}`
-            );
-            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
-        });
-
-        /* ==========================================================
-           RENDERIZAÇÃO (Inversão de Perspectiva + Hover nas Peças Móveis do Jogador da Vez)
+           RENDERIZAÇÃO COM ROTAÇÃO AUTOMÁTICA DE 180 GRAUS
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
             grid.innerHTML = '';
 
-            const invertido = (minhaCor === 'red');
+            // Se for a vez das vermelhas, o tabuleiro roda 180 graus (inverte a matriz visual)
+            const invertido = (turnoAtual === 'red');
 
             for (let visualR = 0; visualR < 8; visualR++) {
                 for (let visualC = 0; visualC < 8; visualC++) {
@@ -699,9 +435,9 @@
                         const isDama = peca.includes('king') ? ' king' : '';
                         
                         let classeExtra = '';
-                        // Destaca via hover/pulsante apenas as peças do jogador que está com a vez no momento
-                        if (!jogoEncerrado && turnoAtual === minhaCor && peca.startsWith(minhaCor)) {
-                            const movsPeca = calcularMovimentosPara(r, c, minhaCor);
+                        // Destaca com efeito pulsante (hover) as peças do jogador ativo da vez
+                        if (!jogoEncerrado && peca.startsWith(turnoAtual)) {
+                            const movsPeca = calcularMovimentosPara(r, c, turnoAtual);
                             if (movsPeca.length > 0) {
                                 classeExtra = ' movel';
                             }
@@ -719,41 +455,41 @@
                 }
             }
 
+            // Atualiza informações no topo
+            document.getElementById('info-minha-cor').textContent =
+                turnoAtual === 'white' ? '⚪ Brancas' : '🔴 Vermelhas';
+            
             const statusEl = document.getElementById('turno-status');
             if (jogoEncerrado) {
-                statusEl.textContent = '🏁 Jogo encerrado';
-            } else if (turnoAtual === minhaCor) {
-                statusEl.textContent = 'Sua vez de jogar!';
+                statusEl.textContent = '🏁 Fim de Jogo';
             } else {
-                statusEl.textContent = 'Vez do oponente...';
+                statusEl.textContent = turnoAtual === 'white' ? 'Vez das Brancas' : 'Vez das Vermelhas (Girado)';
             }
         }
 
         /* ==========================================================
-           CLIQUE
+           CLIQUE NAS CASAS
            ========================================================== */
         function clicarCasa(r, c) {
             if (jogoEncerrado) return;
 
-            if (turnoAtual !== minhaCor) {
-                document.getElementById('info-instrucao').textContent = '⏳ Aguarde a sua vez!';
-                return;
-            }
-
             const peca = tabuleiro[r][c];
 
-            if (peca && peca.startsWith(minhaCor)) {
+            // Selecionar peça própria do turno atual
+            if (peca && peca.startsWith(turnoAtual)) {
                 celulaSelecionada = { r, c };
                 movimentosValidos = calcularMovimentos(r, c);
                 renderizarTabuleiro();
                 return;
             }
 
+            // Mover para casa de destino válida
             if (celulaSelecionada && movimentosValidos.some(m => m.r === r && m.c === c)) {
                 executarMovimento(celulaSelecionada.r, celulaSelecionada.c, r, c);
                 return;
             }
 
+            // Desselecionar
             celulaSelecionada = null;
             movimentosValidos = [];
             renderizarTabuleiro();
@@ -825,10 +561,16 @@
             return movimentos;
         }
 
+        function calcularMovimentosPara(r, c, cor) {
+            const peca = tabuleiro[r][c];
+            if (!peca || !peca.startsWith(cor)) return [];
+            return calcularMovimentos(r, c);
+        }
+
         /* ==========================================================
-           EXECUTAR MOVIMENTO
+           EXECUTAR MOVIMENTO E GIRAR TABULEIRO
            ========================================================== */
-        async function executarMovimento(deR, deC, paraR, paraC) {
+        function executarMovimento(deR, deC, paraR, paraC) {
             const mov = movimentosValidos.find(m => m.r === paraR && m.c === paraC);
             if (!mov) return;
 
@@ -840,15 +582,15 @@
                 tabuleiro[mov.captura.r][mov.captura.c] = null;
             }
 
+            // Promoção a Dama
             if (pecaMovida === 'white' && paraR === 0) tabuleiro[paraR][paraC] = 'white-king';
             if (pecaMovida === 'red'   && paraR === 7) tabuleiro[paraR][paraC] = 'red-king';
 
             celulaSelecionada = null;
             movimentosValidos = [];
 
+            // Alterna o turno (o que aciona o giro automático de 180° no próximo render)
             turnoAtual = turnoAtual === 'white' ? 'red' : 'white';
-
-            renderizarTabuleiro();
 
             const oponente = turnoAtual;
             if (!temPecas(oponente)) {
@@ -859,21 +601,13 @@
                 setTimeout(() => alert(`🏆 Vitória das ${vencedor === 'white' ? 'brancas' : 'vermelhas'}!`), 100);
             } else if (!temMovimentos(oponente)) {
                 jogoEncerrado = true;
+                const vencedor = turnoAtual === 'white' ? 'vermelhas' : 'brancas';
                 document.getElementById('info-instrucao').textContent =
-                    `🏁 Oponente sem movimentos. Vitória das ${minhaCor === 'white' ? 'brancas' : 'vermelhas'}.`;
+                    `🏁 Oponente sem movimentos. Vitória das ${vencedor}.`;
+                setTimeout(() => alert(`🏆 Vitória das ${vencedor}!`), 100);
             }
 
-            try {
-                await update(ref(db, `salas_damas/${idSalaAtual}`), {
-                    tabuleiro: tabuleiroParaFirebase(tabuleiro),
-                    turno: turnoAtual,
-                    status: jogoEncerrado ? 'encerrado' : 'jogando'
-                });
-            } catch (e) {
-                console.error('Erro ao sincronizar:', e);
-                document.getElementById('info-instrucao').textContent =
-                    '⚠️ Falha ao sincronizar. A tentar novamente...';
-            }
+            renderizarTabuleiro();
         }
 
         function temPecas(cor) {
@@ -899,44 +633,8 @@
             return false;
         }
 
-        function calcularMovimentosPara(r, c, cor) {
-            const peca = tabuleiro[r][c];
-            if (!peca || !peca.startsWith(cor)) return [];
-            const backup = minhaCor;
-            minhaCor = cor;
-            const movs = calcularMovimentos(r, c);
-            minhaCor = backup;
-            return movs;
-        }
-
-        /* ==========================================================
-           FIREBASE LISTENER
-           ========================================================== */
-        function escutarFirebase() {
-            if (unsubscribeFirebase) unsubscribeFirebase();
-
-            const salaRef = ref(db, 'salas_damas/' + idSalaAtual);
-            unsubscribeFirebase = onValue(salaRef, (snapshot) => {
-                if (!snapshot.exists()) return;
-                const dados = snapshot.val();
-
-                tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
-                turnoAtual = dados.turno || 'white';
-                jogoEncerrado = dados.status === 'encerrado';
-
-                const jogadores = dados.jogadores || {};
-                if (Object.keys(jogadores).length === 2) {
-                    document.getElementById('info-instrucao').textContent =
-                        '✅ Oponente conectado! ' +
-                        (turnoAtual === minhaCor ? 'Sua vez.' : 'Aguarde a jogada dele.');
-                } else if (minhaCor === 'white') {
-                    document.getElementById('info-instrucao').textContent =
-                        '⏳ Aguardando o oponente entrar na sala...';
-                }
-
-                renderizarTabuleiro();
-            });
-        }
+        // Inicializa o jogo ao carregar
+        renderizarTabuleiro();
     </script>
 </body>
 </html>
