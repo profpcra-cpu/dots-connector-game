@@ -301,7 +301,6 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* SVG DE LINHAS — CORREÇÃO CRÍTICA */
         #canvas-lines {
             position: absolute;
             top: 0;
@@ -757,15 +756,10 @@
         }
 
         /* ==========================================================
-           SVG DE LINHAS — CORREÇÃO CRÍTICA
-           ==========================================================
-           Um <svg> sem viewBox tem coordenadas internas 300×150
-           por padrão. As nossas linhas chegam a y=340, ficando
-           FORA do viewport — invisíveis. Aqui recriamos o SVG
-           com viewBox dinâmico = dimensões do tabuleiro.
+           SVG DE LINHAS
            ========================================================== */
         function garantirSvgValido() {
-            const w = gameBoard.clientWidth || 500;
+            const w = gameBoard.clientWidth || 460;
             const h = gameBoard.clientHeight || 340;
 
             const svgAntigo = document.getElementById('canvas-lines');
@@ -813,8 +807,8 @@
 
             coordenadasNodes = [];
 
-            const boardWidth = gameBoard.clientWidth;
-            const boardHeight = gameBoard.clientHeight;
+            const boardWidth = gameBoard.clientWidth || 460;
+            const boardHeight = gameBoard.clientHeight || 340;
 
             let posicoes = null;
             for (let tentativa = 0; tentativa < 25; tentativa++) {
@@ -874,9 +868,12 @@
             if (nivelConcluido) return;
 
             if (nodeObj.id !== proximoNumeroEsperado) {
-                if (nodeObj.id > proximoNumeroEsperado) {
-                    elementoNode.classList.add('error');
-                    setTimeout(() => elementoNode.classList.remove('error'), 400);
+                elementoNode.classList.add('error');
+                setTimeout(() => elementoNode.classList.remove('error'), 400);
+
+                if (nodeObj.id < proximoNumeroEsperado) {
+                    infoInstrucao.textContent = `⚠️ Este nó já foi conectado! Próximo correto: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
+                } else {
                     infoInstrucao.textContent = `⚠️ Siga a ordem! Próximo: ${obterTextoRotulo(proximoNumeroEsperado, modoNumeracao, totalPontosNivel)}`;
                 }
                 return;
@@ -1038,12 +1035,15 @@
         selectTipoNumeracao.addEventListener('change', () => iniciarNovoJogoRonda());
         btnAvancar.addEventListener('click', () => iniciarNovoJogoRonda());
 
+        // Redimensionamento seguro reiniciando o nível para realinhamento perfeito de nós e linhas
+        let resizeTimeout;
         window.addEventListener('resize', () => {
-            if (canvasLines) {
-                const w = gameBoard.clientWidth;
-                const h = gameBoard.clientHeight;
-                canvasLines.setAttribute('viewBox', `0 0 ${w} ${h}`);
-            }
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (!nivelConcluido) {
+                    iniciarNovoJogoRonda();
+                }
+            }, 250);
         });
     </script>
 </body>
