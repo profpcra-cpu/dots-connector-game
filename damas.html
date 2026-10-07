@@ -279,7 +279,7 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Modo Hover/Rover dinâmico para peças que podem ser movidas */
+        /* Efeito Hover/Pulsante para as peças móveis do jogador da vez */
         .piece.movel {
             cursor: pointer;
             box-shadow: 0 0 12px 3px rgba(74, 222, 128, 0.8);
@@ -664,13 +664,12 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO (Com Inversão de Perspectiva e Modo Hover Móvel)
+           RENDERIZAÇÃO (Inversão de Perspectiva + Hover nas Peças Móveis do Jogador da Vez)
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
             grid.innerHTML = '';
 
-            // Inverte a perspectiva caso o jogador seja 'red' para ver suas peças na parte inferior
             const invertido = (minhaCor === 'red');
 
             for (let visualR = 0; visualR < 8; visualR++) {
@@ -700,7 +699,7 @@
                         const isDama = peca.includes('king') ? ' king' : '';
                         
                         let classeExtra = '';
-                        // Aplica o modo hover/pulsante se for a vez do jogador e a peça tiver movimentos válidos
+                        // Destaca via hover/pulsante apenas as peças do jogador que está com a vez no momento
                         if (!jogoEncerrado && turnoAtual === minhaCor && peca.startsWith(minhaCor)) {
                             const movsPeca = calcularMovimentosPara(r, c, minhaCor);
                             if (movsPeca.length > 0) {
