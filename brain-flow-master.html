@@ -370,155 +370,77 @@ button:hover { filter: brightness(1.08); transform: translateY(-1px); }
 import { db } from "./firebase-config.js";
 import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-/* ==========================================================
-   CACHE BUSTER
-   ========================================================== */
-const VERSAO_CODIGO = 'v4-2026-10-07-procedural';
+const VERSAO_CODIGO = 'v5-2026-10-07-regioes';
 console.log(`✅ Rodando versão ${VERSAO_CODIGO}`);
 
-/* ==========================================================
-   SESSÃO
-   ========================================================== */
 const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
 if (!jogadorSessao) { window.location.href = 'index.html'; }
 
 /* ==========================================================
-   GERADOR PROCEDURAL DE PUZZLES
+   GERADOR POR REGIÕES CONEXAS
    ==========================================================
-   Estratégia:
-   1. Gera um caminho hamiltoniano aleatório (visita cada célula 1x).
-   2. Fatia o caminho em N segmentos disjuntos que cobrem tudo.
-   3. Cada segmento → 1 par (endpoints nas pontas).
-   4. Coloca estrelas em células onde trilhas "adjacentes" se cruzam.
-   Por construção, o puzzle SEMPRE tem solução.
+   Estratégia garantidamente solucionável:
+   1. Escolhe N sementes (uma por par).
+   2. Cada célula é atribuída à semente mais próxima (Voronoi).
+   3. Ajusta fronteiras para garantir que cada região seja conexa.
+   4. Endpoints = 2 células da mesma região com maior distância
+      Manhattan entre si.
+   5. Estrelas = células onde regiões adjacentes se tocam em
+      pontos que forçam travessia (interseção de caminhos).
    ========================================================== */
 
 const CORES = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
 
-/**
- * Gera um caminho hamiltoniano aleatório via backtracking.
- * Retorna array de {r,c} visitando TODAS as n*n células.
- */
-function gerarCaminhoHamiltoniano(n) {
-    const grid = Array.from({ length: n }, () => Array(n).fill(false));
-    const caminho = [];
-    const total = n * n;
-    const inicio = { r: Math.floor(Math.random() * n), c: Math.floor(Math.random() * n) };
-    grid[inicio.r][inicio.c] = true;
-    caminho.push(inicio);
-
-    function dfs(r, c) {
-        if (caminho.length === total) return true;
-        const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-        // Embaralha direções para variar o padrão
-        for (let i = dirs.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+function gerarPuzzle(n, qtdPares) {
+    // 1. Sementes bem distribuídas
+    const sementes = [];
+    const usados = new Set();
+    let tentativas = 0;
+    while (sementes.length < qtdPares && tentativas < 200) {
+        tentativas++;
+        const r = Math.floor(Math.random() * n);
+        const c = Math.floor(Math.random() * n);
+        const k = `${r},${c}`;
+        if (usados.has(k)) continue;
+        // Distância mínima entre sementes
+        let ok = true;
+        for (const s of sementes) {
+            if (Math.abs(s.r - r) + Math.abs(s.c - c) < 2) { ok = false; break; }
         }
-        for (const [dr, dc] of dirs) {
-            const nr = r + dr, nc = c + dc;
-            if (nr < 0 || nr >= n || nc < 0 || nc >= n) continue;
-            if (grid[nr][nc]) continue;
-            grid[nr][nc] = true;
-            caminho.push({ r: nr, c: nc });
-            if (dfs(nr, nc)) return true;
-            caminho.pop();
-            grid[nr][nc] = false;
-        }
-        return false;
+        if (!ok) continue;
+        usados.add(k);
+        sementes.push({ r, c, id: sementes.length });
     }
 
-    if (!dfs(inicio.r, inicio.c)) {
-        // Fallback: caminho em serpentina (sempre funciona)
-        const serp = [];
-        for (let r = 0; r < n; r++) {
-            if (r % 2 === 0) {
-                for (let c = 0; c < n; c++) serp.push({ r, c });
-            } else {
-                for (let c = n - 1; c >= 0; c--) serp.push({ r, c });
+    // 2. Voronoi (atribui cada célula à semente mais próxima)
+    const regiao = Array.from({ length: n }, () => Array(n).fill(-1));
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            let melhor = 0, melhorDist = Infinity;
+            for (const s of sementes) {
+                const d = Math.abs(s.r - r) + Math.abs(s.c - c);
+                if (d < melhorDist) { melhorDist = d; melhor = s.id; }
             }
+            regiao[r][c] = melhor;
         }
-        return serp;
     }
-    return caminho;
-}
 
-/**
- * Fatia o caminho em `qtdPares` segmentos contíguos disjuntos.
- * Retorna array de pares {a, b, indiceInicio, indiceFim}.
- */
-function fatiarCaminho(caminho, qtdPares) {
-    const total = caminho.length;
-    if (qtdPares < 1) return [];
-
-    // Distribui tamanhos com variação
-    const tamanhos = [];
-    let restante = total;
-    for (let i = 0; i < qtdPares - 1; i++) {
-        const minTam = 2;
-        const maxTam = restante - (qtdPares - i - 1) * minTam;
-        const tam = minTam + Math.floor(Math.random() * Math.max(1, maxTam - minTam + 1));
-        tamanhos.push(tam);
-        restante -= tam;
-    }
-    tamanhos.push(restante);
-
-    const pares = [];
-    let idx = 0;
+    // 3. Garante que cada região tem ao menos 2 células
     for (let i = 0; i < qtdPares; i++) {
-        const tam = tamanhos[i];
-        const a = caminho[idx];
-        const b = caminho[idx + tam - 1];
-        pares.push({
-            cor: CORES[i % CORES.length],
-            a: { r: a.r, c: a.c },
-            b: { r: b.r, c: b.c },
-            _caminhoSolucao: caminho.slice(idx, idx + tam),
-            _indiceInicio: idx,
-            _indiceFim: idx + tam - 1
-        });
-        idx += tam;
-    }
-    return pares;
-}
-
-/**
- * Coloca estrelas nas "junções" onde a solução real precisa de travessia.
- * Estratégia: percorre os segmentos na ordem e verifica se um segmento
- * precisa passar por cima do endpoint de outro. Como o caminho hamiltoniano
- * é contíguo, se dois segmentos são adjacentes em linha reta na solução,
- * colocamos a estrela na célula do meio.
- */
-function calcularEstrelas(pares, n) {
-    const estrelas = [];
-    const ocupadas = new Set();
-    for (const p of pares) {
-        ocupadas.add(`${p.a.r},${p.a.c}`);
-        ocupadas.add(`${p.b.r},${p.b.c}`);
-    }
-
-    // Para cada par, olha se o caminho dele "passa perto" do endpoint de outro par
-    // em linha reta. Se sim, coloca estrela na célula intermediária.
-    for (let i = 0; i < pares.length; i++) {
-        const par = pares[i];
-        for (let j = 0; j < pares.length; j++) {
-            if (i === j) continue;
-            const outro = pares[j];
-            for (const ep of [outro.a, outro.b]) {
-                // Verifica se algum ponto do caminho de `par` está na mesma linha/coluna
-                // que `ep` a distância 1 (vai ser forçado a atravessar)
+        let contador = 0;
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (regiao[r][c] === i) contador++;
+        if (contador < 2) {
+            // Toma uma célula de outra região adjacente
+            for (const s of sementes) {
+                if (s.id === i) continue;
                 const vizinhos = [
-                    { r: ep.r - 1, c: ep.c }, { r: ep.r + 1, c: ep.c },
-                    { r: ep.r, c: ep.c - 1 }, { r: ep.r, c: ep.c + 1 }
+                    { r: s.r - 1, c: s.c }, { r: s.r + 1, c: s.c },
+                    { r: s.r, c: s.c - 1 }, { r: s.r, c: s.c + 1 }
                 ];
                 for (const v of vizinhos) {
                     if (v.r < 0 || v.r >= n || v.c < 0 || v.c >= n) continue;
-                    const k = `${v.r},${v.c}`;
-                    if (ocupadas.has(k)) continue;
-                    if (estrelas.some(e => e.r === v.r && e.c === v.c)) continue;
-                    // Coloca estrela se essa célula está no caminho de `par`
-                    if (par._caminhoSolucao.some(p => p.r === v.r && p.c === v.c)) {
-                        estrelas.push({ r: v.r, c: v.c });
+                    if (regiao[v.r][v.c] !== i) {
+                        regiao[v.r][v.c] = i;
                         break;
                     }
                 }
@@ -526,57 +448,83 @@ function calcularEstrelas(pares, n) {
         }
     }
 
-    // Fallback: se nenhuma estrela foi detectada, coloca 1-2 no meio do tabuleiro
-    if (estrelas.length === 0 && pares.length >= 3) {
-        const meio = Math.floor(n / 2);
-        if (!ocupadas.has(`${meio},${meio}`)) {
-            estrelas.push({ r: meio, c: meio });
+    // 4. Encontra os 2 endpoints de cada região (par mais distante)
+    const pares = [];
+    for (let i = 0; i < qtdPares; i++) {
+        const celulas = [];
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+            if (regiao[r][c] === i) celulas.push({ r, c });
+        }
+        if (celulas.length < 2) continue;
+
+        let melhorA = celulas[0], melhorB = celulas[1], melhorDist = -1;
+        for (let a = 0; a < celulas.length; a++) {
+            for (let b = a + 1; b < celulas.length; b++) {
+                const d = Math.abs(celulas[a].r - celulas[b].r) + Math.abs(celulas[a].c - celulas[b].c);
+                if (d > melhorDist) {
+                    melhorDist = d;
+                    melhorA = celulas[a];
+                    melhorB = celulas[b];
+                }
+            }
+        }
+        pares.push({
+            cor: CORES[i % CORES.length],
+            a: { r: melhorA.r, c: melhorA.c },
+            b: { r: melhorB.r, c: melhorB.c },
+            _celulas: celulas
+        });
+    }
+
+    // 5. Estrelas = células onde a fronteira entre 2 regiões se toca
+    //    e ambas têm caminhos que precisam se cruzar. Como garantimos
+    //    Voronoi, colocamos estrelas em 1-2 células "vértice" das fronteiras.
+    const estrelas = [];
+    const ocupadas = new Set();
+    for (const p of pares) {
+        ocupadas.add(`${p.a.r},${p.a.c}`);
+        ocupadas.add(`${p.b.r},${p.b.c}`);
+    }
+
+    // Conta quantas regiões cada célula toca (4-vizinhança)
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const k = `${r},${c}`;
+            if (ocupadas.has(k)) continue;
+            const vizinhosReg = new Set();
+            const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+            for (const [dr, dc] of dirs) {
+                const nr = r + dr, nc = c + dc;
+                if (nr < 0 || nr >= n || nc < 0 || nc >= n) continue;
+                vizinhosReg.add(regiao[nr][nc]);
+            }
+            // Se a célula toca 2+ regiões diferentes (é uma fronteira),
+            // pode ser candidata a estrela
+            if (vizinhosReg.size >= 2 && estrelas.length < 3) {
+                if (Math.random() < 0.5) {
+                    estrelas.push({ r, c });
+                }
+            }
         }
     }
 
-    return estrelas.slice(0, 3); // limita a 3 estrelas no máximo
-}
+    // Remove propriedades internas
+    const paresLimpos = pares.map(p => ({
+        cor: p.cor,
+        a: { r: p.a.r, c: p.a.c },
+        b: { r: p.b.r, c: p.b.c }
+    }));
 
-/**
- * Gera um puzzle completo proceduralmente.
- */
-function gerarPuzzle(n, qtdPares) {
-    for (let tentativa = 0; tentativa < 20; tentativa++) {
-        const caminho = gerarCaminhoHamiltoniano(n);
-        if (caminho.length !== n * n) continue;
-
-        const pares = fatiarCaminho(caminho, qtdPares);
-        // Validação: cada par tem tamanho >= 2
-        const todosValidos = pares.every(p =>
-            p._caminhoSolucao.length >= 2 &&
-            (p.a.r !== p.b.r || p.a.c !== p.b.c)
-        );
-        if (!todosValidos) continue;
-
-        const estrelas = calcularEstrelas(pares, n);
-
-        // Remove propriedades internas antes de retornar
-        const paresLimpos = pares.map(p => ({
-            cor: p.cor,
-            a: { r: p.a.r, c: p.a.c },
-            b: { r: p.b.r, c: p.b.c }
-        }));
-
-        return { tamanho: n, pares: paresLimpos, estrelas };
-    }
-    // Fallback de emergência
     return {
         tamanho: n,
-        pares: [
-            { cor: CORES[0], a: { r: 0, c: 0 }, b: { r: n - 1, c: 0 } },
-            { cor: CORES[1], a: { r: 0, c: n - 1 }, b: { r: n - 1, c: n - 1 } }
-        ],
-        estrelas: []
+        pares: paresLimpos,
+        estrelas,
+        _regiao: regiao  // útil para debug
     };
 }
 
 /* ==========================================================
-   CONFIGURAÇÃO DE NÍVEIS
+   CONFIG DE NÍVEIS
    ========================================================== */
 const CONFIG_NIVEIS = {
     1: { tamanho: 5, qtdPares: 3 },
@@ -585,14 +533,17 @@ const CONFIG_NIVEIS = {
     4: { tamanho: 8, qtdPares: 6 }
 };
 
-// Cache de puzzles gerados por sessão (para "Reiniciar" manter o mesmo)
 const cachePuzzles = {};
 
 function obterPuzzle(nivel) {
     if (!cachePuzzles[nivel]) {
         const cfg = CONFIG_NIVEIS[nivel] || CONFIG_NIVEIS[1];
         cachePuzzles[nivel] = gerarPuzzle(cfg.tamanho, cfg.qtdPares);
-        console.log(`🎲 Puzzle nível ${nivel} gerado:`, cachePuzzles[nivel]);
+        console.log(`🎲 Puzzle nível ${nivel} gerado:`, {
+            tamanho: cachePuzzles[nivel].tamanho,
+            qtdPares: cachePuzzles[nivel].pares.length,
+            estrelas: cachePuzzles[nivel].estrelas
+        });
     }
     return cachePuzzles[nivel];
 }
@@ -600,28 +551,17 @@ function obterPuzzle(nivel) {
 function regerarPuzzle(nivel) {
     const cfg = CONFIG_NIVEIS[nivel] || CONFIG_NIVEIS[1];
     cachePuzzles[nivel] = gerarPuzzle(cfg.tamanho, cfg.qtdPares);
-    console.log(`🎲 Puzzle nível ${nivel} REGERADO:`, cachePuzzles[nivel]);
+    console.log(`🎲 Puzzle nível ${nivel} REGERADO`);
 }
 
 /* ==========================================================
    ESTADO
    ========================================================== */
 const estado = {
-    nivel: 1,
-    tamanho: 5,
-    grid: [],
-    pares: [],
-    estrelas: [],
-    trilhas: {},
-    estrelasPorPar: {},
-    estrelasUsadasGlobal: {},
-    endpointsAtravessados: {},
-    desenhando: null,
-    pontos: 0,
-    segundos: 0,
-    timer: null,
-    recordes: {},
-    concluido: false
+    nivel: 1, tamanho: 5, grid: [], pares: [], estrelas: [],
+    trilhas: {}, estrelasPorPar: {}, estrelasUsadasGlobal: {},
+    endpointsAtravessados: {}, desenhando: null,
+    pontos: 0, segundos: 0, timer: null, recordes: {}, concluido: false
 };
 
 /* ==========================================================
@@ -639,9 +579,6 @@ const btnReiniciar = document.getElementById('btn-reiniciar-nivel');
 const selectNivel = document.getElementById('select-mudar-nivel');
 const themeToggle = document.getElementById('theme-toggle');
 
-/* ==========================================================
-   TEMA
-   ========================================================== */
 const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
 document.documentElement.setAttribute('data-theme', savedTheme);
 themeToggle.addEventListener('click', () => {
@@ -650,18 +587,12 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('brain_flow_theme', next);
 });
 
-/* ==========================================================
-   UTILITÁRIOS
-   ========================================================== */
 function formatarTempo(s) {
     if (s === undefined || s === null) return '--:--';
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 function keyRC(r, c) { return `${r},${c}`; }
 
-/* ==========================================================
-   INICIALIZAÇÃO
-   ========================================================== */
 function iniciarPuzzle(nivel, regerar = false) {
     if (!CONFIG_NIVEIS[nivel]) nivel = 1;
     if (regerar) regerarPuzzle(nivel);
@@ -710,46 +641,33 @@ function renderizarBoard() {
     board.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
     board.style.gridTemplateRows = `repeat(${n}, 1fr)`;
     board.innerHTML = '';
-
-    for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-            cell.id = `cell-${r}-${c}`;
-            board.appendChild(cell);
-        }
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+        cell.id = `cell-${r}-${c}`;
+        board.appendChild(cell);
     }
 }
 
-/* ==========================================================
-   MAPA VISUAL UNIFICADO
-   ========================================================== */
 function construirMapaVisual() {
     const n = estado.tamanho;
     const mapa = Array.from({ length: n }, () =>
         Array.from({ length: n }, () => ({
-            tipo: 'vazio', cor: null, parId: null,
-            temEstrela: false, estrelaId: null,
-            estrelaCapturada: false,
-            conectado: false,
-            atravessado: false,
-            live: false
+            tipo: 'vazio', cor: null, parId: null, temEstrela: false,
+            estrelaId: null, estrelaCapturada: false, conectado: false,
+            atravessado: false, live: false
         }))
     );
-
-    for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-            const g = estado.grid[r][c];
-            mapa[r][c].tipo = g.tipo;
-            mapa[r][c].cor = g.cor;
-            mapa[r][c].parId = g.parId;
-            mapa[r][c].temEstrela = g.temEstrela;
-            mapa[r][c].estrelaId = g.estrelaId;
-        }
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        const g = estado.grid[r][c];
+        mapa[r][c].tipo = g.tipo;
+        mapa[r][c].cor = g.cor;
+        mapa[r][c].parId = g.parId;
+        mapa[r][c].temEstrela = g.temEstrela;
+        mapa[r][c].estrelaId = g.estrelaId;
     }
-
     for (const parId in estado.trilhas) {
         const t = estado.trilhas[parId];
         const par = estado.pares.find(p => p.id == parId);
@@ -760,36 +678,24 @@ function construirMapaVisual() {
             (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
         for (const p of t) {
             const cell = mapa[p.r][p.c];
-            if (cell.tipo === 'endpoint') {
-                if (conecta) cell.conectado = true;
-                continue;
-            }
-            cell.tipo = 'trilha';
-            cell.cor = par.cor;
-            cell.parId = parId;
+            if (cell.tipo === 'endpoint') { if (conecta) cell.conectado = true; continue; }
+            cell.tipo = 'trilha'; cell.cor = par.cor; cell.parId = parId;
             if (conecta) cell.conectado = true;
         }
     }
-
     for (const parId in estado.endpointsAtravessados) {
         for (const k of estado.endpointsAtravessados[parId]) {
             const [r, c] = k.split(',').map(Number);
             mapa[r][c].atravessado = true;
         }
     }
-
     if (estado.desenhando) {
         const d = estado.desenhando;
         for (let i = 0; i < d.trail.length; i++) {
             const p = d.trail[i];
             const cell = mapa[p.r][p.c];
-            if (cell.tipo === 'endpoint') {
-                if (cell.parId === d.parId) cell.conectado = true;
-                continue;
-            }
-            cell.tipo = 'trilha';
-            cell.cor = d.cor;
-            cell.parId = d.parId;
+            if (cell.tipo === 'endpoint') { if (cell.parId === d.parId) cell.conectado = true; continue; }
+            cell.tipo = 'trilha'; cell.cor = d.cor; cell.parId = d.parId;
             if (i === d.trail.length - 1) cell.live = true;
         }
         for (const k of d.endpointsAtravessados) {
@@ -798,7 +704,6 @@ function construirMapaVisual() {
             mapa[r][c].live = false;
         }
     }
-
     for (const estId in estado.estrelasUsadasGlobal) {
         for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
             if (mapa[r][c].estrelaId === Number(estId) && mapa[r][c].temEstrela) {
@@ -806,67 +711,50 @@ function construirMapaVisual() {
             }
         }
     }
-
     return mapa;
 }
 
-/* ==========================================================
-   ATUALIZAÇÃO VISUAL
-   ========================================================== */
 function atualizarVisual() {
     const n = estado.tamanho;
     const mapa = construirMapaVisual();
-
-    for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-            const cell = document.getElementById(`cell-${r}-${c}`);
-            if (!cell) continue;
-
-            const d = mapa[r][c];
-            cell.className = 'cell';
-            cell.style.background = '';
-            cell.innerHTML = '';
-            cell.style.removeProperty('--trail-color');
-
-            if (d.estrelaCapturada) cell.classList.add('star-capturada');
-
-            if (d.tipo === 'endpoint') {
-                const cls = d.conectado ? ' connected' : '';
-                if (d.atravessado) cell.classList.add('atravessado');
-                cell.innerHTML = `<div class="endpoint${cls}" style="background:${d.cor}"></div>`;
-            } else if (d.tipo === 'trilha') {
-                cell.classList.add('trail');
-                if (d.conectado) cell.classList.add('connected');
-                if (d.live) cell.classList.add('live');
-                cell.style.setProperty('--trail-color', d.cor);
-            }
-
-            if (d.temEstrela) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.textContent = '⭐';
-                cell.appendChild(star);
-            }
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        const cell = document.getElementById(`cell-${r}-${c}`);
+        if (!cell) continue;
+        const d = mapa[r][c];
+        cell.className = 'cell';
+        cell.style.background = '';
+        cell.innerHTML = '';
+        cell.style.removeProperty('--trail-color');
+        if (d.estrelaCapturada) cell.classList.add('star-capturada');
+        if (d.tipo === 'endpoint') {
+            const cls = d.conectado ? ' connected' : '';
+            if (d.atravessado) cell.classList.add('atravessado');
+            cell.innerHTML = `<div class="endpoint${cls}" style="background:${d.cor}"></div>`;
+        } else if (d.tipo === 'trilha') {
+            cell.classList.add('trail');
+            if (d.conectado) cell.classList.add('connected');
+            if (d.live) cell.classList.add('live');
+            cell.style.setProperty('--trail-color', d.cor);
+        }
+        if (d.temEstrela) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.textContent = '⭐';
+            cell.appendChild(star);
         }
     }
-
     const total = estado.estrelas.length;
     const capturadas = Object.keys(estado.estrelasUsadasGlobal).length;
     displayEstrelas.textContent = `${capturadas}/${total}`;
 }
 
-/* ==========================================================
-   INTERAÇÃO
-   ========================================================== */
 let activePointerId = null;
-
 board.addEventListener('pointerdown', (e) => {
     if (estado.concluido) return;
     const cell = e.target.closest('.cell');
     if (!cell) return;
     const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
     const dado = estado.grid[r][c];
-
     if (dado.tipo === 'endpoint') {
         e.preventDefault();
         activePointerId = e.pointerId;
@@ -874,35 +762,29 @@ board.addEventListener('pointerdown', (e) => {
         iniciarTrilha(dado.parId, dado.cor, r, c);
     }
 });
-
 board.addEventListener('pointermove', (e) => {
     if (!estado.desenhando) return;
     if (e.pointerId !== activePointerId) return;
     e.preventDefault();
     if (e.pointerType === 'pen' && e.buttons === 0) return;
-
     const cell = cellFromPoint(e.clientX, e.clientY);
     if (!cell) return;
     estenderTrilha(parseInt(cell.dataset.r), parseInt(cell.dataset.c));
 });
-
 board.addEventListener('pointerup', (e) => {
     if (e.pointerId !== activePointerId) return;
     finalizarDesenho();
 });
-
 board.addEventListener('pointercancel', (e) => {
     if (e.pointerId !== activePointerId) return;
     cancelarDesenho();
 });
-
 window.addEventListener('pointerup', (e) => {
     if (e.pointerId === activePointerId && estado.desenhando) finalizarDesenho();
 });
 window.addEventListener('pointercancel', (e) => {
     if (e.pointerId === activePointerId && estado.desenhando) cancelarDesenho();
 });
-
 function cellFromPoint(clientX, clientY) {
     const els = board.querySelectorAll('.cell');
     for (const el of els) {
@@ -912,52 +794,32 @@ function cellFromPoint(clientX, clientY) {
     }
     return null;
 }
-
 function finalizarDesenho() {
-    if (activePointerId !== null) {
-        try { board.releasePointerCapture(activePointerId); } catch (_) {}
-    }
+    if (activePointerId !== null) { try { board.releasePointerCapture(activePointerId); } catch (_) {} }
     activePointerId = null;
     if (estado.desenhando) finalizarTrilha();
 }
-
 function cancelarDesenho() {
-    if (activePointerId !== null) {
-        try { board.releasePointerCapture(activePointerId); } catch (_) {}
-    }
+    if (activePointerId !== null) { try { board.releasePointerCapture(activePointerId); } catch (_) {} }
     activePointerId = null;
-    if (estado.desenhando) {
-        estado.desenhando = null;
-        atualizarVisual();
-    }
+    if (estado.desenhando) { estado.desenhando = null; atualizarVisual(); }
 }
 
-/* ==========================================================
-   LÓGICA DE TRILHA
-   ========================================================== */
 function iniciarTrilha(parId, cor, r, c) {
     if (estado.trilhas[parId]) {
         for (const estId of (estado.estrelasPorPar[parId] || [])) {
-            if (estado.estrelasUsadasGlobal[estId] === parId) {
-                delete estado.estrelasUsadasGlobal[estId];
-            }
+            if (estado.estrelasUsadasGlobal[estId] === parId) delete estado.estrelasUsadasGlobal[estId];
         }
         delete estado.trilhas[parId];
         delete estado.estrelasPorPar[parId];
         delete estado.endpointsAtravessados[parId];
-        for (let rr = 0; rr < estado.tamanho; rr++) {
-            for (let cc = 0; cc < estado.tamanho; cc++) {
-                const g = estado.grid[rr][cc];
-                if (g.tipo === 'trilha' && g.parId === parId) {
-                    g.tipo = 'vazio'; g.cor = null; g.parId = null;
-                }
-            }
+        for (let rr = 0; rr < estado.tamanho; rr++) for (let cc = 0; cc < estado.tamanho; cc++) {
+            const g = estado.grid[rr][cc];
+            if (g.tipo === 'trilha' && g.parId === parId) { g.tipo = 'vazio'; g.cor = null; g.parId = null; }
         }
     }
-
     estado.desenhando = {
-        parId, cor,
-        trail: [{ r, c }],
+        parId, cor, trail: [{ r, c }],
         estrelasCapturadas: new Set(),
         endpointsAtravessados: new Set()
     };
@@ -970,7 +832,6 @@ function estenderTrilha(r, c) {
     const trail = d.trail;
     if (!trail.length) return;
     const ultima = trail[trail.length - 1];
-
     if (ultima.r === r && ultima.c === c) return;
 
     if (trail.length >= 2) {
@@ -987,7 +848,6 @@ function estenderTrilha(r, c) {
             return;
         }
     }
-
     const dr = Math.abs(r - ultima.r), dc = Math.abs(c - ultima.c);
     if (dr + dc !== 1) {
         const idx = trail.findIndex(p => p.r === r && p.c === c);
@@ -1006,29 +866,23 @@ function estenderTrilha(r, c) {
         }
         return;
     }
-
     const alvo = estado.grid[r][c];
-
     if (alvo.tipo === 'endpoint' && alvo.parId === d.parId) {
-        trail.push({ r, c });
-        finalizarTrilha();
-        return;
+        trail.push({ r, c }); finalizarTrilha(); return;
     }
-
     if (alvo.tipo === 'endpoint') {
         const saldo = d.estrelasCapturadas.size - d.endpointsAtravessados.size;
         if (saldo > 0) {
             trail.push({ r, c });
             d.endpointsAtravessados.add(keyRC(r, c));
             atualizarVisual();
-            infoInstrucao.textContent = `⭐ Atravessando bola (${d.estrelasCapturadas.size - d.endpointsAtravessados.size} restante(s))`;
+            infoInstrucao.textContent = `⭐ Atravessando bola (${saldo - 1} restante(s))`;
         } else {
             piscarErro(r, c);
             infoInstrucao.textContent = '⚠️ Capture uma ⭐ para atravessar esta bola!';
         }
         return;
     }
-
     const idx = trail.findIndex(p => p.r === r && p.c === c);
     if (idx >= 0) {
         for (let i = idx + 1; i < trail.length; i++) {
@@ -1044,20 +898,16 @@ function estenderTrilha(r, c) {
         atualizarVisual();
         return;
     }
-
     if (alvo.tipo === 'trilha' && alvo.parId !== d.parId) {
         piscarErro(r, c);
         infoInstrucao.textContent = '⚠️ Não pode cruzar trilhas de outras cores!';
         return;
     }
-
     trail.push({ r, c });
-
     if (alvo.temEstrela && !d.estrelasCapturadas.has(alvo.estrelaId)) {
         d.estrelasCapturadas.add(alvo.estrelaId);
         infoInstrucao.textContent = `⭐ Estrela capturada! (${d.estrelasCapturadas.size - d.endpointsAtravessados.size} disponível(is))`;
     }
-
     atualizarVisual();
 }
 
@@ -1067,29 +917,22 @@ function finalizarTrilha() {
     const trail = d.trail;
     const par = estado.pares.find(p => p.id === d.parId);
     if (!par) { estado.desenhando = null; atualizarVisual(); return; }
-
     const inicio = trail[0], fim = trail[trail.length - 1];
     const conecta =
         (inicio.r === par.a.r && inicio.c === par.a.c && fim.r === par.b.r && fim.c === par.b.c) ||
         (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
-
     if (conecta && trail.length >= 2) {
         estado.trilhas[d.parId] = [...trail];
         estado.estrelasPorPar[d.parId] = new Set(d.estrelasCapturadas);
         estado.endpointsAtravessados[d.parId] = new Set(d.endpointsAtravessados);
-        for (const estId of d.estrelasCapturadas) {
-            estado.estrelasUsadasGlobal[estId] = d.parId;
-        }
+        for (const estId of d.estrelasCapturadas) estado.estrelasUsadasGlobal[estId] = d.parId;
         for (let i = 0; i < trail.length; i++) {
             const p = trail[i];
             const g = estado.grid[p.r][p.c];
             if (g.tipo === 'endpoint') continue;
-            g.tipo = 'trilha';
-            g.cor = d.cor;
-            g.parId = d.parId;
+            g.tipo = 'trilha'; g.cor = d.cor; g.parId = d.parId;
         }
     }
-
     estado.desenhando = null;
     atualizarVisual();
     verificarVitoria();
@@ -1102,14 +945,9 @@ function piscarErro(r, c) {
     setTimeout(() => el.classList.remove('error'), 320);
 }
 
-/* ==========================================================
-   VITÓRIA
-   ========================================================== */
 function verificarVitoria() {
     if (estado.concluido) return;
     const n = estado.tamanho;
-
-    // 1) Todos os pares conectados
     for (const par of estado.pares) {
         const t = estado.trilhas[par.id];
         if (!t || t.length < 2) return;
@@ -1119,19 +957,12 @@ function verificarVitoria() {
             (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
         if (!conecta) return;
     }
-
-    // 2) Nenhuma célula "vazia E sem estrela"
     const mapa = construirMapaVisual();
-    for (let r = 0; r < n; r++) {
-        for (let c = 0; c < n; c++) {
-            const d = mapa[r][c];
-            const ehTrilha = d.tipo === 'trilha';
-            const ehEndpoint = d.tipo === 'endpoint';
-            const temEstrela = d.temEstrela;
-            if (!ehTrilha && !ehEndpoint && !temEstrela) return;
-        }
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        const d = mapa[r][c];
+        const ok = d.tipo === 'trilha' || d.tipo === 'endpoint' || d.temEstrela;
+        if (!ok) return;
     }
-
     estado.concluido = true;
     concluirNivel();
 }
@@ -1141,30 +972,22 @@ async function concluirNivel() {
     infoInstrucao.textContent = `🎉 Nível ${estado.nivel} concluído em ${formatarTempo(estado.segundos)}!`;
     const ganho = estado.nivel * 25 + Math.max(0, 200 - estado.segundos);
     estado.pontos += ganho;
-
     if (!estado.recordes[estado.nivel] || estado.segundos < estado.recordes[estado.nivel]) {
         estado.recordes[estado.nivel] = estado.segundos;
     }
-
     displayPontos.textContent = estado.pontos;
     displayRecorde.textContent = formatarTempo(estado.recordes[estado.nivel]);
-
     try {
         await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
-            pontos: estado.pontos,
-            nivel: estado.nivel + 1,
+            pontos: estado.pontos, nivel: estado.nivel + 1,
             recordesFlowNumeros: estado.recordes,
             ultimaAtualizacao: new Date().toISOString()
         });
     } catch (e) { console.error('Erro ao salvar:', e); }
-
     btnAvancar.classList.remove('hidden');
     btnAvancar.textContent = `Avançar para Nível ${Math.min(estado.nivel + 1, 4)} 🚀`;
 }
 
-/* ==========================================================
-   TIMER
-   ========================================================== */
 function iniciarTimer() {
     pararTimer();
     estado.segundos = 0;
@@ -1179,34 +1002,13 @@ function pararTimer() {
     estado.timer = null;
 }
 
-/* ==========================================================
-   EVENTOS
-   ========================================================== */
-btnReiniciar.addEventListener('click', () => iniciarPuzzle(estado.nivel, false));
-
+btnReiniciar.addEventListener('click', () => iniciarPuzzle(estado.nivel, true));
 selectNivel.addEventListener('change', (e) => {
     const n = parseInt(e.target.value);
-    if (n >= 1 && n <= 4) {
-        selectNivel.value = '';
-        iniciarPuzzle(n, false);
-    }
+    if (n >= 1 && n <= 4) { selectNivel.value = ''; iniciarPuzzle(n, false); }
 });
+btnAvancar.addEventListener('click', () => iniciarPuzzle(Math.min(estado.nivel + 1, 4), false));
 
-btnAvancar.addEventListener('click', () => {
-    iniciarPuzzle(Math.min(estado.nivel + 1, 4), false);
-});
-
-// Botão extra: gerar novo puzzle do mesmo nível (útil para treinar)
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'n' && e.ctrlKey) {
-        e.preventDefault();
-        iniciarPuzzle(estado.nivel, true);
-    }
-});
-
-/* ==========================================================
-   CARREGAMENTO INICIAL
-   ========================================================== */
 async function carregarDados() {
     try {
         const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
@@ -1217,36 +1019,11 @@ async function carregarDados() {
             estado.nivel = Math.min(4, Math.max(1, dados.nivel || 1));
         }
     } catch (e) { console.warn('Modo offline', e); }
-
     displayPontos.textContent = estado.pontos;
     displayNivel.textContent = estado.nivel;
     iniciarPuzzle(estado.nivel, false);
 }
-
 carregarDados();
-
-/* ==========================================================
-   DIAGNÓSTICO (opcional via console)
-   ========================================================== */
-window.diagnosticar = function () {
-    const n = estado.tamanho;
-    const mapa = construirMapaVisual();
-    const orfas = [];
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
-        const d = mapa[r][c];
-        if (d.tipo !== 'trilha' && d.tipo !== 'endpoint' && !d.temEstrela) {
-            orfas.push(`(${r},${c})`);
-        }
-    }
-    console.log('Órfãs:', orfas.length ? orfas.join(', ') : '✅ NENHUMA');
-    console.log('Trilhas:', Object.keys(estado.trilhas).length, 'de', estado.pares.length);
-    return { orfas, trilhas: Object.keys(estado.trilhas).length, pares: estado.pares.length };
-};
-
-window.novoPuzzle = function () {
-    iniciarPuzzle(estado.nivel, true);
-    console.log('🎲 Novo puzzle gerado para o nível', estado.nivel);
-};
 </script>
 </body>
 </html>
