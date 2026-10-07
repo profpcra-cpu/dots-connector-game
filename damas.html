@@ -279,15 +279,20 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Destaque visual para peças que possuem movimentos possíveis no turno */
+        /* Modo Hover/Rover dinâmico para peças que podem ser movidas */
         .piece.movel {
-            box-shadow: 0 0 12px 2px var(--c-blue);
-            animation: pulsarPeca 1.5s infinite alternate;
+            cursor: pointer;
+            box-shadow: 0 0 12px 3px rgba(74, 222, 128, 0.8);
+            animation: pulse-movel 1.5s infinite;
+        }
+        .piece.movel:hover {
+            transform: scale(1.1);
         }
 
-        @keyframes pulsarPeca {
-            from { transform: scale(1); }
-            to { transform: scale(1.06); }
+        @keyframes pulse-movel {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
         }
 
         .instructions {
@@ -391,14 +396,33 @@
         import { ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         /* ==========================================================
+           HELPERS DE SERIALIZAÇÃO
+           ========================================================== */
+        function tabuleiroParaFirebase(t) {
+            return t.map(row => row.slice());
+        }
+
+        function firebaseParaTabuleiro(raw) {
+            if (!raw) return criarTabuleiroInicial();
+            if (Array.isArray(raw)) {
+                return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
+            }
+            const linhas = Object.keys(raw).sort((a, b) => Number(a) - Number(b));
+            const t = [];
+            for (let r = 0; r < 8; r++) {
+                const linhaRaw = raw[r] || raw[String(r)] || {};
+                const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
+                while (linha.length < 8) linha.push(null);
+                t.push(linha.slice(0, 8));
+            }
+            return t;
+        }
+
+        /* ==========================================================
            SESSÃO DO JOGADOR
            ========================================================== */
         const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
         if (!jogadorSessao) { window.location.href = 'index.html'; }
-
-        if (!jogadorSessao.chave) {
-            jogadorSessao.chave = 'user_' + btoa(unescape(encodeURIComponent(jogadorSessao.nome))).replace(/=/g, '');
-        }
 
         document.getElementById('lobby-nome').textContent = jogadorSessao.nome;
         document.getElementById('lobby-avatar').textContent = jogadorSessao.avatar;
@@ -407,7 +431,7 @@
            ESTADO
            ========================================================== */
         let idSalaAtual = null;
-        let minhaCor = null;
+        let minhaCor = null;            
         let tabuleiro = [];
         let celulaSelecionada = null;
         let movimentosValidos = [];
@@ -449,25 +473,6 @@
                 for (let c = 0; c < 8; c++) {
                     if ((r + c) % 2 === 1) t[r][c] = 'white';
                 }
-            }
-            return t;
-        }
-
-        function tabuleiroParaFirebase(t) {
-            return t.map(row => row.slice());
-        }
-
-        function firebaseParaTabuleiro(raw) {
-            if (!raw) return criarTabuleiroInicial();
-            if (Array.isArray(raw)) {
-                return raw.map(row => Array.isArray(row) ? row.slice() : Object.values(row || {}));
-            }
-            const t = [];
-            for (let r = 0; r < 8; r++) {
-                const linhaRaw = raw[r] || raw[String(r)] || {};
-                const linha = Array.isArray(linhaRaw) ? linhaRaw.slice() : Object.values(linhaRaw);
-                while (linha.length < 8) linha.push(null);
-                t.push(linha.slice(0, 8));
             }
             return t;
         }
@@ -547,7 +552,7 @@
             minhaCor = cor;
             tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
             turnoAtual = dados.turno || 'white';
-            jogoEncerrado = dados.status === 'encerrado';
+            jogoEncerrado = false;
 
             entrarInterfaceJogo();
             escutarFirebase();
@@ -600,43 +605,37 @@
             const dados = snapshot.val();
             const jogadores = dados.jogadores || {};
 
-            if (jogadores[jogadorSessao.chave]) {
+            const jaEsta = jogadores[jogadorSessao.chave];
+            if (jaEsta) {
                 idSalaAtual = codigo;
-                minhaCor = jogadores[jogadorSessao.chave].cor;
+                minhaCor = jaEsta.cor;
                 tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
                 turnoAtual = dados.turno || 'white';
-                jogoEncerrado = dados.status === 'encerrado';
                 salvarSessao();
                 entrarInterfaceJogo();
                 escutarFirebase();
                 return;
             }
 
-            const chavesJogadores = Object.keys(jogadores);
-            if (chavesJogadores.length >= 2) {
+            const totalJogadores = Object.keys(jogadores).length;
+            if (totalJogadores >= 2) {
                 alert('Sala já cheia! Peça ao host para criar uma nova.');
                 return;
             }
 
-            const primeiraCor = jogadores[chavesJogadores[0]].cor;
-            minhaCor = primeiraCor === 'white' ? 'red' : 'white';
-
             idSalaAtual = codigo;
+            minhaCor = 'red';
             tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
             turnoAtual = dados.turno || 'white';
 
             await update(ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}`), {
                 nome: jogadorSessao.nome,
-                cor: minhaCor
+                cor: 'red'
             });
 
             salvarSessao();
             entrarInterfaceJogo();
             escutarFirebase();
-
-            if (minhaCor === 'white') {
-                document.getElementById('div-whatsapp').classList.remove('hidden');
-            }
         }
 
         function entrarInterfaceJogo() {
@@ -654,7 +653,7 @@
         document.getElementById('btn-whatsapp').addEventListener('click', () => {
             const url = new URL(window.location.href);
             url.searchParams.set('sala', idSalaAtual);
-            url.searchParams.delete('cor');
+            url.searchParams.delete('cor'); 
             const link = url.toString();
             const msg = encodeURIComponent(
                 `♟️ Vamos disputar uma partida de Damas no Brain Hub?\n\n` +
@@ -665,20 +664,20 @@
         });
 
         /* ==========================================================
-           RENDERIZAÇÃO CORRIGIDA PARA O CELULAR
+           RENDERIZAÇÃO (Com Inversão de Perspectiva e Modo Hover Móvel)
            ========================================================== */
         function renderizarTabuleiro() {
             const grid = document.getElementById('checkers-board');
             grid.innerHTML = '';
 
-            // Se for vermelho, invertemos a perspectiva visual (as suas peças ficam embaixo)
-            const inverter = minhaCor === 'red';
+            // Inverte a perspectiva caso o jogador seja 'red' para ver suas peças na parte inferior
+            const invertido = (minhaCor === 'red');
 
-            for (let i = 0; i < 8; i++) {
-                for (let j = 0; j < 8; j++) {
-                    // Mapeia a linha e coluna visual para a coordenada real do tabuleiro
-                    const r = inverter ? 7 - i : i;
-                    const c = inverter ? 7 - j : j;
+            for (let visualR = 0; visualR < 8; visualR++) {
+                for (let visualC = 0; visualC < 8; visualC++) {
+                    
+                    const r = invertido ? (7 - visualR) : visualR;
+                    const c = invertido ? (7 - visualC) : visualC;
 
                     const square = document.createElement('div');
                     const isDark = (r + c) % 2 === 1;
@@ -700,15 +699,16 @@
                         const corClasse = peca.startsWith('white') ? 'white' : 'red';
                         const isDama = peca.includes('king') ? ' king' : '';
                         
-                        let temMov = false;
-                        if (!jogoEncerrado && turnoAtual === minhaCor && corClasse === minhaCor) {
-                            const movimentosDaPeca = calcularMovimentosPara(r, c, minhaCor);
-                            if (movimentosDaPeca.length > 0) {
-                                temMov = true;
+                        let classeExtra = '';
+                        // Aplica o modo hover/pulsante se for a vez do jogador e a peça tiver movimentos válidos
+                        if (!jogoEncerrado && turnoAtual === minhaCor && peca.startsWith(minhaCor)) {
+                            const movsPeca = calcularMovimentosPara(r, c, minhaCor);
+                            if (movsPeca.length > 0) {
+                                classeExtra = ' movel';
                             }
                         }
 
-                        pieceEl.className = `piece ${corClasse}${isDama}${temMov ? ' movel' : ''}`;
+                        pieceEl.className = `piece ${corClasse}${isDama}${classeExtra}`;
                         square.appendChild(pieceEl);
                     }
 
@@ -729,6 +729,7 @@
                 statusEl.textContent = 'Vez do oponente...';
             }
         }
+
         /* ==========================================================
            CLIQUE
            ========================================================== */
@@ -743,14 +744,8 @@
             const peca = tabuleiro[r][c];
 
             if (peca && peca.startsWith(minhaCor)) {
-                const movimentosDaPeca = calcularMovimentosPara(r, c, minhaCor);
-                if (movimentosDaPeca.length === 0) {
-                    document.getElementById('info-instrucao').textContent = '⚠️ Esta peça não possui movimentos válidos!';
-                    return;
-                }
-
                 celulaSelecionada = { r, c };
-                movimentosValidos = movimentosDaPeca;
+                movimentosValidos = calcularMovimentos(r, c);
                 renderizarTabuleiro();
                 return;
             }
@@ -791,12 +786,12 @@
                                     movimentos.push({ r: nr, c: nc });
                                 } else {
                                     movimentos.push({ r: nr, c: nc, captura: capturada });
-                                    break;
+                                    break; 
                                 }
                             } else if (alvo.startsWith(cor)) {
-                                break;
+                                break; 
                             } else {
-                                if (capturada) break;
+                                if (capturada) break; 
                                 capturada = { r: nr, c: nc };
                             }
                             nr += dr; nc += dc;
