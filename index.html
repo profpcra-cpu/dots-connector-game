@@ -328,7 +328,7 @@
             position: relative;
             overflow: hidden;
             min-height: 64px;
-            min-width: 0;               /* permite o filho encolher */
+            min-width: 0;            /* permite o filho encolher */
             width: 100%;
         }
         .hub-card:hover {
@@ -339,7 +339,7 @@
 
         .hub-card-info {
             flex: 1 1 auto;
-            min-width: 0;               /* ESSENCIAL para o texto encolher */
+            min-width: 0;            /* ESSENCIAL para o texto encolher */
             overflow: hidden;
         }
 
@@ -377,7 +377,7 @@
             border: 1px solid rgba(99, 102, 241, 0.2);
             white-space: nowrap;
             transition: all var(--t-base);
-            flex-shrink: 0;             /* nunca encolhe */
+            flex-shrink: 0;       /* nunca encolhe */
         }
         .hub-card:hover .hub-card-action {
             background: rgba(99, 102, 241, 0.22);
@@ -531,6 +531,14 @@
                 <div class="hub-card-info">
                     <h3>♟️ Jogo de Damas</h3>
                     <p>Duelo em tempo real com convite por WhatsApp.</p>
+                </div>
+                <div class="hub-card-action">Jogar ➔</div>
+            </a>
+
+            <a href="damas-dupla.html" class="hub-card" onclick="verificarPerfil(event)">
+                <div class="hub-card-info">
+                    <h3>👥 Jogo de Damas em Dupla</h3>
+                    <p>Modo colaborativo ou duplas em tempo real.</p>
                 </div>
                 <div class="hub-card-action">Jogar ➔</div>
             </a>
