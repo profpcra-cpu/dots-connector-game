@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conexões em Linhas Curvas Sem Cruzamento</title>
+    <title>Jogo Bolar - Curvas Orgânicas</title>
     <style>
         body {
             margin: 0;
@@ -19,137 +19,190 @@
             overflow: hidden;
         }
         h1 {
-            margin-bottom: 5px;
-            font-size: 1.25rem;
-            font-weight: 600;
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+            color: #38bdf8;
         }
-        p {
-            margin-top: 0;
+        .info {
             margin-bottom: 15px;
+            font-size: 0.95rem;
             color: #94a3b8;
-            font-size: 0.875rem;
         }
         canvas {
             background-color: #1e293b;
             border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            cursor: grab;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
         }
-        canvas:active {
-            cursor: grabbing;
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #f43f5e;
         }
     </style>
 </head>
 <body>
 
-    <h1>Rede de Nós com Curvas Orgânicas</h1>
-    <p>Arraste os nós pela tela. As curvas adaptam-se dinamicamente para manter o fluxo limpo e sem cruzamentos.</p>
+    <h1>JOGO BOLAR (Versão Curvas Suaves)</h1>
+    <div class="info">Use as <b>Setas do Teclado</b> ou <b>A / D</b> para guiar a curva. Evite bater nas bordas!</div>
     
-    <canvas id="canvas" width="800" height="500"></canvas>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div class="score">Pontuação: <span id="scoreVal">0</span></div>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('scoreVal');
 
-        // Definição dos nós (pontos da rede)
-        let nodes = [
-            { id: 1, x: 150, y: 150, label: 'Origem A', radius: 25 },
-            { id: 2, x: 650, y: 150, label: 'Destino A', radius: 25 },
-            { id: 3, x: 150, y: 350, label: 'Origem B', radius: 25 },
-            { id: 4, x: 650, y: 350, label: 'Destino B', radius: 25 },
-            { id: 5, x: 400, y: 250, label: 'Central', radius: 30 }
-        ];
+        // Estado do jogo
+        let snake = {
+            x: 300,
+            y: 200,
+            radius: 10,
+            speed: 3.5,
+            angle: 0,
+            turnSpeed: 0.07,
+            trail: []
+        };
 
-        // Conexões lógicas (arestas) que não devem cruzar o fluxo principal
-        const connections = [
-            { from: 1, to: 5, color: '#38bdf8' },
-            { from: 3, to: 5, color: '#38bdf8' },
-            { from: 5, to: 2, color: '#f43f5e' },
-            { from: 5, to: 4, color: '#f43f5e' }
-        ];
+        let food = {
+            x: 0,
+            y: 0,
+            radius: 8,
+            color: '#f43f5e'
+        };
 
-        let draggedNode = null;
+        let score = 0;
+        let keys = { left: false, right: false };
+        let gameOver = false;
 
-        // Funções auxiliares de eventos de mouse para arrastar os nós
-        canvas.addEventListener('mousedown', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            for (let node of nodes) {
-                const dist = Math.hypot(node.x - mouseX, node.y - mouseY);
-                if (dist < node.radius) {
-                    draggedNode = node;
-                    break;
-                }
-            }
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (!draggedNode) return;
-            const rect = canvas.getBoundingClientRect();
-            draggedNode.x = e.clientX - rect.left;
-            draggedNode.y = e.clientY - rect.top;
-            draw();
-        });
-
-        window.addEventListener('mouseup', () => {
-            draggedNode = null;
-        });
-
-        // Função principal de desenho
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Desenhar conexões com Curvas de Bézier Cúbicas
-            connections.forEach(conn => {
-                const source = nodes.find(n => n.id === conn.from);
-                const target = nodes.find(n => n.id === conn.to);
-
-                if (source && target) {
-                    ctx.beginPath();
-                    ctx.moveTo(source.x, source.y);
-
-                    // Pontos de controle dinâmicos baseados na distância horizontal e vertical
-                    // Isso cria o arqueamento automático sem que as linhas colidam ou cruzem de forma abrupta
-                    const dx = target.x - source.x;
-                    const dy = target.y - source.y;
-                    
-                    // Ajuste de curvatura suave baseada na orientação
-                    const cp1x = source.x + dx * 0.5;
-                    const cp1y = source.y;
-                    const cp2x = source.x + dx * 0.5;
-                    const cp2y = target.y;
-
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, target.x, target.y);
-
-                    ctx.strokeStyle = conn.color;
-                    ctx.lineWidth = 4;
-                    ctx.stroke();
-                }
-            });
-
-            // Desenhar nós
-            nodes.forEach(node => {
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#334155';
-                ctx.fill();
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = '#cbd5e1';
-                ctx.stroke();
-
-                // Rótulo do nó
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = '12px system-ui';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(node.label, node.x, node.y);
-            });
+        // Posicionar comida aleatoriamente
+        function spawnFood() {
+            food.x = Math.random() * (canvas.width - 60) + 30;
+            food.y = Math.random() * (canvas.height - 60) + 30;
         }
 
-        // Renderização inicial
-        draw();
+        // Controles de teclado
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        function resetGame() {
+            snake.x = 300;
+            snake.y = 200;
+            snake.angle = 0;
+            snake.trail = [];
+            score = 0;
+            scoreVal.textContent = score;
+            gameOver = false;
+            spawnFood();
+        }
+
+        spawnFood();
+
+        // Loop principal do jogo
+        function update() {
+            if (gameOver) return;
+
+            // Atualizar direção baseada nas teclas pressionadas (curvas contínuas)
+            if (keys.left) snake.angle -= snake.turnSpeed;
+            if (keys.right) snake.angle += snake.turnSpeed;
+
+            // Mover a cabeça para frente na direção do ângulo atual
+            snake.x += Math.cos(snake.angle) * snake.speed;
+            snake.y += Math.sin(snake.angle) * snake.speed;
+
+            // Salvar posição atual no rastro (para desenhar a linha curva conectada)
+            snake.trail.push({ x: snake.x, y: snake.y });
+            
+            // Controlar o tamanho máximo do rastro baseado na pontuação
+            const maxLength = 40 + score * 15;
+            if (snake.trail.length > maxLength) {
+                snake.trail.shift();
+            }
+
+            // Verificar colisão com as bordas da tela
+            if (snake.x < snake.radius || snake.x > canvas.width - snake.radius ||
+                snake.y < snake.radius || snake.y > canvas.height - snake.radius) {
+                gameOver = true;
+            }
+
+            // Verificar colisão com a comida
+            const dist = Math.hypot(snake.x - food.x, snake.y - food.y);
+            if (dist < snake.radius + food.radius) {
+                score++;
+                scoreVal.textContent = score;
+                spawnFood();
+            }
+        }
+
+        function draw() {
+            // Limpar tela
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Desenhar rastro em curva suave (Linha orgânica sem cruzamento abrupto)
+            if (snake.trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(snake.trail[0].x, snake.trail[0].y);
+                for (let i = 1; i < snake.trail.length; i++) {
+                    ctx.lineTo(snake.trail[i].x, snake.trail[i].y);
+                }
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = snake.radius * 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+
+            // Desenhar a cabeça da "bola"
+            ctx.beginPath();
+            ctx.arc(snake.x, snake.y, snake.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#bae6fd';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#0284c7';
+            ctx.stroke();
+
+            // Desenhar comida
+            ctx.beginPath();
+            ctx.arc(food.x, food.y, food.radius, 0, Math.PI * 2);
+            ctx.fillStyle = food.color;
+            ctx.fill();
+
+            // Tela de Game Over
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = 'bold 28px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillText('FIM DE JOGO', canvas.width / 2, canvas.height / 2 - 15);
+
+                ctx.font = '16px system-ui';
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText('Clique na tela para recomeçar', canvas.width / 2, canvas.height / 2 + 25);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        canvas.addEventListener('click', () => {
+            if (gameOver) resetGame();
+        });
+
+        // Iniciar loop
+        loop();
     </script>
 </body>
 </html>
