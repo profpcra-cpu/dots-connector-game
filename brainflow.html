@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Grid Flow Classic — Ligação Tradicional por Grelha</title>
+<title>Desenho a Lápis — Ligação Livre</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -129,6 +129,28 @@ body {
     line-height: 1.5;
 }
 
+/* Seletor de Cores / Lápis */
+.paleta-cores {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.lapis-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s;
+}
+.lapis-btn.ativo {
+    transform: scale(1.15);
+    border-color: #fff;
+    box-shadow: 0 0 15px currentColor;
+}
+
 #grid-wrapper {
     position: relative;
     width: 100%;
@@ -153,18 +175,7 @@ body {
     justify-content: center;
     position: relative;
     cursor: pointer;
-    transition: background 0.2s;
-}
-
-.dot {
-    width: 70%;
-    height: 70%;
-    border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: background 0.1s;
 }
 
 .controls-grid {
@@ -194,7 +205,6 @@ button {
 }
 button:hover { filter: brightness(1.08); transform: translateY(-1px); }
 .btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
-#btn-proximo { margin-top: 10px; background: linear-gradient(135deg, #10b981, #14b8a6); }
 .hidden { display: none !important; }
 
 .overlay {
@@ -227,43 +237,38 @@ button:hover { filter: brightness(1.08); transform: translateY(-1px); }
     </div>
 
     <div class="score-board">
-        <div>Nível<br><strong id="display-nivel">1</strong></div>
+        <div>Modo<br><strong id="display-nivel">Livre</strong></div>
         <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
-        <div>Pontos<br><strong id="display-pontos">0</strong></div>
+        <div>Células<br><strong id="display-pontos">0</strong></div>
     </div>
 
     <p class="instructions" id="info-instrucao">
-        🔵 Ligue os pontos da mesma cor sem cruzar os caminhos! Preencha todas as casas.
+        ✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!
     </p>
+
+    <!-- Paleta de Lápis para Desenho Livre -->
+    <div class="paleta-cores" id="paleta-cores"></div>
 
     <div id="grid-wrapper">
         <div id="grid-container" style="display: grid; width: 100%; height: 100%; gap: 4px;"></div>
         <div id="overlay" class="overlay hidden">
-            <h2 id="overlay-titulo">Nível Concluído!</h2>
-            <div class="subtitulo" id="overlay-sub">Parabéns!</div>
-            <button id="btn-overlay-acao">Próximo Nível 🚀</button>
+            <h2 id="overlay-titulo">Tabuleiro Completo!</h2>
+            <div class="subtitulo" id="overlay-sub">Excelente trabalho artístico!</div>
+            <button id="btn-reiniciar-overlay" class="btn-secondary">🔄 Jogar Novamente</button>
         </div>
     </div>
 
     <div class="controls-grid">
-        <select id="select-nivel">
-            <option value="" disabled selected>Selecionar Nível...</option>
-            <option value="1">Nível 1 (Grelha 4x4 — Fácil)</option>
-            <option value="2">Nível 2 (Grelha 5x5 — Médio)</option>
-            <option value="3">Nível 3 (Grelha 6x6 — Difícil)</option>
+        <select id="select-tamanho">
+            <option value="4">Grelha 4x4 (Fácil)</option>
+            <option value="5" selected>Grelha 5x5 (Padrão)</option>
+            <option value="6">Grelha 6x6 (Amplo)</option>
         </select>
-        <button id="btn-reiniciar" class="btn-secondary">🔄 Limpar Tudo</button>
+        <button id="btn-reiniciar" class="btn-secondary">🔄 Limpar Tabuleiro</button>
     </div>
-
-    <button id="btn-proximo" class="hidden">Próximo Nível 🚀</button>
 </div>
 
 <script type="module">
-import { db } from "./firebase-config.js";
-import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador')) || { chave: 'convidado', pontos: 0 };
-
 const CORES = [
     '#f43f5e', // Rosa/Vermelho
     '#38bdf8', // Azul Ciano
@@ -273,50 +278,15 @@ const CORES = [
     '#fb923c'  // Laranja
 ];
 
-const NIVEIS = {
-    1: {
-        tamanho: 4,
-        pares: [
-            { id: 1, c1: [0,0], c2: [3,3] },
-            { id: 2, c1: [0,3], c2: [3,0] }
-        ]
-    },
-    2: {
-        tamanho: 5,
-        pares: [
-            { id: 1, c1: [0,0], c2: [4,4] },
-            { id: 2, c1: [0,4], c2: [4,0] },
-            { id: 3, c1: [1,2], c2: [3,2] }
-        ]
-    },
-    3: {
-        tamanho: 6,
-        pares: [
-            { id: 1, c1: [0,0], c2: [5,5] },
-            { id: 2, c1: [0,5], c2: [5,0] },
-            { id: 3, c1: [1,1], c2: [4,4] },
-            { id: 4, c1: [2,0], c2: [2,5] }
-        ]
-    }
-};
-
-const estado = {
-    nivel: 1,
-    pontos: 0,
-    segundos: 0,
-    timer: null,
-    rodando: true
-};
-
-let tamanhoGrelha = 4;
-let paresNivel = [];
-let grelhaCaminhos = []; // Matriz [r][c] guardando o ID da cor ativa na célula
-let pontosIniciais = {};  // Mapeia "r,c" -> id do par fixo
-let corAtiva = null;
+let tamanhoGrelha = 5;
+let corAtual = CORES[0];
+let matrizDesenho = [];
 let desenhando = false;
-let ultimaCelulaDesenhada = null;
+let segundos = 0;
+let timer = null;
+let jogoAtivo = true;
 
-/* Áudio simples */
+/* Gestor de Som Simples */
 class SoundManager {
     constructor() { this.ativo = true; this.ctx = null; }
     init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -327,38 +297,45 @@ class SoundManager {
             const o = this.ctx.createOscillator();
             const g = this.ctx.createGain();
             o.type = type; o.frequency.value = freq;
-            g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            g.gain.setValueAtTime(0.08, this.ctx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
             o.connect(g); g.connect(this.ctx.destination);
             o.start(); o.stop(this.ctx.currentTime + duration);
         } catch(e){}
     }
-    connect() { this.play(523.25, 'sine', 0.15); }
+    draw() { this.play(440 + Math.random() * 200, 'sine', 0.1); }
     win() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.2), i * 100)); }
 }
 const som = new SoundManager();
 
-function iniciarNivel(n) {
-    if (!NIVEIS[n]) n = 1;
-    estado.nivel = n;
-    estado.segundos = 0;
-    estado.rodando = true;
-    const config = NIVEIS[n];
-    tamanhoGrelha = config.tamanho;
-    paresNivel = config.pares;
-
-    grelhaCaminhos = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
-    pontosIniciais = {};
-
-    paresNivel.forEach(p => {
-        pontosIniciais[`${p.c1[0]},${p.c1[1]}`] = p.id;
-        pontosIniciais[`${p.c2[0]},${p.c2[1]}`] = p.id;
-    });
-
+function inicializarJogo(tam) {
+    tamanhoGrelha = tam;
+    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
+    segundos = 0;
+    jogoAtivo = true;
+    
+    montarPaleta();
     montarDOMGrid();
-    atualizarUI();
-    esconderOverlay();
+    atualizarEstatisticas();
     iniciarTimer();
+}
+
+function montarPaleta() {
+    const paleta = document.getElementById('paleta-cores');
+    paleta.innerHTML = '';
+    CORES.forEach((cor, idx) => {
+        const btn = document.createElement('div');
+        btn.className = `lapis-btn ${cor === corAtual ? 'ativo' : ''}`;
+        btn.style.backgroundColor = cor;
+        btn.style.color = cor;
+        btn.addEventListener('click', () => {
+            corAtual = cor;
+            document.querySelectorAll('.lapis-btn').forEach(b => b.classList.remove('ativo'));
+            btn.classList.add('ativo');
+            som.play(600, 'triangle', 0.1);
+        });
+        paleta.appendChild(btn);
+    });
 }
 
 function montarDOMGrid() {
@@ -374,81 +351,52 @@ function montarDOMGrid() {
             cell.dataset.r = r;
             cell.dataset.c = c;
 
-            const pontoId = pontosIniciais[`${r},${c}`];
-            if (pontoId) {
-                const dot = document.createElement('div');
-                dot.className = 'dot';
-                dot.style.background = CORES[(pontoId - 1) % CORES.length];
-                cell.appendChild(dot);
-            }
-
-            // Eventosrato/toque
-            cell.addEventListener('mousedown', () => iniciarTraco(r, c));
-            cell.addEventListener('mouseenter', () => continuarTraco(r, c));
-            cell.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarTraco(r, c); });
+            // Eventos de rato e toque para pintura contínua estilo lápis
+            cell.addEventListener('mousedown', () => iniciarPintura(r, c));
+            cell.addEventListener('mouseenter', () => continuarPintura(r, c));
+            cell.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarPintura(r, c); });
             cell.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 const touch = e.touches[0];
                 const target = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (target && target.classList.contains('cell')) {
-                    continuarTraco(parseInt(target.dataset.r), parseInt(target.dataset.c));
+                    continuarPintura(parseInt(target.dataset.r), parseInt(target.dataset.c));
                 }
             }, {passive: false});
 
             gridContainer.appendChild(cell);
         }
     }
-    window.addEventListener('mouseup', finalizarTraco);
-    window.addEventListener('touchend', finalizarTraco);
+
+    window.addEventListener('mouseup', finalizarPintura);
+    window.addEventListener('touchend', finalizarPintura);
     atualizarVisualGrid();
 }
 
-function iniciarTraco(r, c) {
-    if (!estado.rodando) return;
-    const pontoId = pontosIniciais[`${r},${c}`];
-    if (pontoId) {
-        corAtiva = pontoId;
-        desenhando = true;
-        ultimaCelulaDesenhada = { r, c };
-        // Limpa caminho anterior da mesma cor ao reiniciar o traço
-        limparCaminhoCor(corAtiva);
-        atualizarVisualGrid();
-    }
+function iniciarPintura(r, c) {
+    if (!jogoAtivo) return;
+    desenhando = true;
+    aplicarCor(r, c);
 }
 
-function continuarTraco(r, c) {
-    if (!desenhando || !corAtiva) return;
-    if (ultimaCelulaDesenhada && ultimaCelulaDesenhada.r === r && ultimaCelulaDesenhada.c === c) return;
-
-    // Verificar se é adjacente à última célula (movimento ortogonal estrito)
-    const dr = Math.abs(r - ultimaCelulaDesenhada.r);
-    const dc = Math.abs(c - ultimaCelulaDesenhada.c);
-    if (dr + dc !== 1) return; // Só permite cima, baixo, esquerda, direita
-
-    // Se a célula já pertence a outro ponto fixo de cor diferente, bloqueia
-    const fixoId = pontosIniciais[`${r},${c}`];
-    if (fixoId && fixoId !== corAtiva) return;
-
-    grelhaCaminhos[r][c] = corAtiva;
-    ultimaCelulaDesenhada = { r, c };
-    som.connect();
-    atualizarVisualGrid();
-    verificarConclusoes();
+function continuarPintura(r, c) {
+    if (!desenhando || !jogoAtivo) return;
+    aplicarCor(r, c);
 }
 
-function finalizarTraco() {
+function finalizarPintura() {
     desenhando = false;
-    corAtiva = null;
-    ultimaCelulaDesenhada = null;
 }
 
-function limparCaminhoCor(id) {
-    for (let r = 0; r < tamanhoGrelha; r++) {
-        for (let c = 0; c < tamanhoGrelha; c++) {
-            if (grelhaCaminhos[r][c] === id) {
-                grelhaCaminhos[r][c] = null;
-            }
-        }
+function aplicarCor(r, c) {
+    // Alterna ou pinta com a cor ativa do lápis
+    const corAntiga = matrizDesenho[r][c];
+    if (corAntiga !== corAtual) {
+        matrizDesenho[r][c] = corAtual;
+        som.draw();
+        atualizarVisualGrid();
+        atualizarEstatisticas();
+        verificarPreenchimentoTotal();
     }
 }
 
@@ -457,108 +405,65 @@ function atualizarVisualGrid() {
     cells.forEach(cell => {
         const r = parseInt(cell.dataset.r);
         const c = parseInt(cell.dataset.c);
-        const corId = grelhaCaminhos[r][c];
+        const cor = matrizDesenho[r][c];
 
-        if (corId) {
-            cell.style.background = CORES[(corId - 1) % CORES.length] + '44';
-            cell.style.borderColor = CORES[(corId - 1) % CORES.length];
+        if (cor) {
+            cell.style.background = cor;
+            cell.style.borderColor = '#ffffff';
+            cell.style.boxShadow = `inset 0 0 12px rgba(0,0,0,0.3)`;
         } else {
             cell.style.background = 'rgba(30, 41, 59, 0.4)';
             cell.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+            cell.style.boxShadow = 'none';
         }
     });
 }
 
-function verificarConclusoes() {
-    // Verifica se todos os pares estão conectados corretamente
-    let todasConectadas = true;
-    for (const p of paresNivel) {
-        const r1 = p.c1[0], c1 = p.c1[1];
-        const r2 = p.c2[0], c2 = p.c2[1];
-        
-        // Verifica se há um caminho contínuo entre c1 e c2 com o ID p.id
-        if (!estaoConectados(r1, c1, r2, c2, p.id)) {
-            todasConectadas = false;
-            break;
+function contarCelulasPreenchidas() {
+    let count = 0;
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            if (matrizDesenho[r][c] !== null) count++;
         }
     }
-
-    if (todasConectadas) {
-        estado.rodando = false;
-        pararTimer();
-        som.win();
-        finalizarJogo();
-    }
+    return count;
 }
 
-function estaoConectados(r1, c1, r2, c2, id) {
-    // Busca em largura (BFS) para checar conectividade ortogonal da mesma cor
-    const visitados = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(false));
-    const fila = [[r1, c1]];
-    visitados[r1][c1] = true;
+function atualizarEstatisticas() {
+    const preenchidas = contarCelulasPreenchidas();
+    const total = tamanhoGrelha * tamanhoGrelha;
+    document.getElementById('display-pontos').textContent = `${preenchidas}/${total}`;
+}
 
-    while (fila.length > 0) {
-        const [r, c] = fila.shift();
-        if (r === r2 && c === c2) return true;
-
-        const vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
-        for (const [vr, vc] of vizinhos) {
-            if (vr >= 0 && vr < tamanhoGrelha && vc >= 0 && vc < tamanhoGrelha && !visitados[vr][vc]) {
-                if (grelhaCaminhos[vr][vc] === id || (vr === r2 && vc === c2 && (grelhaCaminhos[vr][vc] === id || pontosIniciais[`${vr},${vc}`] === id))) {
-                    visitados[vr][vc] = true;
-                    fila.push([vr, vc]);
-                }
-            }
-        }
+function verificarPreenchimentoTotal() {
+    const preenchidas = contarCelulasPreenchidas();
+    const total = tamanhoGrelha * tamanhoGrelha;
+    if (preenchidas === total && jogoAtivo) {
+        jogoAtivo = false;
+        pararTimer();
+        som.win();
+        document.getElementById('overlay').classList.remove('hidden');
     }
-    return false;
 }
 
 function iniciarTimer() {
-    if (estado.timer) clearInterval(estado.timer);
-    estado.timer = setInterval(() => {
-        if (!estado.rodando) return;
-        estado.segundos++;
-        document.getElementById('display-tempo').textContent = formatarTempo(estado.segundos);
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+        if (!jogoAtivo) return;
+        segundos++;
+        document.getElementById('display-tempo').textContent = `${String(Math.floor(segundos/60)).padStart(2,'0')}:${String(segundos%60).padStart(2,'0')}`;
     }, 1000);
 }
-function pararTimer() { if (estado.timer) clearInterval(estado.timer); }
-function formatarTempo(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+function pararTimer() { if (timer) clearInterval(timer); }
 
-function atualizarUI() {
-    document.getElementById('display-nivel').textContent = estado.nivel;
-    document.getElementById('display-pontos').textContent = estado.pontos;
-}
-
-function finalizarJogo() {
-    const ganho = 100 * estado.nivel;
-    estado.pontos += ganho;
-    atualizarUI();
-
-    const overlay = document.getElementById('overlay');
-    document.getElementById('overlay-titulo').textContent = '🎉 Nível Concluído!';
-    document.getElementById('overlay-sub').textContent = `Tempo: ${formatarTempo(estado.segundos)} • +${ganho} pts`;
-    overlay.classList.remove('hidden');
-    document.getElementById('btn-proximo').classList.remove('hidden');
-}
-
-function esconderOverlay() {
+// Controlos de UI
+document.getElementById('btn-reiniciar').addEventListener('click', () => inicializarJogo(tamanhoGrelha));
+document.getElementById('btn-reiniciar-overlay').addEventListener('click', () => {
     document.getElementById('overlay').classList.add('hidden');
-    document.getElementById('btn-proximo').classList.add('hidden');
-}
-
-document.getElementById('btn-reiniciar').addEventListener('click', () => iniciarNivel(estado.nivel));
-document.getElementById('btn-proximo').addEventListener('click', () => {
-    const prox = estado.nivel >= 3 ? 1 : estado.nivel + 1;
-    iniciarNivel(prox);
+    inicializarJogo(tamanhoGrelha);
 });
-document.getElementById('select-nivel').addEventListener('change', (e) => {
-    const n = parseInt(e.target.value);
-    if (n) { e.target.value = ''; iniciarNivel(n); }
-});
-document.getElementById('btn-overlay-acao').addEventListener('click', () => {
-    const prox = estado.nivel >= 3 ? 1 : estado.nivel + 1;
-    iniciarNivel(prox);
+document.getElementById('select-tamanho').addEventListener('change', (e) => {
+    inicializarJogo(parseInt(e.target.value));
 });
 
 const soundToggleBtn = document.getElementById('sound-toggle');
@@ -575,7 +480,7 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
     localStorage.setItem('brain_flow_theme', next);
 });
 
-iniciarNivel(1);
+inicializarJogo(5);
 </script>
 </body>
 </html>
