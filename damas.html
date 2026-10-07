@@ -154,29 +154,6 @@
             background: var(--card-bg);
         }
 
-        .lobby-box {
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 12px;
-            text-align: left;
-        }
-        .lobby-box h3 {
-            margin-top: 0;
-            font-size: 15px;
-            color: var(--c-blue);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .lobby-box p {
-            font-size: 12.5px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-
         .user-header {
             display: flex;
             align-items: center;
@@ -301,31 +278,14 @@
             margin: 4px 0 10px;
             min-height: 18px;
         }
-
-        button {
-            width: 100%;
-            padding: 10px 12px;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 13.5px;
-            font-family: inherit;
-            font-weight: 600;
-            color: #fff;
-            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
-            box-shadow: var(--shadow-btn);
-            cursor: pointer;
-            transition: all var(--t-base);
-        }
-        button:hover { filter: brightness(1.08); transform: translateY(-1px); }
-
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="top-bar">
-            <button class="btn-small" onclick="window.location.reload()">🔄 Reiniciar Jogo</button>
+            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+            <button class="btn-small" onclick="window.location.reload()">🔄 Reiniciar</button>
             <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
 
