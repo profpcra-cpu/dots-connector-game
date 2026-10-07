@@ -1,208 +1,998 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo Bolar - Curvas Orgânicas</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        h1 {
-            margin: 0 0 5px 0;
-            font-size: 1.5rem;
-            color: #38bdf8;
-        }
-        .info {
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-            color: #94a3b8;
-        }
-        canvas {
-            background-color: #1e293b;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-        }
-        .score {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-top: 10px;
-            color: #f43f5e;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Brain Flow Curves — Desenhe Livremente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-color: #0b1020;
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-pink: #f43f5e;
+    --c-gold: #fbbf24;
+    --c-green: #4ade80;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-color: #eef2ff;
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+    animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-color);
+}
+#display-nivel { color: var(--c-cyan); }
+#display-estrelas { color: var(--c-gold); }
+#display-tempo { color: #60a5fa; }
+#display-pontos { color: var(--c-green); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    transition: color 0.3s ease;
+}
+.instructions.alerta { color: var(--c-gold); }
+.instructions.erro { color: var(--c-pink); }
+.instructions.sucesso { color: var(--c-green); }
+
+#canvas-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    margin: 0 auto 12px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow:
+        0 12px 40px -14px rgba(0, 0, 0, 0.55),
+        0 0 0 1px var(--card-border),
+        0 0 24px -6px rgba(99, 102, 241, 0.35);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #050914;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-secondary {
+    background: linear-gradient(135deg, #475569, #334155);
+}
+.btn-secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
+#btn-proximo {
+    margin-top: 10px;
+    background: linear-gradient(135deg, #10b981, #14b8a6);
+}
+.hidden { display: none !important; }
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #f8fafc;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+}
+.overlay h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+.overlay .subtitulo {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+.overlay .estrelas-resultado {
+    font-size: 32px;
+    letter-spacing: 6px;
+    margin: 8px 0;
+}
+.overlay button {
+    width: auto;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    font-size: 15px;
+}
+</style>
 </head>
 <body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+    </div>
 
-    <h1>JOGO BOLAR (Versão Curvas Suaves)</h1>
-    <div class="info">Use as <b>Setas do Teclado</b> ou <b>A / D</b> para guiar a curva. Evite bater nas bordas!</div>
-    
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
-    <div class="score">Pontuação: <span id="scoreVal">0</span></div>
+    <div class="score-board">
+        <div>Nível<br><strong id="display-nivel">1</strong></div>
+        <div>⭐<br><strong id="display-estrelas">0/3</strong></div>
+        <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
+        <div>Pontos<br><strong id="display-pontos">0</strong></div>
+    </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreVal = document.getElementById('scoreVal');
+    <p class="instructions" id="info-instrucao">
+        🖐️ <b>Desenhe com o dedo/mouse</b> para criar trilhos. A bola segue sua linha. Colete todas as ⭐!
+    </p>
 
-        // Estado do jogo
-        let snake = {
-            x: 300,
-            y: 200,
-            radius: 10,
-            speed: 3.5,
-            angle: 0,
-            turnSpeed: 0.07,
-            trail: []
-        };
+    <div id="canvas-wrapper">
+        <canvas id="game-canvas"></canvas>
+        <div id="overlay" class="overlay hidden">
+            <h2 id="overlay-titulo">Fim de Jogo</h2>
+            <div class="subtitulo" id="overlay-sub"></div>
+            <div class="estrelas-resultado" id="overlay-estrelas"></div>
+            <button id="btn-overlay-acao">Tentar de novo</button>
+        </div>
+    </div>
 
-        let food = {
-            x: 0,
-            y: 0,
-            radius: 8,
-            color: '#f43f5e'
-        };
+    <div class="controls-grid">
+        <select id="select-nivel">
+            <option value="" disabled selected>Selecionar Nível...</option>
+            <option value="1">Nível 1 — Fácil</option>
+            <option value="2">Nível 2 — Médio</option>
+            <option value="3">Nível 3 — Difícil</option>
+            <option value="4">Nível 4 — Expert</option>
+            <option value="5">Nível 5 — Insano</option>
+        </select>
+        <button id="btn-reiniciar" class="btn-secondary">🔄 Reiniciar</button>
+    </div>
 
-        let score = 0;
-        let keys = { left: false, right: false };
-        let gameOver = false;
+    <button id="btn-proximo" class="hidden">Próximo Nível 🚀</button>
+</div>
 
-        // Posicionar comida aleatoriamente
-        function spawnFood() {
-            food.x = Math.random() * (canvas.width - 60) + 30;
-            food.y = Math.random() * (canvas.height - 60) + 30;
-        }
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Controles de teclado
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
-            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
-        });
+/* ==========================================================
+   SESSÃO
+   ========================================================== */
+const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+if (!jogadorSessao) { window.location.href = 'index.html'; }
 
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
-            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
-        });
+const VERSAO = 'v1-curves-2026-10-07';
+console.log(`✅ Brain Flow Curves ${VERSAO}`);
 
-        function resetGame() {
-            snake.x = 300;
-            snake.y = 200;
-            snake.angle = 0;
-            snake.trail = [];
-            score = 0;
-            scoreVal.textContent = score;
-            gameOver = false;
-            spawnFood();
-        }
+/* ==========================================================
+   ESTADO GLOBAL
+   ========================================================== */
+const estado = {
+    nivel: 1,
+    pontos: 0,
+    recordes: {},
+    segundos: 0,
+    timer: null,
+    pausado: false,
+    rodando: false,
+    vitoria: false,
+    gameOver: false,
+    estrelasColetadas: 0,
+    estrelasTotal: 0,
+    strokePoints: 0,       // pontos do rastro atual (para bônus de eficiência)
+    suavidade: 0           // mede direções opostas seguidas (bônus)
+};
 
-        spawnFood();
+/* ==========================================================
+   CANVAS + DIMENSÕES
+   ========================================================== */
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
 
-        // Loop principal do jogo
-        function update() {
-            if (gameOver) return;
+// Resolução interna fixa (independente do CSS)
+const W = 900;
+const H = 600;
+canvas.width = W;
+canvas.height = H;
 
-            // Atualizar direção baseada nas teclas pressionadas (curvas contínuas)
-            if (keys.left) snake.angle -= snake.turnSpeed;
-            if (keys.right) snake.angle += snake.turnSpeed;
+// DPR para nitidez em retina
+const dpr = window.devicePixelRatio || 1;
+if (dpr > 1) {
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+}
 
-            // Mover a cabeça para frente na direção do ângulo atual
-            snake.x += Math.cos(snake.angle) * snake.speed;
-            snake.y += Math.sin(snake.angle) * snake.speed;
+/* ==========================================================
+   CONFIG DE NÍVEIS
+   ========================================================== */
+const CONFIG = {
+    1: { estrelas: 3, velocidade: 3.6, raio: 10, obstaculos: 0, tempoLimite: 90 },
+    2: { estrelas: 4, velocidade: 4.0, raio: 10, obstaculos: 0, tempoLimite: 90 },
+    3: { estrelas: 5, velocidade: 4.4, raio: 11, obstaculos: 2, tempoLimite: 100 },
+    4: { estrelas: 6, velocidade: 4.8, raio: 11, obstaculos: 3, tempoLimite: 110 },
+    5: { estrelas: 7, velocidade: 5.2, raio: 12, obstaculos: 4, tempoLimite: 120 }
+};
 
-            // Salvar posição atual no rastro (para desenhar a linha curva conectada)
-            snake.trail.push({ x: snake.x, y: snake.y });
-            
-            // Controlar o tamanho máximo do rastro baseado na pontuação
-            const maxLength = 40 + score * 15;
-            if (snake.trail.length > maxLength) {
-                snake.trail.shift();
+/* ==========================================================
+   JOGO
+   ========================================================== */
+const jogo = {
+    bola: { x: W / 2, y: H / 2, raio: 10, angulo: 0, velocidade: 3.6, viva: true },
+    trilha: [],              // pontos que a bola já percorreu {x, y, t}
+    desenhando: false,       // usuário desenhando?
+    tracadoAtual: [],        // pontos do desenho atual
+    estrelas: [],            // {x, y, coletada, angulo}
+    obstaculos: [],          // {x, y, raio, fase, moveY}
+    portal: { x: 0, y: 0, ativo: false, raio: 24, angulo: 0 },
+    tempoRastroSolido: 3000, // ms para rastro virar parede
+    startTime: 0,
+    ultimoUpdate: 0,
+    trailHash: new Set()     // para colisão eficiente
+};
+
+/* ==========================================================
+   INICIALIZAÇÃO DE NÍVEL
+   ========================================================== */
+function iniciarNivel(nivel, preservarPontos = true) {
+    if (!CONFIG[nivel]) nivel = 1;
+    estado.nivel = nivel;
+    const cfg = CONFIG[nivel];
+
+    estado.estrelasTotal = cfg.estrelas;
+    estado.estrelasColetadas = 0;
+    estado.strokePoints = 0;
+    estado.suavidade = 0;
+    estado.segundos = 0;
+    estado.pausado = false;
+    estado.rodando = true;
+    estado.vitoria = false;
+    estado.gameOver = false;
+    if (!preservarPontos) estado.pontos = 0;
+
+    // Bola começa no centro, apontando aleatoriamente
+    jogo.bola.x = W / 2;
+    jogo.bola.y = H / 2;
+    jogo.bola.raio = cfg.raio;
+    jogo.bola.velocidade = cfg.velocidade;
+    jogo.bola.angulo = Math.random() * Math.PI * 2;
+    jogo.bola.viva = true;
+
+    jogo.trilha = [];
+    jogo.tracadoAtual = [];
+    jogo.desenhando = false;
+    jogo.trailHash.clear();
+
+    // Estrelas espalhadas (respeitando bordas)
+    jogo.estrelas = [];
+    const margem = 60;
+    for (let i = 0; i < cfg.estrelas; i++) {
+        let tentativas = 0;
+        while (tentativas < 50) {
+            tentativas++;
+            const x = margem + Math.random() * (W - margem * 2);
+            const y = margem + Math.random() * (H - margem * 2);
+            // Evita perto da bola inicial
+            const distBola = Math.hypot(x - W / 2, y - H / 2);
+            if (distBola < 100) continue;
+            // Evita perto de outras estrelas
+            let ok = true;
+            for (const e of jogo.estrelas) {
+                if (Math.hypot(e.x - x, e.y - y) < 80) { ok = false; break; }
             }
-
-            // Verificar colisão com as bordas da tela
-            if (snake.x < snake.radius || snake.x > canvas.width - snake.radius ||
-                snake.y < snake.radius || snake.y > canvas.height - snake.radius) {
-                gameOver = true;
-            }
-
-            // Verificar colisão com a comida
-            const dist = Math.hypot(snake.x - food.x, snake.y - food.y);
-            if (dist < snake.radius + food.radius) {
-                score++;
-                scoreVal.textContent = score;
-                spawnFood();
-            }
+            if (!ok) continue;
+            jogo.estrelas.push({ x, y, coletada: false, angulo: Math.random() * Math.PI * 2 });
+            break;
         }
+    }
 
-        function draw() {
-            // Limpar tela
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Obstáculos
+    jogo.obstaculos = [];
+    for (let i = 0; i < cfg.obstaculos; i++) {
+        let tentativas = 0;
+        while (tentativas < 50) {
+            tentativas++;
+            const x = margem + Math.random() * (W - margem * 2);
+            const y = margem + Math.random() * (H - margem * 2);
+            const distBola = Math.hypot(x - W / 2, y - H / 2);
+            if (distBola < 120) continue;
+            let ok = true;
+            for (const e of jogo.estrelas) {
+                if (Math.hypot(e.x - x, e.y - y) < 100) { ok = false; break; }
+            }
+            if (!ok) continue;
+            jogo.obstaculos.push({
+                x, y, raio: 22 + Math.random() * 10,
+                fase: Math.random() * Math.PI * 2,
+                moveY: (Math.random() - 0.5) * 0.6,
+                baseY: y
+            });
+            break;
+        }
+    }
 
-            // Desenhar rastro em curva suave (Linha orgânica sem cruzamento abrupto)
-            if (snake.trail.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(snake.trail[0].x, snake.trail[0].y);
-                for (let i = 1; i < snake.trail.length; i++) {
-                    ctx.lineTo(snake.trail[i].x, snake.trail[i].y);
+    // Portal (posição final, inativo até coletar tudo)
+    jogo.portal.x = 60 + Math.random() * (W - 120);
+    jogo.portal.y = 60 + Math.random() * (H - 120);
+    jogo.portal.ativo = false;
+    jogo.portal.angulo = 0;
+
+    jogo.startTime = performance.now();
+    jogo.ultimoUpdate = performance.now();
+
+    atualizarUI();
+    esconderOverlay();
+    iniciarTimer();
+    atualizarInstrucao('🖐️ Desenhe com o dedo/mouse para criar trilhos. A bola segue sua linha. Colete todas as ⭐!');
+}
+
+/* ==========================================================
+   TIMER
+   ========================================================== */
+function iniciarTimer() {
+    pararTimer();
+    estado.timer = setInterval(() => {
+        if (estado.pausado || !estado.rodando) return;
+        estado.segundos++;
+        const limite = CONFIG[estado.nivel].tempoLimite;
+        document.getElementById('display-tempo').textContent = formatarTempo(estado.segundos);
+        if (estado.segundos >= limite) {
+            finalizarJogo(false, '⏰ Tempo esgotado!');
+        }
+    }, 1000);
+}
+function pararTimer() {
+    if (estado.timer) clearInterval(estado.timer);
+    estado.timer = null;
+}
+function formatarTempo(s) {
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+/* ==========================================================
+   ATUALIZAÇÃO DE UI
+   ========================================================== */
+function atualizarUI() {
+    document.getElementById('display-nivel').textContent = estado.nivel;
+    document.getElementById('display-estrelas').textContent = `${estado.estrelasColetadas}/${estado.estrelasTotal}`;
+    document.getElementById('display-pontos').textContent = estado.pontos;
+    document.getElementById('display-tempo').textContent = formatarTempo(estado.segundos);
+}
+
+function atualizarInstrucao(txt, tipo = '') {
+    const el = document.getElementById('info-instrucao');
+    el.innerHTML = txt;
+    el.className = 'instructions' + (tipo ? ' ' + tipo : '');
+}
+
+/* ==========================================================
+   INPUT — DESENHO LIVRE
+   ========================================================== */
+function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+function iniciarDesenho(e) {
+    if (!estado.rodando || estado.pausado || estado.vitoria) return;
+    e.preventDefault();
+    jogo.desenhando = true;
+    jogo.tracadoAtual = [getCanvasPos(e)];
+}
+
+function continuarDesenho(e) {
+    if (!jogo.desenhando) return;
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+    const ultimo = jogo.tracadoAtual[jogo.tracadoAtual.length - 1];
+    // Evita pontos muito próximos
+    if (Math.hypot(pos.x - ultimo.x, pos.y - ultimo.y) < 5) return;
+    jogo.tracadoAtual.push(pos);
+}
+
+function finalizarDesenho(e) {
+    if (!jogo.desenhando) return;
+    jogo.desenhando = false;
+    // O tracado "atual" continua existindo como guia até a bola passar por ele
+    // Depois é descartado ponto a ponto
+}
+
+canvas.addEventListener('mousedown', iniciarDesenho);
+canvas.addEventListener('mousemove', continuarDesenho);
+window.addEventListener('mouseup', finalizarDesenho);
+
+canvas.addEventListener('touchstart', iniciarDesenho, { passive: false });
+canvas.addEventListener('touchmove', continuarDesenho, { passive: false });
+window.addEventListener('touchend', finalizarDesenho);
+window.addEventListener('touchcancel', finalizarDesenho);
+
+/* ==========================================================
+   LOOP PRINCIPAL
+   ========================================================== */
+let rafId = null;
+
+function loop(timestamp) {
+    rafId = requestAnimationFrame(loop);
+    if (!estado.rodando || estado.pausado) return;
+
+    const dt = Math.min(timestamp - jogo.ultimoUpdate, 50);
+    jogo.ultimoUpdate = timestamp;
+
+    update(dt);
+    render();
+}
+
+/* ==========================================================
+   UPDATE — FÍSICA DA BOLA
+   ========================================================== */
+function update(dt) {
+    const bola = jogo.bola;
+    if (!bola.viva) return;
+
+    // ====== 1. A bola segue o trilho desenhado ======
+    // Se há traçado ativo, a bola se move em direção ao próximo ponto
+    // Se não há, ela anda reta (com inércia angular leve para ficar orgânico)
+
+    let alvo = null;
+    let distAlvo = Infinity;
+
+    if (jogo.tracadoAtual.length > 0) {
+        // Encontra o ponto mais próximo à frente da bola
+        for (let i = 0; i < jogo.tracadoAtual.length; i++) {
+            const p = jogo.tracadoAtual[i];
+            const d = Math.hypot(p.x - bola.x, p.y - bola.y);
+            // Só considera pontos numa direção próxima da atual
+            const anguloParaP = Math.atan2(p.y - bola.y, p.x - bola.x);
+            let diffAngulo = anguloParaP - bola.angulo;
+            while (diffAngulo > Math.PI) diffAngulo -= Math.PI * 2;
+            while (diffAngulo < -Math.PI) diffAngulo += Math.PI * 2;
+            // Aceita se estiver num cone de ±100° à frente
+            if (Math.abs(diffAngulo) < Math.PI * 0.55 && d > 5) {
+                if (d < distAlvo) {
+                    distAlvo = d;
+                    alvo = p;
                 }
-                ctx.strokeStyle = '#38bdf8';
-                ctx.lineWidth = snake.radius * 2;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.stroke();
             }
+        }
+    }
 
-            // Desenhar a cabeça da "bola"
+    if (alvo) {
+        // Vira suavemente em direção ao alvo
+        const anguloAlvo = Math.atan2(alvo.y - bola.y, alvo.x - bola.x);
+        let diff = anguloAlvo - bola.angulo;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        // Rotação suave (lerp)
+        bola.angulo += diff * 0.15;
+    }
+
+    // Move a bola
+    const velocidadeAtual = bola.velocidade;
+    bola.x += Math.cos(bola.angulo) * velocidadeAtual;
+    bola.y += Math.sin(bola.angulo) * velocidadeAtual;
+
+    // Remove do traçado os pontos que já ficaram para trás
+    if (jogo.tracadoAtual.length > 0) {
+        const novosPontos = [];
+        for (const p of jogo.tracadoAtual) {
+            const d = Math.hypot(p.x - bola.x, p.y - bola.y);
+            if (d > 12) novosPontos.push(p);
+        }
+        // Mantém apenas pontos próximos à bola para o próximo frame
+        // Se o usuário parou de desenhar, o traçado se esvazia naturalmente
+        if (jogo.desenhando) {
+            jogo.tracadoAtual = jogo.tracadoAtual; // mantém enquanto desenha
+        } else {
+            jogo.tracadoAtual = novosPontos;
+        }
+    }
+
+    // ====== 2. Salva posição no rastro ======
+    jogo.trilha.push({ x: bola.x, y: bola.y, t: performance.now() });
+
+    // Limita tamanho (por segurança de memória)
+    if (jogo.trilha.length > 6000) jogo.trilha.shift();
+
+    // ====== 3. Colisões ======
+    // Borda
+    if (bola.x < bola.raio || bola.x > W - bola.raio ||
+        bola.y < bola.raio || bola.y > H - bola.raio) {
+        finalizarJogo(false, '💥 Bateu na borda!');
+        return;
+    }
+
+    // Rastro sólido (pontos antigos > 3s)
+    const agora = performance.now();
+    for (let i = 0; i < jogo.trilha.length - 40; i++) {
+        const p = jogo.trilha[i];
+        if (agora - p.t < jogo.tempoRastroSolido) continue;
+        const d = Math.hypot(p.x - bola.x, p.y - bola.y);
+        if (d < bola.raio * 0.9) {
+            finalizarJogo(false, '💥 Bateu no próprio rastro!');
+            return;
+        }
+    }
+
+    // Obstáculos
+    for (const obs of jogo.obstaculos) {
+        obs.fase += dt * 0.001;
+        obs.y = obs.baseY + Math.sin(obs.fase) * 40;
+        const d = Math.hypot(obs.x - bola.x, obs.y - bola.y);
+        if (d < obs.raio + bola.raio) {
+            finalizarJogo(false, '💥 Bateu num obstáculo!');
+            return;
+        }
+    }
+
+    // Estrelas
+    for (const est of jogo.estrelas) {
+        if (est.coletada) continue;
+        est.angulo += dt * 0.002;
+        const d = Math.hypot(est.x - bola.x, est.y - bola.y);
+        if (d < 22 + bola.raio) {
+            est.coletada = true;
+            estado.estrelasColetadas++;
+            // Aumenta velocidade em 3% por estrela
+            bola.velocidade *= 1.03;
+            // Aumenta raio levemente
+            bola.raio = Math.min(bola.raio + 0.6, 18);
+            atualizarUI();
+            atualizarInstrucao(`⭐ Estrela! ${estado.estrelasColetadas}/${estado.estrelasTotal}`, 'sucesso');
+            // Verifica vitória
+            if (estado.estrelasColetadas >= estado.estrelasTotal) {
+                jogo.portal.ativo = true;
+                atualizarInstrucao('🌟 Portal ativado! Corra até ele!', 'alerta');
+            }
+        }
+    }
+
+    // Portal
+    if (jogo.portal.ativo) {
+        jogo.portal.angulo += dt * 0.003;
+        const d = Math.hypot(jogo.portal.x - bola.x, jogo.portal.y - bola.y);
+        if (d < jogo.portal.raio + bola.raio) {
+            finalizarJogo(true);
+            return;
+        }
+    }
+}
+
+/* ==========================================================
+   RENDER
+   ========================================================== */
+function render() {
+    // Fundo gradiente
+    const grad = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, Math.max(W, H));
+    grad.addColorStop(0, '#0a1030');
+    grad.addColorStop(1, '#020510');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Estrelas de fundo (paralaxe sutil)
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    for (let i = 0; i < 40; i++) {
+        const x = (i * 137.5) % W;
+        const y = (i * 219.3) % H;
+        const r = (i % 3) * 0.5 + 0.5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#64748b';
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Trilha (rastro antigo, esmaecendo)
+    const agora = performance.now();
+    if (jogo.trilha.length > 1) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        // Desenha como múltiplas linhas para permitir fade
+        for (let i = 1; i < jogo.trilha.length; i++) {
+            const p0 = jogo.trilha[i - 1];
+            const p1 = jogo.trilha[i];
+            const idade = agora - p0.t;
+            const solido = idade > jogo.tempoRastroSolido;
             ctx.beginPath();
-            ctx.arc(snake.x, snake.y, snake.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#bae6fd';
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#0284c7';
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            if (solido) {
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+                ctx.lineWidth = 2;
+            } else {
+                const alpha = Math.max(0.15, 1 - idade / jogo.tempoRastroSolido);
+                ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.9})`;
+                ctx.lineWidth = 3 + (1 - alpha) * 2;
+            }
             ctx.stroke();
+        }
+        ctx.restore();
+    }
 
-            // Desenhar comida
+    // Traçado atual (guia ativo, brilha)
+    if (jogo.tracadoAtual.length > 1) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        // Glow
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(jogo.tracadoAtual[0].x, jogo.tracadoAtual[0].y);
+        for (let i = 1; i < jogo.tracadoAtual.length; i++) {
+            ctx.lineTo(jogo.tracadoAtual[i].x, jogo.tracadoAtual[i].y);
+        }
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // Obstáculos
+    for (const obs of jogo.obstaculos) {
+        ctx.save();
+        ctx.shadowColor = '#a855f7';
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.arc(obs.x, obs.y, obs.raio, 0, Math.PI * 2);
+        const gradObs = ctx.createRadialGradient(obs.x, obs.y, 2, obs.x, obs.y, obs.raio);
+        gradObs.addColorStop(0, '#c084fc');
+        gradObs.addColorStop(1, '#7c3aed');
+        ctx.fillStyle = gradObs;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Estrelas
+    for (const est of jogo.estrelas) {
+        if (est.coletada) continue;
+        ctx.save();
+        ctx.translate(est.x, est.y);
+        ctx.rotate(est.angulo);
+        // Glow
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 20;
+        // Forma da estrela (5 pontas)
+        ctx.beginPath();
+        const pontos = 5;
+        for (let i = 0; i < pontos * 2; i++) {
+            const r = i % 2 === 0 ? 12 : 5;
+            const a = (i / (pontos * 2)) * Math.PI * 2 - Math.PI / 2;
+            const px = Math.cos(a) * r;
+            const py = Math.sin(a) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Portal
+    if (jogo.portal.ativo) {
+        ctx.save();
+        ctx.translate(jogo.portal.x, jogo.portal.y);
+        ctx.rotate(jogo.portal.angulo);
+        // Anel externo
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 30;
+        for (let i = 0; i < 3; i++) {
             ctx.beginPath();
-            ctx.arc(food.x, food.y, food.radius, 0, Math.PI * 2);
-            ctx.fillStyle = food.color;
-            ctx.fill();
-
-            // Tela de Game Over
-            if (gameOver) {
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 28px system-ui';
-                ctx.textAlign = 'center';
-                ctx.fillText('FIM DE JOGO', canvas.width / 2, canvas.height / 2 - 15);
-
-                ctx.font = '16px system-ui';
-                ctx.fillStyle = '#94a3b8';
-                ctx.fillText('Clique na tela para recomeçar', canvas.width / 2, canvas.height / 2 + 25);
-            }
+            ctx.arc(0, 0, jogo.portal.raio + i * 6, 0, Math.PI * 2);
+            ctx.strokeStyle = ['#4ade80', '#38bdf8', '#a855f7'][i];
+            ctx.lineWidth = 3;
+            ctx.stroke();
         }
+        // Centro
+        ctx.beginPath();
+        ctx.arc(0, 0, jogo.portal.raio * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(74, 222, 128, 0.4)';
+        ctx.fill();
+        ctx.restore();
+    }
 
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
+    // Bola
+    ctx.save();
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 25;
+    ctx.beginPath();
+    ctx.arc(jogo.bola.x, jogo.bola.y, jogo.bola.raio, 0, Math.PI * 2);
+    const gradBola = ctx.createRadialGradient(
+        jogo.bola.x - jogo.bola.raio * 0.3,
+        jogo.bola.y - jogo.bola.raio * 0.3,
+        1,
+        jogo.bola.x, jogo.bola.y, jogo.bola.raio
+    );
+    gradBola.addColorStop(0, '#e0f2fe');
+    gradBola.addColorStop(1, '#0284c7');
+    ctx.fillStyle = gradBola;
+    ctx.fill();
+    ctx.restore();
+}
 
-        canvas.addEventListener('click', () => {
-            if (gameOver) resetGame();
+/* ==========================================================
+   FIM DE JOGO / VITÓRIA
+   ========================================================== */
+function finalizarJogo(vitoria, motivo = '') {
+    if (!estado.rodando) return;
+    estado.rodando = false;
+    estado.vitoria = vitoria;
+    estado.gameOver = !vitoria;
+    pararTimer();
+
+    const overlay = document.getElementById('overlay');
+    const titulo = document.getElementById('overlay-titulo');
+    const sub = document.getElementById('overlay-sub');
+    const estrelasEl = document.getElementById('overlay-estrelas');
+    const btnAcao = document.getElementById('btn-overlay-acao');
+
+    if (vitoria) {
+        // Calcula pontos
+        const tempoLimite = CONFIG[estado.nivel].tempoLimite;
+        const bonusTempo = Math.max(0, (tempoLimite - estado.segundos) * 3);
+        const bonusEstrelas = estado.estrelasTotal * 50;
+        const ganho = 100 * estado.nivel + bonusEstrelas + bonusTempo;
+        estado.pontos += ganho;
+
+        // Avaliação com estrelas de resultado
+        let avaliacao = '⭐';
+        if (estado.segundos < tempoLimite * 0.5) avaliacao = '⭐⭐⭐';
+        else if (estado.segundos < tempoLimite * 0.75) avaliacao = '⭐⭐';
+
+        titulo.textContent = '🎉 Nível Concluído!';
+        sub.textContent = `Tempo: ${formatarTempo(estado.segundos)} • +${ganho} pontos`;
+        estrelasEl.textContent = avaliacao;
+        btnAcao.textContent = estado.nivel < 5 ? 'Próximo Nível 🚀' : 'Jogar do Zero';
+
+        // Salva no Firebase
+        estado.recordes[estado.nivel] = Math.min(
+            estado.recordes[estado.nivel] || 999999,
+            estado.segundos
+        );
+        salvarProgresso();
+
+        document.getElementById('btn-proximo').classList.remove('hidden');
+    } else {
+        titulo.textContent = '💥 Fim de Jogo';
+        sub.textContent = motivo || 'Tente novamente!';
+        estrelasEl.textContent = '';
+        btnAcao.textContent = 'Tentar de novo';
+    }
+
+    atualizarUI();
+    overlay.classList.remove('hidden');
+}
+
+function esconderOverlay() {
+    document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('btn-proximo').classList.add('hidden');
+}
+
+/* ==========================================================
+   FIREBASE
+   ========================================================== */
+async function salvarProgresso() {
+    try {
+        await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
+            pontos: (jogadorSessao.pontos || 0) + estado.pontos,
+            pontosCurves: estado.pontos,
+            recordesCurves: estado.recordes,
+            nivelCurves: estado.nivel + 1,
+            ultimaAtualizacao: new Date().toISOString()
         });
+    } catch (e) {
+        console.warn('Erro ao salvar (offline?):', e);
+    }
+}
 
-        // Iniciar loop
-        loop();
-    </script>
+async function carregarProgresso() {
+    try {
+        const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
+        if (snap.exists()) {
+            const dados = snap.val();
+            estado.pontos = dados.pontosCurves || 0;
+            estado.recordes = dados.recordesCurves || {};
+            estado.nivel = Math.min(5, Math.max(1, dados.nivelCurves || 1));
+        }
+    } catch (e) {
+        console.warn('Modo offline:', e);
+    }
+    document.getElementById('display-pontos').textContent = estado.pontos;
+}
+
+/* ==========================================================
+   EVENTOS DE UI
+   ========================================================== */
+document.getElementById('btn-reiniciar').addEventListener('click', () => {
+    iniciarNivel(estado.nivel, true);
+});
+
+document.getElementById('btn-proximo').addEventListener('click', () => {
+    const proximo = estado.nivel >= 5 ? 1 : estado.nivel + 1;
+    iniciarNivel(proximo, true);
+});
+
+document.getElementById('select-nivel').addEventListener('change', (e) => {
+    const n = parseInt(e.target.value);
+    if (n >= 1 && n <= 5) {
+        e.target.value = '';
+        iniciarNivel(n, true);
+    }
+});
+
+document.getElementById('btn-overlay-acao').addEventListener('click', () => {
+    if (estado.vitoria) {
+        const proximo = estado.nivel >= 5 ? 1 : estado.nivel + 1;
+        iniciarNivel(proximo, true);
+    } else {
+        iniciarNivel(estado.nivel, true);
+    }
+});
+
+/* ==========================================================
+   TEMA
+   ========================================================== */
+const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('brain_flow_theme', next);
+});
+
+/* ==========================================================
+   START
+   ========================================================== */
+async function iniciar() {
+    await carregarProgresso();
+    iniciarNivel(estado.nivel, true);
+    rafId = requestAnimationFrame(loop);
+}
+
+iniciar();
+</script>
 </body>
 </html>
