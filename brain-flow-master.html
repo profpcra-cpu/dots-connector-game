@@ -366,7 +366,6 @@ button:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
     <button id="btn-avancar" class="hidden">Avançar para Próximo Nível 🚀</button>
 </div>
-
 <script type="module">
 import { db } from "./firebase-config.js";
 import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -449,11 +448,7 @@ function contarBloqueiosDoPar(par, todosPares) {
     const A = par.a, B = par.b;
     for (const outro of todosPares) {
         if (outro.id === par.id) continue;
-        const dists = [
-            { pt: outro.a },
-            { pt: outro.b }
-        ];
-        for (const { pt } of dists) {
+        for (const pt of [outro.a, outro.b]) {
             const d = distanciaPontoAReta(pt, A, B);
             if (d !== null && d < 0.6) {
                 bloqueios.push({ r: pt.r, c: pt.c, parId: outro.id });
@@ -486,37 +481,54 @@ function analisarEBalancearEstrelas(puzzle) {
         estrelasNecessarias = Math.max(1, Math.ceil(totalBloqueios / 1.8));
     }
 
+    // Candidatos: células livres que NÃO sejam adjacentes (nem em diagonal)
+    // a nenhum endpoint, para não poluir visualmente
+    const adjacenteAEndpoint = new Set();
+    for (const par of pares) {
+        for (const ep of [par.a, par.b]) {
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (dr === 0 && dc === 0) continue;
+                    const rr = ep.r + dr, cc = ep.c + dc;
+                    if (rr < 0 || rr >= n || cc < 0 || cc >= n) continue;
+                    adjacenteAEndpoint.add(`${rr},${cc}`);
+                }
+            }
+        }
+    }
+
     const candidatos = [];
     const visitadas = new Set();
+
+    // Prioriza vizinhos dos bloqueios (mas só se não forem adjacentes a endpoints)
     for (const parId in bloqueiosPorPar) {
         for (const bl of bloqueiosPorPar[parId]) {
             const vizinhos = [
-                { r: bl.r - 1, c: bl.c },
-                { r: bl.r + 1, c: bl.c },
-                { r: bl.r, c: bl.c - 1 },
-                { r: bl.r, c: bl.c + 1 },
-                { r: bl.r - 2, c: bl.c },
-                { r: bl.r + 2, c: bl.c },
-                { r: bl.r, c: bl.c - 2 },
-                { r: bl.r, c: bl.c + 2 }
+                { r: bl.r - 1, c: bl.c }, { r: bl.r + 1, c: bl.c },
+                { r: bl.r, c: bl.c - 1 }, { r: bl.r, c: bl.c + 1 },
+                { r: bl.r - 2, c: bl.c }, { r: bl.r + 2, c: bl.c },
+                { r: bl.r, c: bl.c - 2 }, { r: bl.r, c: bl.c + 2 }
             ];
             for (const v of vizinhos) {
                 if (v.r < 0 || v.r >= n || v.c < 0 || v.c >= n) continue;
                 const key = `${v.r},${v.c}`;
                 if (visitadas.has(key)) continue;
                 if (ocupadas.has(key)) continue;
+                if (adjacenteAEndpoint.has(key)) continue;
                 visitadas.add(key);
                 candidatos.push(v);
             }
         }
     }
 
+    // Fallback: qualquer célula livre não adjacente a endpoint
     if (candidatos.length < estrelasNecessarias) {
         for (let r = 0; r < n && candidatos.length < estrelasNecessarias * 3; r++) {
             for (let c = 0; c < n && candidatos.length < estrelasNecessarias * 3; c++) {
                 const key = `${r},${c}`;
                 if (visitadas.has(key)) continue;
                 if (ocupadas.has(key)) continue;
+                if (adjacenteAEndpoint.has(key)) continue;
                 visitadas.add(key);
                 candidatos.push({ r, c });
             }
@@ -550,20 +562,19 @@ function analisarEBalancearEstrelas(puzzle) {
 const estado = {
     nivel: 1,
     tamanho: 5,
-    grid: [],
+    grid: [],           // estado persistido (só atualizado quando trilha é validada)
     pares: [],
     estrelas: [],
-    trilhas: {},
-    estrelasPorPar: {},
-    estrelasUsadasGlobal: {},
-    endpointsAtravessados: {},
-    desenhando: null,
+    trilhas: {},        // parId -> array de {r,c} já validado
+    estrelasPorPar: {}, // parId -> Set de estrelaId
+    estrelasUsadasGlobal: {}, // estrelaId -> parId
+    endpointsAtravessados: {}, // parId -> Set de "r,c"
+    desenhando: null,   // trilha em construção
     pontos: 0,
     segundos: 0,
     timer: null,
     recordes: {},
-    concluido: false,
-    analise: null
+    concluido: false
 };
 
 /* ==========================================================
@@ -596,7 +607,7 @@ themeToggle.addEventListener('click', () => {
    UTILITÁRIOS
    ========================================================== */
 function formatarTempo(s) {
-    if (!s && s !== 0) return '--:--';
+    if (s === undefined || s === null) return '--:--';
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 function keyRC(r, c) { return `${r},${c}`; }
@@ -612,7 +623,6 @@ function iniciarPuzzle(nivel) {
     estado.tamanho = puzzleBase.tamanho;
     estado.pares = puzzleBase.pares.map((p, i) => ({ ...p, id: i }));
     estado.estrelas = analise.estrelas.map((s, i) => ({ ...s, id: i }));
-    estado.analise = analise;
     estado.trilhas = {};
     estado.estrelasPorPar = {};
     estado.estrelasUsadasGlobal = {};
@@ -665,67 +675,135 @@ function renderizarBoard() {
 }
 
 /* ==========================================================
+   MAPA VISUAL UNIFICADO
+   Constrói um mapa "o que desenhar em cada célula" combinando
+   o estado persistido com a trilha em construção.
+   ========================================================== */
+function construirMapaVisual() {
+    const n = estado.tamanho;
+    const mapa = Array.from({ length: n }, () =>
+        Array.from({ length: n }, () => ({
+            tipo: 'vazio', cor: null, parId: null,
+            temEstrela: false, estrelaId: null,
+            estrelaCapturada: false,
+            conectado: false,
+            atravessado: false,
+            live: false
+        }))
+    );
+
+    // 1) Base: grid persistido
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const g = estado.grid[r][c];
+            mapa[r][c].tipo = g.tipo;
+            mapa[r][c].cor = g.cor;
+            mapa[r][c].parId = g.parId;
+            mapa[r][c].temEstrela = g.temEstrela;
+            mapa[r][c].estrelaId = g.estrelaId;
+        }
+    }
+
+    // 2) Trilhas já validadas
+    for (const parId in estado.trilhas) {
+        const t = estado.trilhas[parId];
+        const par = estado.pares.find(p => p.id == parId);
+        if (!par || t.length < 2) continue;
+        const inicio = t[0], fim = t[t.length - 1];
+        const conecta =
+            (inicio.r === par.a.r && inicio.c === par.a.c && fim.r === par.b.r && fim.c === par.b.c) ||
+            (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
+        for (const p of t) {
+            const cell = mapa[p.r][p.c];
+            if (cell.tipo === 'endpoint') {
+                if (conecta) cell.conectado = true;
+                continue;
+            }
+            cell.tipo = 'trilha';
+            cell.cor = par.cor;
+            cell.parId = parId;
+            if (conecta) cell.conectado = true;
+        }
+    }
+
+    // 3) Endpoints atravessados (persistidos)
+    for (const parId in estado.endpointsAtravessados) {
+        for (const k of estado.endpointsAtravessados[parId]) {
+            const [r, c] = k.split(',').map(Number);
+            mapa[r][c].atravessado = true;
+        }
+    }
+
+    // 4) Trilha em construção (overlay)
+    if (estado.desenhando) {
+        const d = estado.desenhando;
+        for (let i = 0; i < d.trail.length; i++) {
+            const p = d.trail[i];
+            const cell = mapa[p.r][p.c];
+            if (cell.tipo === 'endpoint') {
+                if (cell.parId === d.parId) cell.conectado = true;
+                continue;
+            }
+            cell.tipo = 'trilha';
+            cell.cor = d.cor;
+            cell.parId = d.parId;
+            if (i === d.trail.length - 1) cell.live = true;
+        }
+        for (const k of d.endpointsAtravessados) {
+            const [r, c] = k.split(',').map(Number);
+            mapa[r][c].atravessado = true;
+            mapa[r][c].live = false;
+        }
+    }
+
+    // 5) Estrelas capturadas (persistidas + em construção)
+    for (const estId in estado.estrelasUsadasGlobal) {
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+            if (mapa[r][c].estrelaId === Number(estId) && mapa[r][c].temEstrela) {
+                mapa[r][c].estrelaCapturada = true;
+            }
+        }
+    }
+
+    return mapa;
+}
+
+/* ==========================================================
    ATUALIZAÇÃO VISUAL
    ========================================================== */
 function atualizarVisual() {
     const n = estado.tamanho;
+    const mapa = construirMapaVisual();
+
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
             const cell = document.getElementById(`cell-${r}-${c}`);
             if (!cell) continue;
 
-            const dado = estado.grid[r][c];
+            const d = mapa[r][c];
             cell.className = 'cell';
             cell.style.background = '';
             cell.innerHTML = '';
             cell.style.removeProperty('--trail-color');
 
-            const capturada = dado.temEstrela && estado.estrelasUsadasGlobal[dado.estrelaId] !== undefined;
-            if (capturada) cell.classList.add('star-capturada');
+            if (d.estrelaCapturada) cell.classList.add('star-capturada');
 
-            if (dado.tipo === 'endpoint') {
-                const conectado = estado.trilhas[dado.parId] ? ' connected' : '';
-                const atravessado = Object.values(estado.endpointsAtravessados)
-                    .some(set => set.has(keyRC(r, c)));
-                if (atravessado) cell.classList.add('atravessado');
-
-                cell.innerHTML = `<div class="endpoint${conectado}" style="background:${dado.cor}"></div>`;
-            } else if (dado.tipo === 'trilha') {
+            if (d.tipo === 'endpoint') {
+                const cls = d.conectado ? ' connected' : '';
+                if (d.atravessado) cell.classList.add('atravessado');
+                cell.innerHTML = `<div class="endpoint${cls}" style="background:${d.cor}"></div>`;
+            } else if (d.tipo === 'trilha') {
                 cell.classList.add('trail');
-                cell.style.setProperty('--trail-color', dado.cor);
+                if (d.conectado) cell.classList.add('connected');
+                if (d.live) cell.classList.add('live');
+                cell.style.setProperty('--trail-color', d.cor);
             }
 
-            if (dado.temEstrela) {
+            if (d.temEstrela) {
                 const star = document.createElement('div');
                 star.className = 'star';
                 star.textContent = '⭐';
                 cell.appendChild(star);
-            }
-        }
-    }
-
-    for (const parId in estado.trilhas) {
-        const t = estado.trilhas[parId];
-        if (t.length < 2) continue;
-        const par = estado.pares.find(p => p.id == parId);
-        if (!par) continue;
-        const inicio = t[0], fim = t[t.length - 1];
-        const conecta =
-            (inicio.r === par.a.r && inicio.c === par.a.c && fim.r === par.b.r && fim.c === par.b.c) ||
-            (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
-        if (conecta) {
-            for (const cell of t) {
-                const el = document.getElementById(`cell-${cell.r}-${cell.c}`);
-                if (el) el.classList.add('connected');
-            }
-        }
-    }
-
-    if (estado.desenhando && estado.desenhando.trail.length > 1) {
-        for (const p of estado.desenhando.trail) {
-            if (estado.grid[p.r][p.c].tipo === 'trilha') {
-                const el = document.getElementById(`cell-${p.r}-${p.c}`);
-                if (el) el.classList.add('live');
             }
         }
     }
@@ -736,7 +814,7 @@ function atualizarVisual() {
 }
 
 /* ==========================================================
-   INTERAÇÃO — DESENHO À MÃO LIVRE (POINTER EVENTS)
+   INTERAÇÃO
    ========================================================== */
 let activePointerId = null;
 
@@ -759,14 +837,11 @@ board.addEventListener('pointermove', (e) => {
     if (!estado.desenhando) return;
     if (e.pointerId !== activePointerId) return;
     e.preventDefault();
-
-    // Suporte a caneta/stylus: só desenha se estiver pressionando
     if (e.pointerType === 'pen' && e.buttons === 0) return;
 
     const cell = cellFromPoint(e.clientX, e.clientY);
     if (!cell) return;
-    const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
-    estenderTrilha(r, c);
+    estenderTrilha(parseInt(cell.dataset.r), parseInt(cell.dataset.c));
 });
 
 board.addEventListener('pointerup', (e) => {
@@ -809,42 +884,44 @@ function cancelarDesenho() {
         try { board.releasePointerCapture(activePointerId); } catch (_) {}
     }
     activePointerId = null;
-    if (estado.desenhando) cancelarTrilha();
+    if (estado.desenhando) {
+        estado.desenhando = null;
+        atualizarVisual();
+    }
 }
 
 /* ==========================================================
-   LÓGICA DE TRILHA + ESTRELAS
+   LÓGICA DE TRILHA (pura - só manipula `desenhando`)
    ========================================================== */
 function iniciarTrilha(parId, cor, r, c) {
-    // Remove trilha existente do mesmo par
+    // Remove trilha existente do mesmo par e libera estrelas
     if (estado.trilhas[parId]) {
-        devolverEstrelasDoPar(parId);
-        limparTrilhaDoGrid(estado.trilhas[parId]);
-        delete estado.trilhas[parId];
-        delete estado.estrelasPorPar[parId];
-        delete estado.endpointsAtravessados[parId];
-    }
-    estado.estrelasPorPar[parId] = new Set();
-    estado.endpointsAtravessados[parId] = new Set();
-
-    estado.desenhando = {
-        parId, cor,
-        trail: [{ r, c }],
-        estrelasCapturadasNesteTrajeto: new Set(),
-        endpointsAtravessadosNesteTrajeto: new Set()
-    };
-    atualizarVisual();
-}
-
-function devolverEstrelasDoPar(parId) {
-    const capturadas = estado.estrelasPorPar[parId];
-    if (capturadas) {
-        for (const estId of capturadas) {
+        for (const estId of (estado.estrelasPorPar[parId] || [])) {
             if (estado.estrelasUsadasGlobal[estId] === parId) {
                 delete estado.estrelasUsadasGlobal[estId];
             }
         }
+        delete estado.trilhas[parId];
+        delete estado.estrelasPorPar[parId];
+        delete estado.endpointsAtravessados[parId];
+        // Limpa marcações no grid para este par
+        for (let rr = 0; rr < estado.tamanho; rr++) {
+            for (let cc = 0; cc < estado.tamanho; cc++) {
+                const g = estado.grid[rr][cc];
+                if (g.tipo === 'trilha' && g.parId === parId) {
+                    g.tipo = 'vazio'; g.cor = null; g.parId = null;
+                }
+            }
+        }
     }
+
+    estado.desenhando = {
+        parId, cor,
+        trail: [{ r, c }],
+        estrelasCapturadas: new Set(),
+        endpointsAtravessados: new Set()
+    };
+    atualizarVisual();
 }
 
 function estenderTrilha(r, c) {
@@ -856,27 +933,17 @@ function estenderTrilha(r, c) {
 
     if (ultima.r === r && ultima.c === c) return;
 
-    // Backtrack imediato (voltar para a célula anterior)
+    // Backtrack imediato
     if (trail.length >= 2) {
         const anterior = trail[trail.length - 2];
         if (anterior.r === r && anterior.c === c) {
-            trail.pop();
-            const removida = estado.grid[ultima.r][ultima.c];
-            if (removida.tipo === 'trilha') {
-                removida.tipo = 'vazio';
-                removida.cor = null;
-                removida.parId = null;
+            const removida = trail.pop();
+            const celula = estado.grid[removida.r][removida.c];
+            if (celula.temEstrela && d.estrelasCapturadas.has(celula.estrelaId)) {
+                d.estrelasCapturadas.delete(celula.estrelaId);
             }
-            if (removida.temEstrela && d.estrelasCapturadasNesteTrajeto.has(removida.estrelaId)) {
-                d.estrelasCapturadasNesteTrajeto.delete(removida.estrelaId);
-                if (estado.estrelasUsadasGlobal[removida.estrelaId] === d.parId) {
-                    delete estado.estrelasUsadasGlobal[removida.estrelaId];
-                }
-            }
-            const key = keyRC(ultima.r, ultima.c);
-            if (d.endpointsAtravessadosNesteTrajeto.has(key)) {
-                d.endpointsAtravessadosNesteTrajeto.delete(key);
-            }
+            const k = keyRC(removida.r, removida.c);
+            if (d.endpointsAtravessados.has(k)) d.endpointsAtravessados.delete(k);
             atualizarVisual();
             return;
         }
@@ -884,27 +951,19 @@ function estenderTrilha(r, c) {
 
     const dr = Math.abs(r - ultima.r), dc = Math.abs(c - ultima.c);
     if (dr + dc !== 1) {
-        // Permite pular para célula já na trilha (backtrack longo)
-        const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
-        if (idxMesma >= 0) {
-            for (let i = idxMesma + 1; i < trail.length; i++) {
+        // Backtrack longo: pula para célula já na trilha
+        const idx = trail.findIndex(p => p.r === r && p.c === c);
+        if (idx >= 0) {
+            for (let i = idx + 1; i < trail.length; i++) {
                 const rem = trail[i];
                 const celula = estado.grid[rem.r][rem.c];
-                if (celula.tipo === 'trilha') {
-                    celula.tipo = 'vazio'; celula.cor = null; celula.parId = null;
-                    if (celula.temEstrela && d.estrelasCapturadasNesteTrajeto.has(celula.estrelaId)) {
-                        d.estrelasCapturadasNesteTrajeto.delete(celula.estrelaId);
-                        if (estado.estrelasUsadasGlobal[celula.estrelaId] === d.parId) {
-                            delete estado.estrelasUsadasGlobal[celula.estrelaId];
-                        }
-                    }
-                    const key = keyRC(rem.r, rem.c);
-                    if (d.endpointsAtravessadosNesteTrajeto.has(key)) {
-                        d.endpointsAtravessadosNesteTrajeto.delete(key);
-                    }
+                if (celula.temEstrela && d.estrelasCapturadas.has(celula.estrelaId)) {
+                    d.estrelasCapturadas.delete(celula.estrelaId);
                 }
+                const k = keyRC(rem.r, rem.c);
+                if (d.endpointsAtravessados.has(k)) d.endpointsAtravessados.delete(k);
             }
-            trail.length = idxMesma + 1;
+            trail.length = idx + 1;
             atualizarVisual();
         }
         return;
@@ -912,50 +971,41 @@ function estenderTrilha(r, c) {
 
     const alvo = estado.grid[r][c];
 
-    // Endpoint do MESMO par → conecta
+    // Endpoint do MESMO par → finaliza
     if (alvo.tipo === 'endpoint' && alvo.parId === d.parId) {
         trail.push({ r, c });
-        estado.trilhas[d.parId] = [...trail];
-        estado.estrelasPorPar[d.parId] = new Set(d.estrelasCapturadasNesteTrajeto);
-        estado.endpointsAtravessados[d.parId] = new Set(d.endpointsAtravessadosNesteTrajeto);
-        estado.desenhando = null;
-        atualizarVisual();
-        verificarVitoria();
+        finalizarTrilha();
         return;
     }
 
-    // Endpoint de OUTRO par → tenta atravessar
+    // Endpoint de OUTRO par
     if (alvo.tipo === 'endpoint') {
-        if (podeAtravessar(d)) {
+        const saldo = d.estrelasCapturadas.size - d.endpointsAtravessados.size;
+        if (saldo > 0) {
             trail.push({ r, c });
-            d.endpointsAtravessadosNesteTrajeto.add(keyRC(r, c));
-            alvo.atravessadoPor = d.parId;
+            d.endpointsAtravessados.add(keyRC(r, c));
             atualizarVisual();
-            return;
+            infoInstrucao.textContent = `⭐ Atravessando bola (${d.estrelasCapturadas.size - d.endpointsAtravessados.size} estrela(s) restante(s))`;
         } else {
             piscarErro(r, c);
             infoInstrucao.textContent = '⚠️ Capture uma ⭐ para atravessar esta bola!';
-            return;
         }
+        return;
     }
 
-    // Já é trilha deste par → backtrack
-    const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
-    if (idxMesma >= 0) {
-        for (let i = idxMesma + 1; i < trail.length; i++) {
+    // Trilha deste par → backtrack
+    const idx = trail.findIndex(p => p.r === r && p.c === c);
+    if (idx >= 0) {
+        for (let i = idx + 1; i < trail.length; i++) {
             const rem = trail[i];
             const celula = estado.grid[rem.r][rem.c];
-            if (celula.tipo === 'trilha') {
-                celula.tipo = 'vazio'; celula.cor = null; celula.parId = null;
-                if (celula.temEstrela && d.estrelasCapturadasNesteTrajeto.has(celula.estrelaId)) {
-                    d.estrelasCapturadasNesteTrajeto.delete(celula.estrelaId);
-                    if (estado.estrelasUsadasGlobal[celula.estrelaId] === d.parId) {
-                        delete estado.estrelasUsadasGlobal[celula.estrelaId];
-                    }
-                }
+            if (celula.temEstrela && d.estrelasCapturadas.has(celula.estrelaId)) {
+                d.estrelasCapturadas.delete(celula.estrelaId);
             }
+            const k = keyRC(rem.r, rem.c);
+            if (d.endpointsAtravessados.has(k)) d.endpointsAtravessados.delete(k);
         }
-        trail.length = idxMesma + 1;
+        trail.length = idx + 1;
         atualizarVisual();
         return;
     }
@@ -967,25 +1017,15 @@ function estenderTrilha(r, c) {
         return;
     }
 
-    // Célula vazia: adiciona
+    // Célula vazia ou contendo estrela → adiciona
     trail.push({ r, c });
-    estado.grid[r][c].tipo = 'trilha';
-    estado.grid[r][c].cor = d.cor;
-    estado.grid[r][c].parId = d.parId;
 
-    if (alvo.temEstrela && estado.estrelasUsadasGlobal[alvo.estrelaId] === undefined) {
-        estado.estrelasUsadasGlobal[alvo.estrelaId] = d.parId;
-        d.estrelasCapturadasNesteTrajeto.add(alvo.estrelaId);
-        infoInstrucao.textContent = '⭐ Estrela capturada! Pode atravessar 1 bola de outra cor.';
+    if (alvo.temEstrela && !d.estrelasCapturadas.has(alvo.estrelaId)) {
+        d.estrelasCapturadas.add(alvo.estrelaId);
+        infoInstrucao.textContent = `⭐ Estrela capturada! (${d.estrelasCapturadas.size - d.endpointsAtravessados.size} disponível(is) para atravessar)`;
     }
 
     atualizarVisual();
-}
-
-function podeAtravessar(d) {
-    const capturadas = d.estrelasCapturadasNesteTrajeto.size;
-    const usadas = d.endpointsAtravessadosNesteTrajeto.size;
-    return capturadas > usadas;
 }
 
 function finalizarTrilha() {
@@ -993,54 +1033,36 @@ function finalizarTrilha() {
     if (!d) return;
     const trail = d.trail;
     const par = estado.pares.find(p => p.id === d.parId);
+    if (!par) { estado.desenhando = null; atualizarVisual(); return; }
+
     const inicio = trail[0], fim = trail[trail.length - 1];
     const conecta =
         (inicio.r === par.a.r && inicio.c === par.a.c && fim.r === par.b.r && fim.c === par.b.c) ||
         (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
 
     if (conecta && trail.length >= 2) {
+        // Persiste tudo
         estado.trilhas[d.parId] = [...trail];
-        estado.estrelasPorPar[d.parId] = new Set(d.estrelasCapturadasNesteTrajeto);
-        estado.endpointsAtravessados[d.parId] = new Set(d.endpointsAtravessadosNesteTrajeto);
-    } else {
-        for (const estId of d.estrelasCapturadasNesteTrajeto) {
-            if (estado.estrelasUsadasGlobal[estId] === d.parId) {
-                delete estado.estrelasUsadasGlobal[estId];
-            }
+        estado.estrelasPorPar[d.parId] = new Set(d.estrelasCapturadas);
+        estado.endpointsAtravessados[d.parId] = new Set(d.endpointsAtravessados);
+        for (const estId of d.estrelasCapturadas) {
+            estado.estrelasUsadasGlobal[estId] = d.parId;
         }
-        limparTrilhaDoGrid(trail);
+        // Marca trilha no grid
+        for (let i = 0; i < trail.length; i++) {
+            const p = trail[i];
+            const g = estado.grid[p.r][p.c];
+            if (g.tipo === 'endpoint') continue;
+            g.tipo = 'trilha';
+            g.cor = d.cor;
+            g.parId = d.parId;
+        }
     }
+    // Se não conecta: simplesmente descarta (nada foi persistido no grid)
+
     estado.desenhando = null;
     atualizarVisual();
     verificarVitoria();
-}
-
-function cancelarTrilha() {
-    const d = estado.desenhando;
-    if (d) {
-        for (const estId of d.estrelasCapturadasNesteTrajeto) {
-            if (estado.estrelasUsadasGlobal[estId] === d.parId) {
-                delete estado.estrelasUsadasGlobal[estId];
-            }
-        }
-        limparTrilhaDoGrid(d.trail);
-    }
-    estado.desenhando = null;
-    atualizarVisual();
-}
-
-function limparTrilhaDoGrid(trail) {
-    for (const p of trail) {
-        const cel = estado.grid[p.r][p.c];
-        if (cel.tipo === 'trilha') {
-            cel.tipo = 'vazio';
-            cel.cor = null;
-            cel.parId = null;
-        }
-        if (cel.atravessadoPor !== undefined) {
-            delete cel.atravessadoPor;
-        }
-    }
 }
 
 function piscarErro(r, c) {
@@ -1058,7 +1080,6 @@ function verificarVitoria() {
     const n = estado.tamanho;
     const qtdPares = estado.pares.length;
 
-    let paresLigados = 0;
     for (const par of estado.pares) {
         const t = estado.trilhas[par.id];
         if (!t || t.length < 2) return;
@@ -1066,17 +1087,14 @@ function verificarVitoria() {
         const conecta =
             (inicio.r === par.a.r && inicio.c === par.a.c && fim.r === par.b.r && fim.c === par.b.c) ||
             (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
-        if (conecta) paresLigados++;
+        if (!conecta) return;
     }
-    if (paresLigados !== qtdPares) return;
 
-    let vazias = 0;
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
-            if (estado.grid[r][c].tipo === 'vazio') vazias++;
+            if (estado.grid[r][c].tipo === 'vazio') return;
         }
     }
-    if (vazias > 0) return;
 
     estado.concluido = true;
     concluirNivel();
@@ -1139,8 +1157,7 @@ selectNivel.addEventListener('change', (e) => {
 });
 
 btnAvancar.addEventListener('click', () => {
-    const proximo = Math.min(estado.nivel + 1, 4);
-    iniciarPuzzle(proximo);
+    iniciarPuzzle(Math.min(estado.nivel + 1, 4));
 });
 
 /* ==========================================================
@@ -1153,8 +1170,7 @@ async function carregarDados() {
             const dados = snap.val();
             estado.pontos = dados.pontos || 0;
             estado.recordes = dados.recordesFlowNumeros || {};
-            const nivelSalvo = dados.nivel || 1;
-            estado.nivel = Math.min(4, Math.max(1, nivelSalvo));
+            estado.nivel = Math.min(4, Math.max(1, dados.nivel || 1));
         }
     } catch (e) { console.warn('Modo offline', e); }
 
