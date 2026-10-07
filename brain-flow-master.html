@@ -377,11 +377,7 @@ const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
 if (!jogadorSessao) { window.location.href = 'index.html'; }
 
 /* ==========================================================
-   PUZZLES VALIDADOS (solucionáveis com as estrelas listadas)
-   ==========================================================
-   Cada puzzle possui `estrelas` fixas (posições pré-calculadas
-   e validadas por solver). Não dependemos mais de heurística
-   em tempo de execução.
+   PUZZLES VALIDADOS
    ========================================================== */
 const PUZZLES = {
     1: {
@@ -445,19 +441,11 @@ const PUZZLES = {
 
 /* ==========================================================
    SOLVER — valida se um puzzle é solucionável com N estrelas
-   ==========================================================
-   Regras:
-   - Cada par deve ser conectado por uma trilha (caminho 4-direções).
-   - Trilhas não podem se cruzar (células 'trilha' de outro par).
-   - Endpoints adversários só podem ser atravessados se houver
-     saldo (estrela capturada > endpoints atravessados).
-   - No final, todas as células devem estar ocupadas.
    ========================================================== */
 function puzzleEhSolucionavel(puzzle, estrelas) {
     const n = puzzle.tamanho;
     const pares = puzzle.pares.map((p, i) => ({ ...p, id: i }));
 
-    // Grid base
     const gridBase = Array.from({ length: n }, () =>
         Array.from({ length: n }, () => ({ tipo: 'vazio', parId: null }))
     );
@@ -468,18 +456,16 @@ function puzzleEhSolucionavel(puzzle, estrelas) {
 
     const starSet = new Set(estrelas.map(e => `${e.r},${e.c}`));
 
-    // Ordena pares por dificuldade (maior distância primeiro)
     const ordem = [...pares].sort((a, b) => {
         const da = Math.abs(a.a.r - a.b.r) + Math.abs(a.a.c - a.b.c);
         const dbb = Math.abs(b.a.r - b.b.r) + Math.abs(b.a.c - b.b.c);
         return dbb - da;
     });
 
-    // Estado mutável do solver
     const grid = gridBase.map(row => row.map(c => ({ ...c })));
-    const estrelasUsadasGlobal = new Set(); // chaves "r,c"
+    const estrelasUsadasGlobal = new Set();
     let nosVisitados = 0;
-    const LIMITE_NOS = 500000; // limite de segurança
+    const LIMITE_NOS = 500000;
 
     function todasCelulasOcupadas() {
         for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
@@ -502,7 +488,6 @@ function puzzleEhSolucionavel(puzzle, estrelas) {
             if (nosVisitados > LIMITE_NOS) return false;
 
             if (r === par.b.r && c === par.b.c) {
-                // Aplica trilha no grid
                 const aplicadas = [];
                 for (const p of trilha) {
                     if (grid[p.r][p.c].tipo === 'vazio') {
@@ -510,7 +495,6 @@ function puzzleEhSolucionavel(puzzle, estrelas) {
                         aplicadas.push(p);
                     }
                 }
-                // Registra estrelas capturadas
                 const novasEstrelas = [];
                 for (const p of trilha) {
                     const k = `${p.r},${p.c}`;
@@ -522,7 +506,6 @@ function puzzleEhSolucionavel(puzzle, estrelas) {
 
                 if (tentarPar(idx + 1)) return true;
 
-                // Backtrack
                 for (const k of novasEstrelas) estrelasUsadasGlobal.delete(k);
                 for (const p of aplicadas) {
                     grid[p.r][p.c] = { tipo: 'vazio', parId: null };
@@ -537,20 +520,19 @@ function puzzleEhSolucionavel(puzzle, estrelas) {
                 const k = `${nr},${nc}`;
                 if (visitado.has(k)) continue;
                 const g = grid[nr][nc];
-                if (g.tipo === 'trilha') continue; // não cruza outra trilha
+                if (g.tipo === 'trilha') continue;
 
                 const novoEstrelas = new Set(estrelasCapturadas);
                 const novoEndpoints = new Set(endpointsAtravessados);
 
                 if (g.tipo === 'endpoint') {
                     if (g.parId === par.id) {
-                        // ok — destino final
+                        // destino final
                     } else {
                         if (novoEstrelas.size - novoEndpoints.size <= 0) continue;
                         novoEndpoints.add(k);
                     }
                 } else {
-                    // vazio
                     if (starSet.has(k) && !estrelasUsadasGlobal.has(k)) novoEstrelas.add(k);
                 }
 
@@ -631,8 +613,6 @@ function keyRC(r, c) { return `${r},${c}`; }
 function iniciarPuzzle(nivel) {
     const puzzleBase = PUZZLES[nivel] || PUZZLES[1];
 
-    // Validação opcional em dev: confirma que o puzzle é solucionável
-    // com as estrelas pré-calculadas. Em produção, pode ser comentado.
     if (typeof console !== 'undefined') {
         const ok = puzzleEhSolucionavel(puzzleBase, puzzleBase.estrelas || []);
         if (!ok) {
@@ -1078,12 +1058,14 @@ function piscarErro(r, c) {
 }
 
 /* ==========================================================
-   VITÓRIA
+   VITÓRIA — considera estrelas não capturadas como células válidas
+   e verifica sobre o mapa visual efetivo (o que o jogador vê).
    ========================================================== */
 function verificarVitoria() {
     if (estado.concluido) return;
     const n = estado.tamanho;
 
+    // 1) Todos os pares devem estar conectados
     for (const par of estado.pares) {
         const t = estado.trilhas[par.id];
         if (!t || t.length < 2) return;
@@ -1094,9 +1076,15 @@ function verificarVitoria() {
         if (!conecta) return;
     }
 
+    // 2) Nenhuma célula pode estar "vazia E sem estrela"
+    const mapa = construirMapaVisual();
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
-            if (estado.grid[r][c].tipo === 'vazio') return;
+            const d = mapa[r][c];
+            const ehTrilha = d.tipo === 'trilha';
+            const ehEndpoint = d.tipo === 'endpoint';
+            const temEstrela = d.temEstrela;
+            if (!ehTrilha && !ehEndpoint && !temEstrela) return;
         }
     }
 
