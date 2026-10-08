@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Robô Lógico — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    color: var(--text-color);
+}
+#display-nivel { color: var(--c-cyan); }
+#display-passos { color: var(--c-amber); }
+#display-recorde { color: var(--c-green); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ==========================================================
+   LABIRINTO / GRID
+   ========================================================== */
+.grid-wrapper {
+    background: #030712;
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.75),
+                inset 0 0 40px rgba(0, 0, 0, 0.4);
+    -webkit-user-select: none;
+    user-select: none;
+}
+.grid-tabela {
+    display: grid;
+    gap: 4px;
+    margin: 0 auto;
+}
+.cel {
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(18px, 5vmin, 28px);
+    transition: all 0.2s ease;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Chão normal */
+.cel.chao {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Parede */
+.cel.parede {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border: 1px solid rgba(71, 85, 105, 0.8);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Alvo */
+.cel.alvo {
+    background: rgba(74, 222, 128, 0.15);
+    border: 2px dashed var(--c-green);
+    position: relative;
+}
+.cel.alvo::after {
+    content: "🎯";
+    font-size: clamp(16px, 4vmin, 22px);
+    opacity: 0.7;
+}
+
+/* Robô */
+.cel.robo {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(99, 102, 241, 0.1) 70%);
+    border: 2px solid var(--btn-primary);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+    font-size: clamp(22px, 5.5vmin, 32px);
+    animation: robo-pulsa 1.5s infinite ease-in-out;
+}
+@keyframes robo-pulsa {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Robô a andar */
+.cel.robo-andando {
+    animation: robo-andar 0.3s ease;
+}
+@keyframes robo-andar {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Colisão */
+.cel.robo-bateu {
+    animation: robo-bater 0.4s ease;
+}
+@keyframes robo-bater {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+/* Caminho percorrido (rastro) */
+.cel.rastro::before {
+    content: "";
+    position: absolute;
+    width: 40%;
+    height: 40%;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+}
+
+/* ==========================================================
+   COMANDOS (fila de programação)
+   ========================================================== */
+.comandos-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    margin-bottom: 12px;
+    min-height: 70px;
+}
+.comandos-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.comandos-label span:last-child {
+    color: var(--c-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+}
+.comandos-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 36px;
+}
+.comando-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 36px;
+    padding: 0 10px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 2px solid rgba(99, 102, 241, 0.4);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 900;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    animation: chip-entrar 0.25s ease;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.comando-chip:hover {
+    transform: translateY(-2px);
+    border-color: var(--btn-primary);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+}
+.comando-chip.executando {
+    background: linear-gradient(135deg, var(--btn-primary) 0%, var(--btn-accent) 100%);
+    border-color: #ffffff;
+    box-shadow: 0 0 20px var(--btn-primary);
+    animation: comando-pulse 0.4s ease;
+}
+@keyframes comando-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+.comandos-vazio {
+    color: var(--text-subtle, #64748b);
+    font-size: 12px;
+    font-style: italic;
+    padding: 8px;
+}
+@keyframes chip-entrar {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ==========================================================
+   TECLADO DE COMANDOS
+   ========================================================== */
+.teclado-comandos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.cmd-btn {
+    padding: 14px 8px;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.cmd-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: var(--btn-primary);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+.cmd-btn:active:not(:disabled) {
+    transform: scale(0.94);
+}
+.cmd-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ==========================================================
+   AÇÕES
+   ========================================================== */
+.acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.acoes button {
+    padding: 12px 8px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+.btn-executar {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(34, 197, 94, 0.55);
+}
+.btn-executar:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-executar:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn-apagar {
+    background: linear-gradient(135deg, #b45309, #d97706);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(217, 119, 6, 0.55);
+}
+.btn-apagar:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-apagar:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-limpar {
+    background: linear-gradient(135deg, #475569, #334155);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(71, 85, 105, 0.55);
+}
+.btn-limpar:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button { max-width: 260px; }
+.overlay .trofeu {
+    font-size: 56px;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+</style>
+</head>
+<body>
+<div class="container" id="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="facil">🟢 Fácil</button>
+        <button class="mode-btn" data-mode="medio">🟡 Médio</button>
+        <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
+    </div>
+
+    <div class="score-board">
+        <div>🎯 Nível<br><strong id="display-nivel">1</strong></div>
+        <div>👣 Passos<br><strong id="display-passos">0</strong></div>
+        <div>🏆 Recorde<br><strong id="display-recorde">—</strong></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        🤖 Programe o robô com comandos ↑ ↓ ← → para chegar ao alvo 🎯.
+    </p>
+
+    <div class="grid-wrapper">
+        <div class="grid-tabela" id="grid-tabela"></div>
+    </div>
+
+    <div class="comandos-wrapper">
+        <div class="comandos-label">
+            <span>📝 Sua Programação</span>
+            <span id="comandos-contador">0 comandos</span>
+        </div>
+        <div class="comandos-lista" id="comandos-lista">
+            <div class="comandos-vazio">Adicione comandos abaixo ⬇️</div>
+        </div>
+    </div>
+
+    <div class="teclado-comandos">
+        <button class="cmd-btn" data-cmd="UP" aria-label="Subir">⬆️</button>
+        <button class="cmd-btn" data-cmd="LEFT" aria-label="Esquerda">⬅️</button>
+        <button class="cmd-btn" data-cmd="DOWN" aria-label="Descer">⬇️</button>
+        <button class="cmd-btn" data-cmd="RIGHT" aria-label="Direita">➡️</button>
+    </div>
+
+    <div class="acoes">
+        <button id="btn-apagar" class="btn-apagar" disabled>↩️ Apagar</button>
+        <button id="btn-limpar" class="btn-limpar">🗑️ Limpar</button>
+        <button id="btn-executar" class="btn-executar" disabled>▶️ Executar</button>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-novo">🎲 Novo Nível</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-robo] Inicializando...');
+
+    // ==========================================================
+    // CONFIGURAÇÃO POR MODO
+    // ==========================================================
+    var MODOS = {
+        facil:   { tamanho: 5, paredes: 2, maxPassos: 15, nome: 'Fácil' },
+        medio:   { tamanho: 6, paredes: 4, maxPassos: 20, nome: 'Médio' },
+        dificil: { tamanho: 7, paredes: 6, maxPassos: 25, nome: 'Difícil' }
+    };
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'facil';
+    var tamanho = 5;
+    var numParedes = 2;
+    var maxPassos = 15;
+    var grid = [];              // matriz de strings: 'chao', 'parede', 'alvo', 'robo'
+    var roboPos = { l: 0, c: 0 };
+    var roboInicial = { l: 0, c: 0 };
+    var alvoPos = { l: 0, c: 0 };
+    var comandos = [];          // lista de comandos programados
+    var executando = false;
+    var comandosExecutados = [];
+    var rastro = [];            // posições já visitadas pelo robô
+    var nivelAtual = 1;
+    var passosTotais = 0;
+
+    // Recordes por modo (menor número de comandos para passar 10 níveis)
+    var recordes = {
+        facil:   parseInt(localStorage.getItem('brain_robo_recorde_facil')   || '999999', 10),
+        medio:   parseInt(localStorage.getItem('brain_robo_recorde_medio')   || '999999', 10),
+        dificil: parseInt(localStorage.getItem('brain_robo_recorde_dificil') || '999999', 10)
+    };
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.08, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        click:    function() { this.play(700, 'triangle', 0.06); },
+        mover:    function() { this.play(600, 'triangle', 0.08); },
+        bater:    function() { this.play(160, 'square', 0.15); },
+        apagar:   function() { this.play(400, 'triangle', 0.06); },
+        vitoria:  function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.2); }, i * 90);
+            });
+        },
+        derrota:  function() { this.play(150, 'sawtooth', 0.4); }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function atualizarPlacar() {
+        $('display-nivel').textContent = String(nivelAtual);
+        $('display-passos').textContent = String(comandos.length);
+        var rec = recordes[modoAtual];
+        $('display-recorde').textContent = rec >= 999999 ? '—' : rec;
+    }
+
+    // ==========================================================
+    // GERAR NÍVEL ALEATÓRIO
+    // ==========================================================
+    function gerarNivel() {
+        // Cria grid vazia
+        grid = [];
+        for (var l = 0; l < tamanho; l++) {
+            var linha = [];
+            for (var c = 0; c < tamanho; c++) {
+                linha.push('chao');
+            }
+            grid.push(linha);
+        }
+
+        // Define posição do robô (sempre um canto)
+        var cantos = [
+            { l: 0, c: 0 },
+            { l: 0, c: tamanho - 1 },
+            { l: tamanho - 1, c: 0 },
+            { l: tamanho - 1, c: tamanho - 1 }
+        ];
+        var cantoEscolhido = cantos[randInt(0, 3)];
+        roboPos = { l: cantoEscolhido.l, c: cantoEscolhido.c };
+        roboInicial = { l: cantoEscolhido.l, c: cantoEscolhido.c };
+
+        // Define posição do alvo (longe do robô)
+        var alvoEscolhido = null;
+        var tentativasAlvo = 0;
+        while (!alvoEscolhido && tentativasAlvo < 100) {
+            tentativasAlvo++;
+            var lAlvo = randInt(1, tamanho - 1);
+            var cAlvo = randInt(1, tamanho - 1);
+            var dist = Math.abs(lAlvo - roboPos.l) + Math.abs(cAlvo - roboPos.c);
+            if (dist >= tamanho - 1) {
+                alvoEscolhido = { l: lAlvo, c: cAlvo };
+            }
+        }
+        if (!alvoEscolhido) {
+            alvoEscolhido = { l: tamanho - 1, c: tamanho - 1 };
+        }
+        alvoPos = alvoEscolhido;
+
+        // Coloca paredes (nunca na linha/coluna direta do robô nem sobre o alvo)
+        var paredesColocadas = 0;
+        var tentativasPar = 0;
+        while (paredesColocadas < numParedes && tentativasPar < 200) {
+            tentativasPar++;
+            var lP = randInt(0, tamanho - 1);
+            var cP = randInt(0, tamanho - 1);
+
+            // Não colocar no robô nem no alvo
+            if (lP === roboPos.l && cP === roboPos.c) continue;
+            if (lP === alvoPos.l && cP === alvoPos.c) continue;
+            // Não colocar já ocupado
+            if (grid[lP][cP] === 'parede') continue;
+            // Não bloquear caminho direto (deixa espaço)
+            var distRobo = Math.abs(lP - roboPos.l) + Math.abs(cP - roboPos.c);
+            if (distRobo < 2) continue;
+
+            grid[lP][cP] = 'parede';
+            paredesColocadas++;
+        }
+
+        // Reset de estado
+        comandos = [];
+        comandosExecutados = [];
+        rastro = [];
+        executando = false;
+
+        atualizarComandos();
+        renderizarGrid();
+        atualizarBadge('🎯 Programe o robô!', '');
+    }
+
+    // ==========================================================
+    // RENDERIZAÇÃO
+    // ==========================================================
+    function renderizarGrid() {
+        var tabela = $('grid-tabela');
+        tabela.innerHTML = '';
+        tabela.style.gridTemplateColumns = 'repeat(' + tamanho + ', 1fr)';
+        tabela.style.gap = '4px';
+        tabela.style.maxWidth = '100%';
+
+        for (var l = 0; l < tamanho; l++) {
+            for (var c = 0; c < tamanho; c++) {
+                var cel = document.createElement('div');
+                cel.className = 'cel';
+                cel.dataset.l = l;
+                cel.dataset.c = c;
+
+                if (grid[l][c] === 'parede') {
+                    cel.classList.add('parede');
+                    cel.textContent = '';
+                } else if (l === alvoPos.l && c === alvoPos.c && !(l === roboPos.l && c === roboPos.c)) {
+                    cel.classList.add('alvo');
+                } else {
+                    cel.classList.add('chao');
+                }
+
+                if (l === roboPos.l && c === roboPos.c) {
+                    cel.classList.add('robo');
+                    cel.textContent = '🤖';
+                }
+
+                // Rastro
+                if (foiVisitada(l, c) && !(l === roboPos.l && c === roboPos.c)) {
+                    cel.classList.add('rastro');
+                }
+
+                tabela.appendChild(cel);
+            }
+        }
+    }
+
+    function foiVisitada(l, c) {
+        for (var i = 0; i < rastro.length; i++) {
+            if (rastro[i].l === l && rastro[i].c === c) return true;
+        }
+        return false;
+    }
+
+    // ==========================================================
+    // COMANDOS
+    // ==========================================================
+    function adicionarComando(cmd) {
+        if (executando) return;
+        if (comandos.length >= maxPassos) {
+            atualizarBadge('⚠️ Limite de comandos atingido!', 'erro');
+            return;
+        }
+        comandos.push(cmd);
+        som.click();
+        atualizarComandos();
+    }
+
+    function apagarUltimo() {
+        if (executando) return;
+        if (comandos.length === 0) return;
+        comandos.pop();
+        som.apagar();
+        atualizarComandos();
+    }
+
+    function limparComandos() {
+        if (executando) return;
+        comandos = [];
+        comandosExecutados = [];
+        som.apagar();
+        atualizarComandos();
+    }
+
+    function atualizarComandos() {
+        var lista = $('comandos-lista');
+        var contador = $('comandos-contador');
+        lista.innerHTML = '';
+
+        if (comandos.length === 0) {
+            var vazio = document.createElement('div');
+            vazio.className = 'comandos-vazio';
+            vazio.textContent = 'Adicione comandos abaixo ⬇️';
+            lista.appendChild(vazio);
+        } else {
+            for (var i = 0; i < comandos.length; i++) {
+                var chip = document.createElement('div');
+                chip.className = 'comando-chip';
+                chip.dataset.idx = i;
+                chip.textContent = iconeComando(comandos[i]);
+                lista.appendChild(chip);
+            }
+        }
+
+        contador.textContent = comandos.length + '/' + maxPassos + ' comandos';
+
+        $('btn-apagar').disabled = comandos.length === 0 || executando;
+        $('btn-limpar').disabled = comandos.length === 0 || executando;
+        $('btn-executar').disabled = comandos.length === 0 || executando;
+    }
+
+    function iconeComando(cmd) {
+        return { UP: '⬆️', DOWN: '⬇️', LEFT: '⬅️', RIGHT: '➡️' }[cmd] || '?';
+    }
+
+    // ==========================================================
+    // EXECUTAR COMANDOS
+    // ==========================================================
+    function executar() {
+        if (executando || comandos.length === 0) return;
+        executando = true;
+
+        // Reset estado
+        roboPos = { l: roboInicial.l, c: roboInicial.c };
+        rastro = [{ l: roboPos.l, c: roboPos.c }];
+        comandosExecutados = [];
+
+        atualizarComandos();
+        renderizarGrid();
+        atualizarBadge('▶️ Executando...', '');
+
+        var i = 0;
+        function proximo() {
+            if (i >= comandos.length) {
+                // Fim da execução
+                executando = false;
+                atualizarComandos();
+                verificarResultado();
+                return;
+            }
+
+            var cmd = comandos[i];
+            destacarComando(i);
+            moverRobo(cmd, function(sucesso) {
+                i++;
+                setTimeout(proximo, 200);
+            });
+        }
+        setTimeout(proximo, 300);
+    }
+
+    function destacarComando(i) {
+        var chips = document.querySelectorAll('.comando-chip');
+        for (var k = 0; k < chips.length; k++) {
+            chips[k].classList.remove('executando');
+        }
+        if (chips[i]) chips[i].classList.add('executando');
+    }
+
+    function moverRobo(cmd, callback) {
+        var dl = 0, dc = 0;
+        if (cmd === 'UP')    dl = -1;
+        if (cmd === 'DOWN')  dl = 1;
+        if (cmd === 'LEFT')  dc = -1;
+        if (cmd === 'RIGHT') dc = 1;
+
+        var nl = roboPos.l + dl;
+        var nc = roboPos.c + dc;
+
+        // Colisão com borda
+        if (nl < 0 || nl >= tamanho || nc < 0 || nc >= tamanho) {
+            baterParede();
+            callback(false);
+            return;
+        }
+
+        // Colisão com parede
+        if (grid[nl][nc] === 'parede') {
+            baterParede();
+            callback(false);
+            return;
+        }
+
+        // Move
+        roboPos = { l: nl, c: nc };
+        rastro.push({ l: nl, c: nc });
+        som.mover();
+
+        renderizarGrid();
+
+        // Anima
+        var cel = document.querySelector('.cel.robo');
+        if (cel) {
+            cel.classList.add('robo-andando');
+            setTimeout(function() { cel.classList.remove('robo-andando'); }, 300);
+        }
+
+        setTimeout(function() { callback(true); }, 150);
+    }
+
+    function baterParede() {
+        som.bater();
+        var cel = document.querySelector('.cel.robo');
+        if (cel) {
+            cel.classList.add('robo-bateu');
+            setTimeout(function() { cel.classList.remove('robo-bateu'); }, 400);
+        }
+    }
+
+    function verificarResultado() {
+        if (roboPos.l === alvoPos.l && roboPos.c === alvoPos.c) {
+            vitoria();
+        } else {
+            som.derrota();
+            atualizarBadge('❌ Não chegou ao alvo!', 'erro');
+            mostrarFeedbackFloat('✗', 'negativo');
+        }
+    }
+
+    // ==========================================================
+    // VITÓRIA
+    // ==========================================================
+    function vitoria() {
+        som.vitoria();
+        atualizarBadge('🏆 Chegou!', 'ok');
+        mostrarFeedbackFloat('✓', 'positivo');
+
+        var comandosUsados = comandos.length;
+        var passosMinimos = Math.abs(alvoPos.l - roboInicial.l) + Math.abs(alvoPos.c - roboInicial.c);
+
+        // Pontos: base + bónus por eficiência
+        var eficiencia = Math.max(0, 1 - (comandosUsados - passosMinimos) / passosMinimos);
+        var pontos = Math.round(100 * (1 + eficiencia));
+
+        // Atualiza recorde (menor número de comandos no nível 1)
+        if (nivelAtual === 1 && comandosUsados < recordes[modoAtual]) {
+            recordes[modoAtual] = comandosUsados;
+            localStorage.setItem('brain_robo_recorde_' + modoAtual, String(comandosUsados));
+        }
+
+        // Se completou 5 níveis → fim
+        if (nivelAtual >= 5) {
+            setTimeout(function() {
+                mostrarOverlay({
+                    titulo: '🏆 Missão Completa!',
+                    htmlExtra:
+                        '<div class="trofeu">🏆</div>' +
+                        '<div class="grande">' + pontos + ' pts</div>' +
+                        '<div style="font-size:13px; color:var(--text-muted); margin-top:8px;">' +
+                            'Nível final: ' + nivelAtual + ' · ' + comandosUsados + ' comandos' +
+                        '</div>',
+                    subtitulo: 'Você programou o robô para completar todos os níveis!',
+                    botao: { texto: '🎲 Recomeçar', acao: function() { nivelAtual = 1; gerarNivel(); esconderOverlay(); atualizarPlacar(); } }
+                });
+            }, 800);
+        } else {
+            setTimeout(function() {
+                mostrarOverlay({
+                    titulo: '✅ Nível ' + nivelAtual + ' Completo!',
+                    htmlExtra:
+                        '<div class="trofeu">✅</div>' +
+                        '<div class="grande">+' + pontos + ' pts</div>' +
+                        '<div style="font-size:13px; color:var(--text-muted); margin-top:8px;">' +
+                            comandosUsados + ' comandos usados (mínimo: ' + passosMinimos + ')' +
+                        '</div>',
+                    subtitulo: 'Continue para o próximo nível!',
+                    botao: { texto: '➡️ Próximo Nível', acao: function() { proximoNivel(); } }
+                });
+            }, 800);
+        }
+    }
+
+    function proximoNivel() {
+        nivelAtual++;
+        esconderOverlay();
+        // Aumenta dificuldade
+        if (nivelAtual <= 2) modoAtual = 'facil';
+        else if (nivelAtual <= 4) modoAtual = 'medio';
+        else modoAtual = 'dificil';
+
+        var cfg = MODOS[modoAtual];
+        tamanho = cfg.tamanho;
+        numParedes = cfg.paredes + Math.floor(nivelAtual / 2);
+        maxPassos = cfg.maxPassos;
+
+        // Atualiza botões de modo
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
+        }
+
+        gerarNivel();
+        atualizarPlacar();
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            $('container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    function mostrarFeedbackFloat(texto, tipo) {
+        var el = document.createElement('div');
+        el.className = 'feedback-float ' + tipo;
+        el.textContent = texto;
+        document.querySelector('.grid-wrapper').appendChild(el);
+        setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 900);
+    }
+
+    // ==========================================================
+    // TROCA DE MODO (manual)
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+        nivelAtual = 1;
+
+        var cfg = MODOS[novoModo];
+        tamanho = cfg.tamanho;
+        numParedes = cfg.paredes;
+        maxPassos = cfg.maxPassos;
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        esconderOverlay();
+        gerarNivel();
+        atualizarPlacar();
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var cmdBtns = document.querySelectorAll('.cmd-btn');
+    for (var i = 0; i < cmdBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() {
+                adicionarComando(btn.dataset.cmd);
+            });
+        })(cmdBtns[i]);
+    }
+
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var j = 0; j < modeBtns.length; j++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[j]);
+    }
+
+    $('btn-apagar').addEventListener('click', apagarUltimo);
+    $('btn-limpar').addEventListener('click', limparComandos);
+    $('btn-executar').addEventListener('click', executar);
+    $('btn-novo').addEventListener('click', function() {
+        nivelAtual = 1;
+        var cfg = MODOS[modoAtual];
+        tamanho = cfg.tamanho;
+        numParedes = cfg.paredes;
+        maxPassos = cfg.maxPassos;
+        esconderOverlay();
+        gerarNivel();
+        atualizarPlacar();
+    });
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    gerarNivel();
+    atualizarPlacar();
+    console.log('[brain-robo] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
