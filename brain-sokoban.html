@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sokoban — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --c-orange: #fb923c;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 10px 8px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 9px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    color: var(--text-color);
+}
+#display-nivel { color: var(--c-cyan); }
+#display-passos { color: var(--c-amber); }
+#display-caixas { color: var(--c-green); }
+#display-recorde { color: var(--c-orange); }
+
+.instructions {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ==========================================================
+   GRID
+   ========================================================== */
+.grid-wrapper {
+    background: #030712;
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.75),
+                inset 0 0 40px rgba(0, 0, 0, 0.4);
+    -webkit-user-select: none;
+    user-select: none;
+    overflow-x: auto;
+}
+.grid-tabela {
+    display: grid;
+    gap: 4px;
+    margin: 0 auto;
+}
+.cel {
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(18px, 5vmin, 28px);
+    transition: all 0.2s ease;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Chão */
+.cel.chao {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Parede */
+.cel.parede {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+    border: 1px solid rgba(71, 85, 105, 0.8);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+/* Destino */
+.cel.destino {
+    background: rgba(74, 222, 128, 0.1);
+    border: 2px dashed var(--c-green);
+    position: relative;
+}
+.cel.destino::after {
+    content: "◎";
+    font-size: clamp(16px, 4vmin, 22px);
+    color: var(--c-green);
+    opacity: 0.6;
+    position: absolute;
+}
+
+/* Caixa */
+.cel.caixa {
+    background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+    border: 2px solid #d97706;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(217, 119, 6, 0.3);
+}
+.cel.caixa::after {
+    content: "📦";
+    font-size: clamp(18px, 5vmin, 26px);
+}
+
+/* Caixa no destino (completa) */
+.cel.caixa-no-destino {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    border: 2px solid #22c55e;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+    animation: caixa-completa 0.4s ease;
+}
+.cel.caixa-no-destino::after {
+    content: "✅";
+    font-size: clamp(18px, 5vmin, 26px);
+}
+@keyframes caixa-completa {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* Jogador */
+.cel.jogador {
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(99, 102, 241, 0.1) 70%);
+    border: 2px solid var(--btn-primary);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+    z-index: 2;
+}
+.cel.jogador::after {
+    content: "🐭";
+    font-size: clamp(20px, 5.5vmin, 30px);
+}
+.cel.jogador-com-caixa {
+    animation: jogador-puxa 0.25s ease;
+}
+@keyframes jogador-puxa {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Indicador de direção do jogador */
+.cel.jogador.up::after { transform: rotate(-90deg); }
+.cel.jogador.down::after { transform: rotate(90deg); }
+.cel.jogador.left::after { transform: rotate(180deg); }
+.cel.jogador.right::after { transform: rotate(0deg); }
+
+/* ==========================================================
+   CONTROLES DE DIREÇÃO
+   ========================================================== */
+.direcoes-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 12px;
+    max-width: 220px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.dir-btn {
+    padding: 16px 8px;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(148, 163, 184, 0.2);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    user-select: none;
+    font-family: inherit;
+}
+.dir-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: var(--btn-primary);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+.dir-btn:active:not(:disabled) {
+    transform: scale(0.94);
+}
+.dir-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.dir-up    { grid-column: 2; grid-row: 1; }
+.dir-left  { grid-column: 1; grid-row: 2; }
+.dir-down  { grid-column: 2; grid-row: 2; }
+.dir-right { grid-column: 3; grid-row: 2; }
+
+/* ==========================================================
+   AÇÕES
+   ========================================================== */
+.acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.acoes button {
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+.btn-desfazer {
+    background: linear-gradient(135deg, #b45309, #d97706);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(217, 119, 6, 0.55);
+}
+.btn-desfazer:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-desfazer:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn-reiniciar {
+    background: linear-gradient(135deg, #475569, #334155);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(71, 85, 105, 0.55);
+}
+.btn-reiniciar:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay.hidden {
+    display: none !important;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button { max-width: 260px; }
+.overlay .trofeu {
+    font-size: 56px;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+</style>
+</head>
+<body>
+<div class="container" id="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="facil">🟢 Fácil</button>
+        <button class="mode-btn" data-mode="medio">🟡 Médio</button>
+        <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
+    </div>
+
+    <div class="score-board">
+        <div>🎯 Nível<br><strong id="display-nivel">1</strong></div>
+        <div>👣 Passos<br><strong id="display-passos">0</strong></div>
+        <div>📦 Caixas<br><strong id="display-caixas">0/3</strong></div>
+        <div>🏆 Recorde<br><strong id="display-recorde">—</strong></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        📦 Empurre as caixas até os destinos ◎. Você só pode empurrar, nunca puxar!
+    </p>
+
+    <div class="grid-wrapper">
+        <div class="grid-tabela" id="grid-tabela"></div>
+    </div>
+
+    <div class="direcoes-wrapper">
+        <button class="dir-btn dir-up" data-dir="UP">⬆️</button>
+        <button class="dir-btn dir-left" data-dir="LEFT">⬅️</button>
+        <button class="dir-btn dir-down" data-dir="DOWN">⬇️</button>
+        <button class="dir-btn dir-right" data-dir="RIGHT">➡️</button>
+    </div>
+
+    <div class="acoes">
+        <button id="btn-desfazer" class="btn-desfazer" disabled>↩️ Desfazer</button>
+        <button id="btn-reiniciar" class="btn-reiniciar">🔄 Reiniciar</button>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-novo">🎲 Novo Nível</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-sokoban] Inicializando...');
+
+    // ==========================================================
+    // CONFIGURAÇÃO POR MODO
+    // ==========================================================
+    // tamanho = largura/altura do grid
+    // caixas = número de caixas
+    // paredes = densidade de paredes internas
+    var MODOS = {
+        facil:   { tamanho: 7,  caixas: 2, paredes: 0.10, nome: 'Fácil' },
+        medio:   { tamanho: 8,  caixas: 3, paredes: 0.15, nome: 'Médio' },
+        dificil: { tamanho: 10, caixas: 4, paredes: 0.20, nome: 'Difícil' }
+    };
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'facil';
+    var tamanho = 7;
+    var numCaixas = 2;
+    var densidadeParedes = 0.10;
+    var grid = [];              // matriz: 'chao', 'parede', 'destino'
+    var caixas = [];            // [{l, c}]
+    var jogador = { l: 0, c: 0, dir: 'down' };
+    var destinos = [];          // [{l, c}]
+    var historicoMovimentos = [];
+    var passos = 0;
+    var nivelAtual = 1;
+    var totalNiveis = 8;
+    var jogoAtivo = false;
+
+    var recordes = {
+        facil:   parseInt(localStorage.getItem('brain_sokoban_recorde_facil')   || '9999', 10),
+        medio:   parseInt(localStorage.getItem('brain_sokoban_recorde_medio')   || '9999', 10),
+        dificil: parseInt(localStorage.getItem('brain_sokoban_recorde_dificil') || '9999', 10)
+    };
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.08, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        mover:      function() { this.play(600, 'triangle', 0.06); },
+        empurrar:   function() { this.play(500, 'sine', 0.1); },
+        caixaOk:    function() {
+            var self = this;
+            [700, 900, 1100].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.1); }, i * 60);
+            });
+        },
+        bloqueado:  function() { this.play(200, 'square', 0.1); },
+        desfazer:   function() { this.play(400, 'triangle', 0.08); },
+        vitoria:    function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.2); }, i * 90);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function contarCaixasEmDestino() {
+        var count = 0;
+        for (var i = 0; i < caixas.length; i++) {
+            for (var d = 0; d < destinos.length; d++) {
+                if (caixas[i].l === destinos[d].l && caixas[i].c === destinos[d].c) {
+                    count++;
+                    break;
+                }
+            }
+        }
+        return count;
+    }
+
+    function atualizarPlacar() {
+        $('display-nivel').textContent = String(nivelAtual);
+        $('display-passos').textContent = String(passos);
+        var completas = contarCaixasEmDestino();
+        $('display-caixas').textContent = completas + '/' + caixas.length;
+        var rec = recordes[modoAtual];
+        $('display-recorde').textContent = rec >= 9999 ? '—' : rec;
+        $('btn-desfazer').disabled = historicoMovimentos.length === 0 || !jogoAtivo;
+    }
+
+    // ==========================================================
+    // GERAR NÍVEL
+    // ==========================================================
+    function gerarNivel() {
+        var tentativas = 0;
+        var nivelValido = false;
+
+        while (!nivelValido && tentativas < 100) {
+            tentativas++;
+
+            grid = [];
+            for (var l = 0; l < tamanho; l++) {
+                var linha = [];
+                for (var c = 0; c < tamanho; c++) {
+                    // Bordas sempre paredes
+                    if (l === 0 || l === tamanho - 1 || c === 0 || c === tamanho - 1) {
+                        linha.push('parede');
+                    } else {
+                        // Paredes internas aleatórias
+                        if (Math.random() < densidadeParedes) {
+                            linha.push('parede');
+                        } else {
+                            linha.push('chao');
+                        }
+                    }
+                }
+                grid.push(linha);
+            }
+
+            // Coloca jogador em célula aleatória vazia
+            var tentativasJog = 0;
+            var posJog = null;
+            while (!posJog && tentativasJog < 50) {
+                tentativasJog++;
+                var lj = randInt(1, tamanho - 2);
+                var cj = randInt(1, tamanho - 2);
+                if (grid[lj][cj] === 'chao') {
+                    posJog = { l: lj, c: cj };
+                }
+            }
+            if (!posJog) continue;
+
+            jogador = { l: posJog.l, c: posJog.c, dir: 'down' };
+
+            // Coloca caixas em posições aleatórias, longe do jogador
+            caixas = [];
+            var tentativasCaixas = 0;
+            while (caixas.length < numCaixas && tentativasCaixas < 100) {
+                tentativasCaixas++;
+                var lc = randInt(1, tamanho - 2);
+                var cc = randInt(1, tamanho - 2);
+                if (grid[lc][cc] !== 'chao') continue;
+                if (lc === jogador.l && cc === jogador.c) continue;
+                // Distância mínima do jogador
+                var dist = Math.abs(lc - jogador.l) + Math.abs(cc - jogador.c);
+                if (dist < 2) continue;
+                // Não sobrepor outra caixa
+                var sobrepoe = false;
+                for (var k = 0; k < caixas.length; k++) {
+                    if (caixas[k].l === lc && caixas[k].c === cc) {
+                        sobrepoe = true;
+                        break;
+                    }
+                }
+                if (sobrepoe) continue;
+
+                caixas.push({ l: lc, c: cc });
+            }
+
+            if (caixas.length < numCaixas) continue;
+
+            // Coloca destinos em posições aleatórias vazias (sem parede, sem caixa)
+            destinos = [];
+            var tentativasDestinos = 0;
+            while (destinos.length < numCaixas && tentativasDestinos < 100) {
+                tentativasDestinos++;
+                var ld = randInt(1, tamanho - 2);
+                var cd = randInt(1, tamanho - 2);
+                if (grid[ld][cd] !== 'chao') continue;
+                // Não sobrepor caixa
+                var sobrepoeC = false;
+                for (var k2 = 0; k2 < caixas.length; k2++) {
+                    if (caixas[k2].l === ld && caixas[k2].c === cd) {
+                        sobrepoeC = true;
+                        break;
+                    }
+                }
+                if (sobrepoeC) continue;
+                // Não sobrepor outro destino
+                var sobrepoeD = false;
+                for (var k3 = 0; k3 < destinos.length; k3++) {
+                    if (destinos[k3].l === ld && destinos[k3].c === cd) {
+                        sobrepoeD = true;
+                        break;
+                    }
+                }
+                if (sobrepoeD) continue;
+
+                destinos.push({ l: ld, c: cd });
+            }
+
+            if (destinos.length < numCaixas) continue;
+
+            // Valida se as caixas já não estão todas nos destinos (raro mas possível)
+            var jaCompletas = contarCaixasEmDestino();
+            if (jaCompletas === numCaixas) continue;
+
+            nivelValido = true;
+        }
+
+        passos = 0;
+        historicoMovimentos = [];
+        jogoAtivo = true;
+
+        renderizarGrid();
+        atualizarPlacar();
+        atualizarBadge('🎯 Empurre as caixas!', '');
+    }
+
+    // ==========================================================
+    // RENDERIZAÇÃO
+    // ==========================================================
+    function renderizarGrid() {
+        var tabela = $('grid-tabela');
+        tabela.innerHTML = '';
+        tabela.style.gridTemplateColumns = 'repeat(' + tamanho + ', 1fr)';
+        tabela.style.gap = '4px';
+        tabela.style.maxWidth = '100%';
+
+        for (var l = 0; l < tamanho; l++) {
+            for (var c = 0; c < tamanho; c++) {
+                var cel = document.createElement('div');
+                cel.className = 'cel';
+                cel.dataset.l = l;
+                cel.dataset.c = c;
+
+                var tipo = grid[l][c];
+
+                // Parede
+                if (tipo === 'parede') {
+                    cel.classList.add('parede');
+                }
+                // Destino
+                else if (destinoEm(l, c)) {
+                    cel.classList.add('destino');
+                }
+                // Chão
+                else {
+                    cel.classList.add('chao');
+                }
+
+                // Caixa
+                var caixaIdx = caixaEm(l, c);
+                if (caixaIdx !== -1) {
+                    if (destinoEm(l, c)) {
+                        cel.classList.add('caixa-no-destino');
+                    } else {
+                        cel.classList.add('caixa');
+                    }
+                }
+
+                // Jogador
+                if (l === jogador.l && c === jogador.c) {
+                    cel.classList.add('jogador', jogador.dir);
+                }
+
+                tabela.appendChild(cel);
+            }
+        }
+    }
+
+    function destinoEm(l, c) {
+        for (var i = 0; i < destinos.length; i++) {
+            if (destinos[i].l === l && destinos[i].c === c) return true;
+        }
+        return false;
+    }
+
+    function caixaEm(l, c) {
+        for (var i = 0; i < caixas.length; i++) {
+            if (caixas[i].l === l && caixas[i].c === c) return i;
+        }
+        return -1;
+    }
+
+    // ==========================================================
+    // MOVIMENTO
+    // ==========================================================
+    function mover(dir) {
+        if (!jogoAtivo) return;
+
+        var dl = 0, dc = 0;
+        if (dir === 'UP')    dl = -1;
+        if (dir === 'DOWN')  dl = 1;
+        if (dir === 'LEFT')  dc = -1;
+        if (dir === 'RIGHT') dc = 1;
+
+        var nl = jogador.l + dl;
+        var nc = jogador.c + dc;
+
+        // Atualiza direção do jogador
+        jogador.dir = dir.toLowerCase();
+
+        // Colisão com borda
+        if (nl < 0 || nl >= tamanho || nc < 0 || nc >= tamanho) {
+            som.bloqueado();
+            renderizarGrid();
+            return;
+        }
+
+        // Colisão com parede
+        if (grid[nl][nc] === 'parede') {
+            som.bloqueado();
+            renderizarGrid();
+            return;
+        }
+
+        // Caixa à frente?
+        var idxCaixa = caixaEm(nl, nc);
+        if (idxCaixa !== -1) {
+            // Posição depois da caixa
+            var nlC = nl + dl;
+            var ncC = nc + dc;
+
+            // Colisão da caixa com borda
+            if (nlC < 0 || nlC >= tamanho || ncC < 0 || ncC >= tamanho) {
+                som.bloqueado();
+                renderizarGrid();
+                return;
+            }
+
+            // Colisão da caixa com parede
+            if (grid[nlC][ncC] === 'parede') {
+                som.bloqueado();
+                renderizarGrid();
+                return;
+            }
+
+            // Colisão com outra caixa
+            if (caixaEm(nlC, ncC) !== -1) {
+                som.bloqueado();
+                renderizarGrid();
+                return;
+            }
+
+            // Salva histórico ANTES de mover
+            historicoMovimentos.push({
+                jogadorL: jogador.l,
+                jogadorC: jogador.c,
+                jogadorDir: jogador.dir,
+                caixaIdx: idxCaixa,
+                caixaL: caixas[idxCaixa].l,
+                caixaC: caixas[idxCaixa].c
+            });
+
+            // Move a caixa
+            caixas[idxCaixa].l = nlC;
+            caixas[idxCaixa].c = ncC;
+
+            // Move o jogador
+            jogador.l = nl;
+            jogador.c = nc;
+
+            som.empurrar();
+            passos++;
+
+            // Verifica se a caixa foi para o destino
+            if (destinoEm(nlC, ncC)) {
+                som.caixaOk();
+            }
+        } else {
+            // Não há caixa, apenas move
+            historicoMovimentos.push({
+                jogadorL: jogador.l,
+                jogadorC: jogador.c,
+                jogadorDir: jogador.dir,
+                caixaIdx: -1
+            });
+
+            jogador.l = nl;
+            jogador.c = nc;
+            som.mover();
+            passos++;
+        }
+
+        atualizarPlacar();
+        renderizarGrid();
+        verificarVitoria();
+    }
+
+    // ==========================================================
+    // DESFAZER
+    // ==========================================================
+    function desfazer() {
+        if (historicoMovimentos.length === 0 || !jogoAtivo) return;
+
+        var mov = historicoMovimentos.pop();
+        jogador.l = mov.jogadorL;
+        jogador.c = mov.jogadorC;
+        jogador.dir = mov.jogadorDir;
+
+        if (mov.caixaIdx !== -1) {
+            caixas[mov.caixaIdx].l = mov.caixaL;
+            caixas[mov.caixaIdx].c = mov.caixaC;
+        }
+
+        passos = Math.max(0, passos - 1);
+        som.desfazer();
+        atualizarPlacar();
+        renderizarGrid();
+    }
+
+    // ==========================================================
+    // VITÓRIA
+    // ==========================================================
+    function verificarVitoria() {
+        var completas = contarCaixasEmDestino();
+        if (completas === caixas.length) {
+            jogoAtivo = false;
+            som.vitoria();
+            atualizarBadge('🏆 Nível Completo!', 'ok');
+
+            // Recorde (menor número de passos)
+            if (passos < recordes[modoAtual]) {
+                recordes[modoAtual] = passos;
+                localStorage.setItem('brain_sokoban_recorde_' + modoAtual, String(passos));
+            }
+
+            atualizarPlacar();
+
+            if (nivelAtual >= totalNiveis) {
+                setTimeout(function() { mostrarVitoriaFinal(); }, 600);
+            } else {
+                setTimeout(function() { mostrarVitoriaNivel(); }, 600);
+            }
+        }
+    }
+
+    function mostrarVitoriaNivel() {
+        var pontos = Math.max(50, 500 - passos * 5);
+
+        mostrarOverlay({
+            titulo: '✅ Nível ' + nivelAtual + ' Completo!',
+            htmlExtra:
+                '<div class="trofeu">✅</div>' +
+                '<div class="grande">+' + pontos + ' pts</div>' +
+                '<div style="font-size:13px; color:var(--text-muted); margin-top:8px;">' +
+                    passos + ' passos · ' + caixas.length + ' caixas' +
+                '</div>',
+            subtitulo: 'Continue para o próximo nível!',
+            botao: { texto: '➡️ Próximo Nível', acao: function() { proximoNivel(); } }
+        });
+    }
+
+    function mostrarVitoriaFinal() {
+        var pontos = Math.max(100, 1000 - passos * 3);
+
+        mostrarOverlay({
+            titulo: '🏆 Missão Completa!',
+            htmlExtra:
+                '<div class="trofeu">🏆</div>' +
+                '<div class="grande">' + pontos + ' pts</div>' +
+                '<div style="font-size:13px; color:var(--text-muted); margin-top:8px;">' +
+                    'Último nível: ' + passos + ' passos' +
+                '</div>',
+            subtitulo: 'Você completou todos os ' + totalNiveis + ' níveis!',
+            botao: { texto: '🎲 Recomeçar', acao: function() { resetarJogo(); } }
+        });
+    }
+
+    // ==========================================================
+    // NAVEGAÇÃO DE NÍVEIS
+    // ==========================================================
+    function proximoNivel() {
+        esconderOverlay();
+        nivelAtual++;
+
+        // Aumenta dificuldade automaticamente
+        if (nivelAtual <= 3) modoAtual = 'facil';
+        else if (nivelAtual <= 6) modoAtual = 'medio';
+        else modoAtual = 'dificil';
+
+        var cfg = MODOS[modoAtual];
+        tamanho = cfg.tamanho;
+        numCaixas = Math.min(cfg.caixas + Math.floor((nivelAtual - 1) / 3), 5);
+        densidadeParedes = cfg.paredes;
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
+        }
+
+        gerarNivel();
+    }
+
+    function resetarJogo() {
+        esconderOverlay();
+        nivelAtual = 1;
+        modoAtual = 'facil';
+
+        var cfg = MODOS[modoAtual];
+        tamanho = cfg.tamanho;
+        numCaixas = cfg.caixas;
+        densidadeParedes = cfg.paredes;
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
+        }
+
+        gerarNivel();
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            $('container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO (manual)
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+        nivelAtual = 1;
+
+        var cfg = MODOS[novoModo];
+        tamanho = cfg.tamanho;
+        numCaixas = cfg.caixas;
+        densidadeParedes = cfg.paredes;
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        esconderOverlay();
+        gerarNivel();
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var dirBtns = document.querySelectorAll('.dir-btn');
+    for (var i = 0; i < dirBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() {
+                mover(btn.dataset.dir);
+            });
+        })(dirBtns[i]);
+    }
+
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var j = 0; j < modeBtns.length; j++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[j]);
+    }
+
+    $('btn-desfazer').addEventListener('click', desfazer);
+    $('btn-reiniciar').addEventListener('click', function() {
+        esconderOverlay();
+        gerarNivel();
+    });
+    $('btn-novo').addEventListener('click', function() {
+        esconderOverlay();
+        gerarNivel();
+    });
+
+    // Teclado (setas + WASD)
+    document.addEventListener('keydown', function(e) {
+        if (!jogoAtivo) return;
+
+        var tecla = e.key;
+        if (tecla === 'ArrowUp' || tecla === 'w' || tecla === 'W') {
+            e.preventDefault();
+            mover('UP');
+        } else if (tecla === 'ArrowDown' || tecla === 's' || tecla === 'S') {
+            e.preventDefault();
+            mover('DOWN');
+        } else if (tecla === 'ArrowLeft' || tecla === 'a' || tecla === 'A') {
+            e.preventDefault();
+            mover('LEFT');
+        } else if (tecla === 'ArrowRight' || tecla === 'd' || tecla === 'D') {
+            e.preventDefault();
+            mover('RIGHT');
+        } else if (tecla === 'z' || tecla === 'Z') {
+            desfazer();
+        }
+    });
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    gerarNivel();
+    atualizarPlacar();
+    console.log('[brain-sokoban] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
