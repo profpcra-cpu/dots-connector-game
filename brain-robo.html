@@ -451,6 +451,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     text-align: center;
     border-radius: 14px;
 }
+
+/* ⭐ CORREÇÃO CRÍTICA — esconde o overlay de verdade ⭐ */
+.overlay.hidden {
+    display: none !important;
+}
+
 .overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
 .overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
 .overlay .grande {
@@ -586,11 +592,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     var comandosExecutados = [];
     var rastro = [];
     var nivelAtual = 1;
-    var passosTotais = 0;
 
-    // ==========================================================
-    // RECORDES
-    // ==========================================================
     var recordes = {
         facil:   parseInt(localStorage.getItem('brain_robo_recorde_facil')   || '999999', 10),
         medio:   parseInt(localStorage.getItem('brain_robo_recorde_medio')   || '999999', 10),
@@ -668,41 +670,30 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // RESET COMPLETO DO JOGO (corrigido)
+    // RESET COMPLETO DO JOGO
     // ==========================================================
     function resetarJogo() {
-        // Bloqueia se estiver executando
         if (executando) {
             atualizarBadge('⏳ Aguarde a execução terminar', 'erro');
             return;
         }
 
-        // Reset de nível e modo
         nivelAtual = 1;
         modoAtual = 'facil';
 
-        // Aplica configuração do modo fácil
         var cfg = MODOS[modoAtual];
         tamanho = cfg.tamanho;
         numParedes = cfg.paredes;
         maxPassos = cfg.maxPassos;
-
-        // Reseta estado de execução
         executando = false;
 
-        // Reseta botões de modo visualmente
         var botoes = document.querySelectorAll('.mode-btn');
         for (var i = 0; i < botoes.length; i++) {
             botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
         }
 
-        // Esconde overlay
         esconderOverlay();
-
-        // Gera novo nível (reseta comandos, rastro, roboPos)
         gerarNivel();
-
-        // Atualiza placar
         atualizarPlacar();
     }
 
@@ -762,7 +753,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             paredesColocadas++;
         }
 
-        // Reset de estado
         comandos = [];
         comandosExecutados = [];
         rastro = [];
@@ -989,7 +979,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var comandosUsados = comandos.length;
         var passosMinimos = Math.abs(alvoPos.l - roboInicial.l) + Math.abs(alvoPos.c - roboInicial.c);
 
-        var eficiencia = Math.max(0, 1 - (comandosUsados - passosMinimos) / passosMinimos);
+        var eficiencia = Math.max(0, 1 - (comandosUsados - passosMinimos) / Math.max(passosMinimos, 1));
         var pontos = Math.round(100 * (1 + eficiencia));
 
         if (nivelAtual === 1 && comandosUsados < recordes[modoAtual]) {
@@ -1057,7 +1047,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var ov = $('overlay');
         if (!ov) return;
         ov.classList.add('hidden');
-        ov.innerHTML = '';
+        // NÃO limpa innerHTML imediatamente — deixa o browser processar
+        setTimeout(function() {
+            if (ov && ov.classList.contains('hidden')) {
+                ov.innerHTML = '';
+            }
+        }, 50);
     }
 
     function mostrarOverlay(cfg) {
@@ -1107,7 +1102,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // TROCA DE MODO (manual)
+    // TROCA DE MODO
     // ==========================================================
     function trocarModo(novoModo) {
         if (novoModo === modoAtual) return;
