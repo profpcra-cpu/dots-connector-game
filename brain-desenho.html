@@ -1,629 +1,1100 @@
 <!DOCTYPE html>
-<html lang="pt" data-theme="dark">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain Hub - Jogos e Ferramentas Pedagógicas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Desenho a Lápis — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-color: #0b1020;
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-color: #eef2ff;
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+.mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
 
-    <style>
-        :root {
-            --bg-color: #0b1020;
-            --bg-gradient-1: #1e1b4b;
-            --bg-gradient-2: #0b1020;
-            --card-bg: rgba(30, 41, 59, 0.75);
-            --card-border: rgba(148, 163, 184, 0.15);
-            --card-glow: rgba(99, 102, 241, 0.25);
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-subtle: #64748b;
-            --border-color: rgba(148, 163, 184, 0.18);
-            --border-strong: rgba(148, 163, 184, 0.35);
-            --input-bg: rgba(15, 23, 42, 0.7);
-            --btn-primary: #6366f1;
-            --btn-primary-hover: #818cf8;
-            --btn-accent: #8b5cf6;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
-            --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
-            --t-base: 0.25s ease;
-            --t-slow: 0.4s ease;
-        }
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-nivel { color: var(--c-cyan); }
+#display-tempo { color: #60a5fa; }
+#display-pontos { color: var(--c-green); }
 
-        [data-theme="light"] {
-            --bg-color: #eef2ff;
-            --bg-gradient-1: #e0e7ff;
-            --bg-gradient-2: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --card-glow: rgba(99, 102, 241, 0.15);
-            --text-color: #0f172a;
-            --text-muted: #475569;
-            --text-subtle: #64748b;
-            --border-color: rgba(15, 23, 42, 0.1);
-            --border-strong: rgba(15, 23, 42, 0.25);
-            --input-bg: rgba(255, 255, 255, 0.95);
-            --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
-        }
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+}
 
-        /* ==========================================================
-           RESET
-           ========================================================== */
-        *, *::before, *::after { box-sizing: border-box; }
-        html, body { height: 100%; }
+.paleta-cores {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.lapis-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s;
+    padding: 0;
+}
+.lapis-btn.ativo {
+    transform: scale(1.15);
+    border-color: #fff;
+    box-shadow: 0 0 15px currentColor;
+}
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
-            background-attachment: fixed;
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            transition: background-color var(--t-slow), color var(--t-base);
-            -webkit-font-smoothing: antialiased;
-        }
+#grid-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 12px;
+    background: #050914;
+    border-radius: 14px;
+    padding: 12px;
+    display: grid;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--card-border);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
 
-        body::before, body::after {
-            content: "";
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(130px);
-            opacity: 0.3;
-            z-index: -1;
-            pointer-events: none;
-        }
-        body::before { width: 420px; height: 420px; background: #6366f1; top: -140px; left: -120px; }
-        body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px; right: -140px; }
+.cell {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.cell.errado {
+    animation: shake 0.4s ease;
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
 
-        /* ==========================================================
-           CONTAINER
-           ========================================================== */
-        .container {
-            position: relative;
-            background: var(--card-bg);
-            backdrop-filter: blur(18px) saturate(160%);
-            -webkit-backdrop-filter: blur(18px) saturate(160%);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
-            border: 1px solid var(--card-border);
-            display: flex;
-            flex-direction: column;
-            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
-        }
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+.controls-grid.three {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+.btn-success { background: linear-gradient(135deg, #16a34a, #22c55e); }
+.hidden { display: none !important; }
 
-        .container::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 20%; right: 20%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
-            opacity: 0.9;
-            z-index: 2;
-        }
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.92);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 24px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 52px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay .countdown {
+    font-size: 84px;
+    font-weight: 800;
+    color: var(--c-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    animation: pulse-cd 1s infinite;
+}
+@keyframes pulse-cd {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.85; }
+}
+.overlay button {
+    max-width: 260px;
+}
 
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @media (min-width: 769px) {
-            .container { width: 92%; max-width: 860px; padding: 32px; max-height: 92vh; }
-            #theme-toggle-desktop { display: inline-flex; }
-            #theme-toggle-mobile { display: none; }
-        }
-
-        @media (max-width: 768px) {
-            .container { width: 92%; max-width: 480px; padding: 20px; max-height: 94vh; }
-            #theme-toggle-desktop { display: none; }
-            #theme-toggle-mobile { display: flex; }
-        }
-
-        /* ==========================================================
-           TOP BAR
-           ========================================================== */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 800;
-            margin: 0 0 4px 0;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #a5b4fc, #c4b5fd 55%, #f0abfc);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p.subtitle {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        .btn-small {
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 600;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all var(--t-base);
-            white-space: nowrap;
-        }
-        .btn-small:hover {
-            color: var(--text-color);
-            border-color: var(--border-strong);
-            transform: translateY(-1px);
-        }
-
-        .floating-theme-btn {
-            position: fixed;
-            bottom: 20px; right: 20px;
-            z-index: 999;
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            border: 1px solid var(--border-strong);
-            color: var(--text-color);
-            font-size: 20px;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            display: flex;
-            transition: transform var(--t-base);
-        }
-        .floating-theme-btn:hover { transform: scale(1.08); }
-
-        /* ==========================================================
-           PROFILE BOX
-           ========================================================== */
-        .profile-box {
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            margin-bottom: 16px;
-            flex-shrink: 0;
-        }
-        .profile-box label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .profile-inputs {
-            display: flex;
-            gap: 8px;
-        }
-        input, select {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            font-family: inherit;
-            font-weight: 500;
-            background: var(--input-bg);
-            color: var(--text-color);
-            outline: none;
-            transition: border-color var(--t-base), box-shadow var(--t-base);
-        }
-        input:focus, select:focus {
-            border-color: var(--btn-primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
-        }
-
-        /* ==========================================================
-           HUB GRID
-           ========================================================== */
-        .hub-grid {
-            overflow-y: auto;
-            overflow-x: hidden;
-            scrollbar-gutter: stable;
-            padding-right: 6px;
-        }
-
-        @media (min-width: 769px) {
-            .hub-grid {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 10px 12px;
-                align-items: start;
-                max-height: 60vh;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hub-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                max-height: 58vh;
-            }
-        }
-
-        .hub-grid::-webkit-scrollbar { width: 6px; }
-        .hub-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
-        .hub-grid::-webkit-scrollbar-track { background: transparent; }
-
-        .hub-section-title {
-            grid-column: 1 / -1;
-            width: 100%;
-            flex-basis: 100%;
-
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-subtle);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-
-            margin: 8px 2px 0;
-            padding: 0 2px;
-
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            line-height: 1.4;
-            min-height: 18px;
-
-            position: relative;
-            z-index: 1;
-        }
-        .hub-section-title:first-child { margin-top: 0; }
-        .hub-section-title::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: var(--border-color);
-        }
-
-        /* ==========================================================
-           CARD DE JOGO
-           ========================================================== */
-        .hub-card {
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 12px 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-color);
-            transition: all var(--t-base);
-            position: relative;
-            overflow: hidden;
-            min-height: 64px;
-            min-width: 0;
-            width: 100%;
-        }
-        .hub-card:hover {
-            border-color: var(--btn-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -8px rgba(99, 102, 241, 0.25);
-        }
-
-        .hub-card-info {
-            flex: 1 1 auto;
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        .hub-card-info h3 {
-            margin: 0 0 2px 0;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .hub-card-info p {
-            margin: 0;
-            font-size: 11.5px;
-            color: var(--text-muted);
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            word-break: break-word;
-        }
-
-        .hub-card-action {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--btn-primary-hover);
-            background: rgba(99, 102, 241, 0.12);
-            padding: 5px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            white-space: nowrap;
-            transition: all var(--t-base);
-            flex-shrink: 0;
-        }
-        .hub-card:hover .hub-card-action {
-            background: rgba(99, 102, 241, 0.22);
-            color: #fff;
-        }
-
-        @media (max-width: 480px) {
-            .hub-card { padding: 11px 12px; gap: 8px; }
-            .hub-card-info h3 { font-size: 13.5px; }
-            .hub-card-info p { font-size: 11px; -webkit-line-clamp: 2; }
-            .hub-card-action { font-size: 11.5px; padding: 4px 9px; }
-        }
-
-        .hidden { display: none !important; }
-    </style>
+.badge-nivel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+</style>
 </head>
 <body>
-
-    <div class="container">
-        <!-- TOP BAR -->
-        <div class="top-bar">
-            <div>
-                <h1>Brain Hub</h1>
-                <p class="subtitle">Central de Desafios e Jogos Pedagógicos</p>
-            </div>
-            <button id="theme-toggle-desktop" class="btn-small">🌙 Tema</button>
-        </div>
-
-        <!-- PERFIL -->
-        <div class="profile-box">
-            <label for="input-nome">Identificação do Participante</label>
-            <div class="profile-inputs">
-                <select id="select-avatar" style="width: 65px; text-align: center;">
-                    <option value="😀">😀</option>
-                    <option value="😎">😎</option>
-                    <option value="🦊">🦊</option>
-                    <option value="🚀">🚀</option>
-                    <option value="🦄">🦄</option>
-                    <option value="🤖">🤖</option>
-                    <option value="⭐">⭐</option>
-                    <option value="🔥">🔥</option>
-                </select>
-                <input type="text" id="input-nome" placeholder="Digite seu nome ou apelido...">
-                <button id="btn-salvar-perfil" style="width: 90px; border: none; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent)); color: #fff; font-weight: 600; cursor: pointer;">Salvar</button>
-            </div>
-        </div>
-
-        <!-- GRELHA DE JOGOS -->
-        <div class="hub-grid">
-
-            <div class="hub-section-title">🧭 Simuladores</div>
-
-            <a href="simulador-relacoes-humanas.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🧭 Relações Humanas</h3>
-                    <p>Tomada de decisão e mediação de conflitos.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <div class="hub-section-title">📜 Lucas</div>
-
-            <a href="lucas-associacao.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>📜 Lucas: Associação</h3>
-                    <p>Pilares teológicos e definições.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="lucas-quiz.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>❓ Lucas: Quiz Teológico</h3>
-                    <p>Desafio de perguntas com temporizador.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <div class="hub-section-title">🧠 Lógica e Raciocínio</div>
-
-            <a href="brain-flow-master.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🌊 Brain Flow Master</h3>
-                    <p>Versão avançada de conexões e fluxo lógico contínuo.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="brain-link.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🔗 Brain Link</h3>
-                    <p>Conecte formas e números em sequência lógica crescente.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="brainflow.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>⚡ Brain Flow</h3>
-                    <p>Desafios clássicos de conexão de cores e caminhos mentais.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="brain-desenho.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>✏️ Desenho a Lápis</h3>
-                    <p>Modo livre criativo ou desafio de memória com padrões.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="hanoi.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🗼 Torre de Hanói</h3>
-                    <p>Quebra-cabeça de lógica e movimentação de discos.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="tangram.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>📐 Tangram</h3>
-                    <p>Quebra-cabeça geométrico de formas e encaixes.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <div class="hub-section-title">🔢 Números</div>
-
-            <a href="sudoku.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🔢 Sudoku Desafio</h3>
-                    <p>Tabuleiros 9×9 com recordes e níveis.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="sudoku3x3.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🧩 Sudoku 3x3</h3>
-                    <p>Versão rápida e simplificada do clássico Sudoku.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <div class="hub-section-title">🎯 Memória e Estratégia</div>
-
-            <a href="memoria4x4.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>🧠 Jogo da Memória 4×4</h3>
-                    <p>Teste sua concentração e agilidade visual.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="damas.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>♟️ Jogo de Damas</h3>
-                    <p>Duelo em tempo real com convite por WhatsApp.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
-            <a href="damas-dupla.html" class="hub-card" onclick="verificarPerfil(event)">
-                <div class="hub-card-info">
-                    <h3>👥 Jogo de Damas em Dupla</h3>
-                    <p>Modo colaborativo ou duplas em tempo real.</p>
-                </div>
-                <div class="hub-card-action">Jogar ➔</div>
-            </a>
-
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
         </div>
     </div>
 
-    <button id="theme-toggle-mobile" class="floating-theme-btn" title="Alternar Tema">🌙</button>
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="livre">🎨 Modo Livre</button>
+        <button class="mode-btn" data-mode="desafio">🧠 Desafio</button>
+    </div>
 
-    <script>
-        /* ==========================================================
-           TEMA
-           ========================================================== */
-        const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
-        const themeToggleMobile = document.getElementById('theme-toggle-mobile');
-        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        atualizarBotoesTema(savedTheme);
+    <div class="score-board">
+        <div id="label-bloco1">Modo<br><strong id="display-nivel">Livre</strong></div>
+        <div id="label-bloco2">Tempo<br><strong id="display-tempo">00:00</strong></div>
+        <div id="label-bloco3">Células<br><strong id="display-pontos">0/25</strong></div>
+    </div>
 
-        function alternarTema() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('brain_flow_theme', next);
-            atualizarBotoesTema(next);
-        }
+    <p class="instructions" id="info-instrucao">
+        ✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!
+    </p>
 
-        if (themeToggleDesktop) themeToggleDesktop.addEventListener('click', alternarTema);
-        if (themeToggleMobile) themeToggleMobile.addEventListener('click', alternarTema);
+    <div class="paleta-cores" id="paleta-cores"></div>
 
-        function atualizarBotoesTema(t) {
-            if (themeToggleDesktop) themeToggleDesktop.textContent = t === 'dark' ? '☀️ Claro' : '🌙 Escuro';
-            if (themeToggleMobile) themeToggleMobile.textContent = t === 'dark' ? '☀️' : '🌙';
-        }
+    <div id="grid-wrapper">
+        <div id="grid-container" style="display: grid; width: 100%; height: 100%; gap: 4px;"></div>
+        <div id="overlay" class="overlay hidden"></div>
+    </div>
 
-        /* ==========================================================
-           PERFIL
-           ========================================================== */
-        const inputNome = document.getElementById('input-nome');
-        const selectAvatar = document.getElementById('select-avatar');
-        const btnSalvar = document.getElementById('btn-salvar-perfil');
+    <div class="controls-grid" id="controls-livre">
+        <select id="select-tamanho">
+            <option value="4">Grelha 4x4 (Fácil)</option>
+            <option value="5" selected>Grelha 5x5 (Padrão)</option>
+            <option value="6">Grelha 6x6 (Amplo)</option>
+        </select>
+        <button id="btn-reiniciar" class="btn-secondary">🔄 Limpar Tabuleiro</button>
+    </div>
 
-        let jogadorSalvo = null;
-        try {
-            jogadorSalvo = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-        } catch (_) { /* ignore */ }
+    <div class="controls-grid three hidden" id="controls-desafio">
+        <button id="btn-iniciar-desafio">▶️ Iniciar</button>
+        <button id="btn-dica" class="btn-secondary" disabled>💡 Dica</button>
+        <button id="btn-confirmar" class="btn-success" disabled>✅ Confirmar</button>
+    </div>
+</div>
 
-        if (jogadorSalvo) {
-            inputNome.value = jogadorSalvo.nome || '';
-            selectAvatar.value = jogadorSalvo.avatar || '😀';
-        }
+<script>
+// ==========================================================
+// CONSTANTES
+// ==========================================================
+const CORES = [
+    '#f43f5e',
+    '#38bdf8',
+    '#fbbf24',
+    '#4ade80',
+    '#a855f7',
+    '#fb923c'
+];
 
-        btnSalvar.addEventListener('click', () => {
-            const nome = inputNome.value.trim();
-            if (!nome) {
-                alert('Por favor, digite o seu nome ou apelido.');
-                inputNome.focus();
-                return;
-            }
-            const dados = {
-                nome,
-                avatar: selectAvatar.value,
-                chave: (jogadorSalvo && jogadorSalvo.chave) || null
-            };
-            localStorage.setItem('brain_hub_jogador', JSON.stringify(dados));
-            jogadorSalvo = dados;
-            alert(`Perfil salvo com sucesso, ${nome}! ${dados.avatar}`);
-        });
+const NIVEIS_DESAFIO = [
+    { tamanho: 4, celulas: 4,  tempo: 4.0 },
+    { tamanho: 4, celulas: 6,  tempo: 3.5 },
+    { tamanho: 4, celulas: 8,  tempo: 3.0 },
+    { tamanho: 5, celulas: 8,  tempo: 3.5 },
+    { tamanho: 5, celulas: 10, tempo: 3.0 },
+    { tamanho: 5, celulas: 12, tempo: 2.5 },
+    { tamanho: 6, celulas: 12, tempo: 3.0 },
+    { tamanho: 6, celulas: 15, tempo: 2.5 },
+    { tamanho: 6, celulas: 18, tempo: 2.0 },
+    { tamanho: 6, celulas: 22, tempo: 1.8 }
+];
+const MAX_NIVEL = NIVEIS_DESAFIO.length;
 
-        /* ==========================================================
-           VERIFICAÇÃO DE PERFIL ANTES DE ENTRAR NO JOGO
-           ========================================================== */
-        function verificarPerfil(e) {
-            let jogador = null;
+// ==========================================================
+// ESTADO
+// ==========================================================
+let modoAtual = 'livre';
+
+let tamanhoGrelha = 5;
+let corAtual = CORES[0];
+let matrizDesenho = [];
+let desenhando = false;
+let segundos = 0;
+let timer = null;
+let jogoAtivo = true;
+
+let nivelAtual = 1;
+let pontosDesafio = 0;
+let matrizAlvo = [];
+let fase = 'idle';
+let dicasUsadas = 0;
+
+// ==========================================================
+// SOM
+// ==========================================================
+const som = {
+    ativo: true,
+    ctx: null,
+    init() {
+        if (!this.ctx) {
             try {
-                jogador = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-            } catch (_) { /* ignore */ }
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) { this.ctx = null; }
+        }
+    },
+    play(freq, type, duration) {
+        if (!this.ativo) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = type;
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+            o.connect(g);
+            g.connect(this.ctx.destination);
+            o.start();
+            o.stop(this.ctx.currentTime + duration);
+        } catch (e) {}
+    },
+    draw()  { this.play(440 + Math.random() * 200, 'sine', 0.08); },
+    click() { this.play(600, 'triangle', 0.1); },
+    acerto(){ [523, 659, 783].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.18), i * 80)); },
+    erro()  { this.play(220, 'sawtooth', 0.2); setTimeout(() => this.play(160, 'sawtooth', 0.25), 100); },
+    win()   { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.2), i * 100)); },
+    tick()  { this.play(880, 'square', 0.05); }
+};
 
-            if (!jogador || !jogador.nome) {
-                e.preventDefault();
-                alert('Por favor, defina o seu nome e avatar antes de entrar em uma atividade!');
-                inputNome.focus();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+// ==========================================================
+// INICIALIZAÇÃO
+// ==========================================================
+function inicializarModoLivre(tam) {
+    tamanhoGrelha = tam;
+    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
+    segundos = 0;
+    jogoAtivo = true;
+
+    montarPaleta();
+    montarDOMGrid();
+    atualizarEstatisticasLivre();
+    iniciarTimer();
+    esconderOverlay();
+}
+
+function inicializarModoDesafio() {
+    nivelAtual = 1;
+    pontosDesafio = 0;
+    iniciarNivel();
+}
+
+function iniciarNivel() {
+    const cfg = NIVEIS_DESAFIO[nivelAtual - 1];
+    tamanhoGrelha = cfg.tamanho;
+    matrizAlvo = gerarPadraoAleatorio(cfg.tamanho, cfg.celulas);
+    matrizDesenho = Array(cfg.tamanho).fill(null).map(() => Array(cfg.tamanho).fill(null));
+    dicasUsadas = 0;
+    fase = 'memorizando';
+    segundos = 0;
+
+    montarPaleta();
+    montarDOMGrid();
+    atualizarEstatisticasDesafio();
+    atualizarBotoesDesafio();
+    mostrarOverlayMemorizacao(cfg.tempo);
+}
+
+function gerarPadraoAleatorio(tamanho, quantidade) {
+    const grade = Array(tamanho).fill(null).map(() => Array(tamanho).fill(null));
+    const total = tamanho * tamanho;
+    const qtd = Math.min(quantidade, total);
+
+    const indices = new Set();
+    while (indices.size < qtd) {
+        indices.add(Math.floor(Math.random() * total));
+    }
+
+    for (const idx of indices) {
+        const r = Math.floor(idx / tamanho);
+        const c = idx % tamanho;
+        const cor = CORES[Math.floor(Math.random() * CORES.length)];
+        grade[r][c] = cor;
+    }
+
+    return grade;
+}
+
+// ==========================================================
+// PALETA
+// ==========================================================
+function montarPaleta() {
+    const paleta = document.getElementById('paleta-cores');
+    paleta.innerHTML = '';
+    CORES.forEach((cor) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lapis-btn' + (cor === corAtual ? ' ativo' : '');
+        btn.style.backgroundColor = cor;
+        btn.style.color = cor;
+        btn.setAttribute('aria-label', 'Selecionar cor ' + cor);
+        btn.addEventListener('click', () => {
+            corAtual = cor;
+            document.querySelectorAll('.lapis-btn').forEach(b => b.classList.remove('ativo'));
+            btn.classList.add('ativo');
+            som.click();
+        });
+        paleta.appendChild(btn);
+    });
+}
+
+// ==========================================================
+// GRID DOM
+// ==========================================================
+let listenersAtivos = false;
+
+function montarDOMGrid() {
+    const gridContainer = document.getElementById('grid-container');
+    gridContainer.style.gridTemplateColumns = 'repeat(' + tamanhoGrelha + ', 1fr)';
+    gridContainer.style.gridTemplateRows = 'repeat(' + tamanhoGrelha + ', 1fr)';
+    gridContainer.innerHTML = '';
+
+    const interativo = (modoAtual === 'livre' && jogoAtivo) ||
+                       (modoAtual === 'desafio' && fase === 'reproduzindo');
+
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+
+            if (interativo) {
+                cell.style.cursor = 'pointer';
+                cell.addEventListener('mousedown', (e) => { e.preventDefault(); iniciarPintura(r, c); });
+                cell.addEventListener('mouseenter', () => continuarPintura(r, c));
+                cell.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarPintura(r, c); }, {passive: false});
+                cell.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (target && target.classList.contains('cell')) {
+                        continuarPintura(parseInt(target.dataset.r), parseInt(target.dataset.c));
+                    }
+                }, {passive: false});
+            } else {
+                cell.style.cursor = 'default';
+            }
+
+            gridContainer.appendChild(cell);
+        }
+    }
+
+    if (!listenersAtivos) {
+        window.addEventListener('mouseup', finalizarPintura);
+        window.addEventListener('touchend', finalizarPintura);
+        listenersAtivos = true;
+    }
+
+    atualizarVisualGrid();
+}
+
+// ==========================================================
+// PINTURA
+// ==========================================================
+function iniciarPintura(r, c) {
+    if (modoAtual === 'livre' && !jogoAtivo) return;
+    if (modoAtual === 'desafio' && fase !== 'reproduzindo') return;
+    desenhando = true;
+    aplicarCor(r, c);
+}
+
+function continuarPintura(r, c) {
+    if (!desenhando) return;
+    aplicarCor(r, c);
+}
+
+function finalizarPintura() { desenhando = false; }
+
+function aplicarCor(r, c) {
+    const corAntiga = matrizDesenho[r][c];
+    if (corAntiga === corAtual) {
+        matrizDesenho[r][c] = null;
+    } else {
+        matrizDesenho[r][c] = corAtual;
+    }
+
+    som.draw();
+    atualizarVisualGrid();
+    if (modoAtual === 'livre') {
+        atualizarEstatisticasLivre();
+        verificarPreenchimentoTotalLivre();
+    } else {
+        atualizarEstatisticasDesafio();
+    }
+}
+
+function atualizarVisualGrid() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        const r = parseInt(cell.dataset.r);
+        const c = parseInt(cell.dataset.c);
+
+        let cor;
+        if (modoAtual === 'desafio' && fase === 'memorizando') {
+            cor = matrizAlvo[r][c];
+        } else {
+            cor = matrizDesenho[r][c];
+        }
+
+        if (cor) {
+            cell.style.background = cor;
+            cell.style.borderColor = '#ffffff';
+            cell.style.boxShadow = 'inset 0 0 12px rgba(0,0,0,0.3)';
+        } else {
+            cell.style.background = 'rgba(30, 41, 59, 0.4)';
+            cell.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+            cell.style.boxShadow = 'none';
+        }
+    });
+}
+
+// ==========================================================
+// ESTATÍSTICAS
+// ==========================================================
+function contarCelulasPreenchidas(matriz) {
+    let count = 0;
+    for (let r = 0; r < matriz.length; r++) {
+        for (let c = 0; c < matriz[r].length; c++) {
+            if (matriz[r][c] !== null) count++;
+        }
+    }
+    return count;
+}
+
+function atualizarEstatisticasLivre() {
+    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
+    const total = tamanhoGrelha * tamanhoGrelha;
+    document.getElementById('display-pontos').textContent = preenchidas + '/' + total;
+    document.getElementById('display-nivel').textContent = 'Livre';
+}
+
+function atualizarEstatisticasDesafio() {
+    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
+    const totalAlvo = contarCelulasPreenchidas(matrizAlvo);
+    document.getElementById('display-nivel').textContent = 'Nv ' + nivelAtual + '/' + MAX_NIVEL;
+    document.getElementById('display-pontos').textContent = preenchidas + '/' + totalAlvo;
+    document.getElementById('display-tempo').textContent = formatarTempo(segundos);
+}
+
+// ==========================================================
+// TIMER
+// ==========================================================
+function iniciarTimer() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+        if (modoAtual === 'livre' && !jogoAtivo) return;
+        if (modoAtual === 'desafio' && fase !== 'reproduzindo') return;
+
+        segundos++;
+        document.getElementById('display-tempo').textContent = formatarTempo(segundos);
+    }, 1000);
+}
+function pararTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+// ==========================================================
+// VERIFICAÇÕES
+// ==========================================================
+function verificarPreenchimentoTotalLivre() {
+    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
+    const total = tamanhoGrelha * tamanhoGrelha;
+    if (preenchidas === total && jogoAtivo) {
+        jogoAtivo = false;
+        pararTimer();
+        som.win();
+        mostrarOverlay({
+            titulo: '🎨 Obra Completa!',
+            subtitulo: 'Excelente trabalho artístico! Você preencheu ' + total + ' células em ' + formatarTempo(segundos) + '.',
+            botao: { texto: '🔄 Jogar Novamente', acao: () => inicializarModoLivre(tamanhoGrelha) }
+        });
+    }
+}
+
+// ==========================================================
+// OVERLAYS
+// ==========================================================
+function esconderOverlay() {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.add('hidden');
+    overlay.innerHTML = '';
+}
+
+function mostrarOverlay(cfg) {
+    const overlay = document.getElementById('overlay');
+    overlay.innerHTML = '';
+
+    if (cfg.titulo) {
+        const h2 = document.createElement('h2');
+        h2.textContent = cfg.titulo;
+        overlay.appendChild(h2);
+    }
+    if (cfg.htmlExtra) {
+        const div = document.createElement('div');
+        div.innerHTML = cfg.htmlExtra;
+        overlay.appendChild(div);
+    }
+    if (cfg.subtitulo) {
+        const p = document.createElement('div');
+        p.className = 'subtitulo';
+        p.textContent = cfg.subtitulo;
+        overlay.appendChild(p);
+    }
+    if (cfg.botao) {
+        const btn = document.createElement('button');
+        btn.textContent = cfg.botao.texto;
+        btn.addEventListener('click', cfg.botao.acao);
+        overlay.appendChild(btn);
+    }
+    if (cfg.botaoSecundario) {
+        const btn2 = document.createElement('button');
+        btn2.textContent = cfg.botaoSecundario.texto;
+        btn2.className = 'btn-secondary';
+        btn2.addEventListener('click', cfg.botaoSecundario.acao);
+        overlay.appendChild(btn2);
+    }
+
+    overlay.classList.remove('hidden');
+}
+
+// ==========================================================
+// DESAFIO — FLUXO
+// ==========================================================
+function mostrarOverlayMemorizacao(tempoTotal) {
+    let restante = Math.ceil(tempoTotal);
+    const overlay = document.getElementById('overlay');
+    overlay.innerHTML = '';
+    overlay.classList.remove('hidden');
+
+    const badge = document.createElement('div');
+    badge.className = 'badge-nivel';
+    badge.textContent = 'Nível ' + nivelAtual + ' de ' + MAX_NIVEL;
+    overlay.appendChild(badge);
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = '👀 Memorize o padrão!';
+    overlay.appendChild(titulo);
+
+    const countdown = document.createElement('div');
+    countdown.className = 'countdown';
+    countdown.textContent = restante;
+    overlay.appendChild(countdown);
+
+    const sub = document.createElement('div');
+    sub.className = 'subtitulo';
+    sub.textContent = 'Você terá que reproduzi-lo de memória.';
+    overlay.appendChild(sub);
+
+    let tickAnterior = restante;
+    const interval = setInterval(() => {
+        restante -= 0.1;
+        if (restante <= 0) {
+            clearInterval(interval);
+            iniciarFaseReproducao();
+            return;
+        }
+        const ceil = Math.ceil(restante);
+        if (ceil !== tickAnterior) {
+            tickAnterior = ceil;
+            som.tick();
+        }
+        countdown.textContent = ceil;
+    }, 100);
+}
+
+function iniciarFaseReproducao() {
+    fase = 'reproduzindo';
+    segundos = 0;
+    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
+
+    esconderOverlay();
+    montarDOMGrid();
+    atualizarEstatisticasDesafio();
+    atualizarBotoesDesafio();
+
+    document.getElementById('info-instrucao').textContent =
+        '✏️ Reproduza o padrão de memória! Use as cores corretas e toque em ✅ Confirmar quando terminar.';
+}
+
+function atualizarBotoesDesafio() {
+    const btnIniciar = document.getElementById('btn-iniciar-desafio');
+    const btnDica = document.getElementById('btn-dica');
+    const btnConf = document.getElementById('btn-confirmar');
+
+    if (fase === 'idle') {
+        btnIniciar.disabled = false;
+        btnIniciar.textContent = '▶️ Iniciar';
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    } else if (fase === 'memorizando') {
+        btnIniciar.disabled = true;
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    } else if (fase === 'reproduzindo') {
+        btnIniciar.disabled = true;
+        btnDica.disabled = dicasUsadas >= 1;
+        btnDica.textContent = dicasUsadas >= 1 ? '💡 Usada' : '💡 Dica';
+        btnConf.disabled = false;
+    } else if (fase === 'resultado' || fase === 'finalizado') {
+        btnIniciar.disabled = true;
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    }
+}
+
+function usarDica() {
+    if (fase !== 'reproduzindo' || dicasUsadas >= 1) return;
+    dicasUsadas++;
+
+    const overlay = document.getElementById('overlay');
+    overlay.innerHTML = '';
+    overlay.style.background = 'rgba(5, 9, 20, 0.75)';
+    overlay.classList.remove('hidden');
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = '💡 Dica';
+    overlay.appendChild(titulo);
+
+    const sub = document.createElement('div');
+    sub.className = 'subtitulo';
+    sub.textContent = 'Observe bem... 1.5s';
+    overlay.appendChild(sub);
+
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        const r = parseInt(cell.dataset.r);
+        const c = parseInt(cell.dataset.c);
+        const corAlvo = matrizAlvo[r][c];
+        const corAtualCell = matrizDesenho[r][c];
+        if (corAlvo && !corAtualCell) {
+            cell.style.boxShadow = 'inset 0 0 0 2px ' + corAlvo + ', 0 0 10px ' + corAlvo;
+        }
+    });
+
+    som.click();
+    setTimeout(() => {
+        overlay.style.background = 'rgba(5, 9, 20, 0.92)';
+        cells.forEach(cell => {
+            const r = parseInt(cell.dataset.r);
+            const c = parseInt(cell.dataset.c);
+            if (!matrizDesenho[r][c]) {
+                cell.style.boxShadow = 'none';
+            }
+        });
+        esconderOverlay();
+        atualizarBotoesDesafio();
+    }, 1500);
+
+    atualizarBotoesDesafio();
+}
+
+function confirmarResposta() {
+    if (fase !== 'reproduzindo') return;
+    fase = 'resultado';
+
+    let erros = 0;
+    let faltando = 0;
+
+    const cells = document.querySelectorAll('.cell');
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            const alvo = matrizAlvo[r][c];
+            const feito = matrizDesenho[r][c];
+
+            if (alvo === null && feito !== null) {
+                erros++;
+                const cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
+                if (cell) cell.classList.add('errado');
+            } else if (alvo !== null && feito === null) {
+                faltando++;
+                const cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
+                if (cell) cell.classList.add('errado');
+            } else if (alvo !== null && feito !== null && alvo !== feito) {
+                erros++;
+                const cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
+                if (cell) cell.classList.add('errado');
             }
         }
-    </script>
+    }
+
+    const totalAlvo = contarCelulasPreenchidas(matrizAlvo);
+    const acertosAlvo = contarAcertosAlvo();
+    let pontosNivel = acertosAlvo * 10 - erros * 5 - faltando * 5 - dicasUsadas * 15;
+    pontosNivel = Math.max(0, pontosNivel);
+
+    pontosDesafio += pontosNivel;
+
+    if (acertosAlvo === totalAlvo && erros === 0 && faltando === 0) {
+        som.acerto();
+    } else {
+        som.erro();
+    }
+
+    const perfeito = (acertosAlvo === totalAlvo && erros === 0 && faltando === 0);
+    const htmlExtra =
+        '<div class="grande">+' + pontosNivel + '</div>' +
+        '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">' +
+            '<span style="color:var(--c-green)">✅ ' + acertosAlvo + ' certas</span>' +
+            '<span style="color:var(--c-red)">❌ ' + erros + ' erradas</span>' +
+            '<span style="color:var(--c-amber)">⚠️ ' + faltando + ' faltando</span>' +
+        '</div>' +
+        (dicasUsadas > 0 ? '<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Dica usada: -15 pontos</div>' : '');
+
+    const ultimo = (nivelAtual >= MAX_NIVEL);
+    mostrarOverlay({
+        titulo: perfeito ? '🌟 Perfeito!' : '📊 Resultado',
+        htmlExtra: htmlExtra,
+        subtitulo: 'Pontuação total: ' + pontosDesafio + ' pts',
+        botao: {
+            texto: ultimo ? '🏁 Ver Resultado Final' : '➡️ Próximo Nível',
+            acao: () => {
+                if (ultimo) {
+                    finalizarDesafio();
+                } else {
+                    nivelAtual++;
+                    esconderOverlay();
+                    iniciarNivel();
+                }
+            }
+        },
+        botaoSecundario: {
+            texto: '🔄 Repetir Nível',
+            acao: () => {
+                esconderOverlay();
+                iniciarNivel();
+            }
+        }
+    });
+
+    atualizarBotoesDesafio();
+}
+
+function contarAcertosAlvo() {
+    let acertos = 0;
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            if (matrizAlvo[r][c] !== null && matrizAlvo[r][c] === matrizDesenho[r][c]) {
+                acertos++;
+            }
+        }
+    }
+    return acertos;
+}
+
+function finalizarDesafio() {
+    fase = 'finalizado';
+    const maxPossivel = NIVEIS_DESAFIO.reduce((acc, n) => acc + n.celulas * 10, 0);
+    const percentual = (pontosDesafio / maxPossivel) * 100;
+
+    let medalha, titulo, msg;
+    if (percentual >= 90) {
+        medalha = '🏆'; titulo = 'Mestre da Memória!';
+        msg = 'Impressionante! Você tem uma memória visual extraordinária.';
+    } else if (percentual >= 70) {
+        medalha = '🥇'; titulo = 'Olhar de Águia!';
+        msg = 'Excelente! Sua percepção visual está muito afiada.';
+    } else if (percentual >= 50) {
+        medalha = '🥈'; titulo = 'Aprendiz Atento!';
+        msg = 'Bom trabalho! Continue treinando para melhorar ainda mais.';
+    } else {
+        medalha = '🥉'; titulo = 'Iniciante Curioso!';
+        msg = 'Todo mestre começou assim. Tente novamente!';
+    }
+
+    som.win();
+
+    mostrarOverlay({
+        titulo: medalha + ' ' + titulo,
+        htmlExtra: '<div class="grande">' + pontosDesafio + ' pts</div>',
+        subtitulo: msg,
+        botao: {
+            texto: '🔄 Jogar Novamente',
+            acao: () => {
+                esconderOverlay();
+                inicializarModoDesafio();
+            }
+        }
+    });
+
+    atualizarBotoesDesafio();
+}
+
+function formatarTempo(s) {
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+
+// ==========================================================
+// TROCA DE MODO
+// ==========================================================
+function trocarModo(novoModo) {
+    if (novoModo === modoAtual) return;
+    modoAtual = novoModo;
+    pararTimer();
+    esconderOverlay();
+    desenhando = false;
+    fase = 'idle';
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === novoModo);
+    });
+
+    document.getElementById('controls-livre').classList.toggle('hidden', novoModo !== 'livre');
+    document.getElementById('controls-desafio').classList.toggle('hidden', novoModo !== 'desafio');
+
+    if (novoModo === 'livre') {
+        document.getElementById('label-bloco1').innerHTML = 'Modo<br><strong id="display-nivel">Livre</strong>';
+        document.getElementById('label-bloco3').innerHTML = 'Células<br><strong id="display-pontos">0/25</strong>';
+        document.getElementById('info-instrucao').textContent =
+            '✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!';
+        const tam = parseInt(document.getElementById('select-tamanho').value);
+        inicializarModoLivre(tam);
+    } else {
+        document.getElementById('label-bloco1').innerHTML = 'Nível<br><strong id="display-nivel">Nv 1/10</strong>';
+        document.getElementById('label-bloco3').innerHTML = 'Pintadas<br><strong id="display-pontos">0/0</strong>';
+        document.getElementById('info-instrucao').textContent =
+            '🧠 Memorize o padrão exibido, espere esconder, e reproduza-o de memória!';
+        tamanhoGrelha = 5;
+        matrizDesenho = Array(5).fill(null).map(() => Array(5).fill(null));
+        matrizAlvo = Array(5).fill(null).map(() => Array(5).fill(null));
+        montarPaleta();
+        montarDOMGrid();
+        atualizarBotoesDesafio();
+        document.getElementById('display-tempo').textContent = '00:00';
+        document.getElementById('display-nivel').textContent = 'Nv ' + nivelAtual + '/' + MAX_NIVEL;
+        document.getElementById('display-pontos').textContent = '0/0';
+    }
+
+    iniciarTimer();
+}
+
+// ==========================================================
+// EVENTOS DE UI
+// ==========================================================
+document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => trocarModo(btn.dataset.mode));
+});
+
+document.getElementById('btn-reiniciar').addEventListener('click', () => {
+    inicializarModoLivre(tamanhoGrelha);
+});
+
+document.getElementById('select-tamanho').addEventListener('change', (e) => {
+    inicializarModoLivre(parseInt(e.target.value));
+});
+
+document.getElementById('btn-iniciar-desafio').addEventListener('click', () => {
+    if (fase === 'finalizado') {
+        inicializarModoDesafio();
+    } else {
+        if (nivelAtual === 1 && pontosDesafio === 0) {
+            inicializarModoDesafio();
+        } else {
+            iniciarNivel();
+        }
+    }
+});
+
+document.getElementById('btn-dica').addEventListener('click', usarDica);
+document.getElementById('btn-confirmar').addEventListener('click', confirmarResposta);
+
+const soundToggleBtn = document.getElementById('sound-toggle');
+soundToggleBtn.addEventListener('click', () => {
+    som.ativo = !som.ativo;
+    soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+});
+
+const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('brain_flow_theme', next);
+});
+
+// ==========================================================
+// BOOT
+// ==========================================================
+inicializarModoLivre(5);
+</script>
 </body>
 </html>
