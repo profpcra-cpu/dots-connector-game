@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Detetive Lógico — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-subtle: #64748b;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --text-subtle: #64748b;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 8px 4px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    line-height: 1.2;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-nivel { color: var(--c-cyan); }
+#display-tempo { color: #60a5fa; }
+#display-recorde { color: var(--c-amber); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.timer-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    border-radius: 99px;
+    transition: width 0.3s linear;
+    width: 100%;
+}
+
+.caso-wrapper {
+    padding: 14px;
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    text-align: left;
+}
+.caso-titulo {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-cyan);
+    margin-bottom: 6px;
+}
+.caso-texto {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.pistas-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: left;
+    max-height: 140px;
+    overflow-y: auto;
+}
+.pistas-titulo {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-amber);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.pista {
+    font-size: 12.5px;
+    line-height: 1.4;
+    padding: 6px 10px;
+    background: rgba(251, 191, 36, 0.08);
+    border-left: 3px solid var(--c-amber);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+.pista:last-child { margin-bottom: 0; }
+.pista strong {
+    color: var(--c-amber);
+    font-weight: 700;
+}
+
+.grid-wrapper {
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+}
+.grid-tabela {
+    display: grid;
+    gap: 4px;
+    margin: 0 auto;
+    width: 100%;
+}
+.grid-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    background: rgba(148, 163, 184, 0.1);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    min-height: 40px;
+}
+.grid-cabecalho.grupo-titulo {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+}
+.grid-cabecalho.linha-titulo {
+    justify-content: flex-start;
+    padding-left: 8px;
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--btn-primary-hover);
+}
+.celula-ded {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(30, 41, 59, 0.55);
+    border: 2px solid rgba(148, 163, 184, 0.15);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 18px;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 34px;
+}
+.celula-ded:hover:not(.bloqueada) {
+    border-color: var(--btn-primary);
+    background: rgba(99, 102, 241, 0.2);
+    transform: scale(1.05);
+}
+.celula-ded.marcada-certo {
+    background: rgba(74, 222, 128, 0.3);
+    border-color: var(--c-green);
+    color: var(--c-green);
+}
+.celula-ded.marcada-errado {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: var(--c-red);
+    color: var(--c-red);
+}
+.celula-ded.bloqueada {
+    cursor: default;
+    opacity: 0.9;
+}
+.celula-ded.bloqueada.marcada-certo {
+    opacity: 1;
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
+}
+.celula-ded.automatica {
+    animation: aparecer-auto 0.4s ease;
+}
+@keyframes aparecer-auto {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.acoes button {
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: none;
+}
+.btn-verificar {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(34, 197, 94, 0.55);
+}
+.btn-verificar:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+.btn-verificar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn-limpar {
+    background: linear-gradient(135deg, #475569, #334155);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(71, 85, 105, 0.55);
+}
+.btn-limpar:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.hidden { display: none !important; }
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay.hidden {
+    display: none !important;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button {
+    max-width: 260px;
+}
+.overlay .trofeu {
+    font-size: 56px;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+</style>
+</head>
+<body>
+<div class="container" id="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="facil">🟢 Fácil</button>
+        <button class="mode-btn" data-mode="medio">🟡 Médio</button>
+        <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
+        <button class="mode-btn" data-mode="misto">🎲 Misto</button>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">Caso<br><strong id="display-nivel">1</strong></div>
+        <div id="label-bloco2">Tempo<br><strong id="display-tempo">00:00</strong></div>
+        <div id="label-bloco3">Recorde<br><strong id="display-recorde">0</strong></div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        🕵️ Leia as pistas e use o grid para deduzir a solução.
+    </p>
+
+    <div class="caso-wrapper">
+        <div class="caso-titulo">🔍 Caso</div>
+        <div class="caso-texto" id="caso-texto">Carregando...</div>
+    </div>
+
+    <div class="pistas-wrapper" id="pistas-wrapper">
+        <div class="pistas-titulo">🧩 Pistas</div>
+        <div id="pistas-lista"></div>
+    </div>
+
+    <div class="grid-wrapper">
+        <div class="grid-tabela" id="grid-tabela"></div>
+    </div>
+
+    <div class="acoes">
+        <button id="btn-limpar" class="btn-limpar">🗑️ Limpar</button>
+        <button id="btn-verificar" class="btn-verificar" disabled>✅ Verificar</button>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-iniciar">▶️ Novo Caso</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-logica] Inicializando...');
+
+    // ==========================================================
+    // CASOS (puzzles de dedução)
+    // ==========================================================
+    var CASOS = {
+        facil: [
+            {
+                titulo: 'Três amigos moram em casas de cores diferentes.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla'] },
+                    { nome: 'Casa', itens: ['Vermelha', 'Azul', 'Verde'] }
+                ],
+                solucao: { 0: { 1: 0 }, 1: { 1: 1 }, 2: { 1: 2 } },
+                pistas: [
+                    'Ana mora na casa <strong>Vermelha</strong>.',
+                    'A casa de <strong>Beto</strong> não é a Verde.',
+                    'Carla não mora na casa Azul.'
+                ]
+            },
+            {
+                titulo: 'Ana, Beto e Carla têm animais de estimação diferentes.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla'] },
+                    { nome: 'Animal', itens: ['Gato', 'Cão', 'Peixe'] }
+                ],
+                solucao: { 0: { 1: 0 }, 1: { 1: 1 }, 2: { 1: 2 } },
+                pistas: [
+                    '<strong>Ana</strong> tem um gato.',
+                    'Beto <strong>não</strong> tem peixe.',
+                    'Carla tem o animal que nada.'
+                ]
+            },
+            {
+                titulo: 'Ana, Beto e Carla têm idades diferentes: 8, 10 e 12 anos.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla'] },
+                    { nome: 'Idade', itens: ['8 anos', '10 anos', '12 anos'] }
+                ],
+                solucao: { 0: { 1: 0 }, 1: { 1: 1 }, 2: { 1: 2 } },
+                pistas: [
+                    '<strong>Ana</strong> é a mais nova (8 anos).',
+                    'Beto tem <strong>10 anos</strong>.',
+                    'Carla é 2 anos mais velha que Beto.'
+                ]
+            }
+        ],
+        medio: [
+            {
+                titulo: 'Quatro amigos moram em casas de cores diferentes: Vermelha, Azul, Verde e Amarela.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla', 'Duda'] },
+                    { nome: 'Casa', itens: ['Vermelha', 'Azul', 'Verde', 'Amarela'] }
+                ],
+                solucao: { 0: { 1: 0 }, 1: { 1: 1 }, 2: { 1: 2 }, 3: { 1: 3 } },
+                pistas: [
+                    'Ana mora na casa <strong>Vermelha</strong>.',
+                    'A casa de Duda fica ao lado da casa Verde.',
+                    'Beto mora na casa <strong>Azul</strong>.',
+                    'Carla não mora na casa Amarela.'
+                ]
+            },
+            {
+                titulo: 'Quatro amigos praticam esportes diferentes: Futebol, Natação, Tênis e Basquete.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla', 'Duda'] },
+                    { nome: 'Esporte', itens: ['Futebol', 'Natação', 'Tênis', 'Basquete'] }
+                ],
+                solucao: { 0: { 1: 0 }, 1: { 1: 1 }, 2: { 1: 2 }, 3: { 1: 3 } },
+                pistas: [
+                    'Beto joga <strong>Futebol</strong>.',
+                    'Ana <strong>não</strong> nada.',
+                    'Carla joga <strong>Tênis</strong>.',
+                    'Duda adora esportes aquáticos.'
+                ]
+            }
+        ],
+        dificil: [
+            {
+                titulo: 'Quatro colegas têm profissões e cores favoritas diferentes.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla', 'Duda'] },
+                    { nome: 'Profissão', itens: ['Médico', 'Professor', 'Engenheiro', 'Artista'] },
+                    { nome: 'Cor', itens: ['Vermelho', 'Azul', 'Verde', 'Roxo'] }
+                ],
+                solucao: {
+                    0: { 1: 0, 2: 0 },
+                    1: { 1: 1, 2: 1 },
+                    2: { 1: 2, 2: 2 },
+                    3: { 1: 3, 2: 3 }
+                },
+                pistas: [
+                    'Ana é <strong>médica</strong> e gosta de <strong>vermelho</strong>.',
+                    'Beto dá aulas (é <strong>professor</strong>).',
+                    'O engenheiro gosta de <strong>verde</strong>.',
+                    'Duda é <strong>artista</strong>.',
+                    'Quem gosta de <strong>azul</strong> não é engenheiro.'
+                ]
+            },
+            {
+                titulo: 'Cinco amigos moram em casas de cores diferentes.',
+                grupos: [
+                    { nome: 'Pessoa', itens: ['Ana', 'Beto', 'Carla', 'Duda', 'Eva'] },
+                    { nome: 'Casa', itens: ['Vermelho', 'Azul', 'Verde', 'Amarelo', 'Roxo'] }
+                ],
+                solucao: { 0: { 1: 0 }, 1: { 1: 1 }, 2: { 1: 2 }, 3: { 1: 3 }, 4: { 1: 4 } },
+                pistas: [
+                    'Ana mora na casa <strong>Vermelha</strong>.',
+                    'Eva mora na casa <strong>Roxa</strong>.',
+                    'Beto mora entre a casa Azul e a Verde.',
+                    'Carla <strong>não</strong> mora na casa Amarela.',
+                    'A casa de Duda não é Azul nem Amarela.'
+                ]
+            }
+        ]
+    };
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'facil';
+    var casoAtual = null;
+    var estadoGrid = [];
+    var jogoAtivo = false;
+    var tempoDecorrido = 0;
+    var timerInterval = null;
+    var celulasMarcadas = 0;
+    var casoNumero = 1;
+
+    var recordes = {
+        facil:   parseInt(localStorage.getItem('brain_logica_recorde_facil')   || '999999', 10),
+        medio:   parseInt(localStorage.getItem('brain_logica_recorde_medio')   || '999999', 10),
+        dificil: parseInt(localStorage.getItem('brain_logica_recorde_dificil') || '999999', 10)
+    };
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.07, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        click:   function() { this.play(650, 'triangle', 0.06); },
+        acerto:  function() {
+            var self = this;
+            [523, 659, 783].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.18); }, i * 70);
+            });
+        },
+        erro:    function() { this.play(200, 'sawtooth', 0.2); },
+        vitoria: function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function formatarTempo(s) {
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function atualizarPlacar() {
+        $('display-tempo').textContent = formatarTempo(tempoDecorrido);
+        var rec = recordes[modoAtual];
+        $('display-recorde').textContent = rec >= 999999 ? '—' : formatarTempo(rec);
+        $('display-nivel').textContent = String(casoNumero);
+    }
+
+    // ==========================================================
+    // CARREGAR CASO
+    // ==========================================================
+    function carregarCaso() {
+        var pool;
+        if (modoAtual === 'misto') {
+            var todos = [];
+            ['facil', 'medio', 'dificil'].forEach(function(n) {
+                CASOS[n].forEach(function(c) { todos.push(c); });
+            });
+            pool = todos;
+        } else {
+            pool = CASOS[modoAtual];
+        }
+        var idx = Math.floor(Math.random() * pool.length);
+        casoAtual = pool[idx];
+
+        // Inicializa estado do grid
+        var numLinhas = casoAtual.grupos[0].itens.length;
+        var colunas = [];
+        for (var g = 1; g < casoAtual.grupos.length; g++) {
+            for (var i = 0; i < casoAtual.grupos[g].itens.length; i++) {
+                colunas.push({ grupoIdx: g, itemIdx: i });
+            }
+        }
+
+        estadoGrid = [];
+        for (var l = 0; l < numLinhas; l++) {
+            var linha = [];
+            for (var c = 0; c < colunas.length; c++) linha.push(0);
+            estadoGrid.push(linha);
+        }
+
+        celulasMarcadas = 0;
+        tempoDecorrido = 0;
+        jogoAtivo = true;
+
+        $('caso-texto').innerHTML = casoAtual.titulo;
+        renderizarPistas();
+        renderizarGrid(colunas);
+        atualizarPlacar();
+
+        esconderOverlay();
+        iniciarTimer();
+        atualizarBadge('🕵️ Investigue o caso!', '');
+    }
+
+    function renderizarPistas() {
+        var lista = $('pistas-lista');
+        lista.innerHTML = '';
+        casoAtual.pistas.forEach(function(p) {
+            var div = document.createElement('div');
+            div.className = 'pista';
+            div.innerHTML = '🧩 ' + p;
+            lista.appendChild(div);
+        });
+    }
+
+    // ==========================================================
+    // RENDERIZAR GRID
+    // ==========================================================
+    function renderizarGrid(colunas) {
+        var tabela = $('grid-tabela');
+        tabela.innerHTML = '';
+
+        var numLinhas = casoAtual.grupos[0].itens.length;
+
+        tabela.style.gridTemplateColumns = '90px repeat(' + colunas.length + ', minmax(38px, 1fr))';
+
+        // Cabeçalho linha 1
+        var canto = document.createElement('div');
+        canto.className = 'grid-cabecalho grupo-titulo';
+        canto.textContent = '→';
+        tabela.appendChild(canto);
+
+        var gruposCols = {};
+        for (var g = 1; g < casoAtual.grupos.length; g++) {
+            gruposCols[g] = casoAtual.grupos[g].itens.length;
+        }
+
+        for (var g2 = 1; g2 < casoAtual.grupos.length; g2++) {
+            var cab = document.createElement('div');
+            cab.className = 'grid-cabecalho grupo-titulo';
+            cab.textContent = casoAtual.grupos[g2].nome;
+            cab.style.gridColumn = 'span ' + gruposCols[g2];
+            tabela.appendChild(cab);
+        }
+
+        // Cabeçalho linha 2
+        var canto2 = document.createElement('div');
+        canto2.className = 'grid-cabecalho linha-titulo';
+        canto2.textContent = casoAtual.grupos[0].nome;
+        tabela.appendChild(canto2);
+
+        colunas.forEach(function(col) {
+            var cab = document.createElement('div');
+            cab.className = 'grid-cabecalho';
+            cab.textContent = casoAtual.grupos[col.grupoIdx].itens[col.itemIdx];
+            cab.style.fontSize = '10px';
+            cab.style.padding = '4px 2px';
+            tabela.appendChild(cab);
+        });
+
+        // Linhas
+        for (var l = 0; l < numLinhas; l++) {
+            var linhaTitulo = document.createElement('div');
+            linhaTitulo.className = 'grid-cabecalho linha-titulo';
+            linhaTitulo.textContent = casoAtual.grupos[0].itens[l];
+            tabela.appendChild(linhaTitulo);
+
+            for (var c = 0; c < colunas.length; c++) {
+                (function(linhaIdx, colIdx) {
+                    var cel = document.createElement('div');
+                    cel.className = 'celula-ded';
+                    cel.dataset.linha = linhaIdx;
+                    cel.dataset.col = colIdx;
+
+                    var est = estadoGrid[linhaIdx][colIdx];
+                    if (est === 1) {
+                        cel.classList.add('marcada-certo');
+                        cel.textContent = '✓';
+                    } else if (est === -1) {
+                        cel.classList.add('marcada-errado');
+                        cel.textContent = '✗';
+                    }
+
+                    cel.addEventListener('click', function() {
+                        if (!jogoAtivo) return;
+                        clicarCelula(linhaIdx, colIdx);
+                    });
+
+                    tabela.appendChild(cel);
+                })(l, c);
+            }
+        }
+    }
+
+    function atualizarGridVisual() {
+        var celulas = document.querySelectorAll('.celula-ded');
+        for (var i = 0; i < celulas.length; i++) {
+            var cel = celulas[i];
+            var l = parseInt(cel.dataset.linha, 10);
+            var c = parseInt(cel.dataset.col, 10);
+            var est = estadoGrid[l][c];
+
+            cel.classList.remove('marcada-certo', 'marcada-errado');
+            cel.textContent = '';
+
+            if (est === 1) {
+                cel.classList.add('marcada-certo');
+                cel.textContent = '✓';
+            } else if (est === -1) {
+                cel.classList.add('marcada-errado');
+                cel.textContent = '✗';
+            }
+        }
+    }
+
+    // ==========================================================
+    // LÓGICA DE CLIQUE
+    // ==========================================================
+    function clicarCelula(linha, col) {
+        var est = estadoGrid[linha][col];
+        var novo;
+        if (est === 0) novo = 1;
+        else if (est === 1) novo = -1;
+        else novo = 0;
+
+        estadoGrid[linha][col] = novo;
+        som.click();
+        atualizarGridVisual();
+        contarCelulasMarcadas();
+    }
+
+    function contarCelulasMarcadas() {
+        celulasMarcadas = 0;
+        for (var l = 0; l < estadoGrid.length; l++) {
+            for (var c = 0; c < estadoGrid[l].length; c++) {
+                if (estadoGrid[l][c] !== 0) celulasMarcadas++;
+            }
+        }
+        $('btn-verificar').disabled = celulasMarcadas === 0;
+    }
+
+    function limparGrid() {
+        for (var l = 0; l < estadoGrid.length; l++) {
+            for (var c = 0; c < estadoGrid[l].length; c++) {
+                estadoGrid[l][c] = 0;
+            }
+        }
+        atualizarGridVisual();
+        contarCelulasMarcadas();
+        som.click();
+    }
+
+    // ==========================================================
+    // VERIFICAR SOLUÇÃO
+    // ==========================================================
+    function verificarSolucao() {
+        if (!jogoAtivo) return;
+
+        var correto = true;
+
+        // Monta colunas (mesma ordem de renderizarGrid)
+        var colunas = [];
+        for (var g = 1; g < casoAtual.grupos.length; g++) {
+            for (var i = 0; i < casoAtual.grupos[g].itens.length; i++) {
+                colunas.push({ grupoIdx: g, itemIdx: i });
+            }
+        }
+
+        for (var l = 0; l < estadoGrid.length; l++) {
+            for (var c = 0; c < estadoGrid[l].length; c++) {
+                var est = estadoGrid[l][c];
+                var col = colunas[c];
+
+                var deveMarcarCerto = (casoAtual.solucao[l] && casoAtual.solucao[l][col.grupoIdx] === col.itemIdx);
+
+                if (deveMarcarCerto) {
+                    if (est !== 1) correto = false;
+                } else {
+                    if (est !== -1) correto = false;
+                }
+            }
+        }
+
+        if (correto) {
+            vitoria();
+        } else {
+            som.erro();
+            atualizarBadge('❌ Ainda não está correto. Reveja as pistas!', 'erro');
+            mostrarFeedbackFloat('✗', 'negativo');
+        }
+    }
+
+    // ==========================================================
+    // VITÓRIA
+    // ==========================================================
+    function vitoria() {
+        jogoAtivo = false;
+        pararTimer();
+        som.vitoria();
+
+        var tempoFinal = tempoDecorrido;
+        var recAtual = recordes[modoAtual];
+        var novoRecorde = tempoFinal < recAtual;
+
+        if (novoRecorde) {
+            recordes[modoAtual] = tempoFinal;
+            localStorage.setItem('brain_logica_recorde_' + modoAtual, String(tempoFinal));
+        }
+
+        var pontos = Math.max(100, 1000 - tempoFinal * 5);
+
+        var medalha, mensagem;
+        if (tempoFinal <= 30) { medalha = '🏆'; mensagem = 'Sherlock Holmes! Resolução relâmpago.'; }
+        else if (tempoFinal <= 90) { medalha = '🥇'; mensagem = 'Excelente dedução!'; }
+        else if (tempoFinal <= 180) { medalha = '🥈'; mensagem = 'Bom raciocínio lógico!'; }
+        else { medalha = '🥉'; mensagem = 'Caso resolvido! Continue praticando.'; }
+
+        mostrarOverlay({
+            titulo: medalha + ' Caso Resolvido!',
+            htmlExtra:
+                '<div class="trofeu">' + medalha + '</div>' +
+                '<div class="grande">' + pontos + ' pts</div>' +
+                '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">' +
+                    '<span style="color:var(--c-cyan)">⏱️ ' + formatarTempo(tempoFinal) + '</span>' +
+                    (novoRecorde ? '<span style="color:var(--c-amber)">🏆 NOVO RECORDE!</span>' : '') +
+                '</div>',
+            subtitulo: mensagem,
+            botao: { texto: '🔄 Novo Caso', acao: function() { proximoCaso(); } }
+        });
+
+        atualizarBadge('🏆 Resolvido!', 'ok');
+        atualizarPlacar();
+    }
+
+    function proximoCaso() {
+        casoNumero++;
+        esconderOverlay();
+        carregarCaso();
+    }
+
+    // ==========================================================
+    // TIMER
+    // ==========================================================
+    function iniciarTimer() {
+        pararTimer();
+        tempoDecorrido = 0;
+        $('timer-fill').style.width = '100%';
+        timerInterval = setInterval(function() {
+            if (!jogoAtivo) return;
+            tempoDecorrido++;
+            $('display-tempo').textContent = formatarTempo(tempoDecorrido);
+            var pct = Math.max(0, 100 - (tempoDecorrido / 300) * 100);
+            $('timer-fill').style.width = pct + '%';
+        }, 1000);
+    }
+
+    function pararTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    // ==========================================================
+    // FEEDBACK FLUTUANTE
+    // ==========================================================
+    function mostrarFeedbackFloat(texto, tipo) {
+        var el = document.createElement('div');
+        el.className = 'feedback-float ' + tipo;
+        el.textContent = texto;
+        document.querySelector('.grid-wrapper').appendChild(el);
+        setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 900);
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            $('container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+
+        jogoAtivo = false;
+        pararTimer();
+        esconderOverlay();
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        casoNumero = 1;
+        atualizarPlacar();
+        atualizarBadge('Pronto', '');
+        $('caso-texto').textContent = 'Clique em "Novo Caso" para começar.';
+        $('pistas-lista').innerHTML = '';
+        $('grid-tabela').innerHTML = '';
+        $('display-tempo').textContent = '00:00';
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-iniciar').addEventListener('click', function() {
+        casoNumero = 1;
+        esconderOverlay();
+        carregarCaso();
+    });
+    $('btn-verificar').addEventListener('click', verificarSolucao);
+    $('btn-limpar').addEventListener('click', limparGrid);
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    atualizarPlacar();
+    atualizarBadge('Pronto', '');
+    console.log('[brain-logica] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
