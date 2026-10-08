@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Desenho a Lápis — Livre & Desafio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-color: #0b1020;
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-color: #eef2ff;
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+/* Seletor de Modo */
+.mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-nivel { color: var(--c-cyan); }
+#display-tempo { color: #60a5fa; }
+#display-pontos { color: var(--c-green); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+}
+
+.paleta-cores {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.lapis-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s;
+    padding: 0;
+}
+.lapis-btn.ativo {
+    transform: scale(1.15);
+    border-color: #fff;
+    box-shadow: 0 0 15px currentColor;
+}
+.lapis-btn.destaque-correta {
+    animation: piscar 0.6s ease 2;
+}
+@keyframes piscar {
+    0%, 100% { border-color: #fff; }
+    50% { border-color: var(--c-green); box-shadow: 0 0 20px var(--c-green); }
+}
+
+#grid-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 12px;
+    background: #050914;
+    border-radius: 14px;
+    padding: 12px;
+    display: grid;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--card-border);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cell {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.cell.numero-visivel::after {
+    content: attr(data-numero);
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 11px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+}
+.cell.errado {
+    animation: shake 0.4s ease;
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+.controls-grid.three {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+.btn-success { background: linear-gradient(135deg, #16a34a, #22c55e); }
+.hidden { display: none !important; }
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.92);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 26px; font-weight: 800; }
+.overlay .subtitulo { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 56px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay .countdown {
+    font-size: 90px;
+    font-weight: 800;
+    color: var(--c-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    animation: pulse-cd 1s infinite;
+}
+@keyframes pulse-cd {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.85; }
+}
+.overlay button {
+    max-width: 260px;
+}
+
+.badge-nivel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <!-- Seletor de Modo -->
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="livre">🎨 Modo Livre</button>
+        <button class="mode-btn" data-mode="desafio">🧠 Desafio</button>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">Modo<br><strong id="display-nivel">Livre</strong></div>
+        <div id="label-bloco2">Tempo<br><strong id="display-tempo">00:00</strong></div>
+        <div id="label-bloco3">Células<br><strong id="display-pontos">0/25</strong></div>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        ✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!
+    </p>
+
+    <div class="paleta-cores" id="paleta-cores"></div>
+
+    <div id="grid-wrapper">
+        <div id="grid-container" style="display: grid; width: 100%; height: 100%; gap: 4px;"></div>
+        <div id="overlay" class="overlay hidden"></div>
+    </div>
+
+    <!-- Controls Modo Livre -->
+    <div class="controls-grid" id="controls-livre">
+        <select id="select-tamanho">
+            <option value="4">Grelha 4x4 (Fácil)</option>
+            <option value="5" selected>Grelha 5x5 (Padrão)</option>
+            <option value="6">Grelha 6x6 (Amplo)</option>
+        </select>
+        <button id="btn-reiniciar" class="btn-secondary">🔄 Limpar Tabuleiro</button>
+    </div>
+
+    <!-- Controls Modo Desafio -->
+    <div class="controls-grid three hidden" id="controls-desafio">
+        <button id="btn-iniciar-desafio">▶️ Iniciar</button>
+        <button id="btn-dica" class="btn-secondary" disabled>💡 Dica</button>
+        <button id="btn-confirmar" class="btn-success" disabled>✅ Confirmar</button>
+    </div>
+</div>
+
+<script type="module">
+// ==========================================================
+// CONSTANTES
+// ==========================================================
+const CORES = [
+    '#f43f5e', // 1 - Rosa
+    '#38bdf8', // 2 - Azul
+    '#fbbf24', // 3 - Amarelo
+    '#4ade80', // 4 - Verde
+    '#a855f7', // 5 - Roxo
+    '#fb923c'  // 6 - Laranja
+];
+
+// Configuração dos 10 níveis do Desafio
+// cada nível: { tamanho, celulasPintadas, tempoMemorizacao }
+const NIVEIS_DESAFIO = [
+    { tamanho: 4, celulas: 4,  tempo: 4.0 },  // Nível 1
+    { tamanho: 4, celulas: 6,  tempo: 3.5 },  // Nível 2
+    { tamanho: 4, celulas: 8,  tempo: 3.0 },  // Nível 3
+    { tamanho: 5, celulas: 8,  tempo: 3.5 },  // Nível 4
+    { tamanho: 5, celulas: 10, tempo: 3.0 },  // Nível 5
+    { tamanho: 5, celulas: 12, tempo: 2.5 },  // Nível 6
+    { tamanho: 6, celulas: 12, tempo: 3.0 },  // Nível 7
+    { tamanho: 6, celulas: 15, tempo: 2.5 },  // Nível 8
+    { tamanho: 6, celulas: 18, tempo: 2.0 },  // Nível 9
+    { tamanho: 6, celulas: 22, tempo: 1.8 }   // Nível 10
+];
+const MAX_NIVEL = NIVEIS_DESAFIO.length;
+
+// ==========================================================
+// ESTADO
+// ==========================================================
+let modoAtual = 'livre'; // 'livre' | 'desafio'
+
+// Modo Livre
+let tamanhoGrelha = 5;
+let corAtual = CORES[0];
+let matrizDesenho = [];
+let desenhando = false;
+let segundos = 0;
+let timer = null;
+let jogoAtivo = true;
+
+// Modo Desafio
+let nivelAtual = 1;
+let pontosDesafio = 0;
+let matrizAlvo = [];      // padrão a memorizar
+let fase = 'idle';        // 'idle' | 'memorizando' | 'reproduzindo' | 'resultado' | 'finalizado'
+let dicasUsadas = 0;
+
+// ==========================================================
+// SOM
+// ==========================================================
+class SoundManager {
+    constructor() { this.ativo = true; this.ctx = null; }
+    init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    play(freq, type, duration) {
+        if (!this.ativo) return;
+        try {
+            this.init();
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = type; o.frequency.value = freq;
+            g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(); o.stop(this.ctx.currentTime + duration);
+        } catch(e){}
+    }
+    draw() { this.play(440 + Math.random() * 200, 'sine', 0.08); }
+    click() { this.play(600, 'triangle', 0.1); }
+    acerto() { [523, 659, 783].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.18), i * 80)); }
+    erro() { this.play(220, 'sawtooth', 0.2); setTimeout(() => this.play(160, 'sawtooth', 0.25), 100); }
+    win() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.2), i * 100)); }
+    tick() { this.play(880, 'square', 0.05); }
+}
+const som = new SoundManager();
+
+// ==========================================================
+// INICIALIZAÇÃO
+// ==========================================================
+function inicializarModoLivre(tam) {
+    tamanhoGrelha = tam;
+    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
+    segundos = 0;
+    jogoAtivo = true;
+
+    montarPaleta();
+    montarDOMGrid();
+    atualizarEstatisticasLivre();
+    iniciarTimer();
+    esconderOverlay();
+}
+
+function inicializarModoDesafio() {
+    nivelAtual = 1;
+    pontosDesafio = 0;
+    iniciarNivel();
+}
+
+function iniciarNivel() {
+    const cfg = NIVEIS_DESAFIO[nivelAtual - 1];
+    tamanhoGrelha = cfg.tamanho;
+    matrizAlvo = gerarPadraoAleatorio(cfg.tamanho, cfg.celulas);
+    matrizDesenho = Array(cfg.tamanho).fill(null).map(() => Array(cfg.tamanho).fill(null));
+    dicasUsadas = 0;
+    fase = 'memorizando';
+    segundos = 0;
+
+    montarPaleta();
+    montarDOMGrid();
+    atualizarEstatisticasDesafio();
+    atualizarBotoesDesafio();
+    mostrarOverlayMemorizacao(cfg.tempo);
+}
+
+// ==========================================================
+// GERAÇÃO DE PADRÃO ALEATÓRIO
+// ==========================================================
+function gerarPadraoAleatorio(tamanho, quantidade) {
+    const grade = Array(tamanho).fill(null).map(() => Array(tamanho).fill(null));
+    const total = tamanho * tamanho;
+    const qtd = Math.min(quantidade, total);
+
+    // Sorteia qtd posições únicas
+    const indices = new Set();
+    while (indices.size < qtd) {
+        indices.add(Math.floor(Math.random() * total));
+    }
+
+    for (const idx of indices) {
+        const r = Math.floor(idx / tamanho);
+        const c = idx % tamanho;
+        const cor = CORES[Math.floor(Math.random() * CORES.length)];
+        grade[r][c] = cor;
+    }
+
+    return grade;
+}
+
+// ==========================================================
+// PALETA
+// ==========================================================
+function montarPaleta() {
+    const paleta = document.getElementById('paleta-cores');
+    paleta.innerHTML = '';
+    CORES.forEach((cor) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `lapis-btn ${cor === corAtual ? 'ativo' : ''}`;
+        btn.style.backgroundColor = cor;
+        btn.style.color = cor;
+        btn.setAttribute('aria-label', `Selecionar cor ${cor}`);
+        btn.addEventListener('click', () => {
+            corAtual = cor;
+            document.querySelectorAll('.lapis-btn').forEach(b => b.classList.remove('ativo'));
+            btn.classList.add('ativo');
+            som.click();
+        });
+        paleta.appendChild(btn);
+    });
+}
+
+// ==========================================================
+// GRID DOM
+// ==========================================================
+let listenersAtivos = false;
+
+function montarDOMGrid() {
+    const gridContainer = document.getElementById('grid-container');
+    gridContainer.style.gridTemplateColumns = `repeat(${tamanhoGrelha}, 1fr)`;
+    gridContainer.style.gridTemplateRows = `repeat(${tamanhoGrelha}, 1fr)`;
+    gridContainer.innerHTML = '';
+
+    const interativo = (modoAtual === 'livre' && jogoAtivo) ||
+                       (modoAtual === 'desafio' && fase === 'reproduzindo');
+
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+
+            if (interativo) {
+                cell.style.cursor = 'pointer';
+                cell.addEventListener('mousedown', (e) => { e.preventDefault(); iniciarPintura(r, c); });
+                cell.addEventListener('mouseenter', () => continuarPintura(r, c));
+                cell.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarPintura(r, c); }, {passive: false});
+                cell.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (target && target.classList.contains('cell')) {
+                        continuarPintura(parseInt(target.dataset.r), parseInt(target.dataset.c));
+                    }
+                }, {passive: false});
+            } else {
+                cell.style.cursor = 'default';
+            }
+
+            gridContainer.appendChild(cell);
+        }
+    }
+
+    // Listeners globais de fim de pintura (registrados apenas uma vez)
+    if (!listenersAtivos) {
+        window.addEventListener('mouseup', finalizarPintura);
+        window.addEventListener('touchend', finalizarPintura);
+        listenersAtivos = true;
+    }
+
+    atualizarVisualGrid();
+}
+
+// ==========================================================
+// PINTURA
+// ==========================================================
+function iniciarPintura(r, c) {
+    if (modoAtual === 'livre') {
+        if (!jogoAtivo) return;
+    } else if (modoAtual === 'desafio') {
+        if (fase !== 'reproduzindo') return;
+    }
+    desenhando = true;
+    aplicarCor(r, c);
+}
+
+function continuarPintura(r, c) {
+    if (!desenhando) return;
+    aplicarCor(r, c);
+}
+
+function finalizarPintura() { desenhando = false; }
+
+function aplicarCor(r, c) {
+    // Se já tem a cor, permite apagar (clique de novo com mesma cor = apaga)
+    const corAntiga = matrizDesenho[r][c];
+    if (corAntiga === corAtual) {
+        matrizDesenho[r][c] = null;
+    } else {
+        matrizDesenho[r][c] = corAtual;
+    }
+
+    som.draw();
+    atualizarVisualGrid();
+    if (modoAtual === 'livre') {
+        atualizarEstatisticasLivre();
+        verificarPreenchimentoTotalLivre();
+    } else {
+        atualizarEstatisticasDesafio();
+    }
+}
+
+function atualizarVisualGrid() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        const r = parseInt(cell.dataset.r);
+        const c = parseInt(cell.dataset.c);
+
+        // No modo desafio, durante memorização, mostra o padrão alvo
+        let cor;
+        if (modoAtual === 'desafio' && fase === 'memorizando') {
+            cor = matrizAlvo[r][c];
+        } else {
+            cor = matrizDesenho[r][c];
+        }
+
+        if (cor) {
+            cell.style.background = cor;
+            cell.style.borderColor = '#ffffff';
+            cell.style.boxShadow = `inset 0 0 12px rgba(0,0,0,0.3)`;
+        } else {
+            cell.style.background = 'rgba(30, 41, 59, 0.4)';
+            cell.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+            cell.style.boxShadow = 'none';
+        }
+    });
+}
+
+// ==========================================================
+// CONTAGEM / ESTATÍSTICAS
+// ==========================================================
+function contarCelulasPreenchidas(matriz) {
+    let count = 0;
+    for (let r = 0; r < matriz.length; r++) {
+        for (let c = 0; c < matriz[r].length; c++) {
+            if (matriz[r][c] !== null) count++;
+        }
+    }
+    return count;
+}
+
+function atualizarEstatisticasLivre() {
+    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
+    const total = tamanhoGrelha * tamanhoGrelha;
+    document.getElementById('display-pontos').textContent = `${preenchidas}/${total}`;
+    document.getElementById('display-nivel').textContent = 'Livre';
+}
+
+function atualizarEstatisticasDesafio() {
+    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
+    const totalAlvo = contarCelulasPreenchidas(matrizAlvo);
+    document.getElementById('display-nivel').textContent = `Nv ${nivelAtual}/${MAX_NIVEL}`;
+    document.getElementById('display-pontos').textContent = `${preenchidas}/${totalAlvo}`;
+    const tempoFmt = `${String(Math.floor(segundos/60)).padStart(2,'0')}:${String(segundos%60).padStart(2,'0')}`;
+    document.getElementById('display-tempo').textContent = tempoFmt;
+}
+
+// ==========================================================
+// TIMER
+// ==========================================================
+function iniciarTimer() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(() => {
+        if (modoAtual === 'livre' && !jogoAtivo) return;
+        if (modoAtual === 'desafio' && fase !== 'reproduzindo') return;
+
+        segundos++;
+        const tempoFmt = `${String(Math.floor(segundos/60)).padStart(2,'0')}:${String(segundos%60).padStart(2,'0')}`;
+        document.getElementById('display-tempo').textContent = tempoFmt;
+    }, 1000);
+}
+function pararTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+// ==========================================================
+// VERIFICAÇÕES
+// ==========================================================
+function verificarPreenchimentoTotalLivre() {
+    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
+    const total = tamanhoGrelha * tamanhoGrelha;
+    if (preenchidas === total && jogoAtivo) {
+        jogoAtivo = false;
+        pararTimer();
+        som.win();
+        mostrarOverlay({
+            titulo: '🎨 Obra Completa!',
+            subtitulo: `Excelente trabalho artístico! Você preencheu ${total} células em ${formatarTempo(segundos)}.`,
+            botao: { texto: '🔄 Jogar Novamente', acao: () => inicializarModoLivre(tamanhoGrelha) }
+        });
+    }
+}
+
+// ==========================================================
+// OVERLAYS
+// ==========================================================
+function esconderOverlay() {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.add('hidden');
+    overlay.innerHTML = '';
+}
+
+function mostrarOverlay({ titulo, subtitulo, botao, htmlExtra = '', botaoSecundario = null }) {
+    const overlay = document.getElementById('overlay');
+    overlay.innerHTML = '';
+
+    if (titulo) {
+        const h2 = document.createElement('h2');
+        h2.textContent = titulo;
+        overlay.appendChild(h2);
+    }
+    if (htmlExtra) {
+        const div = document.createElement('div');
+        div.innerHTML = htmlExtra;
+        overlay.appendChild(div);
+    }
+    if (subtitulo) {
+        const p = document.createElement('div');
+        p.className = 'subtitulo';
+        p.textContent = subtitulo;
+        overlay.appendChild(p);
+    }
+    if (botao) {
+        const btn = document.createElement('button');
+        btn.textContent = botao.texto;
+        btn.addEventListener('click', botao.acao);
+        overlay.appendChild(btn);
+    }
+    if (botaoSecundario) {
+        const btn2 = document.createElement('button');
+        btn2.textContent = botaoSecundario.texto;
+        btn2.className = 'btn-secondary';
+        btn2.addEventListener('click', botaoSecundario.acao);
+        overlay.appendChild(btn2);
+    }
+
+    overlay.classList.remove('hidden');
+}
+
+// ==========================================================
+// DESAFIO — FLUXO COMPLETO
+// ==========================================================
+function mostrarOverlayMemorizacao(tempoTotal) {
+    let restante = Math.ceil(tempoTotal);
+    const overlay = document.getElementById('overlay');
+    overlay.innerHTML = '';
+    overlay.classList.remove('hidden');
+
+    const badge = document.createElement('div');
+    badge.className = 'badge-nivel';
+    badge.textContent = `Nível ${nivelAtual} de ${MAX_NIVEL}`;
+    overlay.appendChild(badge);
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = '👀 Memorize o padrão!';
+    overlay.appendChild(titulo);
+
+    const countdown = document.createElement('div');
+    countdown.className = 'countdown';
+    countdown.textContent = restante;
+    overlay.appendChild(countdown);
+
+    const sub = document.createElement('div');
+    sub.className = 'subtitulo';
+    sub.textContent = 'Você terá que reproduzi-lo de memória.';
+    overlay.appendChild(sub);
+
+    let tickAnterior = restante;
+    const interval = setInterval(() => {
+        restante -= 0.1;
+        if (restante <= 0) {
+            clearInterval(interval);
+            iniciarFaseReproducao();
+            return;
+        }
+        const ceil = Math.ceil(restante);
+        if (ceil !== tickAnterior) {
+            tickAnterior = ceil;
+            som.tick();
+        }
+        countdown.textContent = ceil;
+    }, 100);
+}
+
+function iniciarFaseReproducao() {
+    fase = 'reproduzindo';
+    segundos = 0;
+    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
+
+    esconderOverlay();
+    montarDOMGrid(); // remonta com eventos ativos
+    atualizarEstatisticasDesafio();
+    atualizarBotoesDesafio();
+
+    document.getElementById('info-instrucao').textContent =
+        '✏️ Reproduza o padrão de memória! Use as cores corretas e toque em ✅ Confirmar quando terminar.';
+}
+
+function atualizarBotoesDesafio() {
+    const btnIniciar = document.getElementById('btn-iniciar-desafio');
+    const btnDica = document.getElementById('btn-dica');
+    const btnConf = document.getElementById('btn-confirmar');
+
+    if (fase === 'idle') {
+        btnIniciar.disabled = false;
+        btnIniciar.textContent = '▶️ Iniciar';
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    } else if (fase === 'memorizando') {
+        btnIniciar.disabled = true;
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    } else if (fase === 'reproduzindo') {
+        btnIniciar.disabled = true;
+        btnDica.disabled = dicasUsadas >= 1; // 1 dica por nível
+        btnDica.textContent = dicasUsadas >= 1 ? '💡 Usada' : '💡 Dica';
+        btnConf.disabled = false;
+    } else if (fase === 'resultado') {
+        btnIniciar.disabled = true;
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    } else if (fase === 'finalizado') {
+        btnIniciar.disabled = false;
+        btnIniciar.textContent = '🔁 Reiniciar';
+        btnDica.disabled = true;
+        btnConf.disabled = true;
+    }
+}
+
+function usarDica() {
+    if (fase !== 'reproduzindo' || dicasUsadas >= 1) return;
+    dicasUsadas++;
+
+    // Mostra por 1.5s o padrão correto em overlay leve (semi-transparente)
+    const overlay = document.getElementById('overlay');
+    overlay.innerHTML = '';
+    overlay.style.background = 'rgba(5, 9, 20, 0.75)';
+    overlay.classList.remove('hidden');
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = '💡 Dica';
+    overlay.appendChild(titulo);
+
+    const sub = document.createElement('div');
+    sub.className = 'subtitulo';
+    sub.textContent = 'Observe bem... 1.5s';
+    overlay.appendChild(sub);
+
+    // Durante a dica, mostra o alvo no grid por baixo
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        const r = parseInt(cell.dataset.r);
+        const c = parseInt(cell.dataset.c);
+        const corAlvo = matrizAlvo[r][c];
+        const corAtualCell = matrizDesenho[r][c];
+        if (corAlvo && !corAtualCell) {
+            cell.style.boxShadow = `inset 0 0 0 2px ${corAlvo}, 0 0 10px ${corAlvo}`;
+        }
+    });
+
+    som.click();
+    setTimeout(() => {
+        overlay.style.background = 'rgba(5, 9, 20, 0.92)';
+        cells.forEach(cell => {
+            const r = parseInt(cell.dataset.r);
+            const c = parseInt(cell.dataset.c);
+            if (!matrizDesenho[r][c]) {
+                cell.style.boxShadow = 'none';
+            }
+        });
+        esconderOverlay();
+        atualizarBotoesDesafio();
+    }, 1500);
+
+    atualizarBotoesDesafio();
+}
+
+function confirmarResposta() {
+    if (fase !== 'reproduzindo') return;
+    fase = 'resultado';
+
+    // Compara matrizDesenho com matrizAlvo
+    let acertos = 0;
+    let erros = 0;
+    let faltando = 0;
+
+    const cells = document.querySelectorAll('.cell');
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            const alvo = matrizAlvo[r][c];
+            const feito = matrizDesenho[r][c];
+
+            if (alvo === null && feito === null) {
+                acertos++; // célula vazia correta
+            } else if (alvo === null && feito !== null) {
+                erros++; // pintou onde não devia
+                const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                if (cell) cell.classList.add('errado');
+            } else if (alvo !== null && feito === null) {
+                faltando++; // esqueceu de pintar
+                const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                if (cell) cell.classList.add('errado');
+            } else if (alvo === feito) {
+                acertos++;
+            } else {
+                erros++; // cor errada
+                const cell = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+                if (cell) cell.classList.add('errado');
+            }
+        }
+    }
+
+    // Pontuação: acertos nas células alvo - erros - faltando - penalidade de dica
+    const totalAlvo = contarCelulasPreenchidas(matrizAlvo);
+    const acertosAlvo = contarAcertosAlvo();
+    let pontosNivel = acertosAlvo * 10 - erros * 5 - faltando * 5 - dicasUsadas * 15;
+    pontosNivel = Math.max(0, pontosNivel);
+
+    pontosDesafio += pontosNivel;
+
+    // Feedback sonoro
+    if (acertosAlvo === totalAlvo && erros === 0 && faltando === 0) {
+        som.acerto();
+    } else {
+        som.erro();
+    }
+
+    // Overlay resultado
+    const perfeito = (acertosAlvo === totalAlvo && erros === 0 && faltando === 0);
+    const htmlExtra = `
+        <div class="grande">+${pontosNivel}</div>
+        <div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">
+            <span style="color:var(--c-green)">✅ ${acertosAlvo} certas</span>
+            <span style="color:var(--c-red)">❌ ${erros} erradas</span>
+            <span style="color:var(--c-amber)">⚠️ ${faltando} faltando</span>
+        </div>
+        ${dicasUsadas > 0 ? '<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Dica usada: -15 pontos</div>' : ''}
+    `;
+
+    const ultimo = (nivelAtual >= MAX_NIVEL);
+    mostrarOverlay({
+        titulo: perfeito ? '🌟 Perfeito!' : '📊 Resultado',
+        htmlExtra,
+        subtitulo: `Pontuação total: ${pontosDesafio} pts`,
+        botao: {
+            texto: ultimo ? '🏁 Ver Resultado Final' : '➡️ Próximo Nível',
+            acao: () => {
+                if (ultimo) {
+                    finalizarDesafio();
+                } else {
+                    nivelAtual++;
+                    esconderOverlay();
+                    iniciarNivel();
+                }
+            }
+        },
+        botaoSecundario: {
+            texto: '🔄 Repetir Nível',
+            acao: () => {
+                esconderOverlay();
+                iniciarNivel();
+            }
+        }
+    });
+
+    atualizarBotoesDesafio();
+}
+
+function contarAcertosAlvo() {
+    let acertos = 0;
+    for (let r = 0; r < tamanhoGrelha; r++) {
+        for (let c = 0; c < tamanhoGrelha; c++) {
+            if (matrizAlvo[r][c] !== null && matrizAlvo[r][c] === matrizDesenho[r][c]) {
+                acertos++;
+            }
+        }
+    }
+    return acertos;
+}
+
+function finalizarDesafio() {
+    fase = 'finalizado';
+    const maxPossivel = NIVEIS_DESAFIO.reduce((acc, n) => acc + n.celulas * 10, 0);
+    const percentual = (pontosDesafio / maxPossivel) * 100;
+
+    let medalha, titulo, msg;
+    if (percentual >= 90) {
+        medalha = '🏆'; titulo = 'Mestre da Memória!';
+        msg = 'Impressionante! Você tem uma memória visual extraordinária.';
+    } else if (percentual >= 70) {
+        medalha = '🥇'; titulo = 'Olhar de Águia!';
+        msg = 'Excelente! Sua percepção visual está muito afiada.';
+    } else if (percentual >= 50) {
+        medalha = '🥈'; titulo = 'Aprendiz Atento!';
+        msg = 'Bom trabalho! Continue treinando para melhorar ainda mais.';
+    } else {
+        medalha = '🥉'; titulo = 'Iniciante Curioso!';
+        msg = 'Todo mestre começou assim. Tente novamente!';
+    }
+
+    som.win();
+
+    mostrarOverlay({
+        titulo: `${medalha} ${titulo}`,
+        htmlExtra: `<div class="grande">${pontosDesafio} pts</div>`,
+        subtitulo: msg,
+        botao: {
+            texto: '🔄 Jogar Novamente',
+            acao: () => {
+                esconderOverlay();
+                inicializarModoDesafio();
+            }
+        }
+    });
+
+    atualizarBotoesDesafio();
+}
+
+function formatarTempo(s) {
+    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
+// ==========================================================
+// TROCA DE MODO
+// ==========================================================
+function trocarModo(novoModo) {
+    if (novoModo === modoAtual) return;
+    modoAtual = novoModo;
+    pararTimer();
+    esconderOverlay();
+    desenhando = false;
+    fase = 'idle';
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === novoModo);
+    });
+
+    document.getElementById('controls-livre').classList.toggle('hidden', novoModo !== 'livre');
+    document.getElementById('controls-desafio').classList.toggle('hidden', novoModo !== 'desafio');
+
+    // Ajusta labels do score-board
+    if (novoModo === 'livre') {
+        document.getElementById('label-bloco1').innerHTML = 'Modo<br><strong id="display-nivel">Livre</strong>';
+        document.getElementById('label-bloco3').innerHTML = 'Células<br><strong id="display-pontos">0/25</strong>';
+        document.getElementById('info-instrucao').textContent =
+            '✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!';
+        inicializarModoLivre(parseInt(document.getElementById('select-tamanho').value));
+    } else {
+        document.getElementById('label-bloco1').innerHTML = 'Nível<br><strong id="display-nivel">Nv 1/10</strong>';
+        document.getElementById('label-bloco3').innerHTML = 'Pintadas<br><strong id="display-pontos">0/0</strong>';
+        document.getElementById('info-instrucao').textContent =
+            '🧠 Memorize o padrão exibido, espere esconder, e reproduza-o de memória!';
+        // Inicia com estado idle — jogador clica em Iniciar
+        tamanhoGrelha = 5;
+        matrizDesenho = Array(5).fill(null).map(() => Array(5).fill(null));
+        matrizAlvo = Array(5).fill(null).map(() => Array(5).fill(null));
+        montarPaleta();
+        montarDOMGrid();
+        atualizarBotoesDesafio();
+        document.getElementById('display-tempo').textContent = '00:00';
+        document.getElementById('display-nivel').textContent = `Nv ${nivelAtual}/${MAX_NIVEL}`;
+        document.getElementById('display-pontos').textContent = '0/0';
+    }
+
+    iniciarTimer();
+}
+
+// ==========================================================
+// EVENTOS DE UI
+// ==========================================================
+document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => trocarModo(btn.dataset.mode));
+});
+
+document.getElementById('btn-reiniciar').addEventListener('click', () => {
+    inicializarModoLivre(tamanhoGrelha);
+});
+
+document.getElementById('select-tamanho').addEventListener('change', (e) => {
+    inicializarModoLivre(parseInt(e.target.value));
+});
+
+document.getElementById('btn-iniciar-desafio').addEventListener('click', () => {
+    if (fase === 'finalizado') {
+        inicializarModoDesafio();
+    } else {
+        // Se está idle, inicia do nível 1
+        if (nivelAtual === 1 && pontosDesafio === 0) {
+            inicializarModoDesafio();
+        } else {
+            iniciarNivel();
+        }
+    }
+});
+
+document.getElementById('btn-dica').addEventListener('click', usarDica);
+document.getElementById('btn-confirmar').addEventListener('click', confirmarResposta);
+
+const soundToggleBtn = document.getElementById('sound-toggle');
+soundToggleBtn.addEventListener('click', () => {
+    som.ativo = !som.ativo;
+    soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+});
+
+const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('brain_flow_theme', next);
+});
+
+// ==========================================================
+// BOOT
+// ==========================================================
+inicializarModoLivre(5);
+</script>
+</body>
+</html>
