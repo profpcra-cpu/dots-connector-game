@@ -583,7 +583,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         <button id="btn-novo">🎲 Novo Nível</button>
     </div>
 </div>
-
 <script>
 (function() {
     'use strict';
@@ -606,18 +605,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     var tamanho = 5;
     var numParedes = 2;
     var maxPassos = 15;
-    var grid = [];              // matriz de strings: 'chao', 'parede', 'alvo', 'robo'
+    var grid = [];
     var roboPos = { l: 0, c: 0 };
     var roboInicial = { l: 0, c: 0 };
     var alvoPos = { l: 0, c: 0 };
-    var comandos = [];          // lista de comandos programados
+    var comandos = [];
     var executando = false;
     var comandosExecutados = [];
-    var rastro = [];            // posições já visitadas pelo robô
+    var rastro = [];
     var nivelAtual = 1;
     var passosTotais = 0;
 
-    // Recordes por modo (menor número de comandos para passar 10 níveis)
     var recordes = {
         facil:   parseInt(localStorage.getItem('brain_robo_recorde_facil')   || '999999', 10),
         medio:   parseInt(localStorage.getItem('brain_robo_recorde_medio')   || '999999', 10),
@@ -695,10 +693,42 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
+    // RESET COMPLETO DO JOGO
+    // ==========================================================
+    function resetarJogo() {
+        // Reset de nível e modo
+        nivelAtual = 1;
+        modoAtual = 'facil';
+
+        // Aplica configuração do modo fácil
+        var cfg = MODOS[modoAtual];
+        tamanho = cfg.tamanho;
+        numParedes = cfg.paredes;
+        maxPassos = cfg.maxPassos;
+
+        // Reseta estado de execução
+        executando = false;
+
+        // Reseta botões de modo visualmente
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
+        }
+
+        // Esconde overlay
+        esconderOverlay();
+
+        // Gera novo nível (reseta comandos, rastro, roboPos)
+        gerarNivel();
+
+        // Atualiza placar
+        atualizarPlacar();
+    }
+
+    // ==========================================================
     // GERAR NÍVEL ALEATÓRIO
     // ==========================================================
     function gerarNivel() {
-        // Cria grid vazia
         grid = [];
         for (var l = 0; l < tamanho; l++) {
             var linha = [];
@@ -708,7 +738,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             grid.push(linha);
         }
 
-        // Define posição do robô (sempre um canto)
         var cantos = [
             { l: 0, c: 0 },
             { l: 0, c: tamanho - 1 },
@@ -719,7 +748,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         roboPos = { l: cantoEscolhido.l, c: cantoEscolhido.c };
         roboInicial = { l: cantoEscolhido.l, c: cantoEscolhido.c };
 
-        // Define posição do alvo (longe do robô)
         var alvoEscolhido = null;
         var tentativasAlvo = 0;
         while (!alvoEscolhido && tentativasAlvo < 100) {
@@ -736,7 +764,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         }
         alvoPos = alvoEscolhido;
 
-        // Coloca paredes (nunca na linha/coluna direta do robô nem sobre o alvo)
         var paredesColocadas = 0;
         var tentativasPar = 0;
         while (paredesColocadas < numParedes && tentativasPar < 200) {
@@ -744,12 +771,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             var lP = randInt(0, tamanho - 1);
             var cP = randInt(0, tamanho - 1);
 
-            // Não colocar no robô nem no alvo
             if (lP === roboPos.l && cP === roboPos.c) continue;
             if (lP === alvoPos.l && cP === alvoPos.c) continue;
-            // Não colocar já ocupado
             if (grid[lP][cP] === 'parede') continue;
-            // Não bloquear caminho direto (deixa espaço)
             var distRobo = Math.abs(lP - roboPos.l) + Math.abs(cP - roboPos.c);
             if (distRobo < 2) continue;
 
@@ -787,7 +811,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
                 if (grid[l][c] === 'parede') {
                     cel.classList.add('parede');
-                    cel.textContent = '';
                 } else if (l === alvoPos.l && c === alvoPos.c && !(l === roboPos.l && c === roboPos.c)) {
                     cel.classList.add('alvo');
                 } else {
@@ -799,7 +822,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                     cel.textContent = '🤖';
                 }
 
-                // Rastro
                 if (foiVisitada(l, c) && !(l === roboPos.l && c === roboPos.c)) {
                     cel.classList.add('rastro');
                 }
@@ -884,7 +906,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         if (executando || comandos.length === 0) return;
         executando = true;
 
-        // Reset estado
         roboPos = { l: roboInicial.l, c: roboInicial.c };
         rastro = [{ l: roboPos.l, c: roboPos.c }];
         comandosExecutados = [];
@@ -896,7 +917,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var i = 0;
         function proximo() {
             if (i >= comandos.length) {
-                // Fim da execução
                 executando = false;
                 atualizarComandos();
                 verificarResultado();
@@ -931,28 +951,24 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var nl = roboPos.l + dl;
         var nc = roboPos.c + dc;
 
-        // Colisão com borda
         if (nl < 0 || nl >= tamanho || nc < 0 || nc >= tamanho) {
             baterParede();
             callback(false);
             return;
         }
 
-        // Colisão com parede
         if (grid[nl][nc] === 'parede') {
             baterParede();
             callback(false);
             return;
         }
 
-        // Move
         roboPos = { l: nl, c: nc };
         rastro.push({ l: nl, c: nc });
         som.mover();
 
         renderizarGrid();
 
-        // Anima
         var cel = document.querySelector('.cel.robo');
         if (cel) {
             cel.classList.add('robo-andando');
@@ -992,17 +1008,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var comandosUsados = comandos.length;
         var passosMinimos = Math.abs(alvoPos.l - roboInicial.l) + Math.abs(alvoPos.c - roboInicial.c);
 
-        // Pontos: base + bónus por eficiência
         var eficiencia = Math.max(0, 1 - (comandosUsados - passosMinimos) / passosMinimos);
         var pontos = Math.round(100 * (1 + eficiencia));
 
-        // Atualiza recorde (menor número de comandos no nível 1)
         if (nivelAtual === 1 && comandosUsados < recordes[modoAtual]) {
             recordes[modoAtual] = comandosUsados;
             localStorage.setItem('brain_robo_recorde_' + modoAtual, String(comandosUsados));
         }
 
-        // Se completou 5 níveis → fim
         if (nivelAtual >= 5) {
             setTimeout(function() {
                 mostrarOverlay({
@@ -1014,7 +1027,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                             'Nível final: ' + nivelAtual + ' · ' + comandosUsados + ' comandos' +
                         '</div>',
                     subtitulo: 'Você programou o robô para completar todos os níveis!',
-                    botao: { texto: '🎲 Recomeçar', acao: function() { nivelAtual = 1; gerarNivel(); esconderOverlay(); atualizarPlacar(); } }
+                    botao: { texto: '🎲 Recomeçar', acao: function() { resetarJogo(); } }
                 });
             }, 800);
         } else {
@@ -1037,17 +1050,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     function proximoNivel() {
         nivelAtual++;
         esconderOverlay();
-        // Aumenta dificuldade
+
         if (nivelAtual <= 2) modoAtual = 'facil';
         else if (nivelAtual <= 4) modoAtual = 'medio';
         else modoAtual = 'dificil';
 
         var cfg = MODOS[modoAtual];
         tamanho = cfg.tamanho;
-        numParedes = cfg.paredes + Math.floor(nivelAtual / 2);
-        maxPassos = cfg.maxPassos;
+        numParedes = Math.min(cfg.paredes + Math.floor((nivelAtual - 1) / 2), 10);
+        maxPassos = cfg.maxPassos + 5;
 
-        // Atualiza botões de modo
         var botoes = document.querySelectorAll('.mode-btn');
         for (var i = 0; i < botoes.length; i++) {
             botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
@@ -1118,6 +1130,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ==========================================================
     function trocarModo(novoModo) {
         if (novoModo === modoAtual) return;
+        if (executando) {
+            atualizarBadge('⏳ Aguarde a execução terminar', 'erro');
+            return;
+        }
         modoAtual = novoModo;
         nivelAtual = 1;
 
@@ -1125,6 +1141,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         tamanho = cfg.tamanho;
         numParedes = cfg.paredes;
         maxPassos = cfg.maxPassos;
+        executando = false;
 
         var botoes = document.querySelectorAll('.mode-btn');
         for (var i = 0; i < botoes.length; i++) {
@@ -1159,14 +1176,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     $('btn-limpar').addEventListener('click', limparComandos);
     $('btn-executar').addEventListener('click', executar);
     $('btn-novo').addEventListener('click', function() {
-        nivelAtual = 1;
-        var cfg = MODOS[modoAtual];
-        tamanho = cfg.tamanho;
-        numParedes = cfg.paredes;
-        maxPassos = cfg.maxPassos;
-        esconderOverlay();
-        gerarNivel();
-        atualizarPlacar();
+        resetarJogo();
     });
 
     var soundToggleBtn = $('sound-toggle');
