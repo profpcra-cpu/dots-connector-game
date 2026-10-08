@@ -436,6 +436,9 @@ button {
 button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ==========================================================
+   OVERLAY — CORRIGIDO
+   ========================================================== */
 .overlay {
     position: absolute;
     inset: 0;
@@ -452,7 +455,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     border-radius: 14px;
 }
 
-/* ⭐ CORREÇÃO CRÍTICA — esconde o overlay de verdade ⭐ */
 .overlay.hidden {
     display: none !important;
 }
@@ -589,9 +591,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     var alvoPos = { l: 0, c: 0 };
     var comandos = [];
     var executando = false;
-    var comandosExecutados = [];
     var rastro = [];
     var nivelAtual = 1;
+    var totalNiveis = 5;
 
     var recordes = {
         facil:   parseInt(localStorage.getItem('brain_robo_recorde_facil')   || '999999', 10),
@@ -754,7 +756,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         }
 
         comandos = [];
-        comandosExecutados = [];
         rastro = [];
         executando = false;
 
@@ -821,6 +822,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         comandos.push(cmd);
         som.click();
         atualizarComandos();
+        atualizarPlacar();
     }
 
     function apagarUltimo() {
@@ -829,14 +831,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         comandos.pop();
         som.apagar();
         atualizarComandos();
+        atualizarPlacar();
     }
 
     function limparComandos() {
         if (executando) return;
         comandos = [];
-        comandosExecutados = [];
         som.apagar();
         atualizarComandos();
+        atualizarPlacar();
     }
 
     function atualizarComandos() {
@@ -879,7 +882,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         roboPos = { l: roboInicial.l, c: roboInicial.c };
         rastro = [{ l: roboPos.l, c: roboPos.c }];
-        comandosExecutados = [];
 
         atualizarComandos();
         renderizarGrid();
@@ -896,7 +898,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
             var cmd = comandos[i];
             destacarComando(i);
-            moverRobo(cmd, function(sucesso) {
+            moverRobo(cmd, function() {
                 i++;
                 setTimeout(proximo, 200);
             });
@@ -924,13 +926,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         if (nl < 0 || nl >= tamanho || nc < 0 || nc >= tamanho) {
             baterParede();
-            callback(false);
+            callback();
             return;
         }
 
         if (grid[nl][nc] === 'parede') {
             baterParede();
-            callback(false);
+            callback();
             return;
         }
 
@@ -946,7 +948,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             setTimeout(function() { cel.classList.remove('robo-andando'); }, 300);
         }
 
-        setTimeout(function() { callback(true); }, 150);
+        setTimeout(function() { callback(); }, 150);
     }
 
     function baterParede() {
@@ -978,7 +980,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         var comandosUsados = comandos.length;
         var passosMinimos = Math.abs(alvoPos.l - roboInicial.l) + Math.abs(alvoPos.c - roboInicial.c);
-
         var eficiencia = Math.max(0, 1 - (comandosUsados - passosMinimos) / Math.max(passosMinimos, 1));
         var pontos = Math.round(100 * (1 + eficiencia));
 
@@ -987,7 +988,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             localStorage.setItem('brain_robo_recorde_' + modoAtual, String(comandosUsados));
         }
 
-        if (nivelAtual >= 5) {
+        if (nivelAtual >= totalNiveis) {
             setTimeout(function() {
                 mostrarOverlay({
                     titulo: '🏆 Missão Completa!',
@@ -1019,9 +1020,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     function proximoNivel() {
-        nivelAtual++;
+        // ⚠️ Esconde o overlay PRIMEIRO
         esconderOverlay();
 
+        // Incrementa o nível
+        nivelAtual++;
+
+        // Define o modo conforme o nível
         if (nivelAtual <= 2) modoAtual = 'facil';
         else if (nivelAtual <= 4) modoAtual = 'medio';
         else modoAtual = 'dificil';
@@ -1036,23 +1041,21 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             botoes[i].classList.toggle('active', botoes[i].dataset.mode === modoAtual);
         }
 
+        // Reset executando para garantir que o jogo está livre
+        executando = false;
+
         gerarNivel();
         atualizarPlacar();
     }
 
     // ==========================================================
-    // OVERLAYS
+    // OVERLAYS — SIMPLIFICADO
     // ==========================================================
     function esconderOverlay() {
         var ov = $('overlay');
         if (!ov) return;
         ov.classList.add('hidden');
-        // NÃO limpa innerHTML imediatamente — deixa o browser processar
-        setTimeout(function() {
-            if (ov && ov.classList.contains('hidden')) {
-                ov.innerHTML = '';
-            }
-        }, 50);
+        ov.innerHTML = '';
     }
 
     function mostrarOverlay(cfg) {
