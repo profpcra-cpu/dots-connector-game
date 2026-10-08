@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Balança Lógica — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    color: var(--text-color);
+}
+#display-rodada { color: var(--c-cyan); }
+#display-pontos { color: var(--c-green); }
+#display-recorde { color: var(--c-amber); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ==========================================================
+   ÁREA DE BALANÇAS
+   ========================================================== */
+.balancas-area {
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.balanca-item {
+    padding: 10px 12px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 54px;
+    flex-wrap: wrap;
+    position: relative;
+    animation: balanca-entrar 0.4s ease backwards;
+}
+.balanca-item.principal {
+    border-color: rgba(251, 191, 36, 0.5);
+    background: rgba(251, 191, 36, 0.08);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
+}
+@keyframes balanca-entrar {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.balanca-item .label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-right: 6px;
+}
+.objeto {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    font-size: 26px;
+    line-height: 1;
+    transition: all 0.3s ease;
+    position: relative;
+}
+.objeto .mult {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 900;
+    color: var(--c-cyan);
+    margin-right: 2px;
+}
+.objeto.destaque {
+    border-color: var(--c-amber);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+    background: rgba(251, 191, 36, 0.1);
+}
+.objeto.interrogacao {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: var(--c-amber);
+    color: var(--c-amber);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    min-width: 50px;
+    animation: pulsar-q 1.4s infinite;
+}
+@keyframes pulsar-q {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(251, 191, 36, 0.4); }
+    50% { transform: scale(1.06); box-shadow: 0 0 20px rgba(251, 191, 36, 0.7); }
+}
+.operador {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-muted);
+    padding: 0 2px;
+}
+.igual {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--c-cyan);
+    padding: 0 6px;
+}
+
+/* ==========================================================
+   OPÇÕES DE RESPOSTA
+   ========================================================== */
+.opcoes-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 12px;
+}
+.opcoes-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-align: left;
+    padding-left: 4px;
+}
+.opcoes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.opcao {
+    padding: 14px 10px;
+    border-radius: 12px;
+    border: 2px solid rgba(148, 163, 184, 0.25);
+    background: rgba(30, 41, 59, 0.55);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 60px;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    flex-wrap: wrap;
+}
+.opcao:hover:not(:disabled) {
+    border-color: var(--btn-primary);
+    background: rgba(99, 102, 241, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.4);
+}
+.opcao:disabled {
+    cursor: default;
+}
+.opcao .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--c-cyan);
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+.opcao .emoji {
+    font-size: 24px;
+}
+.opcao.correta {
+    background: rgba(74, 222, 128, 0.3) !important;
+    border-color: var(--c-green) !important;
+    box-shadow: 0 0 24px rgba(74, 222, 128, 0.5);
+    animation: acerto-pop 0.4s ease;
+}
+.opcao.incorreta {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: var(--c-red) !important;
+    animation: erro-shake 0.4s ease;
+}
+@keyframes acerto-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+@keyframes erro-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* ==========================================================
+   CONTROLES
+   ========================================================== */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.hidden { display: none !important; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay.hidden {
+    display: none !important;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button { max-width: 260px; }
+.overlay .trofeu {
+    font-size: 56px;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+</style>
+</head>
+<body>
+<div class="container" id="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="facil">🟢 Fácil</button>
+        <button class="mode-btn" data-mode="medio">🟡 Médio</button>
+        <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
+    </div>
+
+    <div class="score-board">
+        <div>🔢 Rodada<br><strong id="display-rodada">1</strong></div>
+        <div>⭐ Pontos<br><strong id="display-pontos">0</strong></div>
+        <div>🏆 Recorde<br><strong id="display-recorde">0</strong></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        ⚖️ Descubra quanto vale o objeto com <strong>?</strong> usando as balanças em equilíbrio.
+    </p>
+
+    <div class="balancas-area" id="balancas-area"></div>
+
+    <div class="opcoes-wrapper">
+        <div class="opcoes-label">🎯 Sua Resposta</div>
+        <div class="opcoes-grid" id="opcoes-grid"></div>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-iniciar">▶️ Iniciar Jogo</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-balanca] Inicializando...');
+
+    // ==========================================================
+    // CONFIGURAÇÃO POR MODO
+    // ==========================================================
+    var MODOS = {
+        facil:   { numEquacoes: 2, numObjetos: 3, maxPeso: 5, nome: 'Fácil' },
+        medio:   { numEquacoes: 3, numObjetos: 4, maxPeso: 8, nome: 'Médio' },
+        dificil: { numEquacoes: 4, numObjetos: 5, maxPeso: 10, nome: 'Difícil' }
+    };
+
+    // ==========================================================
+    // BANCO DE EMOJIS
+    // ==========================================================
+    var EMOJIS = ['🍎', '🍌', '🍇', '🍊', '🍓', '🍋', '🍒', '🍑', '🥝', '🍍', '🥥', '🍉'];
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'facil';
+    var rodada = 1;
+    var pontos = 0;
+    var acertos = 0;
+    var erros = 0;
+    var comboAtual = 0;
+    var jogoAtivo = false;
+    var aceitandoResposta = false;
+    var puzzleAtual = null;
+
+    var recordes = {
+        facil:   parseInt(localStorage.getItem('brain_balanca_recorde_facil')   || '0', 10),
+        medio:   parseInt(localStorage.getItem('brain_balanca_recorde_medio')   || '0', 10),
+        dificil: parseInt(localStorage.getItem('brain_balanca_recorde_dificil') || '0', 10)
+    };
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.08, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        acerto: function() {
+            var self = this;
+            [523, 659, 783].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.18); }, i * 70);
+            });
+        },
+        erro: function() { this.play(180, 'sawtooth', 0.3); },
+        click: function() { this.play(700, 'triangle', 0.06); },
+        vitoria: function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function embaralhar(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+        }
+        return a;
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function atualizarPlacar() {
+        $('display-rodada').textContent = String(rodada);
+        $('display-pontos').textContent = String(pontos);
+        $('display-recorde').textContent = String(recordes[modoAtual]);
+    }
+
+    // ==========================================================
+    // GERAR PUZZLE
+    // ==========================================================
+    function gerarPuzzle() {
+        var cfg = MODOS[modoAtual];
+        var numObjetos = cfg.numObjetos;
+        var numEquacoes = cfg.numEquacoes;
+        var maxPeso = cfg.maxPeso;
+
+        // Escolhe emojis únicos
+        var emojisEscolhidos = embaralhar(EMOJIS).slice(0, numObjetos);
+
+        // Atribui pesos aleatórios
+        var pesos = {};
+        for (var i = 0; i < numObjetos; i++) {
+            pesos[i] = randInt(1, maxPeso);
+        }
+
+        // Escolhe qual será o objeto desconhecido (último)
+        var idxIncognita = numObjetos - 1;
+        var pesoIncognita = pesos[idxIncognita];
+
+        // Gera equações com pesos conhecidos (não a incógnita)
+        var equacoes = [];
+        // Para cada objeto conhecido, gera uma equação que o relacione com outra coisa
+        for (var eq = 0; eq < numEquacoes - 1; eq++) {
+            var tipo = randInt(0, 2);
+
+            if (tipo === 0) {
+                // A = kB (A conhecido, B conhecido)
+                var idxA = eq % (numObjetos - 1);
+                var idxB = (eq + 1) % (numObjetos - 1);
+                if (idxA === idxB) idxB = (idxB + 1) % (numObjetos - 1);
+                if (idxA === idxB) continue;
+
+                var pesoA = pesos[idxA];
+                var pesoB = pesos[idxB];
+
+                // k = pesoA / pesoB, se inteiro
+                if (pesoA % pesoB === 0) {
+                    equacoes.push({
+                        tipo: 'A_igual_kB',
+                        objA: idxA, objB: idxB, k: pesoA / pesoB
+                    });
+                } else if (pesoB % pesoA === 0) {
+                    equacoes.push({
+                        tipo: 'A_igual_kB',
+                        objA: idxB, objB: idxA, k: pesoB / pesoA
+                    });
+                } else {
+                    // Fallback: A = A (redundante) — força outra equação
+                    equacoes.push({
+                        tipo: 'A_igual_kB',
+                        objA: idxA, objB: idxA, k: 1
+                    });
+                }
+            } else if (tipo === 1) {
+                // A + B = C (todos conhecidos)
+                var idxC = eq;
+                var idxA2 = (eq + 1) % (numObjetos - 1);
+                var idxB2 = (eq + 2) % (numObjetos - 1);
+
+                if (idxA2 === idxB2) idxB2 = (idxB2 + 1) % (numObjetos - 1);
+                if (idxA2 === idxC || idxB2 === idxC) continue;
+
+                var pesoC = pesos[idxC];
+                var pesoA2 = pesos[idxA2];
+                var pesoB2 = pesos[idxB2];
+
+                if (pesoC === pesoA2 + pesoB2) {
+                    equacoes.push({
+                        tipo: 'A_mais_B_igual_C',
+                        objA: idxA2, objB: idxB2, objC: idxC
+                    });
+                }
+                // Se não bater, pula (geraremos depois equação mínima)
+            } else {
+                // C = A + B (equivalente ao anterior mas ordem invertida)
+                var idxC3 = (eq + 2) % (numObjetos - 1);
+                var idxA3 = eq % (numObjetos - 1);
+                var idxB3 = (eq + 1) % (numObjetos - 1);
+
+                if (idxA3 === idxB3) idxB3 = (idxB3 + 1) % (numObjetos - 1);
+                if (idxA3 === idxC3 || idxB3 === idxC3) continue;
+
+                if (pesos[idxC3] === pesos[idxA3] + pesos[idxB3]) {
+                    equacoes.push({
+                        tipo: 'A_mais_B_igual_C',
+                        objA: idxA3, objB: idxB3, objC: idxC3
+                    });
+                }
+            }
+        }
+
+        // Se não conseguiu gerar equações suficientes, gera A = kB forçadas
+        while (equacoes.length < numEquacoes - 1) {
+            var a = randInt(0, numObjetos - 2);
+            var b = randInt(0, numObjetos - 2);
+            if (a === b) continue;
+            if (pesos[a] % pesos[b] === 0) {
+                equacoes.push({ tipo: 'A_igual_kB', objA: a, objB: b, k: pesos[a] / pesos[b] });
+            } else if (pesos[b] % pesos[a] === 0) {
+                equacoes.push({ tipo: 'A_igual_kB', objA: b, objB: a, k: pesos[b] / pesos[a] });
+            }
+        }
+
+        // Equação final: incógnita = soma/diferença de objetos conhecidos
+        // Acha dois objetos conhecidos cuja soma ou diferença dá pesoIncognita
+        var objFinal = null;
+        for (var k = 0; k < numObjetos - 1 && !objFinal; k++) {
+            for (var m = 0; m < numObjetos - 1 && !objFinal; m++) {
+                if (k === m) continue;
+                if (pesos[k] + pesos[m] === pesoIncognita) {
+                    objFinal = { tipo: 'incognita_soma', objA: k, objB: m };
+                } else if (pesos[k] - pesos[m] === pesoIncognita) {
+                    objFinal = { tipo: 'incognita_dif', objA: k, objB: m };
+                } else if (pesos[m] - pesos[k] === pesoIncognita) {
+                    objFinal = { tipo: 'incognita_dif', objA: m, objB: k };
+                }
+            }
+        }
+
+        // Fallback: incógnita = 1 objeto conhecido (k=1)
+        if (!objFinal) {
+            objFinal = { tipo: 'incognita_simples', objA: 0 };
+        }
+
+        // Gera opções de resposta (1 correta + 3 erradas)
+        var opcoes = [pesoIncognita];
+        var tentativas = 0;
+        while (opcoes.length < 4 && tentativas < 100) {
+            tentativas++;
+            var delta = randInt(1, Math.max(3, Math.floor(maxPeso / 2)));
+            var variacao = pesoIncognita + (Math.random() < 0.5 ? -delta : delta);
+            if (variacao > 0 && opcoes.indexOf(variacao) === -1) {
+                opcoes.push(variacao);
+            }
+        }
+        opcoes = embaralhar(opcoes);
+
+        return {
+            emojis: emojisEscolhidos,
+            pesos: pesos,
+            equacoes: equacoes,
+            equacaoFinal: objFinal,
+            idxIncognita: idxIncognita,
+            pesoIncognita: pesoIncognita,
+            opcoes: opcoes
+        };
+    }
+
+    // ==========================================================
+    // RENDERIZAÇÃO DAS BALANÇAS
+    // ==========================================================
+    function renderizarBalancas() {
+        var area = $('balancas-area');
+        area.innerHTML = '';
+
+        var p = puzzleAtual;
+
+        // Renderiza cada equação
+        for (var i = 0; i < p.equacoes.length; i++) {
+            var eq = p.equacoes[i];
+            var linha = document.createElement('div');
+            linha.className = 'balanca-item';
+            linha.style.animationDelay = (i * 0.08) + 's';
+
+            var label = document.createElement('span');
+            label.className = 'label';
+            label.textContent = '⚖️';
+            linha.appendChild(label);
+
+            renderizarEquacao(linha, eq, p);
+
+            area.appendChild(linha);
+        }
+
+        // Renderiza equação principal (incógnita)
+        var linhaFinal = document.createElement('div');
+        linhaFinal.className = 'balanca-item principal';
+        linhaFinal.style.animationDelay = (p.equacoes.length * 0.08) + 's';
+
+        var labelFinal = document.createElement('span');
+        labelFinal.className = 'label';
+        labelFinal.textContent = '🎯';
+        linhaFinal.appendChild(labelFinal);
+
+        renderizarEquacaoFinal(linhaFinal, p);
+
+        area.appendChild(linhaFinal);
+    }
+
+    function criarObjetoObj(emoji, mult) {
+        var obj = document.createElement('div');
+        obj.className = 'objeto';
+        if (mult && mult > 1) {
+            var span = document.createElement('span');
+            span.className = 'mult';
+            span.textContent = mult + '×';
+            obj.appendChild(span);
+        }
+        var em = document.createElement('span');
+        em.textContent = emoji;
+        obj.appendChild(em);
+        return obj;
+    }
+
+    function renderizarEquacao(container, eq, p) {
+        if (eq.tipo === 'A_igual_kB') {
+            container.appendChild(criarObjetoObj(p.emojis[eq.objA], 1));
+            var ig = document.createElement('span');
+            ig.className = 'igual';
+            ig.textContent = '=';
+            container.appendChild(ig);
+            container.appendChild(criarObjetoObj(p.emojis[eq.objB], eq.k));
+        } else if (eq.tipo === 'A_mais_B_igual_C') {
+            container.appendChild(criarObjetoObj(p.emojis[eq.objA], 1));
+            var op = document.createElement('span');
+            op.className = 'operador';
+            op.textContent = '+';
+            container.appendChild(op);
+            container.appendChild(criarObjetoObj(p.emojis[eq.objB], 1));
+            var ig2 = document.createElement('span');
+            ig2.className = 'igual';
+            ig2.textContent = '=';
+            container.appendChild(ig2);
+            container.appendChild(criarObjetoObj(p.emojis[eq.objC], 1));
+        }
+    }
+
+    function renderizarEquacaoFinal(container, p) {
+        var ef = p.equacaoFinal;
+
+        if (ef.tipo === 'incognita_simples') {
+            container.appendChild(criarObjetoObj(p.emojis[p.idxIncognita], 1));
+            var ig = document.createElement('span');
+            ig.className = 'igual';
+            ig.textContent = '=';
+            container.appendChild(ig);
+            container.appendChild(criarObjetoObj(p.emojis[ef.objA], 1));
+        } else if (ef.tipo === 'incognita_soma') {
+            container.appendChild(criarObjetoObj(p.emojis[p.idxIncognita], 1));
+            var ig2 = document.createElement('span');
+            ig2.className = 'igual';
+            ig2.textContent = '=';
+            container.appendChild(ig2);
+            container.appendChild(criarObjetoObj(p.emojis[ef.objA], 1));
+            var op = document.createElement('span');
+            op.className = 'operador';
+            op.textContent = '+';
+            container.appendChild(op);
+            container.appendChild(criarObjetoObj(p.emojis[ef.objB], 1));
+        } else if (ef.tipo === 'incognita_dif') {
+            container.appendChild(criarObjetoObj(p.emojis[p.idxIncognita], 1));
+            var ig3 = document.createElement('span');
+            ig3.className = 'igual';
+            ig3.textContent = '=';
+            container.appendChild(ig3);
+            container.appendChild(criarObjetoObj(p.emojis[ef.objA], 1));
+            var op2 = document.createElement('span');
+            op2.className = 'operador';
+            op2.textContent = '−';
+            container.appendChild(op2);
+            container.appendChild(criarObjetoObj(p.emojis[ef.objB], 1));
+        }
+    }
+
+    function renderizarOpcoes() {
+        var grid = $('opcoes-grid');
+        grid.innerHTML = '';
+
+        var p = puzzleAtual;
+
+        // Quantos objetos da incógnita?
+        var emojiIncognita = p.emojis[p.idxIncognita];
+
+        p.opcoes.forEach(function(valor) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'opcao';
+            btn.dataset.valor = valor;
+
+            var numSpan = document.createElement('span');
+            numSpan.className = 'num';
+            numSpan.textContent = valor + '×';
+            btn.appendChild(numSpan);
+
+            var emojiSpan = document.createElement('span');
+            emojiSpan.className = 'emoji';
+            emojiSpan.textContent = emojiIncognita;
+            btn.appendChild(emojiSpan);
+
+            btn.addEventListener('click', function() {
+                responder(valor, btn);
+            });
+
+            grid.appendChild(btn);
+        });
+    }
+
+    // ==========================================================
+    // RESPONDER
+    // ==========================================================
+    function responder(valor, btn) {
+        if (!aceitandoResposta) return;
+        aceitandoResposta = false;
+
+        var acertou = (valor === puzzleAtual.pesoIncognita);
+
+        var botoes = document.querySelectorAll('.opcao');
+        for (var i = 0; i < botoes.length; i++) {
+            var b = botoes[i];
+            b.disabled = true;
+            if (parseInt(b.dataset.valor, 10) === puzzleAtual.pesoIncognita) {
+                b.classList.add('correta');
+            } else if (b === btn && !acertou) {
+                b.classList.add('incorreta');
+            }
+        }
+
+        if (acertou) {
+            acertos++;
+            comboAtual++;
+            var bonus = Math.min(comboAtual, 5);
+            var ganho = 10 + bonus * 2;
+            pontos += ganho;
+
+            som.acerto();
+            atualizarBadge('✅ Correto! +' + ganho, 'ok');
+            mostrarFeedbackFloat('+' + ganho, 'positivo');
+
+            if (pontos > recordes[modoAtual]) {
+                recordes[modoAtual] = pontos;
+                localStorage.setItem('brain_balanca_recorde_' + modoAtual, String(pontos));
+            }
+        } else {
+            erros++;
+            comboAtual = 0;
+            som.erro();
+            atualizarBadge('❌ Errado! Era ' + puzzleAtual.pesoIncognita + '×', 'erro');
+            mostrarFeedbackFloat('✗', 'negativo');
+        }
+
+        atualizarPlacar();
+
+        rodada++;
+        setTimeout(function() {
+            if (jogoAtivo) proximaRodada();
+        }, acertou ? 1400 : 2200);
+    }
+
+    // ==========================================================
+    // FLUXO DO JOGO
+    // ==========================================================
+    function proximaRodada() {
+        puzzleAtual = gerarPuzzle();
+        renderizarBalancas();
+        renderizarOpcoes();
+        aceitandoResposta = true;
+        atualizarBadge('👉 Sua vez!', '');
+    }
+
+    function iniciarJogo() {
+        jogoAtivo = true;
+        rodada = 1;
+        pontos = 0;
+        acertos = 0;
+        erros = 0;
+        comboAtual = 0;
+        aceitandoResposta = false;
+
+        esconderOverlay();
+        atualizarPlacar();
+        atualizarBadge('⚖️ Prepare-se...', 'ok');
+
+        setTimeout(function() {
+            proximaRodada();
+        }, 400);
+    }
+
+    function fimDeJogo() {
+        // Este jogo não tem fim — é infinito
+    }
+
+    // ==========================================================
+    // FEEDBACK FLUTUANTE
+    // ==========================================================
+    function mostrarFeedbackFloat(texto, tipo) {
+        var el = document.createElement('div');
+        el.className = 'feedback-float ' + tipo;
+        el.textContent = texto;
+        document.querySelector('.balancas-area').appendChild(el);
+        setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 900);
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            $('container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+
+        jogoAtivo = false;
+        aceitandoResposta = false;
+        esconderOverlay();
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        rodada = 1;
+        pontos = 0;
+        acertos = 0;
+        erros = 0;
+        comboAtual = 0;
+
+        atualizarPlacar();
+        atualizarBadge('Pronto', '');
+        $('balancas-area').innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:20px;">Clique em ▶️ Iniciar Jogo para começar</div>';
+        $('opcoes-grid').innerHTML = '';
+
+        // Instrução conforme modo
+        if (novoModo === 'facil') {
+            $('info-instrucao').innerHTML = '⚖️ Descubra o valor do objeto 🎯 usando 2 balanças.';
+        } else if (novoModo === 'medio') {
+            $('info-instrucao').innerHTML = '⚖️ Raciocínio em cadeia: 3 balanças com objetos diferentes.';
+        } else {
+            $('info-instrucao').innerHTML = '⚖️ Desafio máximo: 4 balanças com equações encadeadas.';
+        }
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-iniciar').addEventListener('click', iniciarJogo);
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    trocarModo('facil');
+    console.log('[brain-balanca] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
