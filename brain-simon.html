@@ -159,7 +159,7 @@ body {
 }
 
 /* ==========================================================
-   TABULEIRO SIMON — 4 quadrantes grandes
+   TABULEIRO SIMON — CORRIGIDO
    ========================================================== */
 #grid-wrapper {
     position: relative;
@@ -178,18 +178,19 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
     height: 100%;
 }
+
 .quad {
-    border-radius: 12px;
+    border-radius: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 40px;
-    transition: transform 0.1s, box-shadow 0.1s, filter 0.15s;
+    transition: transform 0.12s ease, box-shadow 0.15s ease, opacity 0.15s ease;
     position: relative;
     user-select: none;
     -webkit-user-select: none;
@@ -197,36 +198,43 @@ body {
     border: none;
     padding: 0;
     font-family: inherit;
-    color: rgba(255,255,255,0.9);
-    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
-    filter: brightness(0.55) saturate(0.8);
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    /* Estado "apagado" — cor visível mas suave */
+    opacity: 0.72;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.25);
 }
 .quad:hover:not(:disabled) {
-    filter: brightness(0.7) saturate(0.9);
+    opacity: 0.88;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.15), 0 0 12px rgba(255, 255, 255, 0.15);
 }
 .quad:disabled {
     cursor: default;
 }
 .quad.brilhando {
-    filter: brightness(1.4) saturate(1.3);
-    box-shadow: 0 0 30px currentColor, inset 0 0 20px rgba(255,255,255,0.4);
+    opacity: 1;
     transform: scale(0.96);
+    box-shadow:
+        0 0 40px 6px currentColor,
+        inset 0 0 30px rgba(255, 255, 255, 0.5);
 }
 .quad.errado {
-    animation: piscar-erro 0.4s ease;
+    animation: piscar-erro 0.5s ease;
 }
 @keyframes piscar-erro {
-    0%, 100% { filter: brightness(0.55); }
-    25%, 75% { filter: brightness(0.2) hue-rotate(340deg); }
+    0%, 100% { opacity: 0.72; }
+    25%, 75% { opacity: 0.15; }
 }
+
 .quad-num {
     position: absolute;
     bottom: 8px;
-    right: 10px;
+    right: 12px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.55);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 
 /* ==========================================================
@@ -260,41 +268,6 @@ body {
 }
 .overlay button {
     max-width: 260px;
-}
-
-/* Contador central durante a sequência */
-.center-badge {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: rgba(5, 9, 20, 0.95);
-    border: 3px solid var(--btn-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 32px;
-    font-weight: 900;
-    color: #fff;
-    z-index: 5;
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
-    pointer-events: none;
-}
-
-/* Vidas */
-.lives {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    font-size: 18px;
-    z-index: 6;
-    letter-spacing: 2px;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
-    pointer-events: none;
 }
 
 /* ==========================================================
@@ -413,28 +386,28 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // CONFIGURAÇÃO DOS 4 QUADRANTES
     // ==========================================================
     var QUADRANTES = [
-        { id: 0, cor: '#4ade80', corClara: '#86efac', nota: 261.63, nome: 'Verde',  freq: 261.63, posicao: 'top-left' },     // Dó
-        { id: 1, cor: '#ef4444', corClara: '#fca5a5', nota: 329.63, nome: 'Vermelho', freq: 329.63, posicao: 'top-right' },   // Mi
-        { id: 2, cor: '#fbbf24', corClara: '#fde68a', nota: 392.00, nome: 'Amarelo', freq: 392.00, posicao: 'bottom-left' },  // Sol
-        { id: 3, cor: '#38bdf8', corClara: '#7dd3fc', nota: 523.25, nome: 'Azul',    freq: 523.25, posicao: 'bottom-right' }  // Dó agudo
+        { id: 0, cor: '#4ade80', freq: 261.63, nome: 'Verde'  },   // Dó
+        { id: 1, cor: '#ef4444', freq: 329.63, nome: 'Vermelho' }, // Mi
+        { id: 2, cor: '#fbbf24', freq: 392.00, nome: 'Amarelo' },  // Sol
+        { id: 3, cor: '#38bdf8', freq: 523.25, nome: 'Azul' }      // Dó agudo
     ];
 
     // ==========================================================
     // ESTADO
     // ==========================================================
-    var modoAtual = 'classico';          // classico | reverso | vidas
-    var sequencia = [];                   // array de índices [0..3]
-    var passoAtual = 0;                   // posição do jogador na sequência
+    var modoAtual = 'classico';
+    var sequencia = [];
+    var passoAtual = 0;
     var nivel = 1;
     var vidas = 3;
     var jogoAtivo = false;
     var aceitandoInput = false;
     var recorde = parseInt(localStorage.getItem('brain_simon_recorde') || '0', 10);
-    var velocidade = 600;                 // ms de brilho por quadrante
+    var velocidade = 600;
     var intervalosAtivos = [];
 
     // ==========================================================
-    // SOM (por quadrante)
+    // SOM
     // ==========================================================
     var som = {
         ativo: true,
@@ -519,7 +492,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // MONTAGEM DOS QUADRANTES
+    // MONTAGEM DOS QUADRANTES — CORRIGIDA
     // ==========================================================
     function montarQuadrantes() {
         var gridContainer = $('grid-container');
@@ -531,8 +504,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 btn.type = 'button';
                 btn.className = 'quad';
                 btn.dataset.id = q.id;
+                btn.dataset.cor = q.cor;
+
+                // Força a cor de forma bruta e com prioridade máxima
+                btn.style.setProperty('background', q.cor, 'important');
                 btn.style.setProperty('background-color', q.cor, 'important');
+                btn.style.setProperty('background-image', 'none', 'important');
                 btn.style.setProperty('color', q.cor, 'important');
+
                 btn.setAttribute('aria-label', q.nome);
                 btn.disabled = true;
 
@@ -555,8 +534,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var gridContainer = $('grid-container');
         var btn = gridContainer.querySelector('.quad[data-id="' + id + '"]');
         if (!btn) return;
+
         btn.classList.add('brilhando');
         som.tocarNota(QUADRANTES[id].freq, duracao / 1000);
+
         setTimeout(function() {
             btn.classList.remove('brilhando');
         }, duracao);
@@ -570,7 +551,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // REPRODUÇÃO DA SEQUÊNCIA (SIMON)
+    // REPRODUÇÃO DA SEQUÊNCIA
     // ==========================================================
     function reproduzirSequencia() {
         aceitandoInput = false;
@@ -582,12 +563,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var atrasoInicial = 600;
 
         for (var i = 0; i < sequencia.length; i++) {
-            (function(indice, idx) {
+            (function(idx) {
                 var t = setTimeout(function() {
                     brilharQuadrante(sequencia[idx], tempo * 0.85);
                 }, atrasoInicial + idx * tempo);
                 intervalosAtivos.push(t);
-            })(i, i);
+            })(i);
         }
 
         var tempoFinal = atrasoInicial + sequencia.length * tempo + 200;
@@ -622,12 +603,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     function clicarQuadrante(id) {
         if (!aceitandoInput) return;
 
-        // Brilha mesmo com erro (feedback tátil)
         brilharQuadrante(id, Math.min(200, velocidade * 0.5));
 
         var esperado;
         if (modoAtual === 'reverso') {
-            // No modo reverso, o jogador tem que reproduzir ao contrário
             var indiceReverso = sequencia.length - 1 - passoAtual;
             esperado = sequencia[indiceReverso];
         } else {
@@ -635,7 +614,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         }
 
         if (id !== esperado) {
-            // ERRO
             aceitandoInput = false;
             bloquearQuadrantes(true);
             som.erro();
@@ -644,7 +622,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             var btn = gridContainer.querySelector('.quad[data-id="' + id + '"]');
             if (btn) {
                 btn.classList.add('errado');
-                setTimeout(function() { btn.classList.remove('errado'); }, 400);
+                setTimeout(function() { btn.classList.remove('errado'); }, 500);
             }
 
             if (modoAtual === 'vidas') {
@@ -656,7 +634,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                     setTimeout(function() { fimDeJogo(); }, 800);
                 } else {
                     setTimeout(function() {
-                        // Repete o mesmo nível com nova tentativa
                         passoAtual = 0;
                         reproduzirSequencia();
                     }, 1200);
@@ -669,18 +646,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             return;
         }
 
-        // Acerto
         passoAtual++;
         atualizarPlacar();
 
         if (passoAtual === sequencia.length) {
-            // Completou a sequência!
             aceitandoInput = false;
             bloquearQuadrantes(true);
             atualizarBadge('✅ Perfeito!', 'jogador');
             $('info-instrucao').textContent = '✅ Muito bem! Preparando próximo nível...';
 
-            // Atualiza recorde
             if (nivel > recorde) {
                 recorde = nivel;
                 localStorage.setItem('brain_simon_recorde', String(recorde));
@@ -699,7 +673,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ==========================================================
     function proximoNivel() {
         nivel++;
-        // Acelera a cada 2 níveis, mas mantém mínimo legível
         velocidade = Math.max(280, 600 - (nivel - 1) * 25);
         sequencia.push(gerarNovaCor());
         atualizarPlacar();
@@ -834,7 +807,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
         }
 
-        // Ajusta texto de instrução conforme o modo
         if (novoModo === 'classico') {
             $('info-instrucao').textContent = '🎵 Repita a sequência de cores e sons na ordem correta. Cada nível adiciona uma cor nova!';
         } else if (novoModo === 'reverso') {
@@ -843,7 +815,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             $('info-instrucao').textContent = '❤️ Você tem 3 vidas. Cada erro custa uma vida. Errar não reinicia — só perde vida!';
         }
 
-        // Cancela jogo atual
         jogoAtivo = false;
         aceitandoInput = false;
         bloquearQuadrantes(true);
