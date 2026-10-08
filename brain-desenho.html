@@ -157,6 +157,9 @@ body {
     line-height: 1.5;
 }
 
+/* ==========================================================
+   PALETA DE CORES — CORRIGIDA (força cor sólida sempre)
+   ========================================================== */
 .paleta-cores {
     display: flex;
     justify-content: center;
@@ -171,14 +174,30 @@ body {
     border: 3px solid transparent;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
     padding: 0;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    /* Reseta qualquer background herdado */
+    background-image: none;
+    background-clip: padding-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.lapis-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+    z-index: 0;
+    pointer-events: none;
 }
 .lapis-btn.ativo {
     transform: scale(1.15);
-    border-color: #fff;
-    box-shadow: 0 0 15px currentColor;
+    border-color: #ffffff;
+    box-shadow: 0 0 15px currentColor, 0 4px 10px rgba(0,0,0,0.3);
 }
 
 #grid-wrapper {
@@ -200,7 +219,6 @@ body {
     width: 100%;
     height: 100%;
     gap: 4px;
-    /* grid-template-columns e rows são aplicados via JS */
 }
 
 .cell {
@@ -498,7 +516,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // PALETA
+    // PALETA — CORRIGIDA
     // ==========================================================
     function montarPaleta() {
         var paleta = $('paleta-cores');
@@ -507,9 +525,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             var btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'lapis-btn' + (cor === corAtual ? ' ativo' : '');
-            btn.style.backgroundColor = cor;
-            btn.style.color = cor;
+            // Força cor sólida com !important para vencer qualquer CSS herdado
+            btn.style.setProperty('background-color', cor, 'important');
+            btn.style.setProperty('background-image', 'none', 'important');
+            btn.style.setProperty('color', cor, 'important');
             btn.setAttribute('aria-label', 'Selecionar cor ' + cor);
+            btn.setAttribute('data-cor', cor);
             btn.addEventListener('click', function() {
                 corAtual = cor;
                 var todos = document.querySelectorAll('.lapis-btn');
@@ -530,7 +551,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var gridContainer = $('grid-container');
         gridContainer.innerHTML = '';
 
-        // Aplica o grid template via JS de forma explícita
         gridContainer.style.display = 'grid';
         gridContainer.style.gridTemplateColumns = 'repeat(' + tamanhoGrelha + ', 1fr)';
         gridContainer.style.gridTemplateRows = 'repeat(' + tamanhoGrelha + ', 1fr)';
