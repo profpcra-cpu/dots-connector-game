@@ -6,7 +6,7 @@
 <title>Pintar por Números — Brain Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
     --bg-gradient-1: #1e1b4b;
@@ -141,7 +141,7 @@ body {
 .cor-btn {
     position: relative;
     aspect-ratio: 1 / 1;
-    border-radius: 10px;
+    border-radius: 12px;
     border: 3px solid transparent;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -151,10 +151,12 @@ body {
     align-items: center;
     justify-content: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: 900;
     color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    text-shadow:
+        0 0 6px rgba(0, 0, 0, 0.8),
+        0 2px 4px rgba(0, 0, 0, 0.9);
     -webkit-appearance: none;
     appearance: none;
     overflow: hidden;
@@ -185,14 +187,14 @@ body {
 }
 
 /* ==========================================================
-   GRID
+   GRID — NÚMEROS GRANDES E COM ALTO CONTRASTE
    ========================================================== */
 #grid-wrapper {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     margin: 0 auto 12px;
-    background: #050914;
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
     border-radius: 14px;
     padding: 10px;
     box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
@@ -204,12 +206,13 @@ body {
     display: grid;
     width: 100%;
     height: 100%;
-    gap: 3px;
+    gap: 4px;
 }
+
 .cell {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 6px;
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -219,20 +222,40 @@ body {
     min-width: 0;
     min-height: 0;
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 800;
-    color: rgba(255,255,255,0.55);
-    font-size: 13px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    font-weight: 900;
+    color: #ffffff;
+    font-size: clamp(16px, 5vmin, 28px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-shadow:
+        0 0 8px rgba(0, 0, 0, 0.9),
+        0 2px 4px rgba(0, 0, 0, 0.95),
+        0 0 2px rgba(0, 0, 0, 1);
 }
-.cell:hover:not(.pintada) {
-    background: rgba(99, 102, 241, 0.25);
+
+/* "Bolinha" escura atrás do número para garantir contraste */
+.cell:not(.pintada):not(.vazia)::before {
+    content: "";
+    position: absolute;
+    inset: 18%;
+    background: rgba(0, 0, 0, 0.38);
+    border-radius: 50%;
+    z-index: -1;
+    pointer-events: none;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.cell:hover:not(.pintada):not(.vazia) {
+    background: rgba(99, 102, 241, 0.35);
+    border-color: rgba(148, 163, 184, 0.5);
     transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
 }
 .cell.pintada {
     cursor: default;
     color: transparent;
     text-shadow: none;
-    border-color: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.2);
 }
 .cell.errado {
     animation: shake 0.35s ease;
@@ -396,11 +419,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     console.log('[brain-colorir] Inicializando...');
 
     // ==========================================================
-    // FIGURAS — cada figura é uma matriz com números de 1 a 6
-    // 0 = célula vazia (não precisa pintar)
+    // FIGURAS
     // ==========================================================
     var FIGURAS = [
-        // 0 - Estrela 5x5
         {
             nome: 'Estrela',
             emoji: '⭐',
@@ -412,7 +433,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 [0,2,0,2,0]
             ]
         },
-        // 1 - Coração 6x6
         {
             nome: 'Coração',
             emoji: '❤️',
@@ -425,7 +445,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 [0,0,1,0,0,0]
             ]
         },
-        // 2 - Casa 6x6
         {
             nome: 'Casa',
             emoji: '🏠',
@@ -438,7 +457,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 [0,2,3,3,2,0]
             ]
         },
-        // 3 - Flor 7x7
         {
             nome: 'Flor',
             emoji: '🌸',
@@ -452,7 +470,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 [0,0,1,5,1,0,0]
             ]
         },
-        // 4 - Peixe 7x7
         {
             nome: 'Peixe',
             emoji: '🐟',
@@ -466,7 +483,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 [0,0,0,5,0,0,0]
             ]
         },
-        // 5 - Borboleta 8x8
         {
             nome: 'Borboleta',
             emoji: '🦋',
@@ -483,7 +499,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         }
     ];
 
-    // Paleta fixa: índice 0 = cor do número 1, etc.
     var CORES = [
         '#f43f5e', // 1 - rosa
         '#38bdf8', // 2 - azul
@@ -497,9 +512,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ESTADO
     // ==========================================================
     var figuraAtual = 0;
-    var matrizAlvo = [];        // números (0 a 6)
-    var matrizPintada = [];     // booleano por célula
-    var corAtual = 1;           // número da cor selecionada (1 a 6)
+    var matrizAlvo = [];
+    var matrizPintada = [];
+    var corAtual = 1;
     var tamanhoGrelha = 5;
     var desenhando = false;
     var segundos = 0;
@@ -574,7 +589,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         totalPintaveis = contarPintaveis(matrizAlvo);
         pintadas = 0;
 
-        // Zera a pintura
         matrizPintada = [];
         for (var r = 0; r < tamanhoGrelha; r++) {
             var linha = [];
@@ -603,7 +617,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         gridContainer.style.display = 'grid';
         gridContainer.style.gridTemplateColumns = 'repeat(' + tamanhoGrelha + ', 1fr)';
         gridContainer.style.gridTemplateRows = 'repeat(' + tamanhoGrelha + ', 1fr)';
-        gridContainer.style.gap = '3px';
+        gridContainer.style.gap = '4px';
 
         for (var r = 0; r < tamanhoGrelha; r++) {
             for (var c = 0; c < tamanhoGrelha; c++) {
@@ -614,9 +628,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
                 var numero = matrizAlvo[r][c];
                 if (numero === 0) {
-                    cell.style.opacity = '0.15';
+                    cell.classList.add('vazia');
+                    cell.style.opacity = '0.25';
                     cell.style.cursor = 'default';
-                    cell.style.background = 'rgba(15, 23, 42, 0.5)';
+                    cell.style.background = 'rgba(15, 23, 42, 0.4)';
+                    cell.style.borderColor = 'rgba(148, 163, 184, 0.08)';
                 } else {
                     cell.textContent = numero;
                     cell.dataset.numero = numero;
@@ -651,7 +667,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             }
         }
 
-        // Listeners globais
         if (!window._colorirListeners) {
             window.addEventListener('mouseup', function() { desenhando = false; });
             window.addEventListener('touchend', function() { desenhando = false; });
@@ -666,7 +681,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var paleta = $('paleta-cores');
         paleta.innerHTML = '';
 
-        // Detecta quais números a figura atual usa
         var numerosUsados = {};
         for (var r = 0; r < tamanhoGrelha; r++) {
             for (var c = 0; c < tamanhoGrelha; c++) {
@@ -689,7 +703,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 btn.setAttribute('aria-label', 'Cor ' + num);
                 btn.innerHTML = '<span>' + num + '</span>';
 
-                // Se a figura não usa essa cor, esconde
                 if (!numerosUsados[num]) {
                     btn.classList.add('completa');
                     btn.disabled = true;
@@ -729,7 +742,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var numeroCorreto = matrizAlvo[r][c];
 
         if (corAtual === numeroCorreto) {
-            // Acerto
             matrizPintada[r][c] = true;
             pintadas++;
             som.paint();
@@ -752,7 +764,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 setTimeout(function() { mostrarVitoria(); }, 400);
             }
         } else {
-            // Erro
             som.erro();
             var gridContainer2 = $('grid-container');
             var cell2 = gridContainer2.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
