@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Toque Rápido — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 8px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-tempo { color: #60a5fa; }
+#display-pontos { color: var(--c-green); }
+#display-recorde { color: var(--c-amber); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* Barra de tempo */
+.timer-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    border-radius: 99px;
+    transition: width 0.1s linear;
+    width: 100%;
+}
+
+/* ==========================================================
+   GRID DE TOQUE
+   ========================================================== */
+#grid-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 12px;
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+#grid-container {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    gap: 5px;
+}
+.cell {
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.1s, transform 0.1s, box-shadow 0.15s;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    font-family: inherit;
+}
+.cell:disabled {
+    cursor: default;
+}
+.cell.alvo {
+    animation: alvo-pulsa 0.6s infinite;
+}
+@keyframes alvo-pulsa {
+    0%, 100% { box-shadow: 0 0 20px 2px currentColor, inset 0 0 20px rgba(255,255,255,0.35); }
+    50% { box-shadow: 0 0 35px 6px currentColor, inset 0 0 30px rgba(255,255,255,0.55); }
+}
+.cell.correta {
+    animation: acerto-pop 0.35s ease;
+}
+@keyframes acerto-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+.cell.errada {
+    animation: erro-shake 0.35s ease;
+}
+@keyframes erro-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* ==========================================================
+   PALETA PARA MODO COR CERTA
+   ========================================================== */
+.paleta-cores {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.cor-btn {
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    overflow: hidden;
+}
+.cor-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+}
+.cor-btn:hover:not(:disabled) {
+    transform: scale(1.08);
+}
+.cor-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.cor-btn.selecionada {
+    border-color: #ffffff;
+    box-shadow: 0 0 15px currentColor;
+    transform: scale(1.12);
+}
+
+/* ==========================================================
+   CONTROLES
+   ========================================================== */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+.hidden { display: none !important; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button {
+    max-width: 260px;
+}
+
+/* Badge de fase */
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Feedback flutuante */
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 48px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.8s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="classico">⏱️ Clássico</button>
+        <button class="mode-btn" data-mode="sobrevivencia">💀 Vidas</button>
+        <button class="mode-btn" data-mode="cor">🎯 Cor Certa</button>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">Alvo<br><strong id="display-tempo">—</strong></div>
+        <div id="label-bloco2">Pontos<br><strong id="display-pontos">0</strong></div>
+        <div id="label-bloco3">Recorde<br><strong id="display-recorde">0</strong></div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        ⚡ Toque na célula acesa o mais rápido possível antes que ela desapareça!
+    </p>
+
+    <div id="grid-wrapper">
+        <div id="grid-container"></div>
+        <div id="overlay" class="overlay hidden"></div>
+    </div>
+
+    <div class="paleta-cores hidden" id="paleta-cores"></div>
+
+    <div class="controls-grid">
+        <button id="btn-iniciar">▶️ Iniciar Jogo</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-reflexo] Inicializando...');
+
+    // ==========================================================
+    // CORES DA PALETA
+    // ==========================================================
+    var CORES = [
+        '#f43f5e',
+        '#38bdf8',
+        '#fbbf24',
+        '#4ade80',
+        '#a855f7',
+        '#fb923c'
+    ];
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'classico';        // classico | sobrevivencia | cor
+    var jogoAtivo = false;
+    var pontos = 0;
+    var acertos = 0;
+    var erros = 0;
+    var tempoRestante = 0;
+    var timerGlobal = null;
+    var timerAlvo = null;
+    var timerProximo = null;
+    var alvoAtual = null;              // { r, c, cor, corIndex }
+    var velocidade = 1200;              // ms por alvo
+    var comboAtual = 0;                 // acertos consecutivos
+    var vidas = 3;
+
+    // Para o modo Cor Certa — cor selecionada na paleta
+    var corSelecionada = 0;
+    var numeroCores = 4;
+
+    // Recordes por modo
+    var recordeClassico = parseInt(localStorage.getItem('brain_reflexo_recorde_classico') || '0', 10);
+    var recordeVidas = parseInt(localStorage.getItem('brain_reflexo_recorde_vidas') || '0', 10);
+    var recordeCor = parseInt(localStorage.getItem('brain_reflexo_recorde_cor') || '0', 10);
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(0.08, agora + 0.015);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        acerto: function() {
+            var nota = 500 + Math.min(comboAtual * 30, 400);
+            this.play(nota, 'sine', 0.12);
+        },
+        erro: function() {
+            this.play(160, 'sawtooth', 0.28);
+        },
+        novaRodada: function() {
+            this.play(700, 'triangle', 0.08);
+        },
+        vitoria: function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function getRecordeAtual() {
+        if (modoAtual === 'classico') return recordeClassico;
+        if (modoAtual === 'sobrevivencia') return recordeVidas;
+        return recordeCor;
+    }
+
+    function setRecordeAtual(valor) {
+        if (modoAtual === 'classico') {
+            recordeClassico = valor;
+            localStorage.setItem('brain_reflexo_recorde_classico', String(valor));
+        } else if (modoAtual === 'sobrevivencia') {
+            recordeVidas = valor;
+            localStorage.setItem('brain_reflexo_recorde_vidas', String(valor));
+        } else {
+            recordeCor = valor;
+            localStorage.setItem('brain_reflexo_recorde_cor', String(valor));
+        }
+    }
+
+    function configuracaoModo() {
+        if (modoAtual === 'classico') {
+            return { tamanho: 3, tempoGlobal: 30 };
+        } else if (modoAtual === 'sobrevivencia') {
+            return { tamanho: 3, tempoGlobal: 0 };
+        } else {
+            // Cor certa — mais difícil
+            return { tamanho: 3, tempoGlobal: 30 };
+        }
+    }
+
+    function calcularTamanho() {
+        // Aumenta conforme nível (baseado em acertos)
+        var nivel = Math.floor(acertos / 3);
+        if (nivel < 3) return 3;
+        if (nivel < 6) return 4;
+        if (nivel < 10) return 5;
+        return 6;
+    }
+
+    function calcularVelocidade() {
+        // Diminui conforme acertos (mínimo 300ms)
+        var v = 1200 - acertos * 35;
+        return Math.max(320, v);
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function atualizarPlacar() {
+        $('display-pontos').textContent = String(pontos);
+        $('display-recorde').textContent = String(getRecordeAtual());
+        $('display-tempo').textContent = (modoAtual === 'sobrevivencia')
+            ? (vidas + ' ❤️')
+            : (Math.ceil(tempoRestante) + 's');
+    }
+
+    // Haptic feedback em mobile
+    function vibrar(ms) {
+        if (navigator.vibrate) {
+            try { navigator.vibrate(ms); } catch (e) {}
+        }
+    }
+
+    // ==========================================================
+    // MONTAGEM DO GRID
+    // ==========================================================
+    function montarGrid(tamanho) {
+        var gridContainer = $('grid-container');
+        gridContainer.innerHTML = '';
+        gridContainer.style.display = 'grid';
+        gridContainer.style.gridTemplateColumns = 'repeat(' + tamanho + ', 1fr)';
+        gridContainer.style.gridTemplateRows = 'repeat(' + tamanho + ', 1fr)';
+        gridContainer.style.gap = '5px';
+
+        for (var r = 0; r < tamanho; r++) {
+            for (var c = 0; c < tamanho; c++) {
+                (function(rr, cc) {
+                    var cell = document.createElement('button');
+                    cell.type = 'button';
+                    cell.className = 'cell';
+                    cell.dataset.r = rr;
+                    cell.dataset.c = cc;
+                    cell.disabled = true;
+
+                    cell.addEventListener('click', function() {
+                        if (!jogoAtivo) return;
+                        tentarToque(rr, cc);
+                    });
+
+                    gridContainer.appendChild(cell);
+                })(r, c);
+            }
+        }
+    }
+
+    function limparGrid() {
+        var cells = document.querySelectorAll('.cell');
+        for (var i = 0; i < cells.length; i++) {
+            cells[i].classList.remove('alvo', 'correta', 'errada');
+            cells[i].style.background = 'rgba(30, 41, 59, 0.55)';
+            cells[i].style.color = '';
+        }
+    }
+
+    function bloquearCells(bloquear) {
+        var cells = document.querySelectorAll('.cell');
+        for (var i = 0; i < cells.length; i++) {
+            cells[i].disabled = bloquear;
+        }
+    }
+
+    function posicionarAlvo() {
+        if (!jogoAtivo) return;
+
+        limparGrid();
+        bloquearCells(false);
+
+        var tamanhoAtual = calcularTamanho();
+        var gridContainer = $('grid-container');
+        var cellsAtuais = gridContainer.children.length;
+        var tamanhoAnterior = Math.sqrt(cellsAtuais);
+
+        // Se precisa mudar de tamanho, remonta
+        if (tamanhoAnterior !== tamanhoAtual) {
+            montarGrid(tamanhoAtual);
+        }
+
+        var r = Math.floor(Math.random() * tamanhoAtual);
+        var c = Math.floor(Math.random() * tamanhoAtual);
+
+        // Escolhe uma cor
+        var corIndex;
+        if (modoAtual === 'cor') {
+            // No modo Cor Certa, a cor é a que o jogador selecionou (se ele escolheu uma cor da paleta)
+            corIndex = corSelecionada;
+            // Às vezes pode ser outra cor para confundir
+            if (Math.random() < 0.4) {
+                corIndex = Math.floor(Math.random() * numeroCores);
+            }
+        } else {
+            corIndex = Math.floor(Math.random() * CORES.length);
+        }
+        var cor = CORES[corIndex];
+
+        alvoAtual = { r: r, c: c, cor: cor, corIndex: corIndex };
+
+        var cell = gridContainer.children[r * tamanhoAtual + c];
+        if (cell) {
+            cell.style.background = cor;
+            cell.style.color = cor;
+            cell.classList.add('alvo');
+        }
+
+        som.novaRodada();
+
+        // Timer do alvo
+        velocidade = calcularVelocidade();
+        if (timerAlvo) clearTimeout(timerAlvo);
+        timerAlvo = setTimeout(function() {
+            // Tempo esgotado para este alvo
+            if (jogoAtivo && alvoAtual) {
+                tempoEsgotadoAlvo();
+            }
+        }, velocidade);
+    }
+
+    // ==========================================================
+    // TOQUE
+    // ==========================================================
+    function tentarToque(r, c) {
+        if (!alvoAtual || !jogoAtivo) return;
+        if (timerAlvo) { clearTimeout(timerAlvo); timerAlvo = null; }
+
+        var cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
+        var acertou = (r === alvoAtual.r && c === alvoAtual.c);
+
+        // No modo Cor Certa, exige que a cor selecionada seja a do alvo
+        if (acertou && modoAtual === 'cor') {
+            if (corSelecionada !== alvoAtual.corIndex) {
+                acertou = false;
+            }
+        }
+
+        if (acertou) {
+            acertos++;
+            comboAtual++;
+            var bonus = Math.min(comboAtual, 5);
+            var ganho = 1 + bonus;
+            pontos += ganho;
+
+            if (cell) {
+                cell.classList.remove('alvo');
+                cell.classList.add('correta');
+            }
+            som.acerto();
+            vibrar(30);
+            mostrarFeedbackFloat('+' + ganho, 'positivo');
+            atualizarBadge('✅ Combo x' + comboAtual, 'ok');
+
+            // Atualiza recorde
+            if (pontos > getRecordeAtual()) {
+                setRecordeAtual(pontos);
+            }
+            atualizarPlacar();
+
+            bloquearCells(true);
+            limparGrid();
+
+            timerProximo = setTimeout(function() {
+                posicionarAlvo();
+            }, 120);
+        } else {
+            erros++;
+            comboAtual = 0;
+            if (cell) cell.classList.add('errada');
+            som.erro();
+            vibrar(80);
+            mostrarFeedbackFloat('✗', 'negativo');
+            atualizarBadge('❌ Errou!', 'erro');
+
+            if (modoAtual === 'sobrevivencia') {
+                vidas--;
+                atualizarPlacar();
+                if (vidas <= 0) {
+                    setTimeout(function() { fimDeJogo(); }, 400);
+                    return;
+                }
+                bloquearCells(true);
+                setTimeout(function() {
+                    limparGrid();
+                    posicionarAlvo();
+                }, 500);
+            } else {
+                pontos = Math.max(0, pontos - 1);
+                atualizarPlacar();
+                bloquearCells(true);
+                setTimeout(function() {
+                    limparGrid();
+                    posicionarAlvo();
+                }, 500);
+            }
+        }
+    }
+
+    function tempoEsgotadoAlvo() {
+        // Alvo desapareceu sem toque
+        limparGrid();
+        comboAtual = 0;
+        erros++;
+        som.erro();
+        atualizarBadge('⏰ Muito lento!', 'erro');
+
+        if (modoAtual === 'sobrevivencia') {
+            vidas--;
+            atualizarPlacar();
+            if (vidas <= 0) {
+                fimDeJogo();
+                return;
+            }
+        } else {
+            pontos = Math.max(0, pontos - 1);
+            atualizarPlacar();
+        }
+
+        setTimeout(function() {
+            posicionarAlvo();
+        }, 400);
+    }
+
+    // ==========================================================
+    // PALETA PARA MODO COR CERTA
+    // ==========================================================
+    function montarPaleta() {
+        var paleta = $('paleta-cores');
+        paleta.innerHTML = '';
+
+        for (var i = 0; i < numeroCores; i++) {
+            (function(idx) {
+                var cor = CORES[idx];
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cor-btn';
+                btn.style.setProperty('background-color', cor, 'important');
+                btn.style.setProperty('background-image', 'none', 'important');
+                btn.style.setProperty('color', cor, 'important');
+                btn.dataset.cor = idx;
+                btn.setAttribute('aria-label', 'Cor ' + (idx + 1));
+
+                if (idx === corSelecionada) btn.classList.add('selecionada');
+
+                btn.addEventListener('click', function() {
+                    corSelecionada = idx;
+                    var botoes = document.querySelectorAll('.cor-btn');
+                    for (var j = 0; j < botoes.length; j++) {
+                        botoes[j].classList.remove('selecionada');
+                    }
+                    btn.classList.add('selecionada');
+                    som.play(600, 'triangle', 0.06);
+                });
+
+                paleta.appendChild(btn);
+            })(i);
+        }
+    }
+
+    // ==========================================================
+    // TIMER GLOBAL (modo clássico e cor certa)
+    // ==========================================================
+    function iniciarTimerGlobal(segundos) {
+        tempoRestante = segundos;
+        atualizarTimerBar();
+
+        if (timerGlobal) clearInterval(timerGlobal);
+        timerGlobal = setInterval(function() {
+            tempoRestante -= 0.1;
+            if (tempoRestante <= 0) {
+                tempoRestante = 0;
+                atualizarTimerBar();
+                clearInterval(timerGlobal);
+                timerGlobal = null;
+                fimDeJogo();
+                return;
+            }
+            atualizarTimerBar();
+            $('display-tempo').textContent = Math.ceil(tempoRestante) + 's';
+        }, 100);
+    }
+
+    function atualizarTimerBar() {
+        var cfg = configuracaoModo();
+        var tempoMax = cfg.tempoGlobal || 30;
+        var pct = (tempoRestante / tempoMax) * 100;
+        $('timer-fill').style.width = pct + '%';
+    }
+
+    function pararTimers() {
+        if (timerGlobal) { clearInterval(timerGlobal); timerGlobal = null; }
+        if (timerAlvo) { clearTimeout(timerAlvo); timerAlvo = null; }
+        if (timerProximo) { clearTimeout(timerProximo); timerProximo = null; }
+    }
+
+    // ==========================================================
+    // FEEDBACK FLUTUANTE
+    // ==========================================================
+    function mostrarFeedbackFloat(texto, tipo) {
+        var el = document.createElement('div');
+        el.className = 'feedback-float ' + tipo;
+        el.textContent = texto;
+        $('grid-wrapper').appendChild(el);
+        setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 850);
+    }
+
+    // ==========================================================
+    // INÍCIO / FIM DE JOGO
+    // ==========================================================
+    function iniciarJogo() {
+        jogoAtivo = true;
+        pontos = 0;
+        acertos = 0;
+        erros = 0;
+        comboAtual = 0;
+        vidas = 3;
+        corSelecionada = 0;
+        velocidade = 1200;
+
+        var cfg = configuracaoModo();
+        esconderOverlay();
+
+        // Paleta só no modo Cor Certa
+        var paleta = $('paleta-cores');
+        if (modoAtual === 'cor') {
+            paleta.classList.remove('hidden');
+            montarPaleta();
+        } else {
+            paleta.classList.add('hidden');
+        }
+
+        montarGrid(cfg.tamanho);
+        atualizarPlacar();
+        atualizarBadge('▶️ Prepare-se...', 'ok');
+
+        if (modoAtual === 'classico') {
+            $('info-instrucao').textContent = '⚡ Toque na célula acesa! 30 segundos de adrenalina.';
+            iniciarTimerGlobal(30);
+        } else if (modoAtual === 'sobrevivencia') {
+            $('info-instrucao').textContent = '❤️ 3 vidas. Cada erro custa 1. Boa sorte!';
+            $('timer-fill').style.width = '100%';
+        } else {
+            $('info-instrucao').textContent = '🎯 Escolha uma cor na paleta, depois toque na célula acesa só se ela tiver essa cor!';
+            iniciarTimerGlobal(30);
+        }
+
+        // Pequeno delay antes de começar
+        setTimeout(function() {
+            if (jogoAtivo) posicionarAlvo();
+        }, 500);
+    }
+
+    function fimDeJogo() {
+        jogoAtivo = false;
+        pararTimers();
+        bloquearCells(true);
+        limparGrid();
+
+        // Atualiza recorde
+        if (pontos > getRecordeAtual()) {
+            setRecordeAtual(pontos);
+        }
+
+        var precisao = (acertos + erros) > 0
+            ? Math.round((acertos / (acertos + erros)) * 100)
+            : 0;
+
+        var medalha, titulo, mensagem;
+        if (pontos >= 40) {
+            medalha = '🏆'; titulo = 'Reflexo Sobre-Humano!';
+            mensagem = 'Impressionante! Você tem reflexos de atleta olímpico.';
+        } else if (pontos >= 25) {
+            medalha = '🥇'; titulo = 'Velocidade Máxima!';
+            mensagem = 'Excelente! Seus reflexos estão afiados.';
+        } else if (pontos >= 12) {
+            medalha = '🥈'; titulo = 'Bom Ritmo!';
+            mensagem = 'Muito bem! Continue treinando para melhorar ainda mais.';
+        } else {
+            medalha = '🥉'; titulo = 'Aquecendo!';
+            mensagem = 'Bom começo! O segredo é a prática.';
+        }
+
+        som.vitoria();
+
+        mostrarOverlay({
+            titulo: medalha + ' ' + titulo,
+            htmlExtra:
+                '<div class="grande">' + pontos + ' pts</div>' +
+                '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">' +
+                    '<span style="color:var(--c-green)">✅ ' + acertos + '</span>' +
+                    '<span style="color:var(--c-red)">❌ ' + erros + '</span>' +
+                    '<span style="color:var(--c-cyan)">🎯 ' + precisao + '%</span>' +
+                '</div>' +
+                '<div style="font-size:12px; color:var(--text-muted); margin-top:8px;">' +
+                    'Recorde: <strong style="color:var(--c-amber)">' + getRecordeAtual() + ' pts</strong>' +
+                '</div>',
+            subtitulo: mensagem,
+            botao: { texto: '🔄 Jogar Novamente', acao: function() { iniciarJogo(); } }
+        });
+
+        atualizarBadge('🏁 Fim de jogo', 'erro');
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+
+        jogoAtivo = false;
+        pararTimers();
+        limparGrid();
+        esconderOverlay();
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        // Reset
+        pontos = 0;
+        acertos = 0;
+        erros = 0;
+        vidas = 3;
+        tempoRestante = 0;
+
+        // Paleta
+        var paleta = $('paleta-cores');
+        if (novoModo === 'cor') {
+            paleta.classList.remove('hidden');
+            montarPaleta();
+            $('info-instrucao').textContent = '🎯 Escolha uma cor na paleta, depois toque na célula acesa só se ela tiver essa cor!';
+        } else {
+            paleta.classList.add('hidden');
+            if (novoModo === 'classico') {
+                $('info-instrucao').textContent = '⚡ Toque na célula acesa! 30 segundos de adrenalina.';
+            } else {
+                $('info-instrucao').textContent = '❤️ 3 vidas. Cada erro custa 1. Boa sorte!';
+            }
+        }
+
+        montarGrid(3);
+        atualizarPlacar();
+        atualizarBadge('Pronto', '');
+        $('timer-fill').style.width = '0%';
+        $('display-tempo').textContent = (novoModo === 'sobrevivencia') ? '3 ❤️' : '30s';
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-iniciar').addEventListener('click', iniciarJogo);
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    montarGrid(3);
+    atualizarPlacar();
+    atualizarBadge('Pronto para jogar', '');
+    $('display-tempo').textContent = '30s';
+    console.log('[brain-reflexo] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
