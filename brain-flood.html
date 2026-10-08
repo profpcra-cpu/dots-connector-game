@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flood It! — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-dificuldade { color: var(--c-cyan); }
+#display-movimentos { color: var(--c-amber); }
+#display-dominado { color: var(--c-green); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+}
+
+#grid-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 12px;
+    background: #050914;
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+#grid-container {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    gap: 2px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.cell {
+    border-radius: 4px;
+    transition: background 0.25s ease, transform 0.2s ease;
+    position: relative;
+}
+.cell.origin {
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.85);
+    z-index: 1;
+}
+.cell.capture {
+    animation: capturePulse 0.35s ease;
+}
+@keyframes capturePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+.paleta-cores {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+.cor-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    background-image: none;
+    background-clip: padding-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.cor-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+    z-index: 0;
+    pointer-events: none;
+}
+.cor-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+.cor-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.cor-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+.hidden { display: none !important; }
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.92);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 24px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 52px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button {
+    max-width: 260px;
+}
+
+/* Barra de movimentos restantes */
+.moves-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 12px;
+    position: relative;
+}
+.moves-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    border-radius: 99px;
+    transition: width 0.3s ease;
+    width: 100%;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">Modo<br><strong id="display-dificuldade">Médio</strong></div>
+        <div id="label-bloco2">Movimentos<br><strong id="display-movimentos">0/20</strong></div>
+        <div id="label-bloco3">Dominado<br><strong id="display-dominado">1%</strong></div>
+    </div>
+
+    <div class="moves-bar">
+        <div class="moves-bar-fill" id="moves-bar-fill"></div>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        🌊 Clique nas cores abaixo para expandir a mancha do canto superior esquerdo. Objetivo: dominar TODO o tabuleiro antes de ficar sem movimentos!
+    </p>
+
+    <div id="grid-wrapper">
+        <div id="grid-container"></div>
+        <div id="overlay" class="overlay hidden"></div>
+    </div>
+
+    <div class="paleta-cores" id="paleta-cores"></div>
+
+    <div class="controls-grid">
+        <select id="select-dificuldade">
+            <option value="facil">🟢 Fácil (6×6 · 22 mov · 4 cores)</option>
+            <option value="medio" selected>🟡 Médio (8×8 · 25 mov · 6 cores)</option>
+            <option value="dificil">🔴 Difícil (10×10 · 25 mov · 6 cores)</option>
+            <option value="mestre">💀 Mestre (12×12 · 22 mov · 6 cores)</option>
+        </select>
+        <button id="btn-reiniciar" class="btn-secondary">🔄 Novo Jogo</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-flood] Inicializando...');
+
+    // ==========================================================
+    // CONSTANTES
+    // ==========================================================
+    // 6 cores inspiradas na paleta do Brain Hub
+    var CORES = [
+        '#f43f5e', // 0 - rosa/vermelho
+        '#38bdf8', // 1 - azul
+        '#fbbf24', // 2 - amarelo
+        '#4ade80', // 3 - verde
+        '#a855f7', // 4 - roxo
+        '#fb923c'  // 5 - laranja
+    ];
+
+    var DIFICULDADES = {
+        facil:   { tamanho: 6,  movimentos: 22, cores: 4, nome: 'Fácil' },
+        medio:   { tamanho: 8,  movimentos: 25, cores: 6, nome: 'Médio' },
+        dificil: { tamanho: 10, movimentos: 25, cores: 6, nome: 'Difícil' },
+        mestre:  { tamanho: 12, movimentos: 22, cores: 6, nome: 'Mestre' }
+    };
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var dificuldadeAtual = 'medio';
+    var tamanhoGrelha = 8;
+    var numCores = 6;
+    var movimentosMax = 25;
+    var movimentosUsados = 0;
+    var matrizCores = [];        // matriz [r][c] = índice de cor
+    var jogoAtivo = false;
+    var corAtualMancha = 0;      // índice da cor da mancha
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+        },
+        play: function(freq, type, duration) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                g.gain.setValueAtTime(0.07, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start();
+                o.stop(this.ctx.currentTime + duration);
+            } catch (e) {}
+        },
+        click:    function() { this.play(520, 'triangle', 0.08); },
+        flood:    function() { this.play(300, 'sine', 0.15); },
+        bloqueado:function() { this.play(200, 'square', 0.06); },
+        win:      function() { var self = this; [523, 659, 783, 1046].forEach(function(f, i) { setTimeout(function() { self.play(f, 'sine', 0.2); }, i * 100); }); },
+        lose:     function() { this.play(220, 'sawtooth', 0.3); var self = this; setTimeout(function() { self.play(150, 'sawtooth', 0.4); }, 200); }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function criarMatrizAleatoria(tam, qtdCores) {
+        var m = [];
+        for (var r = 0; r < tam; r++) {
+            var linha = [];
+            for (var c = 0; c < tam; c++) {
+                linha.push(Math.floor(Math.random() * qtdCores));
+            }
+            m.push(linha);
+        }
+        return m;
+    }
+
+    function contarDominado() {
+        // Conta quantas células têm a cor da mancha (a partir do canto 0,0)
+        var visitado = criarMatrizVisitada();
+        var cor = matrizCores[0][0];
+        var total = 0;
+        var stack = [[0, 0]];
+        visitado[0][0] = true;
+        while (stack.length > 0) {
+            var pos = stack.pop();
+            var r = pos[0];
+            var c = pos[1];
+            total++;
+            var vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+            for (var i = 0; i < vizinhos.length; i++) {
+                var nr = vizinhos[i][0];
+                var nc = vizinhos[i][1];
+                if (nr < 0 || nr >= tamanhoGrelha || nc < 0 || nc >= tamanhoGrelha) continue;
+                if (visitado[nr][nc]) continue;
+                if (matrizCores[nr][nc] !== cor) continue;
+                visitado[nr][nc] = true;
+                stack.push([nr, nc]);
+            }
+        }
+        return total;
+    }
+
+    function criarMatrizVisitada() {
+        var v = [];
+        for (var r = 0; r < tamanhoGrelha; r++) {
+            var linha = [];
+            for (var c = 0; c < tamanhoGrelha; c++) linha.push(false);
+            v.push(linha);
+        }
+        return v;
+    }
+
+    // ==========================================================
+    // RENDERIZAÇÃO
+    // ==========================================================
+    function montarDOMGrid() {
+        var gridContainer = $('grid-container');
+        gridContainer.innerHTML = '';
+        gridContainer.style.display = 'grid';
+        gridContainer.style.gridTemplateColumns = 'repeat(' + tamanhoGrelha + ', 1fr)';
+        gridContainer.style.gridTemplateRows = 'repeat(' + tamanhoGrelha + ', 1fr)';
+        gridContainer.style.gap = '2px';
+
+        // Marca quais células fazem parte da mancha atual
+        var visitado = criarMatrizVisitada();
+        var corMancha = matrizCores[0][0];
+        var stack = [[0, 0]];
+        visitado[0][0] = true;
+        while (stack.length > 0) {
+            var pos = stack.pop();
+            var r = pos[0];
+            var c = pos[1];
+            var vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+            for (var i = 0; i < vizinhos.length; i++) {
+                var nr = vizinhos[i][0];
+                var nc = vizinhos[i][1];
+                if (nr < 0 || nr >= tamanhoGrelha || nc < 0 || nc >= tamanhoGrelha) continue;
+                if (visitado[nr][nc]) continue;
+                if (matrizCores[nr][nc] !== corMancha) continue;
+                visitado[nr][nc] = true;
+                stack.push([nr, nc]);
+            }
+        }
+
+        for (var r = 0; r < tamanhoGrelha; r++) {
+            for (var c = 0; c < tamanhoGrelha; c++) {
+                var cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.r = r;
+                cell.dataset.c = c;
+                cell.style.backgroundColor = CORES[matrizCores[r][c]];
+                if (visitado[r][c]) {
+                    cell.classList.add('origin');
+                }
+                gridContainer.appendChild(cell);
+            }
+        }
+    }
+
+    function atualizarVisualGrid(cellsAlteradas) {
+        var gridContainer = $('grid-container');
+        var cells = gridContainer.querySelectorAll('.cell');
+
+        var visitado = criarMatrizVisitada();
+        var corMancha = matrizCores[0][0];
+        var stack = [[0, 0]];
+        visitado[0][0] = true;
+        while (stack.length > 0) {
+            var pos = stack.pop();
+            var r = pos[0];
+            var c = pos[1];
+            var vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+            for (var i = 0; i < vizinhos.length; i++) {
+                var nr = vizinhos[i][0];
+                var nc = vizinhos[i][1];
+                if (nr < 0 || nr >= tamanhoGrelha || nc < 0 || nc >= tamanhoGrelha) continue;
+                if (visitado[nr][nc]) continue;
+                if (matrizCores[nr][nc] !== corMancha) continue;
+                visitado[nr][nc] = true;
+                stack.push([nr, nc]);
+            }
+        }
+
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            var r = parseInt(cell.dataset.r, 10);
+            var c = parseInt(cell.dataset.c, 10);
+            cell.style.backgroundColor = CORES[matrizCores[r][c]];
+            cell.classList.toggle('origin', visitado[r][c]);
+
+            // Animação nas células que mudaram
+            if (cellsAlteradas) {
+                for (var k = 0; k < cellsAlteradas.length; k++) {
+                    var p = cellsAlteradas[k];
+                    if (p[0] === r && p[1] === c) {
+                        cell.classList.remove('capture');
+                        void cell.offsetWidth;
+                        cell.classList.add('capture');
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // ==========================================================
+    // PALETA
+    // ==========================================================
+    function montarPaleta() {
+        var paleta = $('paleta-cores');
+        paleta.innerHTML = '';
+        for (var i = 0; i < numCores; i++) {
+            (function(indiceCor) {
+                var cor = CORES[indiceCor];
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cor-btn';
+                btn.style.setProperty('background-color', cor, 'important');
+                btn.style.setProperty('background-image', 'none', 'important');
+                btn.style.setProperty('color', cor, 'important');
+                btn.setAttribute('aria-label', 'Cor ' + (indiceCor + 1));
+                btn.dataset.cor = indiceCor;
+
+                btn.addEventListener('click', function() {
+                    aplicarCor(indiceCor);
+                });
+
+                paleta.appendChild(btn);
+            })(i);
+        }
+        atualizarBotoesPaleta();
+    }
+
+    function atualizarBotoesPaleta() {
+        var botoes = document.querySelectorAll('.cor-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            var btn = botoes[i];
+            var indiceCor = parseInt(btn.dataset.cor, 10);
+            // Desabilita se for a cor atual da mancha OU se o jogo não está ativo
+            btn.disabled = !jogoAtivo || indiceCor === corAtualMancha;
+        }
+    }
+
+    // ==========================================================
+    // MOTOR DO JOGO — FLOOD
+    // ==========================================================
+    function aplicarCor(novaCor) {
+        if (!jogoAtivo) {
+            som.bloqueado();
+            return;
+        }
+        if (novaCor === corAtualMancha) {
+            som.bloqueado();
+            return;
+        }
+
+        movimentosUsados++;
+        var cellsAlteradas = [];
+
+        // Coleta todas as células da mancha atual
+        var visitado = criarMatrizVisitada();
+        var corAntiga = matrizCores[0][0];
+        var stack = [[0, 0]];
+        visitado[0][0] = true;
+        var mancha = [[0, 0]];
+        while (stack.length > 0) {
+            var pos = stack.pop();
+            var r = pos[0];
+            var c = pos[1];
+            var vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+            for (var i = 0; i < vizinhos.length; i++) {
+                var nr = vizinhos[i][0];
+                var nc = vizinhos[i][1];
+                if (nr < 0 || nr >= tamanhoGrelha || nc < 0 || nc >= tamanhoGrelha) continue;
+                if (visitado[nr][nc]) continue;
+                if (matrizCores[nr][nc] !== corAntiga) continue;
+                visitado[nr][nc] = true;
+                stack.push([nr, nc]);
+                mancha.push([nr, nc]);
+            }
+        }
+
+        // Aplica a nova cor na mancha
+        for (var k = 0; k < mancha.length; k++) {
+            var rr = mancha[k][0];
+            var cc = mancha[k][1];
+            matrizCores[rr][cc] = novaCor;
+            cellsAlteradas.push([rr, cc]);
+        }
+
+        // Depois da troca, faz o flood para capturar novas células adjacentes
+        // que agora têm a cor nova
+        var capturadas = floodExpandir(novaCor, visitado);
+        for (var k2 = 0; k2 < capturadas.length; k2++) {
+            cellsAlteradas.push(capturadas[k2]);
+        }
+
+        corAtualMancha = novaCor;
+        som.flood();
+
+        atualizarVisualGrid(cellsAlteradas);
+        atualizarEstatisticas();
+        atualizarBotoesPaleta();
+
+        // Verifica vitória ou derrota
+        var dominado = contarDominado();
+        var total = tamanhoGrelha * tamanhoGrelha;
+        if (dominado === total) {
+            jogoAtivo = false;
+            setTimeout(function() { mostrarVitoria(); }, 300);
+        } else if (movimentosUsados >= movimentosMax) {
+            jogoAtivo = false;
+            setTimeout(function() { mostrarDerrota(); }, 300);
+        }
+    }
+
+    // Expande a mancha capturando células adjacentes que já tenham a cor nova
+    // Retorna lista de células capturadas (novas entradas na mancha)
+    function floodExpandir(novaCor, visitado) {
+        var capturadas = [];
+        var fila = [];
+
+        // Enfileira todos os vizinhos da mancha atual
+        for (var r = 0; r < tamanhoGrelha; r++) {
+            for (var c = 0; c < tamanhoGrelha; c++) {
+                if (!visitado[r][c]) continue;
+                var vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+                for (var i = 0; i < vizinhos.length; i++) {
+                    var nr = vizinhos[i][0];
+                    var nc = vizinhos[i][1];
+                    if (nr < 0 || nr >= tamanhoGrelha || nc < 0 || nc >= tamanhoGrelha) continue;
+                    if (visitado[nr][nc]) continue;
+                    if (matrizCores[nr][nc] === novaCor) {
+                        fila.push([nr, nc]);
+                    }
+                }
+            }
+        }
+
+        // BFS para capturar tudo que agora tem a cor nova e é alcançável
+        while (fila.length > 0) {
+            var pos = fila.shift();
+            var r = pos[0];
+            var c = pos[1];
+            if (visitado[r][c]) continue;
+            visitado[r][c] = true;
+            capturadas.push([r, c]);
+
+            var vizinhos = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+            for (var i = 0; i < vizinhos.length; i++) {
+                var nr = vizinhos[i][0];
+                var nc = vizinhos[i][1];
+                if (nr < 0 || nr >= tamanhoGrelha || nc < 0 || nc >= tamanhoGrelha) continue;
+                if (visitado[nr][nc]) continue;
+                if (matrizCores[nr][nc] === novaCor) {
+                    fila.push([nr, nc]);
+                }
+            }
+        }
+
+        return capturadas;
+    }
+
+    // ==========================================================
+    // ESTATÍSTICAS
+    // ==========================================================
+    function atualizarEstatisticas() {
+        var dominado = contarDominado();
+        var total = tamanhoGrelha * tamanhoGrelha;
+        var percentual = Math.round((dominado / total) * 100);
+        $('display-dominado').textContent = percentual + '%';
+        $('display-movimentos').textContent = movimentosUsados + '/' + movimentosMax;
+        $('display-dificuldade').textContent = DIFICULDADES[dificuldadeAtual].nome;
+
+        // Barra de progresso dos movimentos
+        var restantes = movimentosMax - movimentosUsados;
+        var pct = (restantes / movimentosMax) * 100;
+        $('moves-bar-fill').style.width = pct + '%';
+    }
+
+    // ==========================================================
+    // VITÓRIA / DERROTA
+    // ==========================================================
+    function mostrarVitoria() {
+        som.win();
+        var restantes = movimentosMax - movimentosUsados;
+        var pontos = Math.round(1000 + restantes * 50);
+        var estrelas = restantes >= 10 ? '⭐⭐⭐' : (restantes >= 4 ? '⭐⭐' : '⭐');
+
+        mostrarOverlay({
+            titulo: '🏆 Vitória!',
+            htmlExtra: '<div class="grande">' + pontos + ' pts</div>' +
+                '<div style="font-size:22px; margin-top:8px;">' + estrelas + '</div>',
+            subtitulo: 'Você dominou o tabuleiro em ' + movimentosUsados + ' movimentos (' + restantes + ' restantes).',
+            botao: { texto: '🔄 Novo Jogo', acao: function() { novoJogo(); } },
+            botaoSecundario: { texto: '🎯 Trocar Dificuldade', acao: function() { novoJogo(); } }
+        });
+    }
+
+    function mostrarDerrota() {
+        som.lose();
+        var dominado = contarDominado();
+        var total = tamanhoGrelha * tamanhoGrelha;
+        var percentual = Math.round((dominado / total) * 100);
+
+        mostrarOverlay({
+            titulo: '😢 Sem Movimentos!',
+            htmlExtra: '<div class="grande">' + percentual + '%</div>',
+            subtitulo: 'Você dominou ' + dominado + ' de ' + total + ' células. Tente novamente!',
+            botao: { texto: '🔄 Tentar Novamente', acao: function() { novoJogo(); } },
+            botaoSecundario: { texto: '🎯 Trocar Dificuldade', acao: function() { novoJogo(); } }
+        });
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var overlay = $('overlay');
+        overlay.classList.add('hidden');
+        overlay.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var overlay = $('overlay');
+        overlay.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            overlay.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            overlay.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            overlay.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            overlay.appendChild(btn);
+        }
+        if (cfg.botaoSecundario) {
+            var btn2 = document.createElement('button');
+            btn2.textContent = cfg.botaoSecundario.texto;
+            btn2.className = 'btn-secondary';
+            btn2.addEventListener('click', cfg.botaoSecundario.acao);
+            overlay.appendChild(btn2);
+        }
+
+        overlay.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // NOVO JOGO
+    // ==========================================================
+    function novoJogo() {
+        var cfg = DIFICULDADES[dificuldadeAtual];
+        tamanhoGrelha = cfg.tamanho;
+        movimentosMax = cfg.movimentos;
+        numCores = cfg.cores;
+        movimentosUsados = 0;
+        jogoAtivo = true;
+
+        matrizCores = criarMatrizAleatoria(tamanhoGrelha, numCores);
+        corAtualMancha = matrizCores[0][0];
+
+        esconderOverlay();
+        montarDOMGrid();
+        montarPaleta();
+        atualizarEstatisticas();
+        atualizarBotoesPaleta();
+
+        // Verifica vitória imediata (caso raro)
+        var dominado = contarDominado();
+        var total = tamanhoGrelha * tamanhoGrelha;
+        if (dominado === total) {
+            jogoAtivo = false;
+            setTimeout(function() { mostrarVitoria(); }, 300);
+        }
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    $('btn-reiniciar').addEventListener('click', function() {
+        novoJogo();
+    });
+
+    $('select-dificuldade').addEventListener('change', function(e) {
+        dificuldadeAtual = e.target.value;
+        novoJogo();
+    });
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    novoJogo();
+    console.log('[brain-flood] Pronto! Tabuleiro:', tamanhoGrelha + 'x' + tamanhoGrelha);
+})();
+</script>
+</body>
+</html>
