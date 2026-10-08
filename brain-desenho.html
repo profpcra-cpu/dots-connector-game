@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg-color: #0b1020;
     --bg-gradient-1: #1e1b4b;
     --bg-gradient-2: #0b1020;
     --card-bg: rgba(30, 41, 59, 0.85);
@@ -30,7 +29,6 @@
     --radius-md: 12px;
 }
 [data-theme="light"] {
-    --bg-color: #eef2ff;
     --bg-gradient-1: #e0e7ff;
     --bg-gradient-2: #f8fafc;
     --card-bg: rgba(255, 255, 255, 0.9);
@@ -64,7 +62,7 @@ body {
     -webkit-backdrop-filter: blur(18px) saturate(160%);
     padding: 20px;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+    box-shadow: var(--shadow-card);
     width: 100%;
     max-width: 480px;
     text-align: center;
@@ -164,6 +162,7 @@ body {
     justify-content: center;
     gap: 10px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 .lapis-btn {
     width: 36px;
@@ -174,6 +173,7 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     transition: transform 0.2s, border-color 0.2s;
     padding: 0;
+    flex-shrink: 0;
 }
 .lapis-btn.ativo {
     transform: scale(1.15);
@@ -189,11 +189,18 @@ body {
     background: #050914;
     border-radius: 14px;
     padding: 12px;
-    display: grid;
-    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--card-border);
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+}
+
+#grid-container {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    gap: 4px;
+    /* grid-template-columns e rows são aplicados via JS */
 }
 
 .cell {
@@ -206,6 +213,8 @@ body {
     position: relative;
     cursor: pointer;
     transition: background 0.1s;
+    min-width: 0;
+    min-height: 0;
 }
 .cell.errado {
     animation: shake 0.4s ease;
@@ -334,7 +343,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     <div class="paleta-cores" id="paleta-cores"></div>
 
     <div id="grid-wrapper">
-        <div id="grid-container" style="display: grid; width: 100%; height: 100%; gap: 4px;"></div>
+        <div id="grid-container"></div>
         <div id="overlay" class="overlay hidden"></div>
     </div>
 
@@ -355,746 +364,797 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 </div>
 
 <script>
-// ==========================================================
-// CONSTANTES
-// ==========================================================
-const CORES = [
-    '#f43f5e',
-    '#38bdf8',
-    '#fbbf24',
-    '#4ade80',
-    '#a855f7',
-    '#fb923c'
-];
+(function() {
+    'use strict';
 
-const NIVEIS_DESAFIO = [
-    { tamanho: 4, celulas: 4,  tempo: 4.0 },
-    { tamanho: 4, celulas: 6,  tempo: 3.5 },
-    { tamanho: 4, celulas: 8,  tempo: 3.0 },
-    { tamanho: 5, celulas: 8,  tempo: 3.5 },
-    { tamanho: 5, celulas: 10, tempo: 3.0 },
-    { tamanho: 5, celulas: 12, tempo: 2.5 },
-    { tamanho: 6, celulas: 12, tempo: 3.0 },
-    { tamanho: 6, celulas: 15, tempo: 2.5 },
-    { tamanho: 6, celulas: 18, tempo: 2.0 },
-    { tamanho: 6, celulas: 22, tempo: 1.8 }
-];
-const MAX_NIVEL = NIVEIS_DESAFIO.length;
+    console.log('[brain-desenho] Inicializando...');
 
-// ==========================================================
-// ESTADO
-// ==========================================================
-let modoAtual = 'livre';
+    // ==========================================================
+    // CONSTANTES
+    // ==========================================================
+    var CORES = [
+        '#f43f5e',
+        '#38bdf8',
+        '#fbbf24',
+        '#4ade80',
+        '#a855f7',
+        '#fb923c'
+    ];
 
-let tamanhoGrelha = 5;
-let corAtual = CORES[0];
-let matrizDesenho = [];
-let desenhando = false;
-let segundos = 0;
-let timer = null;
-let jogoAtivo = true;
+    var NIVEIS_DESAFIO = [
+        { tamanho: 4, celulas: 4,  tempo: 4.0 },
+        { tamanho: 4, celulas: 6,  tempo: 3.5 },
+        { tamanho: 4, celulas: 8,  tempo: 3.0 },
+        { tamanho: 5, celulas: 8,  tempo: 3.5 },
+        { tamanho: 5, celulas: 10, tempo: 3.0 },
+        { tamanho: 5, celulas: 12, tempo: 2.5 },
+        { tamanho: 6, celulas: 12, tempo: 3.0 },
+        { tamanho: 6, celulas: 15, tempo: 2.5 },
+        { tamanho: 6, celulas: 18, tempo: 2.0 },
+        { tamanho: 6, celulas: 22, tempo: 1.8 }
+    ];
+    var MAX_NIVEL = NIVEIS_DESAFIO.length;
 
-let nivelAtual = 1;
-let pontosDesafio = 0;
-let matrizAlvo = [];
-let fase = 'idle';
-let dicasUsadas = 0;
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'livre';
+    var tamanhoGrelha = 5;
+    var corAtual = CORES[0];
+    var matrizDesenho = [];
+    var desenhando = false;
+    var segundos = 0;
+    var timer = null;
+    var jogoAtivo = true;
 
-// ==========================================================
-// SOM
-// ==========================================================
-const som = {
-    ativo: true,
-    ctx: null,
-    init() {
-        if (!this.ctx) {
-            try {
-                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            } catch (e) { this.ctx = null; }
-        }
-    },
-    play(freq, type, duration) {
-        if (!this.ativo) return;
-        this.init();
-        if (!this.ctx) return;
-        try {
-            const o = this.ctx.createOscillator();
-            const g = this.ctx.createGain();
-            o.type = type;
-            o.frequency.value = freq;
-            g.gain.setValueAtTime(0.08, this.ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-            o.connect(g);
-            g.connect(this.ctx.destination);
-            o.start();
-            o.stop(this.ctx.currentTime + duration);
-        } catch (e) {}
-    },
-    draw()  { this.play(440 + Math.random() * 200, 'sine', 0.08); },
-    click() { this.play(600, 'triangle', 0.1); },
-    acerto(){ [523, 659, 783].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.18), i * 80)); },
-    erro()  { this.play(220, 'sawtooth', 0.2); setTimeout(() => this.play(160, 'sawtooth', 0.25), 100); },
-    win()   { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.play(f, 'sine', 0.2), i * 100)); },
-    tick()  { this.play(880, 'square', 0.05); }
-};
+    var nivelAtual = 1;
+    var pontosDesafio = 0;
+    var matrizAlvo = [];
+    var fase = 'idle';
+    var dicasUsadas = 0;
 
-// ==========================================================
-// INICIALIZAÇÃO
-// ==========================================================
-function inicializarModoLivre(tam) {
-    tamanhoGrelha = tam;
-    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
-    segundos = 0;
-    jogoAtivo = true;
-
-    montarPaleta();
-    montarDOMGrid();
-    atualizarEstatisticasLivre();
-    iniciarTimer();
-    esconderOverlay();
-}
-
-function inicializarModoDesafio() {
-    nivelAtual = 1;
-    pontosDesafio = 0;
-    iniciarNivel();
-}
-
-function iniciarNivel() {
-    const cfg = NIVEIS_DESAFIO[nivelAtual - 1];
-    tamanhoGrelha = cfg.tamanho;
-    matrizAlvo = gerarPadraoAleatorio(cfg.tamanho, cfg.celulas);
-    matrizDesenho = Array(cfg.tamanho).fill(null).map(() => Array(cfg.tamanho).fill(null));
-    dicasUsadas = 0;
-    fase = 'memorizando';
-    segundos = 0;
-
-    montarPaleta();
-    montarDOMGrid();
-    atualizarEstatisticasDesafio();
-    atualizarBotoesDesafio();
-    mostrarOverlayMemorizacao(cfg.tempo);
-}
-
-function gerarPadraoAleatorio(tamanho, quantidade) {
-    const grade = Array(tamanho).fill(null).map(() => Array(tamanho).fill(null));
-    const total = tamanho * tamanho;
-    const qtd = Math.min(quantidade, total);
-
-    const indices = new Set();
-    while (indices.size < qtd) {
-        indices.add(Math.floor(Math.random() * total));
-    }
-
-    for (const idx of indices) {
-        const r = Math.floor(idx / tamanho);
-        const c = idx % tamanho;
-        const cor = CORES[Math.floor(Math.random() * CORES.length)];
-        grade[r][c] = cor;
-    }
-
-    return grade;
-}
-
-// ==========================================================
-// PALETA
-// ==========================================================
-function montarPaleta() {
-    const paleta = document.getElementById('paleta-cores');
-    paleta.innerHTML = '';
-    CORES.forEach((cor) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'lapis-btn' + (cor === corAtual ? ' ativo' : '');
-        btn.style.backgroundColor = cor;
-        btn.style.color = cor;
-        btn.setAttribute('aria-label', 'Selecionar cor ' + cor);
-        btn.addEventListener('click', () => {
-            corAtual = cor;
-            document.querySelectorAll('.lapis-btn').forEach(b => b.classList.remove('ativo'));
-            btn.classList.add('ativo');
-            som.click();
-        });
-        paleta.appendChild(btn);
-    });
-}
-
-// ==========================================================
-// GRID DOM
-// ==========================================================
-let listenersAtivos = false;
-
-function montarDOMGrid() {
-    const gridContainer = document.getElementById('grid-container');
-    gridContainer.style.gridTemplateColumns = 'repeat(' + tamanhoGrelha + ', 1fr)';
-    gridContainer.style.gridTemplateRows = 'repeat(' + tamanhoGrelha + ', 1fr)';
-    gridContainer.innerHTML = '';
-
-    const interativo = (modoAtual === 'livre' && jogoAtivo) ||
-                       (modoAtual === 'desafio' && fase === 'reproduzindo');
-
-    for (let r = 0; r < tamanhoGrelha; r++) {
-        for (let c = 0; c < tamanhoGrelha; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-
-            if (interativo) {
-                cell.style.cursor = 'pointer';
-                cell.addEventListener('mousedown', (e) => { e.preventDefault(); iniciarPintura(r, c); });
-                cell.addEventListener('mouseenter', () => continuarPintura(r, c));
-                cell.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarPintura(r, c); }, {passive: false});
-                cell.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if (target && target.classList.contains('cell')) {
-                        continuarPintura(parseInt(target.dataset.r), parseInt(target.dataset.c));
-                    }
-                }, {passive: false});
-            } else {
-                cell.style.cursor = 'default';
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
             }
+        },
+        play: function(freq, type, duration) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start();
+                o.stop(this.ctx.currentTime + duration);
+            } catch (e) {}
+        },
+        draw:   function() { this.play(440 + Math.random() * 200, 'sine', 0.08); },
+        click:  function() { this.play(600, 'triangle', 0.1); },
+        acerto: function() { var self = this; [523, 659, 783].forEach(function(f, i) { setTimeout(function() { self.play(f, 'sine', 0.18); }, i * 80); }); },
+        erro:   function() { this.play(220, 'sawtooth', 0.2); var self = this; setTimeout(function() { self.play(160, 'sawtooth', 0.25); }, 100); },
+        win:    function() { var self = this; [523, 659, 783, 1046].forEach(function(f, i) { setTimeout(function() { self.play(f, 'sine', 0.2); }, i * 100); }); },
+        tick:   function() { this.play(880, 'square', 0.05); }
+    };
 
-            gridContainer.appendChild(cell);
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function formatarTempo(s) {
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function contarCelulasPreenchidas(matriz) {
+        var count = 0;
+        for (var r = 0; r < matriz.length; r++) {
+            for (var c = 0; c < matriz[r].length; c++) {
+                if (matriz[r][c] !== null) count++;
+            }
         }
+        return count;
     }
 
-    if (!listenersAtivos) {
-        window.addEventListener('mouseup', finalizarPintura);
-        window.addEventListener('touchend', finalizarPintura);
-        listenersAtivos = true;
-    }
+    function gerarPadraoAleatorio(tamanho, quantidade) {
+        var grade = [];
+        for (var i = 0; i < tamanho; i++) {
+            var linha = [];
+            for (var j = 0; j < tamanho; j++) linha.push(null);
+            grade.push(linha);
+        }
+        var total = tamanho * tamanho;
+        var qtd = Math.min(quantidade, total);
 
-    atualizarVisualGrid();
-}
-
-// ==========================================================
-// PINTURA
-// ==========================================================
-function iniciarPintura(r, c) {
-    if (modoAtual === 'livre' && !jogoAtivo) return;
-    if (modoAtual === 'desafio' && fase !== 'reproduzindo') return;
-    desenhando = true;
-    aplicarCor(r, c);
-}
-
-function continuarPintura(r, c) {
-    if (!desenhando) return;
-    aplicarCor(r, c);
-}
-
-function finalizarPintura() { desenhando = false; }
-
-function aplicarCor(r, c) {
-    const corAntiga = matrizDesenho[r][c];
-    if (corAntiga === corAtual) {
-        matrizDesenho[r][c] = null;
-    } else {
-        matrizDesenho[r][c] = corAtual;
-    }
-
-    som.draw();
-    atualizarVisualGrid();
-    if (modoAtual === 'livre') {
-        atualizarEstatisticasLivre();
-        verificarPreenchimentoTotalLivre();
-    } else {
-        atualizarEstatisticasDesafio();
-    }
-}
-
-function atualizarVisualGrid() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        const r = parseInt(cell.dataset.r);
-        const c = parseInt(cell.dataset.c);
-
-        let cor;
-        if (modoAtual === 'desafio' && fase === 'memorizando') {
-            cor = matrizAlvo[r][c];
-        } else {
-            cor = matrizDesenho[r][c];
+        var indices = [];
+        while (indices.length < qtd) {
+            var idx = Math.floor(Math.random() * total);
+            if (indices.indexOf(idx) === -1) indices.push(idx);
         }
 
-        if (cor) {
-            cell.style.background = cor;
-            cell.style.borderColor = '#ffffff';
-            cell.style.boxShadow = 'inset 0 0 12px rgba(0,0,0,0.3)';
-        } else {
-            cell.style.background = 'rgba(30, 41, 59, 0.4)';
-            cell.style.borderColor = 'rgba(255, 255, 255, 0.04)';
-            cell.style.boxShadow = 'none';
+        for (var k = 0; k < indices.length; k++) {
+            var id = indices[k];
+            var r = Math.floor(id / tamanho);
+            var c = id % tamanho;
+            var cor = CORES[Math.floor(Math.random() * CORES.length)];
+            grade[r][c] = cor;
         }
-    });
-}
 
-// ==========================================================
-// ESTATÍSTICAS
-// ==========================================================
-function contarCelulasPreenchidas(matriz) {
-    let count = 0;
-    for (let r = 0; r < matriz.length; r++) {
-        for (let c = 0; c < matriz[r].length; c++) {
-            if (matriz[r][c] !== null) count++;
-        }
+        return grade;
     }
-    return count;
-}
 
-function atualizarEstatisticasLivre() {
-    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
-    const total = tamanhoGrelha * tamanhoGrelha;
-    document.getElementById('display-pontos').textContent = preenchidas + '/' + total;
-    document.getElementById('display-nivel').textContent = 'Livre';
-}
+    // ==========================================================
+    // PALETA
+    // ==========================================================
+    function montarPaleta() {
+        var paleta = $('paleta-cores');
+        paleta.innerHTML = '';
+        CORES.forEach(function(cor) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'lapis-btn' + (cor === corAtual ? ' ativo' : '');
+            btn.style.backgroundColor = cor;
+            btn.style.color = cor;
+            btn.setAttribute('aria-label', 'Selecionar cor ' + cor);
+            btn.addEventListener('click', function() {
+                corAtual = cor;
+                var todos = document.querySelectorAll('.lapis-btn');
+                for (var i = 0; i < todos.length; i++) todos[i].classList.remove('ativo');
+                btn.classList.add('ativo');
+                som.click();
+            });
+            paleta.appendChild(btn);
+        });
+    }
 
-function atualizarEstatisticasDesafio() {
-    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
-    const totalAlvo = contarCelulasPreenchidas(matrizAlvo);
-    document.getElementById('display-nivel').textContent = 'Nv ' + nivelAtual + '/' + MAX_NIVEL;
-    document.getElementById('display-pontos').textContent = preenchidas + '/' + totalAlvo;
-    document.getElementById('display-tempo').textContent = formatarTempo(segundos);
-}
+    // ==========================================================
+    // GRID DOM
+    // ==========================================================
+    var listenersGlobaisAtivos = false;
 
-// ==========================================================
-// TIMER
-// ==========================================================
-function iniciarTimer() {
-    if (timer) clearInterval(timer);
-    timer = setInterval(() => {
+    function montarDOMGrid() {
+        var gridContainer = $('grid-container');
+        gridContainer.innerHTML = '';
+
+        // Aplica o grid template via JS de forma explícita
+        gridContainer.style.display = 'grid';
+        gridContainer.style.gridTemplateColumns = 'repeat(' + tamanhoGrelha + ', 1fr)';
+        gridContainer.style.gridTemplateRows = 'repeat(' + tamanhoGrelha + ', 1fr)';
+        gridContainer.style.width = '100%';
+        gridContainer.style.height = '100%';
+        gridContainer.style.gap = '4px';
+
+        var interativo = (modoAtual === 'livre' && jogoAtivo) ||
+                         (modoAtual === 'desafio' && fase === 'reproduzindo');
+
+        for (var r = 0; r < tamanhoGrelha; r++) {
+            for (var c = 0; c < tamanhoGrelha; c++) {
+                var cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.r = r;
+                cell.dataset.c = c;
+
+                if (interativo) {
+                    cell.style.cursor = 'pointer';
+                    (function(rr, cc) {
+                        cell.addEventListener('mousedown', function(e) { e.preventDefault(); iniciarPintura(rr, cc); });
+                        cell.addEventListener('mouseenter', function() { continuarPintura(rr, cc); });
+                        cell.addEventListener('touchstart', function(e) { e.preventDefault(); iniciarPintura(rr, cc); }, { passive: false });
+                        cell.addEventListener('touchmove', function(e) {
+                            e.preventDefault();
+                            var touch = e.touches[0];
+                            var target = document.elementFromPoint(touch.clientX, touch.clientY);
+                            if (target && target.classList.contains('cell')) {
+                                continuarPintura(parseInt(target.dataset.r, 10), parseInt(target.dataset.c, 10));
+                            }
+                        }, { passive: false });
+                    })(r, c);
+                } else {
+                    cell.style.cursor = 'default';
+                }
+
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        if (!listenersGlobaisAtivos) {
+            window.addEventListener('mouseup', finalizarPintura);
+            window.addEventListener('touchend', finalizarPintura);
+            listenersGlobaisAtivos = true;
+        }
+
+        atualizarVisualGrid();
+    }
+
+    // ==========================================================
+    // PINTURA
+    // ==========================================================
+    function iniciarPintura(r, c) {
         if (modoAtual === 'livre' && !jogoAtivo) return;
         if (modoAtual === 'desafio' && fase !== 'reproduzindo') return;
-
-        segundos++;
-        document.getElementById('display-tempo').textContent = formatarTempo(segundos);
-    }, 1000);
-}
-function pararTimer() { if (timer) { clearInterval(timer); timer = null; } }
-
-// ==========================================================
-// VERIFICAÇÕES
-// ==========================================================
-function verificarPreenchimentoTotalLivre() {
-    const preenchidas = contarCelulasPreenchidas(matrizDesenho);
-    const total = tamanhoGrelha * tamanhoGrelha;
-    if (preenchidas === total && jogoAtivo) {
-        jogoAtivo = false;
-        pararTimer();
-        som.win();
-        mostrarOverlay({
-            titulo: '🎨 Obra Completa!',
-            subtitulo: 'Excelente trabalho artístico! Você preencheu ' + total + ' células em ' + formatarTempo(segundos) + '.',
-            botao: { texto: '🔄 Jogar Novamente', acao: () => inicializarModoLivre(tamanhoGrelha) }
-        });
-    }
-}
-
-// ==========================================================
-// OVERLAYS
-// ==========================================================
-function esconderOverlay() {
-    const overlay = document.getElementById('overlay');
-    overlay.classList.add('hidden');
-    overlay.innerHTML = '';
-}
-
-function mostrarOverlay(cfg) {
-    const overlay = document.getElementById('overlay');
-    overlay.innerHTML = '';
-
-    if (cfg.titulo) {
-        const h2 = document.createElement('h2');
-        h2.textContent = cfg.titulo;
-        overlay.appendChild(h2);
-    }
-    if (cfg.htmlExtra) {
-        const div = document.createElement('div');
-        div.innerHTML = cfg.htmlExtra;
-        overlay.appendChild(div);
-    }
-    if (cfg.subtitulo) {
-        const p = document.createElement('div');
-        p.className = 'subtitulo';
-        p.textContent = cfg.subtitulo;
-        overlay.appendChild(p);
-    }
-    if (cfg.botao) {
-        const btn = document.createElement('button');
-        btn.textContent = cfg.botao.texto;
-        btn.addEventListener('click', cfg.botao.acao);
-        overlay.appendChild(btn);
-    }
-    if (cfg.botaoSecundario) {
-        const btn2 = document.createElement('button');
-        btn2.textContent = cfg.botaoSecundario.texto;
-        btn2.className = 'btn-secondary';
-        btn2.addEventListener('click', cfg.botaoSecundario.acao);
-        overlay.appendChild(btn2);
+        desenhando = true;
+        aplicarCor(r, c);
     }
 
-    overlay.classList.remove('hidden');
-}
+    function continuarPintura(r, c) {
+        if (!desenhando) return;
+        aplicarCor(r, c);
+    }
 
-// ==========================================================
-// DESAFIO — FLUXO
-// ==========================================================
-function mostrarOverlayMemorizacao(tempoTotal) {
-    let restante = Math.ceil(tempoTotal);
-    const overlay = document.getElementById('overlay');
-    overlay.innerHTML = '';
-    overlay.classList.remove('hidden');
+    function finalizarPintura() { desenhando = false; }
 
-    const badge = document.createElement('div');
-    badge.className = 'badge-nivel';
-    badge.textContent = 'Nível ' + nivelAtual + ' de ' + MAX_NIVEL;
-    overlay.appendChild(badge);
-
-    const titulo = document.createElement('h2');
-    titulo.textContent = '👀 Memorize o padrão!';
-    overlay.appendChild(titulo);
-
-    const countdown = document.createElement('div');
-    countdown.className = 'countdown';
-    countdown.textContent = restante;
-    overlay.appendChild(countdown);
-
-    const sub = document.createElement('div');
-    sub.className = 'subtitulo';
-    sub.textContent = 'Você terá que reproduzi-lo de memória.';
-    overlay.appendChild(sub);
-
-    let tickAnterior = restante;
-    const interval = setInterval(() => {
-        restante -= 0.1;
-        if (restante <= 0) {
-            clearInterval(interval);
-            iniciarFaseReproducao();
-            return;
+    function aplicarCor(r, c) {
+        if (!matrizDesenho[r] || matrizDesenho[r][c] === undefined) return;
+        var corAntiga = matrizDesenho[r][c];
+        if (corAntiga === corAtual) {
+            matrizDesenho[r][c] = null;
+        } else {
+            matrizDesenho[r][c] = corAtual;
         }
-        const ceil = Math.ceil(restante);
-        if (ceil !== tickAnterior) {
-            tickAnterior = ceil;
-            som.tick();
+
+        som.draw();
+        atualizarVisualGrid();
+        if (modoAtual === 'livre') {
+            atualizarEstatisticasLivre();
+            verificarPreenchimentoTotalLivre();
+        } else {
+            atualizarEstatisticasDesafio();
         }
-        countdown.textContent = ceil;
-    }, 100);
-}
-
-function iniciarFaseReproducao() {
-    fase = 'reproduzindo';
-    segundos = 0;
-    matrizDesenho = Array(tamanhoGrelha).fill(null).map(() => Array(tamanhoGrelha).fill(null));
-
-    esconderOverlay();
-    montarDOMGrid();
-    atualizarEstatisticasDesafio();
-    atualizarBotoesDesafio();
-
-    document.getElementById('info-instrucao').textContent =
-        '✏️ Reproduza o padrão de memória! Use as cores corretas e toque em ✅ Confirmar quando terminar.';
-}
-
-function atualizarBotoesDesafio() {
-    const btnIniciar = document.getElementById('btn-iniciar-desafio');
-    const btnDica = document.getElementById('btn-dica');
-    const btnConf = document.getElementById('btn-confirmar');
-
-    if (fase === 'idle') {
-        btnIniciar.disabled = false;
-        btnIniciar.textContent = '▶️ Iniciar';
-        btnDica.disabled = true;
-        btnConf.disabled = true;
-    } else if (fase === 'memorizando') {
-        btnIniciar.disabled = true;
-        btnDica.disabled = true;
-        btnConf.disabled = true;
-    } else if (fase === 'reproduzindo') {
-        btnIniciar.disabled = true;
-        btnDica.disabled = dicasUsadas >= 1;
-        btnDica.textContent = dicasUsadas >= 1 ? '💡 Usada' : '💡 Dica';
-        btnConf.disabled = false;
-    } else if (fase === 'resultado' || fase === 'finalizado') {
-        btnIniciar.disabled = true;
-        btnDica.disabled = true;
-        btnConf.disabled = true;
     }
-}
 
-function usarDica() {
-    if (fase !== 'reproduzindo' || dicasUsadas >= 1) return;
-    dicasUsadas++;
+    function atualizarVisualGrid() {
+        var cells = document.querySelectorAll('.cell');
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            var r = parseInt(cell.dataset.r, 10);
+            var c = parseInt(cell.dataset.c, 10);
 
-    const overlay = document.getElementById('overlay');
-    overlay.innerHTML = '';
-    overlay.style.background = 'rgba(5, 9, 20, 0.75)';
-    overlay.classList.remove('hidden');
-
-    const titulo = document.createElement('h2');
-    titulo.textContent = '💡 Dica';
-    overlay.appendChild(titulo);
-
-    const sub = document.createElement('div');
-    sub.className = 'subtitulo';
-    sub.textContent = 'Observe bem... 1.5s';
-    overlay.appendChild(sub);
-
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        const r = parseInt(cell.dataset.r);
-        const c = parseInt(cell.dataset.c);
-        const corAlvo = matrizAlvo[r][c];
-        const corAtualCell = matrizDesenho[r][c];
-        if (corAlvo && !corAtualCell) {
-            cell.style.boxShadow = 'inset 0 0 0 2px ' + corAlvo + ', 0 0 10px ' + corAlvo;
-        }
-    });
-
-    som.click();
-    setTimeout(() => {
-        overlay.style.background = 'rgba(5, 9, 20, 0.92)';
-        cells.forEach(cell => {
-            const r = parseInt(cell.dataset.r);
-            const c = parseInt(cell.dataset.c);
-            if (!matrizDesenho[r][c]) {
-                cell.style.boxShadow = 'none';
+            var cor;
+            if (modoAtual === 'desafio' && fase === 'memorizando') {
+                cor = matrizAlvo[r][c];
+            } else {
+                cor = matrizDesenho[r][c];
             }
-        });
+
+            if (cor) {
+                cell.style.background = cor;
+                cell.style.borderColor = '#ffffff';
+            } else {
+                cell.style.background = 'rgba(30, 41, 59, 0.4)';
+                cell.style.borderColor = 'rgba(255, 255, 255, 0.04)';
+            }
+        }
+    }
+
+    // ==========================================================
+    // ESTATÍSTICAS
+    // ==========================================================
+    function atualizarEstatisticasLivre() {
+        var preenchidas = contarCelulasPreenchidas(matrizDesenho);
+        var total = tamanhoGrelha * tamanhoGrelha;
+        $('display-pontos').textContent = preenchidas + '/' + total;
+        $('display-nivel').textContent = 'Livre';
+    }
+
+    function atualizarEstatisticasDesafio() {
+        var preenchidas = contarCelulasPreenchidas(matrizDesenho);
+        var totalAlvo = contarCelulasPreenchidas(matrizAlvo);
+        $('display-nivel').textContent = 'Nv ' + nivelAtual + '/' + MAX_NIVEL;
+        $('display-pontos').textContent = preenchidas + '/' + totalAlvo;
+        $('display-tempo').textContent = formatarTempo(segundos);
+    }
+
+    // ==========================================================
+    // TIMER
+    // ==========================================================
+    function iniciarTimer() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(function() {
+            if (modoAtual === 'livre' && !jogoAtivo) return;
+            if (modoAtual === 'desafio' && fase !== 'reproduzindo') return;
+
+            segundos++;
+            $('display-tempo').textContent = formatarTempo(segundos);
+        }, 1000);
+    }
+
+    function pararTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+    // ==========================================================
+    // VERIFICAÇÕES
+    // ==========================================================
+    function verificarPreenchimentoTotalLivre() {
+        var preenchidas = contarCelulasPreenchidas(matrizDesenho);
+        var total = tamanhoGrelha * tamanhoGrelha;
+        if (preenchidas === total && jogoAtivo) {
+            jogoAtivo = false;
+            pararTimer();
+            som.win();
+            mostrarOverlay({
+                titulo: '🎨 Obra Completa!',
+                subtitulo: 'Excelente trabalho artístico! Você preencheu ' + total + ' células em ' + formatarTempo(segundos) + '.',
+                botao: { texto: '🔄 Jogar Novamente', acao: function() { inicializarModoLivre(tamanhoGrelha); } }
+            });
+        }
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var overlay = $('overlay');
+        overlay.classList.add('hidden');
+        overlay.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var overlay = $('overlay');
+        overlay.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            overlay.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            overlay.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            overlay.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            overlay.appendChild(btn);
+        }
+        if (cfg.botaoSecundario) {
+            var btn2 = document.createElement('button');
+            btn2.textContent = cfg.botaoSecundario.texto;
+            btn2.className = 'btn-secondary';
+            btn2.addEventListener('click', cfg.botaoSecundario.acao);
+            overlay.appendChild(btn2);
+        }
+
+        overlay.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // MODOS
+    // ==========================================================
+    function inicializarModoLivre(tam) {
+        tamanhoGrelha = tam;
+        matrizDesenho = [];
+        for (var i = 0; i < tamanhoGrelha; i++) {
+            var linha = [];
+            for (var j = 0; j < tamanhoGrelha; j++) linha.push(null);
+            matrizDesenho.push(linha);
+        }
+        segundos = 0;
+        jogoAtivo = true;
+
+        montarPaleta();
+        montarDOMGrid();
+        atualizarEstatisticasLivre();
+        $('display-tempo').textContent = '00:00';
+        iniciarTimer();
         esconderOverlay();
+    }
+
+    function inicializarModoDesafio() {
+        nivelAtual = 1;
+        pontosDesafio = 0;
+        iniciarNivel();
+    }
+
+    function iniciarNivel() {
+        var cfg = NIVEIS_DESAFIO[nivelAtual - 1];
+        tamanhoGrelha = cfg.tamanho;
+        matrizAlvo = gerarPadraoAleatorio(cfg.tamanho, cfg.celulas);
+        matrizDesenho = [];
+        for (var i = 0; i < cfg.tamanho; i++) {
+            var linha = [];
+            for (var j = 0; j < cfg.tamanho; j++) linha.push(null);
+            matrizDesenho.push(linha);
+        }
+        dicasUsadas = 0;
+        fase = 'memorizando';
+        segundos = 0;
+
+        montarPaleta();
+        montarDOMGrid();
+        atualizarEstatisticasDesafio();
         atualizarBotoesDesafio();
-    }, 1500);
+        mostrarOverlayMemorizacao(cfg.tempo);
+    }
 
-    atualizarBotoesDesafio();
-}
+    function mostrarOverlayMemorizacao(tempoTotal) {
+        var restante = Math.ceil(tempoTotal);
+        var overlay = $('overlay');
+        overlay.innerHTML = '';
+        overlay.classList.remove('hidden');
 
-function confirmarResposta() {
-    if (fase !== 'reproduzindo') return;
-    fase = 'resultado';
+        var badge = document.createElement('div');
+        badge.className = 'badge-nivel';
+        badge.textContent = 'Nível ' + nivelAtual + ' de ' + MAX_NIVEL;
+        overlay.appendChild(badge);
 
-    let erros = 0;
-    let faltando = 0;
+        var titulo = document.createElement('h2');
+        titulo.textContent = '👀 Memorize o padrão!';
+        overlay.appendChild(titulo);
 
-    const cells = document.querySelectorAll('.cell');
-    for (let r = 0; r < tamanhoGrelha; r++) {
-        for (let c = 0; c < tamanhoGrelha; c++) {
-            const alvo = matrizAlvo[r][c];
-            const feito = matrizDesenho[r][c];
+        var countdown = document.createElement('div');
+        countdown.className = 'countdown';
+        countdown.textContent = restante;
+        overlay.appendChild(countdown);
 
-            if (alvo === null && feito !== null) {
-                erros++;
-                const cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
-                if (cell) cell.classList.add('errado');
-            } else if (alvo !== null && feito === null) {
-                faltando++;
-                const cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
-                if (cell) cell.classList.add('errado');
-            } else if (alvo !== null && feito !== null && alvo !== feito) {
-                erros++;
-                const cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
-                if (cell) cell.classList.add('errado');
+        var sub = document.createElement('div');
+        sub.className = 'subtitulo';
+        sub.textContent = 'Você terá que reproduzi-lo de memória.';
+        overlay.appendChild(sub);
+
+        var tickAnterior = restante;
+        var interval = setInterval(function() {
+            restante -= 0.1;
+            if (restante <= 0) {
+                clearInterval(interval);
+                iniciarFaseReproducao();
+                return;
             }
+            var ceil = Math.ceil(restante);
+            if (ceil !== tickAnterior) {
+                tickAnterior = ceil;
+                som.tick();
+            }
+            countdown.textContent = ceil;
+        }, 100);
+    }
+
+    function iniciarFaseReproducao() {
+        fase = 'reproduzindo';
+        segundos = 0;
+        matrizDesenho = [];
+        for (var i = 0; i < tamanhoGrelha; i++) {
+            var linha = [];
+            for (var j = 0; j < tamanhoGrelha; j++) linha.push(null);
+            matrizDesenho.push(linha);
+        }
+
+        esconderOverlay();
+        montarDOMGrid();
+        atualizarEstatisticasDesafio();
+        atualizarBotoesDesafio();
+
+        $('info-instrucao').textContent =
+            '✏️ Reproduza o padrão de memória! Use as cores corretas e toque em ✅ Confirmar quando terminar.';
+    }
+
+    function atualizarBotoesDesafio() {
+        var btnIniciar = $('btn-iniciar-desafio');
+        var btnDica = $('btn-dica');
+        var btnConf = $('btn-confirmar');
+
+        if (fase === 'idle') {
+            btnIniciar.disabled = false;
+            btnIniciar.textContent = '▶️ Iniciar';
+            btnDica.disabled = true;
+            btnConf.disabled = true;
+        } else if (fase === 'memorizando') {
+            btnIniciar.disabled = true;
+            btnDica.disabled = true;
+            btnConf.disabled = true;
+        } else if (fase === 'reproduzindo') {
+            btnIniciar.disabled = true;
+            btnDica.disabled = dicasUsadas >= 1;
+            btnDica.textContent = dicasUsadas >= 1 ? '💡 Usada' : '💡 Dica';
+            btnConf.disabled = false;
+        } else {
+            btnIniciar.disabled = true;
+            btnDica.disabled = true;
+            btnConf.disabled = true;
         }
     }
 
-    const totalAlvo = contarCelulasPreenchidas(matrizAlvo);
-    const acertosAlvo = contarAcertosAlvo();
-    let pontosNivel = acertosAlvo * 10 - erros * 5 - faltando * 5 - dicasUsadas * 15;
-    pontosNivel = Math.max(0, pontosNivel);
+    function usarDica() {
+        if (fase !== 'reproduzindo' || dicasUsadas >= 1) return;
+        dicasUsadas++;
 
-    pontosDesafio += pontosNivel;
+        var overlay = $('overlay');
+        overlay.innerHTML = '';
+        overlay.style.background = 'rgba(5, 9, 20, 0.75)';
+        overlay.classList.remove('hidden');
 
-    if (acertosAlvo === totalAlvo && erros === 0 && faltando === 0) {
-        som.acerto();
-    } else {
-        som.erro();
+        var titulo = document.createElement('h2');
+        titulo.textContent = '💡 Dica';
+        overlay.appendChild(titulo);
+
+        var sub = document.createElement('div');
+        sub.className = 'subtitulo';
+        sub.textContent = 'Observe bem... 1.5s';
+        overlay.appendChild(sub);
+
+        var cells = document.querySelectorAll('.cell');
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            var r = parseInt(cell.dataset.r, 10);
+            var c = parseInt(cell.dataset.c, 10);
+            var corAlvo = matrizAlvo[r][c];
+            if (corAlvo && !matrizDesenho[r][c]) {
+                cell.style.boxShadow = 'inset 0 0 0 2px ' + corAlvo + ', 0 0 10px ' + corAlvo;
+            }
+        }
+
+        som.click();
+        setTimeout(function() {
+            overlay.style.background = 'rgba(5, 9, 20, 0.92)';
+            for (var i = 0; i < cells.length; i++) {
+                var cell = cells[i];
+                var r = parseInt(cell.dataset.r, 10);
+                var c = parseInt(cell.dataset.c, 10);
+                if (!matrizDesenho[r][c]) {
+                    cell.style.boxShadow = 'none';
+                }
+            }
+            esconderOverlay();
+            atualizarBotoesDesafio();
+        }, 1500);
+
+        atualizarBotoesDesafio();
     }
 
-    const perfeito = (acertosAlvo === totalAlvo && erros === 0 && faltando === 0);
-    const htmlExtra =
-        '<div class="grande">+' + pontosNivel + '</div>' +
-        '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">' +
-            '<span style="color:var(--c-green)">✅ ' + acertosAlvo + ' certas</span>' +
-            '<span style="color:var(--c-red)">❌ ' + erros + ' erradas</span>' +
-            '<span style="color:var(--c-amber)">⚠️ ' + faltando + ' faltando</span>' +
-        '</div>' +
-        (dicasUsadas > 0 ? '<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Dica usada: -15 pontos</div>' : '');
+    function confirmarResposta() {
+        if (fase !== 'reproduzindo') return;
+        fase = 'resultado';
 
-    const ultimo = (nivelAtual >= MAX_NIVEL);
-    mostrarOverlay({
-        titulo: perfeito ? '🌟 Perfeito!' : '📊 Resultado',
-        htmlExtra: htmlExtra,
-        subtitulo: 'Pontuação total: ' + pontosDesafio + ' pts',
-        botao: {
-            texto: ultimo ? '🏁 Ver Resultado Final' : '➡️ Próximo Nível',
-            acao: () => {
-                if (ultimo) {
-                    finalizarDesafio();
-                } else {
-                    nivelAtual++;
+        var erros = 0;
+        var faltando = 0;
+
+        for (var r = 0; r < tamanhoGrelha; r++) {
+            for (var c = 0; c < tamanhoGrelha; c++) {
+                var alvo = matrizAlvo[r][c];
+                var feito = matrizDesenho[r][c];
+
+                var ehErro = false;
+                if (alvo === null && feito !== null) { erros++; ehErro = true; }
+                else if (alvo !== null && feito === null) { faltando++; ehErro = true; }
+                else if (alvo !== null && feito !== null && alvo !== feito) { erros++; ehErro = true; }
+
+                if (ehErro) {
+                    var cell = document.querySelector('.cell[data-r="' + r + '"][data-c="' + c + '"]');
+                    if (cell) cell.classList.add('errado');
+                }
+            }
+        }
+
+        var totalAlvo = contarCelulasPreenchidas(matrizAlvo);
+        var acertosAlvo = contarAcertosAlvo();
+        var pontosNivel = acertosAlvo * 10 - erros * 5 - faltando * 5 - dicasUsadas * 15;
+        pontosNivel = Math.max(0, pontosNivel);
+
+        pontosDesafio += pontosNivel;
+
+        if (acertosAlvo === totalAlvo && erros === 0 && faltando === 0) {
+            som.acerto();
+        } else {
+            som.erro();
+        }
+
+        var perfeito = (acertosAlvo === totalAlvo && erros === 0 && faltando === 0);
+        var htmlExtra =
+            '<div class="grande">+' + pontosNivel + '</div>' +
+            '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">' +
+                '<span style="color:var(--c-green)">✅ ' + acertosAlvo + ' certas</span>' +
+                '<span style="color:var(--c-red)">❌ ' + erros + ' erradas</span>' +
+                '<span style="color:var(--c-amber)">⚠️ ' + faltando + ' faltando</span>' +
+            '</div>' +
+            (dicasUsadas > 0 ? '<div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Dica usada: -15 pontos</div>' : '');
+
+        var ultimo = (nivelAtual >= MAX_NIVEL);
+        mostrarOverlay({
+            titulo: perfeito ? '🌟 Perfeito!' : '📊 Resultado',
+            htmlExtra: htmlExtra,
+            subtitulo: 'Pontuação total: ' + pontosDesafio + ' pts',
+            botao: {
+                texto: ultimo ? '🏁 Ver Resultado Final' : '➡️ Próximo Nível',
+                acao: function() {
+                    if (ultimo) {
+                        finalizarDesafio();
+                    } else {
+                        nivelAtual++;
+                        esconderOverlay();
+                        iniciarNivel();
+                    }
+                }
+            },
+            botaoSecundario: {
+                texto: '🔄 Repetir Nível',
+                acao: function() {
                     esconderOverlay();
                     iniciarNivel();
                 }
             }
-        },
-        botaoSecundario: {
-            texto: '🔄 Repetir Nível',
-            acao: () => {
-                esconderOverlay();
+        });
+
+        atualizarBotoesDesafio();
+    }
+
+    function contarAcertosAlvo() {
+        var acertos = 0;
+        for (var r = 0; r < tamanhoGrelha; r++) {
+            for (var c = 0; c < tamanhoGrelha; c++) {
+                if (matrizAlvo[r][c] !== null && matrizAlvo[r][c] === matrizDesenho[r][c]) {
+                    acertos++;
+                }
+            }
+        }
+        return acertos;
+    }
+
+    function finalizarDesafio() {
+        fase = 'finalizado';
+        var maxPossivel = NIVEIS_DESAFIO.reduce(function(acc, n) { return acc + n.celulas * 10; }, 0);
+        var percentual = (pontosDesafio / maxPossivel) * 100;
+
+        var medalha, titulo, msg;
+        if (percentual >= 90) {
+            medalha = '🏆'; titulo = 'Mestre da Memória!';
+            msg = 'Impressionante! Você tem uma memória visual extraordinária.';
+        } else if (percentual >= 70) {
+            medalha = '🥇'; titulo = 'Olhar de Águia!';
+            msg = 'Excelente! Sua percepção visual está muito afiada.';
+        } else if (percentual >= 50) {
+            medalha = '🥈'; titulo = 'Aprendiz Atento!';
+            msg = 'Bom trabalho! Continue treinando para melhorar ainda mais.';
+        } else {
+            medalha = '🥉'; titulo = 'Iniciante Curioso!';
+            msg = 'Todo mestre começou assim. Tente novamente!';
+        }
+
+        som.win();
+
+        mostrarOverlay({
+            titulo: medalha + ' ' + titulo,
+            htmlExtra: '<div class="grande">' + pontosDesafio + ' pts</div>',
+            subtitulo: msg,
+            botao: {
+                texto: '🔄 Jogar Novamente',
+                acao: function() {
+                    esconderOverlay();
+                    inicializarModoDesafio();
+                }
+            }
+        });
+
+        atualizarBotoesDesafio();
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+        pararTimer();
+        esconderOverlay();
+        desenhando = false;
+        fase = 'idle';
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        $('controls-livre').classList.toggle('hidden', novoModo !== 'livre');
+        $('controls-desafio').classList.toggle('hidden', novoModo !== 'desafio');
+
+        if (novoModo === 'livre') {
+            $('label-bloco1').innerHTML = 'Modo<br><strong id="display-nivel">Livre</strong>';
+            $('label-bloco3').innerHTML = 'Células<br><strong id="display-pontos">0/25</strong>';
+            $('info-instrucao').textContent =
+                '✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!';
+            var tam = parseInt($('select-tamanho').value, 10);
+            inicializarModoLivre(tam);
+        } else {
+            $('label-bloco1').innerHTML = 'Nível<br><strong id="display-nivel">Nv 1/10</strong>';
+            $('label-bloco3').innerHTML = 'Pintadas<br><strong id="display-pontos">0/0</strong>';
+            $('info-instrucao').textContent =
+                '🧠 Memorize o padrão exibido, espere esconder, e reproduza-o de memória!';
+            tamanhoGrelha = 5;
+            matrizDesenho = [];
+            for (var i2 = 0; i2 < 5; i2++) {
+                var linha = [];
+                for (var j2 = 0; j2 < 5; j2++) linha.push(null);
+                matrizDesenho.push(linha);
+            }
+            matrizAlvo = [];
+            for (var i3 = 0; i3 < 5; i3++) {
+                var linha2 = [];
+                for (var j3 = 0; j3 < 5; j3++) linha2.push(null);
+                matrizAlvo.push(linha2);
+            }
+            montarPaleta();
+            montarDOMGrid();
+            atualizarBotoesDesafio();
+            $('display-tempo').textContent = '00:00';
+            $('display-nivel').textContent = 'Nv ' + nivelAtual + '/' + MAX_NIVEL;
+            $('display-pontos').textContent = '0/0';
+        }
+
+        iniciarTimer();
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-reiniciar').addEventListener('click', function() {
+        inicializarModoLivre(tamanhoGrelha);
+    });
+
+    $('select-tamanho').addEventListener('change', function(e) {
+        inicializarModoLivre(parseInt(e.target.value, 10));
+    });
+
+    $('btn-iniciar-desafio').addEventListener('click', function() {
+        if (fase === 'finalizado') {
+            inicializarModoDesafio();
+        } else {
+            if (nivelAtual === 1 && pontosDesafio === 0) {
+                inicializarModoDesafio();
+            } else {
                 iniciarNivel();
             }
         }
     });
 
-    atualizarBotoesDesafio();
-}
+    $('btn-dica').addEventListener('click', usarDica);
+    $('btn-confirmar').addEventListener('click', confirmarResposta);
 
-function contarAcertosAlvo() {
-    let acertos = 0;
-    for (let r = 0; r < tamanhoGrelha; r++) {
-        for (let c = 0; c < tamanhoGrelha; c++) {
-            if (matrizAlvo[r][c] !== null && matrizAlvo[r][c] === matrizDesenho[r][c]) {
-                acertos++;
-            }
-        }
-    }
-    return acertos;
-}
-
-function finalizarDesafio() {
-    fase = 'finalizado';
-    const maxPossivel = NIVEIS_DESAFIO.reduce((acc, n) => acc + n.celulas * 10, 0);
-    const percentual = (pontosDesafio / maxPossivel) * 100;
-
-    let medalha, titulo, msg;
-    if (percentual >= 90) {
-        medalha = '🏆'; titulo = 'Mestre da Memória!';
-        msg = 'Impressionante! Você tem uma memória visual extraordinária.';
-    } else if (percentual >= 70) {
-        medalha = '🥇'; titulo = 'Olhar de Águia!';
-        msg = 'Excelente! Sua percepção visual está muito afiada.';
-    } else if (percentual >= 50) {
-        medalha = '🥈'; titulo = 'Aprendiz Atento!';
-        msg = 'Bom trabalho! Continue treinando para melhorar ainda mais.';
-    } else {
-        medalha = '🥉'; titulo = 'Iniciante Curioso!';
-        msg = 'Todo mestre começou assim. Tente novamente!';
-    }
-
-    som.win();
-
-    mostrarOverlay({
-        titulo: medalha + ' ' + titulo,
-        htmlExtra: '<div class="grande">' + pontosDesafio + ' pts</div>',
-        subtitulo: msg,
-        botao: {
-            texto: '🔄 Jogar Novamente',
-            acao: () => {
-                esconderOverlay();
-                inicializarModoDesafio();
-            }
-        }
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
     });
 
-    atualizarBotoesDesafio();
-}
-
-function formatarTempo(s) {
-    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-}
-
-// ==========================================================
-// TROCA DE MODO
-// ==========================================================
-function trocarModo(novoModo) {
-    if (novoModo === modoAtual) return;
-    modoAtual = novoModo;
-    pararTimer();
-    esconderOverlay();
-    desenhando = false;
-    fase = 'idle';
-
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === novoModo);
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
     });
 
-    document.getElementById('controls-livre').classList.toggle('hidden', novoModo !== 'livre');
-    document.getElementById('controls-desafio').classList.toggle('hidden', novoModo !== 'desafio');
-
-    if (novoModo === 'livre') {
-        document.getElementById('label-bloco1').innerHTML = 'Modo<br><strong id="display-nivel">Livre</strong>';
-        document.getElementById('label-bloco3').innerHTML = 'Células<br><strong id="display-pontos">0/25</strong>';
-        document.getElementById('info-instrucao').textContent =
-            '✏️ Escolha um lápis de cor abaixo e arraste livremente para desenhar e preencher o tabuleiro!';
-        const tam = parseInt(document.getElementById('select-tamanho').value);
-        inicializarModoLivre(tam);
-    } else {
-        document.getElementById('label-bloco1').innerHTML = 'Nível<br><strong id="display-nivel">Nv 1/10</strong>';
-        document.getElementById('label-bloco3').innerHTML = 'Pintadas<br><strong id="display-pontos">0/0</strong>';
-        document.getElementById('info-instrucao').textContent =
-            '🧠 Memorize o padrão exibido, espere esconder, e reproduza-o de memória!';
-        tamanhoGrelha = 5;
-        matrizDesenho = Array(5).fill(null).map(() => Array(5).fill(null));
-        matrizAlvo = Array(5).fill(null).map(() => Array(5).fill(null));
-        montarPaleta();
-        montarDOMGrid();
-        atualizarBotoesDesafio();
-        document.getElementById('display-tempo').textContent = '00:00';
-        document.getElementById('display-nivel').textContent = 'Nv ' + nivelAtual + '/' + MAX_NIVEL;
-        document.getElementById('display-pontos').textContent = '0/0';
-    }
-
-    iniciarTimer();
-}
-
-// ==========================================================
-// EVENTOS DE UI
-// ==========================================================
-document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => trocarModo(btn.dataset.mode));
-});
-
-document.getElementById('btn-reiniciar').addEventListener('click', () => {
-    inicializarModoLivre(tamanhoGrelha);
-});
-
-document.getElementById('select-tamanho').addEventListener('change', (e) => {
-    inicializarModoLivre(parseInt(e.target.value));
-});
-
-document.getElementById('btn-iniciar-desafio').addEventListener('click', () => {
-    if (fase === 'finalizado') {
-        inicializarModoDesafio();
-    } else {
-        if (nivelAtual === 1 && pontosDesafio === 0) {
-            inicializarModoDesafio();
-        } else {
-            iniciarNivel();
-        }
-    }
-});
-
-document.getElementById('btn-dica').addEventListener('click', usarDica);
-document.getElementById('btn-confirmar').addEventListener('click', confirmarResposta);
-
-const soundToggleBtn = document.getElementById('sound-toggle');
-soundToggleBtn.addEventListener('click', () => {
-    som.ativo = !som.ativo;
-    soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
-});
-
-const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
-document.documentElement.setAttribute('data-theme', savedTheme);
-document.getElementById('theme-toggle').addEventListener('click', () => {
-    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('brain_flow_theme', next);
-});
-
-// ==========================================================
-// BOOT
-// ==========================================================
-inicializarModoLivre(5);
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    inicializarModoLivre(5);
+    console.log('[brain-desenho] Pronto! Grid:', tamanhoGrelha + 'x' + tamanhoGrelha);
+})();
 </script>
 </body>
 </html>
