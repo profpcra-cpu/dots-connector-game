@@ -184,9 +184,6 @@ body {
     border-color: rgba(239, 68, 68, 0.3);
 }
 
-/* ==========================================================
-   LABIRINTO / GRID
-   ========================================================== */
 .grid-wrapper {
     background: #030712;
     border-radius: 14px;
@@ -214,21 +211,15 @@ body {
     min-width: 0;
     min-height: 0;
 }
-
-/* Chão normal */
 .cel.chao {
     background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(148, 163, 184, 0.1);
 }
-
-/* Parede */
 .cel.parede {
     background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
     border: 1px solid rgba(71, 85, 105, 0.8);
     box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
 }
-
-/* Alvo */
 .cel.alvo {
     background: rgba(74, 222, 128, 0.15);
     border: 2px dashed var(--c-green);
@@ -239,8 +230,6 @@ body {
     font-size: clamp(16px, 4vmin, 22px);
     opacity: 0.7;
 }
-
-/* Robô */
 .cel.robo {
     background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(99, 102, 241, 0.1) 70%);
     border: 2px solid var(--btn-primary);
@@ -252,8 +241,6 @@ body {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.05); }
 }
-
-/* Robô a andar */
 .cel.robo-andando {
     animation: robo-andar 0.3s ease;
 }
@@ -262,8 +249,6 @@ body {
     50% { transform: scale(1.2); }
     100% { transform: scale(1); }
 }
-
-/* Colisão */
 .cel.robo-bateu {
     animation: robo-bater 0.4s ease;
 }
@@ -272,8 +257,6 @@ body {
     25% { transform: translateX(-4px); }
     75% { transform: translateX(4px); }
 }
-
-/* Caminho percorrido (rastro) */
 .cel.rastro::before {
     content: "";
     position: absolute;
@@ -284,9 +267,6 @@ body {
     box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
 }
 
-/* ==========================================================
-   COMANDOS (fila de programação)
-   ========================================================== */
 .comandos-wrapper {
     background: var(--input-bg);
     border: 1px solid var(--border-color);
@@ -354,7 +334,7 @@ body {
     100% { transform: scale(1); }
 }
 .comandos-vazio {
-    color: var(--text-subtle, #64748b);
+    color: #64748b;
     font-size: 12px;
     font-style: italic;
     padding: 8px;
@@ -364,9 +344,6 @@ body {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* ==========================================================
-   TECLADO DE COMANDOS
-   ========================================================== */
 .teclado-comandos {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -400,9 +377,6 @@ body {
     cursor: not-allowed;
 }
 
-/* ==========================================================
-   AÇÕES
-   ========================================================== */
 .acoes {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -462,9 +436,6 @@ button {
 button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ==========================================================
-   OVERLAY
-   ========================================================== */
 .overlay {
     position: absolute;
     inset: 0;
@@ -583,6 +554,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         <button id="btn-novo">🎲 Novo Nível</button>
     </div>
 </div>
+
 <script>
 (function() {
     'use strict';
@@ -616,6 +588,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     var nivelAtual = 1;
     var passosTotais = 0;
 
+    // ==========================================================
+    // RECORDES
+    // ==========================================================
     var recordes = {
         facil:   parseInt(localStorage.getItem('brain_robo_recorde_facil')   || '999999', 10),
         medio:   parseInt(localStorage.getItem('brain_robo_recorde_medio')   || '999999', 10),
@@ -693,9 +668,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // RESET COMPLETO DO JOGO
+    // RESET COMPLETO DO JOGO (corrigido)
     // ==========================================================
     function resetarJogo() {
+        // Bloqueia se estiver executando
+        if (executando) {
+            atualizarBadge('⏳ Aguarde a execução terminar', 'erro');
+            return;
+        }
+
         // Reset de nível e modo
         nivelAtual = 1;
         modoAtual = 'facil';
