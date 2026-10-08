@@ -90,9 +90,6 @@ body {
 }
 .btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
 
-/* ==========================================================
-   SELETOR DE MODO
-   ========================================================== */
 .mode-switch {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -122,75 +119,140 @@ body {
 }
 
 /* ==========================================================
-   PLACAR
+   PLACAR EXPANDIDO
    ========================================================== */
 .score-board {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
     background: var(--input-bg);
-    padding: 10px;
+    padding: 10px 8px;
     border-radius: var(--radius-md);
-    margin-bottom: 12px;
-    font-size: 10px;
+    margin-bottom: 10px;
+    font-size: 9px;
     border: 1px solid var(--border-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-muted);
 }
 .score-board > div {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 .score-board strong {
-    font-size: 14px;
+    font-size: 15px;
     font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
+    font-weight: 900;
     color: var(--text-color);
 }
-#display-minas { color: var(--c-red); }
-#display-tempo { color: #60a5fa; }
-#display-recorde { color: var(--c-amber); }
-
-.instructions {
-    font-size: 12.5px;
-    color: var(--text-muted);
-    margin: 4px 0 12px;
-    min-height: 18px;
-    line-height: 1.5;
-    font-weight: 500;
-}
+#display-minas { color: #ef4444; text-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+#display-reveladas { color: #22c55e; text-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+#display-tempo { color: #60a5fa; text-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
+#display-recorde { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.5); }
 
 /* ==========================================================
-   TIMER
+   BARRA DE PROGRESSO DE REVELAÇÃO
    ========================================================== */
+.progress-wrapper {
+    margin-bottom: 12px;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+.progress-label span:last-child {
+    color: #22c55e;
+    font-family: 'JetBrains Mono', monospace;
+}
+.progress-bar {
+    height: 8px;
+    background: rgba(148, 163, 184, 0.15);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #4ade80, #86efac);
+    border-radius: 99px;
+    transition: width 0.3s ease;
+    width: 0%;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+}
+
+/* Timer separado */
 .timer-bar {
-    height: 6px;
-    background: rgba(148, 163, 184, 0.2);
+    height: 4px;
+    background: rgba(148, 163, 184, 0.15);
     border-radius: 99px;
     overflow: hidden;
     margin: 0 0 12px;
 }
 .timer-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
     border-radius: 99px;
     transition: width 1s linear;
     width: 100%;
 }
 
+.instructions {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0 0 12px;
+    min-height: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
 /* ==========================================================
-   MODO BANDEIRA (toggle)
+   TOGGLE MODO
    ========================================================== */
 .modo-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     background: var(--input-bg);
     padding: 8px 12px;
     border-radius: var(--radius-md);
@@ -225,44 +287,49 @@ body {
 .toggle-btn.ativo {
     background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
     color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
 }
 .toggle-btn.ativo.bandeira {
     background: linear-gradient(135deg, #dc2626, #ef4444);
+    box-shadow: 0 4px 12px -4px rgba(239, 68, 68, 0.6);
 }
 
 /* ==========================================================
-   GRID
+   GRID — REDESENHADO COM CONTRASTE MÁXIMO
    ========================================================== */
 .grid-wrapper {
-    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    background: #030712;
     border-radius: 14px;
-    padding: 8px;
+    padding: 10px;
     margin-bottom: 12px;
     overflow-x: auto;
-    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    box-shadow:
+        0 12px 40px -14px rgba(0, 0, 0, 0.75),
+        inset 0 0 40px rgba(0, 0, 0, 0.4);
     -webkit-user-select: none;
     user-select: none;
 }
 .grid-tabela {
     display: grid;
-    gap: 3px;
+    gap: 4px;
     margin: 0 auto;
 }
+
+/* Célula escondida — aparência de "botão táctil" */
 .cel-mina {
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    background: linear-gradient(135deg, #475569 0%, #334155 100%);
-    border-top: 1px solid rgba(255,255,255,0.15);
-    border-left: 1px solid rgba(255,255,255,0.1);
-    border-bottom: 1px solid rgba(0,0,0,0.35);
-    border-right: 1px solid rgba(0,0,0,0.25);
+    border-radius: 5px;
+    background: linear-gradient(135deg, #3b475c 0%, #1f2937 100%);
+    border-top: 1px solid rgba(148, 163, 184, 0.35);
+    border-left: 1px solid rgba(148, 163, 184, 0.2);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+    border-right: 2px solid rgba(0, 0, 0, 0.4);
     cursor: pointer;
-    transition: background 0.1s ease, transform 0.1s ease;
+    transition: all 0.1s ease;
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(11px, 2.6vmin, 18px);
     font-weight: 900;
     color: #ffffff;
     -webkit-tap-highlight-color: transparent;
@@ -270,65 +337,109 @@ body {
     min-height: 0;
     -webkit-user-select: none;
     user-select: none;
+    position: relative;
 }
 .cel-mina:hover:not(.revelada):not(.bandeira):not(.explodida) {
-    background: linear-gradient(135deg, #5c6b81 0%, #455066 100%);
-    transform: scale(0.97);
+    background: linear-gradient(135deg, #4d5a72 0%, #2a3547 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
+.cel-mina:active:not(.revelada) {
+    transform: scale(0.94);
+}
+
+/* Célula revelada — fundo escuro profundo */
 .cel-mina.revelada {
-    background: rgba(15, 23, 42, 0.75);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    background: #0a1220;
+    border: 1px solid rgba(30, 41, 59, 0.6);
     cursor: default;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.4);
+    font-size: clamp(20px, 5.5vmin, 36px);
+    text-shadow: 0 0 10px currentColor;
+    animation: revelar-celula 0.35s ease;
+}
+@keyframes revelar-celula {
+    0% { transform: scale(0.7); opacity: 0.4; }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
 }
 .cel-mina.revelada:hover {
     transform: none;
-    background: rgba(15, 23, 42, 0.75);
+    background: #0a1220;
 }
+
+/* Cores dos números — VIBRANTES COM GLOW */
+.cel-mina.num-1 { color: #60a5fa; text-shadow: 0 0 12px #3b82f6, 0 0 4px #60a5fa; }
+.cel-mina.num-2 { color: #4ade80; text-shadow: 0 0 12px #22c55e, 0 0 4px #4ade80; }
+.cel-mina.num-3 { color: #f87171; text-shadow: 0 0 12px #ef4444, 0 0 4px #f87171; }
+.cel-mina.num-4 { color: #c084fc; text-shadow: 0 0 12px #a855f7, 0 0 4px #c084fc; }
+.cel-mina.num-5 { color: #fb923c; text-shadow: 0 0 12px #f97316, 0 0 4px #fb923c; }
+.cel-mina.num-6 { color: #22d3ee; text-shadow: 0 0 12px #06b6d4, 0 0 4px #22d3ee; }
+.cel-mina.num-7 { color: #ffffff; text-shadow: 0 0 14px #ffffff, 0 0 6px #e2e8f0; }
+.cel-mina.num-8 { color: #fbbf24; text-shadow: 0 0 14px #f59e0b, 0 0 6px #fbbf24; }
+
+/* Célula com bandeira — bandeira vermelha vibrante */
 .cel-mina.bandeira {
-    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
-    color: #ffffff;
-    font-size: clamp(14px, 3.5vmin, 22px);
-}
-.cel-mina.bandeira:hover {
-    transform: scale(0.97);
-}
-.cel-mina.explodida {
     background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-    animation: explodir 0.5s ease;
+    border-color: #7f1d1d;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    font-size: clamp(20px, 5vmin, 30px);
+    animation: bandeira-plantar 0.4s ease;
+}
+@keyframes bandeira-plantar {
+    0% { transform: scale(0.3) rotate(-45deg); }
+    60% { transform: scale(1.15) rotate(5deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+/* Célula explodida */
+.cel-mina.explodida {
+    background: radial-gradient(circle, #fbbf24 0%, #dc2626 60%, #7f1d1d 100%) !important;
+    animation: explodir 0.6s ease;
+    z-index: 2;
 }
 @keyframes explodir {
     0% { transform: scale(1); }
-    30% { transform: scale(1.4); box-shadow: 0 0 30px #ef4444; }
-    60% { transform: scale(0.9); }
+    30% { transform: scale(1.5); box-shadow: 0 0 40px #ef4444, 0 0 80px #fbbf24; }
+    60% { transform: scale(0.85); }
     100% { transform: scale(1); }
 }
+
+/* Mina revelada (após perder) */
 .cel-mina.mina-revelada {
-    background: rgba(127, 29, 29, 0.6);
+    background: rgba(127, 29, 29, 0.4);
     cursor: default;
-    font-size: clamp(14px, 3.5vmin, 22px);
+    font-size: clamp(18px, 4.5vmin, 28px);
+    box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.4);
 }
+
+/* Bandeira errada (marcada mas não era mina) */
 .cel-mina.bandeira-errada {
-    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
     position: relative;
+    opacity: 0.5;
 }
 .cel-mina.bandeira-errada::after {
     content: "✗";
     position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 26px;
     color: rgba(255,255,255,0.9);
     font-weight: 900;
-    text-shadow: 0 0 8px rgba(0,0,0,0.9);
+    text-shadow: 0 0 10px #ef4444;
 }
 
-/* Cores clássicas dos números */
-.num-1 { color: #60a5fa; }
-.num-2 { color: #4ade80; }
-.num-3 { color: #f87171; }
-.num-4 { color: #a855f7; }
-.num-5 { color: #fb923c; }
-.num-6 { color: #22d3ee; }
-.num-7 { color: #f8fafc; }
-.num-8 { color: #94a3b8; }
+/* Destaque temporário de erro */
+.cel-mina.erro-flash {
+    animation: erro-flash 0.5s ease;
+}
+@keyframes erro-flash {
+    0%, 100% { background: linear-gradient(135deg, #3b475c 0%, #1f2937 100%); }
+    50% { background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); }
+}
 
 /* ==========================================================
    CONTROLES
@@ -400,7 +511,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     50% { transform: translateY(-12px); }
 }
 
-/* Feedback flutuante */
+/* ==========================================================
+   FEEDBACK FLUTUANTE
+   ========================================================== */
 .feedback-float {
     position: absolute;
     top: 50%;
@@ -421,31 +534,19 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
 }
 
-/* Badge de fase */
-.fase-badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 800;
-    padding: 5px 14px;
-    border-radius: 99px;
-    background: rgba(56, 189, 248, 0.15);
-    color: var(--c-cyan);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    margin-bottom: 10px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    min-height: 24px;
-    line-height: 14px;
+/* Partículas de explosão */
+.particula {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 25;
+    animation: particula-sair 0.8s ease-out forwards;
 }
-.fase-badge.ok {
-    background: rgba(74, 222, 128, 0.15);
-    color: var(--c-green);
-    border-color: rgba(74, 222, 128, 0.3);
-}
-.fase-badge.erro {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--c-red);
-    border-color: rgba(239, 68, 68, 0.3);
+@keyframes particula-sair {
+    0% { opacity: 1; transform: translate(0, 0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
 }
 </style>
 </head>
@@ -465,12 +566,26 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
     </div>
 
+    <!-- Placar com 4 métricas -->
     <div class="score-board">
-        <div id="label-bloco1">💣 Minas<br><strong id="display-minas">10</strong></div>
-        <div id="label-bloco2">Tempo<br><strong id="display-tempo">00:00</strong></div>
-        <div id="label-bloco3">Recorde<br><strong id="display-recorde">—</strong></div>
+        <div>💣 Minas<br><strong id="display-minas">10</strong></div>
+        <div>✅ Reveladas<br><strong id="display-reveladas">0/54</strong></div>
+        <div>⏱️ Tempo<br><strong id="display-tempo">00:00</strong></div>
+        <div>🏆 Recorde<br><strong id="display-recorde">—</strong></div>
     </div>
 
+    <!-- Barra de progresso de revelação -->
+    <div class="progress-wrapper">
+        <div class="progress-label">
+            <span>Progresso de Dedução</span>
+            <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Barra de tempo -->
     <div class="timer-bar">
         <div class="timer-fill" id="timer-fill"></div>
     </div>
@@ -480,7 +595,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     </div>
 
     <p class="instructions" id="info-instrucao">
-        💣 Clique nas células para revelar. Clique direito (ou toque longo) para colocar 🚩.
+        💣 Deduza as minas a partir dos números. Cada número indica minas vizinhas.
     </p>
 
     <div class="modo-wrapper">
@@ -504,7 +619,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 (function() {
     'use strict';
 
-    console.log('[brain-minado] Inicializando...');
+    console.log('[brain-minado-v2] Inicializando...');
 
     // ==========================================================
     // CONFIGURAÇÃO POR MODO
@@ -522,20 +637,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     var linhas = 8;
     var colunas = 8;
     var numMinas = 10;
-    var tabuleiro = [];         // [{ mina: bool, revelada: bool, bandeira: bool, vizinhas: 0-8 }]
+    var tabuleiro = [];
     var primeiraJogada = true;
     var jogoAtivo = false;
-    var jogoFinalizado = false;
-    var modoBandeira = false;   // toggle
+    var modoBandeira = false;
     var tempoDecorrido = 0;
     var tempoMax = 300;
     var timerInterval = null;
-    var celulasReveladas = 0;
-    var totalCelulasSeguras = 0;
     var bandeirasErradas = 0;
     var toqueLongoTimer = null;
 
-    // Recordes (melhor tempo em segundos)
     var recordes = {
         facil:   parseInt(localStorage.getItem('brain_minado_recorde_facil')   || '999999', 10),
         medio:   parseInt(localStorage.getItem('brain_minado_recorde_medio')   || '999999', 10),
@@ -577,18 +688,34 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 o.stop(agora + duration + 0.02);
             } catch (e) {}
         },
-        revelar:    function() { this.play(700, 'triangle', 0.06); },
-        revelarBloco: function() { this.play(500, 'sine', 0.15); },
-        bandeira:   function() { this.play(880, 'triangle', 0.1); },
-        explosao:   function() {
-            this.play(100, 'sawtooth', 0.5, 0.15);
-            var self = this;
-            setTimeout(function() { self.play(60, 'sawtooth', 0.4, 0.1); }, 100);
+        revelar: function() {
+            // Nota sobe com base no número revelado
+            this.play(660, 'triangle', 0.08);
         },
-        vitoria:    function() {
+        revelarBloco: function() {
+            var self = this;
+            [440, 550, 660].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.1, 0.05); }, i * 40);
+            });
+        },
+        bandeira: function() {
+            this.play(880, 'triangle', 0.1);
+            var self = this;
+            setTimeout(function() { self.play(1100, 'sine', 0.08); }, 50);
+        },
+        desmarcar: function() {
+            this.play(550, 'triangle', 0.08);
+        },
+        explosao: function() {
+            this.play(80, 'sawtooth', 0.6, 0.2);
+            var self = this;
+            setTimeout(function() { self.play(50, 'sawtooth', 0.5, 0.15); }, 100);
+            setTimeout(function() { self.play(30, 'sawtooth', 0.4, 0.1); }, 200);
+        },
+        vitoria: function() {
             var self = this;
             [523, 659, 783, 1046].forEach(function(f, i) {
-                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+                setTimeout(function() { self.play(f, 'sine', 0.22, 0.1); }, i * 100);
             });
         }
     };
@@ -619,9 +746,24 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         }
         var restantes = numMinas - bandeiras;
         $('display-minas').textContent = restantes;
+
+        // Reveladas
+        var rev = 0;
+        var total = linhas * colunas - numMinas;
+        for (var j = 0; j < tabuleiro.length; j++) {
+            if (tabuleiro[j].revelada && !tabuleiro[j].mina) rev++;
+        }
+        $('display-reveladas').textContent = rev + '/' + total;
+
         $('display-tempo').textContent = formatarTempo(tempoDecorrido);
+
         var rec = recordes[modoAtual];
         $('display-recorde').textContent = rec >= 999999 ? '—' : formatarTempo(rec);
+
+        // Barra de progresso
+        var pct = total > 0 ? Math.round((rev / total) * 100) : 0;
+        $('progress-fill').style.width = pct + '%';
+        $('progress-pct').textContent = pct + '%';
     }
 
     // ==========================================================
@@ -647,11 +789,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     function colocarMinas(excluirIdx) {
-        // Coloca minas aleatoriamente, evitando a célula inicial (e suas vizinhas)
         var posicoesExcluidas = {};
         posicoesExcluidas[excluirIdx] = true;
 
-        // Exclui também as vizinhas do primeiro clique (primeira jogada sempre abre bloco)
         var lEx = Math.floor(excluirIdx / colunas);
         var cEx = excluirIdx % colunas;
         var viz = obterVizinhos(lEx, cEx);
@@ -661,9 +801,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         var colocadas = 0;
         var tentativas = 0;
-        var maxTentativas = 10000;
-
-        while (colocadas < numMinas && tentativas < maxTentativas) {
+        while (colocadas < numMinas && tentativas < 10000) {
             tentativas++;
             var pos = randInt(0, linhas * colunas - 1);
             if (posicoesExcluidas[pos]) continue;
@@ -709,10 +847,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var tabela = $('grid-tabela');
         tabela.innerHTML = '';
         tabela.style.gridTemplateColumns = 'repeat(' + colunas + ', 1fr)';
-        tabela.style.gap = colunas > 12 ? '2px' : '3px';
-
-        // Ajusta tamanho da célula conforme grid
-        var tamanhoCel = colunas > 12 ? '22px' : (colunas > 8 ? '28px' : '36px');
+        tabela.style.gap = colunas > 12 ? '3px' : '4px';
         tabela.style.maxWidth = '100%';
 
         for (var l = 0; l < linhas; l++) {
@@ -724,12 +859,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                     cel.dataset.l = linha;
                     cel.dataset.c = col;
                     cel.dataset.i = i;
-                    cel.style.minHeight = tamanhoCel;
 
-                    // Aplica estado visual
                     aplicarEstadoCelula(cel, i);
 
-                    // Eventos
                     cel.addEventListener('click', function(e) {
                         e.preventDefault();
                         if (!jogoAtivo) return;
@@ -746,17 +878,15 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                         toggleBandeira(linha, col);
                     });
 
-                    // Toque longo para bandeira (mobile)
                     cel.addEventListener('touchstart', function(e) {
                         if (!jogoAtivo) return;
                         toqueLongoTimer = setTimeout(function() {
                             toggleBandeira(linha, col);
                             toqueLongoTimer = null;
-                            e.preventDefault();
-                        }, 500);
+                        }, 450);
                     }, { passive: true });
 
-                    cel.addEventListener('touchend', function(e) {
+                    cel.addEventListener('touchend', function() {
                         if (toqueLongoTimer) {
                             clearTimeout(toqueLongoTimer);
                             toqueLongoTimer = null;
@@ -819,35 +949,32 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         if (cel.revelada || cel.bandeira) return;
 
-        // Primeira jogada: coloca minas evitando esta célula
         if (primeiraJogada) {
             primeiraJogada = false;
             colocarMinas(i);
             calcularVizinhanca();
         }
 
-        // Se é mina → perdeu
         if (cel.mina) {
             cel.revelada = true;
             cel.explodida = true;
             atualizarGrid();
+            criarParticulas(l, c);
             som.explosao();
             perder();
             return;
         }
 
-        // Revela a célula (com BFS se for zero)
         revelarEmCascata(l, c);
-        som.revelar();
         atualizarGrid();
         atualizarPlacar();
-
         verificarVitoria();
     }
 
     function revelarEmCascata(l, c) {
         var fila = [{ l: l, c: c }];
         var visitados = {};
+        var totalNovas = 0;
 
         while (fila.length > 0) {
             var pos = fila.shift();
@@ -859,9 +986,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             if (cel.revelada || cel.bandeira || cel.mina) continue;
 
             cel.revelada = true;
-            celulasReveladas++;
+            totalNovas++;
 
-            // Se for zero, abre os vizinhos
             if (cel.vizinhas === 0) {
                 var viz = obterVizinhos(pos.l, pos.c);
                 for (var v = 0; v < viz.length; v++) {
@@ -872,7 +998,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 }
             }
         }
-        som.revelarBloco();
+
+        if (totalNovas > 5) {
+            som.revelarBloco();
+            mostrarFeedbackFloat('+' + totalNovas, 'positivo');
+        } else {
+            som.revelar();
+        }
     }
 
     function toggleBandeira(l, c) {
@@ -882,13 +1014,20 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         if (cel.revelada) return;
 
         cel.bandeira = !cel.bandeira;
-        som.bandeira();
-        atualizarGrid();
+        if (cel.bandeira) {
+            som.bandeira();
+        } else {
+            som.desmarcar();
+        }
+
+        var el = document.querySelector('.cel-mina[data-l="' + l + '"][data-c="' + c + '"]');
+        if (el) {
+            aplicarEstadoCelula(el, i);
+        }
         atualizarPlacar();
     }
 
     function verificarVitoria() {
-        // Conta células seguras reveladas
         var segurasReveladas = 0;
         var totalSeguras = linhas * colunas - numMinas;
 
@@ -902,24 +1041,51 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
+    // PARTÍCULAS DE EXPLOSÃO
+    // ==========================================================
+    function criarParticulas(l, c) {
+        var cel = document.querySelector('.cel-mina[data-l="' + l + '"][data-c="' + c + '"]');
+        if (!cel) return;
+        var rect = cel.getBoundingClientRect();
+        var wrapper = document.querySelector('.grid-wrapper');
+        var wrapRect = wrapper.getBoundingClientRect();
+        var cx = rect.left - wrapRect.left + rect.width / 2;
+        var cy = rect.top - wrapRect.top + rect.height / 2;
+
+        var cores = ['#fbbf24', '#ef4444', '#f97316', '#dc2626'];
+        for (var i = 0; i < 16; i++) {
+            var p = document.createElement('div');
+            p.className = 'particula';
+            p.style.left = cx + 'px';
+            p.style.top = cy + 'px';
+            p.style.background = cores[i % cores.length];
+            p.style.boxShadow = '0 0 12px ' + cores[i % cores.length];
+            var angulo = (i / 16) * Math.PI * 2;
+            var dist = 60 + Math.random() * 60;
+            p.style.setProperty('--dx', Math.cos(angulo) * dist + 'px');
+            p.style.setProperty('--dy', Math.sin(angulo) * dist + 'px');
+            wrapper.appendChild(p);
+            setTimeout(function(el) {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 800, p);
+        }
+    }
+
+    // ==========================================================
     // VITÓRIA / DERROTA
     // ==========================================================
     function vencer() {
         jogoAtivo = false;
-        jogoFinalizado = true;
         pararTimer();
 
-        // Conta bandeiras erradas
-        var bandeirasErradas = 0;
+        var bErradas = 0;
         for (var i = 0; i < tabuleiro.length; i++) {
             if (tabuleiro[i].bandeira && !tabuleiro[i].mina) {
-                bandeirasErradas++;
+                bErradas++;
                 tabuleiro[i].bandeira = false;
-                // marca como bandeira errada
             }
         }
         atualizarGrid();
-
         som.vitoria();
 
         var tempoFinal = tempoDecorrido;
@@ -931,19 +1097,18 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             localStorage.setItem('brain_minado_recorde_' + modoAtual, String(tempoFinal));
         }
 
-        // Pontos
         var pontos = 500 + Math.max(0, (tempoMax - tempoFinal));
-        if (bandeirasErradas === 0) pontos += 100;
+        if (bErradas === 0) pontos += 100;
 
         var medalha, mensagem;
-        if (bandeirasErradas === 0 && tempoFinal < tempoMax * 0.3) {
-            medalha = '🏆'; mensagem = 'PERFEITO! Sem bandeiras erradas e super rápido!';
+        if (bErradas === 0 && tempoFinal < tempoMax * 0.3) {
+            medalha = '🏆'; mensagem = 'PERFEITO! Dedução impecável!';
         } else if (tempoFinal < tempoMax * 0.5) {
-            medalha = '🥇'; mensagem = 'Excelente! Dedução perfeita!';
+            medalha = '🥇'; mensagem = 'Excelente! Lógica afiada!';
         } else if (tempoFinal < tempoMax * 0.8) {
             medalha = '🥈'; mensagem = 'Bom trabalho! Continue praticando.';
         } else {
-            medalha = '🥉'; mensagem = 'Conseguiu! Tente ser mais rápido na próxima.';
+            medalha = '🥉'; mensagem = 'Conseguiu! Tente ser mais rápido.';
         }
 
         mostrarOverlay({
@@ -953,7 +1118,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 '<div class="grande">' + pontos + ' pts</div>' +
                 '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px; flex-wrap:wrap;">' +
                     '<span style="color:var(--c-cyan)">⏱️ ' + formatarTempo(tempoFinal) + '</span>' +
-                    (bandeirasErradas > 0 ? '<span style="color:var(--c-amber)">🚩 ' + bandeirasErradas + ' erradas</span>' : '<span style="color:var(--c-green)">✅ Sem erros</span>') +
+                    (bErradas > 0 ? '<span style="color:var(--c-amber)">🚩 ' + bErradas + ' erradas</span>' : '<span style="color:var(--c-green)">✅ Sem erros</span>') +
                     (novoRecorde ? '<span style="color:var(--c-amber)">🏆 RECORDE!</span>' : '') +
                 '</div>',
             subtitulo: mensagem,
@@ -966,17 +1131,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     function perder() {
         jogoAtivo = false;
-        jogoFinalizado = true;
         pararTimer();
         atualizarBadge('💥 Boom!', 'erro');
 
-        // Revela todas as minas
         setTimeout(function() {
             for (var i = 0; i < tabuleiro.length; i++) {
                 if (tabuleiro[i].mina && !tabuleiro[i].revelada) {
                     tabuleiro[i].revelada = true;
                 }
-                // Marca bandeiras erradas
                 if (tabuleiro[i].bandeira && !tabuleiro[i].mina) {
                     tabuleiro[i].bandeira = false;
                 }
@@ -992,9 +1154,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                             'Você pisou numa mina em ' + formatarTempo(tempoDecorrido) + '.' +
                         '</div>' +
                         '<div style="font-size:12px; color:var(--text-muted); margin-top:4px;">' +
-                            'Tente novamente! Cada tabuleiro é único.' +
+                            'Dica: revele mais células antes de arriscar!' +
                         '</div>',
-                    subtitulo: 'Dedução é a chave. Boa sorte na próxima!',
+                    subtitulo: 'Cada tabuleiro é único — dedução é a chave.',
                     botao: { texto: '🎲 Novo Tabuleiro', acao: function() { iniciarJogo(); } }
                 });
             }, 800);
@@ -1042,10 +1204,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         tabuleiro = criarTabuleiroVazio();
         primeiraJogada = true;
         jogoAtivo = true;
-        jogoFinalizado = false;
         tempoDecorrido = 0;
-        celulasReveladas = 0;
-        bandeirasErradas = 0;
 
         esconderOverlay();
         renderizarGrid();
@@ -1101,6 +1260,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         ov.classList.remove('hidden');
     }
 
+    function mostrarFeedbackFloat(texto, tipo) {
+        var el = document.createElement('div');
+        el.className = 'feedback-float ' + tipo;
+        el.textContent = texto;
+        document.querySelector('.grid-wrapper').appendChild(el);
+        setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 900);
+    }
+
     // ==========================================================
     // TROCA DE MODO
     // ==========================================================
@@ -1124,17 +1293,18 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         tempoMax = cfg.tempoMax;
 
         tabuleiro = criarTabuleiroVazio();
-        celulasReveladas = 0;
         tempoDecorrido = 0;
 
         renderizarGrid();
         atualizarPlacar();
         atualizarBadge('Pronto', '');
         $('timer-fill').style.width = '0%';
+        $('progress-fill').style.width = '0%';
+        $('progress-pct').textContent = '0%';
     }
 
     // ==========================================================
-    // TOGGLE MODO BANDEIRA
+    // EVENTOS DE UI
     // ==========================================================
     var btnToggleRevelar = $('toggle-revelar');
     var btnToggleBandeira = $('toggle-bandeira');
@@ -1151,9 +1321,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         btnToggleRevelar.classList.remove('ativo');
     });
 
-    // ==========================================================
-    // EVENTOS DE UI
-    // ==========================================================
     var modeBtns = document.querySelectorAll('.mode-btn');
     for (var i = 0; i < modeBtns.length; i++) {
         (function(btn) {
@@ -1177,7 +1344,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         localStorage.setItem('brain_flow_theme', next);
     });
 
-    // Previne menu de contexto global (para bandeiras)
     document.addEventListener('contextmenu', function(e) {
         if (e.target.closest('.grid-wrapper')) e.preventDefault();
     });
@@ -1186,7 +1352,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // BOOT
     // ==========================================================
     trocarModo('facil');
-    console.log('[brain-minado] Pronto! Modo:', modoAtual);
+    console.log('[brain-minado-v2] Pronto! Modo:', modoAtual);
 })();
 </script>
 </body>
