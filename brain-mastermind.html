@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mastermind — Senha Secreta — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+/* ==========================================================
+   SELETOR DE MODO
+   ========================================================== */
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+/* ==========================================================
+   PLACAR
+   ========================================================== */
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-tentativas { color: var(--c-cyan); }
+#display-tempo { color: #60a5fa; }
+#display-recorde { color: var(--c-amber); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* ==========================================================
+   TIMER
+   ========================================================== */
+.timer-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    border-radius: 99px;
+    transition: width 0.3s linear;
+    width: 100%;
+}
+
+/* ==========================================================
+   SENHA SECRETA
+   ========================================================== */
+.senha-wrapper {
+    padding: 16px;
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+.senha-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.senha-visual {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+.senha-pino {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(30, 41, 59, 0.8);
+    border: 2px solid rgba(148, 163, 184, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+.senha-pino.revelado {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 15px currentColor;
+    animation: revelar 0.5s ease;
+}
+.senha-pino .interrogacao {
+    color: var(--text-subtle);
+    font-weight: 900;
+    font-family: 'JetBrains Mono', monospace;
+}
+@keyframes revelar {
+    0% { transform: rotateY(90deg) scale(0.5); }
+    100% { transform: rotateY(0) scale(1); }
+}
+
+/* ==========================================================
+   ÁREA DA TENTATIVA ATUAL
+   ========================================================== */
+.tentativa-atual {
+    padding: 14px 12px;
+    background: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+.tentativa-atual.completa {
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+.slots-wrapper {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+.slot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(30, 41, 59, 0.6);
+    border: 2px dashed rgba(148, 163, 184, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-subtle);
+    font-size: 18px;
+    font-weight: 900;
+    font-family: 'JetBrains Mono', monospace;
+}
+.slot.preenchido {
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+}
+.slot.preenchido:hover {
+    transform: scale(1.05);
+}
+.slot.ativo {
+    border: 2px solid var(--c-cyan);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    transform: scale(1.08);
+}
+.slot.sel-preview {
+    animation: bounce-mini 0.3s ease;
+}
+@keyframes bounce-mini {
+    0% { transform: scale(0.8); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* ==========================================================
+   PALETA DE CORES
+   ========================================================== */
+.paleta-wrapper {
+    padding: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+}
+.paleta-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-align: left;
+    padding-left: 4px;
+}
+.paleta-cores {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+.cor-btn {
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    overflow: hidden;
+}
+.cor-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+}
+.cor-btn:hover:not(:disabled) {
+    transform: scale(1.08);
+}
+.cor-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.cor-btn.selecionada {
+    border-color: #ffffff;
+    box-shadow: 0 0 15px currentColor, 0 4px 10px rgba(0,0,0,0.3);
+    transform: scale(1.1);
+}
+
+/* ==========================================================
+   BOTÕES DE AÇÃO
+   ========================================================== */
+.acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.acoes button {
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: none;
+}
+.btn-confirmar {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(34, 197, 94, 0.55);
+}
+.btn-confirmar:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+.btn-confirmar:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.btn-limpar {
+    background: linear-gradient(135deg, #475569, #334155);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(71, 85, 105, 0.55);
+}
+.btn-limpar:hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+.btn-limpar:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ==========================================================
+   HISTÓRICO DE TENTATIVAS
+   ========================================================== */
+.historico-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    scrollbar-gutter: stable;
+}
+.historico-wrapper::-webkit-scrollbar { width: 6px; }
+.historico-wrapper::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+.historico-wrapper::-webkit-scrollbar-track { background: transparent; }
+
+.historico-vazio {
+    font-size: 12px;
+    color: var(--text-subtle);
+    font-style: italic;
+    padding: 12px;
+    text-align: center;
+}
+
+.historico-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    animation: item-aparece 0.3s ease;
+}
+@keyframes item-aparece {
+    0% { opacity: 0; transform: translateX(-10px); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+.historico-item.ultimo {
+    border-color: var(--btn-primary);
+    background: rgba(99, 102, 241, 0.1);
+}
+.hist-numero {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-subtle);
+    min-width: 20px;
+}
+.hist-cores {
+    display: flex;
+    gap: 4px;
+}
+.hist-cor {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+.hist-feedback {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    max-width: 80px;
+    justify-content: flex-end;
+}
+.hist-pino {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.hist-pino.preto {
+    background: #1e293b;
+    border: 1.5px solid #f8fafc;
+    box-shadow: 0 0 6px rgba(248, 250, 252, 0.4);
+}
+.hist-pino.branco {
+    background: transparent;
+    border: 1.5px solid #f8fafc;
+}
+.hist-pino.vazio {
+    background: rgba(148, 163, 184, 0.15);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+[data-theme="light"] .hist-pino.preto {
+    background: #0f172a;
+    border-color: #0f172a;
+    box-shadow: none;
+}
+[data-theme="light"] .hist-pino.branco {
+    border-color: #0f172a;
+}
+
+/* ==========================================================
+   CONTROLES
+   ========================================================== */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+.hidden { display: none !important; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button {
+    max-width: 260px;
+}
+.overlay .trofeu {
+    font-size: 56px;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+.overlay .senha-final {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 8px 0;
+}
+.overlay .senha-final .bolinha {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 15px currentColor;
+}
+
+/* Feedback flutuante */
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+
+/* Badge de fase */
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn" data-mode="facil">🟢 Fácil</button>
+        <button class="mode-btn active" data-mode="medio">🟡 Médio</button>
+        <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">Tentativas<br><strong id="display-tentativas">0/10</strong></div>
+        <div id="label-bloco2">Tempo<br><strong id="display-tempo">05:00</strong></div>
+        <div id="label-bloco3">Recorde<br><strong id="display-recorde">0</strong></div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        🧩 Descubra a senha secreta de 4 cores. Use os feedbacks para deduzir!
+    </p>
+
+    <div class="senha-wrapper">
+        <div class="senha-label">🔒 Senha Secreta</div>
+        <div class="senha-visual" id="senha-visual"></div>
+    </div>
+
+    <div class="tentativa-atual" id="tentativa-atual">
+        <div class="senha-label" style="color:var(--c-cyan);">🎯 Sua Tentativa</div>
+        <div class="slots-wrapper" id="slots-wrapper"></div>
+    </div>
+
+    <div class="paleta-wrapper">
+        <div class="paleta-label">🎨 Paleta de cores</div>
+        <div class="paleta-cores" id="paleta-cores"></div>
+    </div>
+
+    <div class="acoes">
+        <button id="btn-limpar" class="btn-limpar">🗑️ Limpar</button>
+        <button id="btn-confirmar" class="btn-confirmar" disabled>✅ Confirmar</button>
+    </div>
+
+    <div class="historico-wrapper" id="historico-wrapper">
+        <div class="historico-vazio">Nenhuma tentativa ainda. Faça a primeira!</div>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-iniciar">▶️ Novo Jogo</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-mastermind] Inicializando...');
+
+    // ==========================================================
+    // PALETA DE CORES
+    // ==========================================================
+    var CORES = [
+        { hex: '#ef4444', nome: 'Vermelho' },
+        { hex: '#3b82f6', nome: 'Azul' },
+        { hex: '#fbbf24', nome: 'Amarelo' },
+        { hex: '#22c55e', nome: 'Verde' },
+        { hex: '#a855f7', nome: 'Roxo' },
+        { hex: '#fb923c', nome: 'Laranja' },
+        { hex: '#ec4899', nome: 'Rosa' },
+        { hex: '#06b6d4', nome: 'Ciano' }
+    ];
+
+    // ==========================================================
+    // CONFIGURAÇÃO DOS MODOS
+    // ==========================================================
+    var MODOS = {
+        facil:   { posicoes: 4, cores: 4, tentativas: 12, tempo: 300, nome: 'Fácil' },
+        medio:   { posicoes: 4, cores: 6, tentativas: 10, tempo: 300, nome: 'Médio' },
+        dificil: { posicoes: 5, cores: 8, tentativas: 10, tempo: 300, nome: 'Difícil' }
+    };
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'medio';
+    var senhaSecreta = [];
+    var tentativaAtual = [];
+    var slotAtivo = 0;                  // qual posição está selecionada para preencher
+    var historico = [];                 // [{ cores: [...], pretos: N, brancos: N }]
+    var tentativasUsadas = 0;
+    var maxTentativas = 10;
+    var numPosicoes = 4;
+    var numCores = 6;
+    var jogoAtivo = false;
+    var aceitandoInput = false;
+    var pontos = 0;
+    var recorde = 0;
+    var tempoRestante = 0;
+    var tempoTotal = 300;
+    var timerGlobal = null;
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.08, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        clicar:   function() { this.play(700, 'triangle', 0.06); },
+        enviar:   function() { this.play(500, 'sine', 0.12); },
+        vitoria:  function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+            });
+        },
+        derrota:  function() {
+            var self = this;
+            [400, 300, 220, 150].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sawtooth', 0.3); }, i * 150);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function getCor(indice) {
+        return CORES[indice] || CORES[0];
+    }
+
+    function formatarTempo(s) {
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function chaveRecorde() {
+        return 'brain_mastermind_recorde_' + modoAtual;
+    }
+
+    function carregarRecorde() {
+        return parseInt(localStorage.getItem(chaveRecorde()) || '0', 10);
+    }
+
+    function salvarRecorde(valor) {
+        localStorage.setItem(chaveRecorde(), String(valor));
+    }
+
+    function atualizarPlacar() {
+        $('display-tentativas').textContent = tentativasUsadas + '/' + maxTentativas;
+        $('display-tempo').textContent = formatarTempo(tempoRestante);
+        $('display-recorde').textContent = String(carregarRecorde());
+    }
+
+    // ==========================================================
+    // GERAR SENHA SECRETA
+    // ==========================================================
+    function gerarSenha() {
+        var s = [];
+        for (var i = 0; i < numPosicoes; i++) {
+            s.push(Math.floor(Math.random() * numCores));
+        }
+        return s;
+    }
+
+    // ==========================================================
+    // RENDERIZAÇÃO
+    // ==========================================================
+    function renderizarSenha(revelar) {
+        var wrapper = $('senha-visual');
+        wrapper.innerHTML = '';
+
+        for (var i = 0; i < numPosicoes; i++) {
+            var pino = document.createElement('div');
+            pino.className = 'senha-pino';
+
+            if (revelar) {
+                pino.classList.add('revelado');
+                pino.style.background = getCor(senhaSecreta[i]).hex;
+                pino.style.color = getCor(senhaSecreta[i]).hex;
+            } else {
+                pino.innerHTML = '<span class="interrogacao">?</span>';
+            }
+
+            wrapper.appendChild(pino);
+        }
+    }
+
+    function renderizarSlots() {
+        var wrapper = $('slots-wrapper');
+        wrapper.innerHTML = '';
+
+        for (var i = 0; i < numPosicoes; i++) {
+            var slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.dataset.idx = i;
+
+            if (tentativaAtual[i] !== undefined && tentativaAtual[i] !== null) {
+                slot.classList.add('preenchido');
+                slot.style.background = getCor(tentativaAtual[i]).hex;
+                slot.style.color = getCor(tentativaAtual[i]).hex;
+            } else {
+                slot.innerHTML = '·';
+            }
+
+            if (i === slotAtivo) {
+                slot.classList.add('ativo');
+            }
+
+            (function(idx) {
+                slot.addEventListener('click', function() {
+                    if (!aceitandoInput) return;
+                    slotAtivo = idx;
+                    som.clicar();
+                    renderizarSlots();
+                });
+            })(i);
+
+            wrapper.appendChild(slot);
+        }
+
+        // Atualiza estado do botão confirmar
+        var completa = tentativaAtual.length === numPosicoes &&
+                       tentativaAtual.every(function(v) { return v !== null && v !== undefined; });
+        $('btn-confirmar').disabled = !completa || !aceitandoInput;
+        $('btn-limpar').disabled = tentativaAtual.every(function(v) { return v === null || v === undefined; });
+        $('tentativa-atual').classList.toggle('completa', completa);
+    }
+
+    function renderizarPaleta() {
+        var paleta = $('paleta-cores');
+        paleta.innerHTML = '';
+
+        for (var i = 0; i < numCores; i++) {
+            var cor = getCor(i);
+            (function(idx, corObj) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cor-btn';
+                btn.dataset.corIdx = idx;
+                btn.style.setProperty('background-color', corObj.hex, 'important');
+                btn.style.setProperty('background-image', 'none', 'important');
+                btn.style.setProperty('color', corObj.hex, 'important');
+                btn.setAttribute('aria-label', corObj.nome);
+                btn.title = corObj.nome;
+
+                btn.addEventListener('click', function() {
+                    if (!aceitandoInput) return;
+                    escolherCor(idx);
+                });
+
+                paleta.appendChild(btn);
+            })(i, cor);
+        }
+    }
+
+    function renderizarHistorico() {
+        var wrapper = $('historico-wrapper');
+        wrapper.innerHTML = '';
+
+        if (historico.length === 0) {
+            var vazio = document.createElement('div');
+            vazio.className = 'historico-vazio';
+            vazio.textContent = 'Nenhuma tentativa ainda. Faça a primeira!';
+            wrapper.appendChild(vazio);
+            return;
+        }
+
+        for (var i = historico.length - 1; i >= 0; i--) {
+            var item = historico[i];
+            var row = document.createElement('div');
+            row.className = 'historico-item' + (i === historico.length - 1 ? ' ultimo' : '');
+
+            var numero = document.createElement('div');
+            numero.className = 'hist-numero';
+            numero.textContent = '#' + (i + 1);
+            row.appendChild(numero);
+
+            var coresWrap = document.createElement('div');
+            coresWrap.className = 'hist-cores';
+            for (var j = 0; j < item.cores.length; j++) {
+                var bolinha = document.createElement('div');
+                bolinha.className = 'hist-cor';
+                bolinha.style.background = getCor(item.cores[j]).hex;
+                coresWrap.appendChild(bolinha);
+            }
+            row.appendChild(coresWrap);
+
+            var feedback = document.createElement('div');
+            feedback.className = 'hist-feedback';
+            var totalFeedbacks = numPosicoes;
+            for (var k = 0; k < totalFeedbacks; k++) {
+                var pino = document.createElement('span');
+                pino.className = 'hist-pino';
+                if (k < item.pretos) pino.classList.add('preto');
+                else if (k < item.pretos + item.brancos) pino.classList.add('branco');
+                else pino.classList.add('vazio');
+                feedback.appendChild(pino);
+            }
+            row.appendChild(feedback);
+
+            wrapper.appendChild(row);
+        }
+
+        // Scroll para o topo (mais recente)
+        wrapper.scrollTop = 0;
+    }
+
+    // ==========================================================
+    // INTERAÇÃO
+    // ==========================================================
+    function escolherCor(indiceCor) {
+        if (!aceitandoInput) return;
+        if (slotAtivo >= numPosicoes) return;
+
+        tentativaAtual[slotAtivo] = indiceCor;
+        som.clicar();
+
+        // Avança para o próximo slot vazio
+        var proximo = slotAtivo + 1;
+        while (proximo < numPosicoes && tentativaAtual[proximo] !== null && tentativaAtual[proximo] !== undefined) {
+            proximo++;
+        }
+        if (proximo < numPosicoes) slotAtivo = proximo;
+
+        renderizarSlots();
+    }
+
+    function limparTentativa() {
+        if (!aceitandoInput) return;
+        tentativaAtual = [];
+        for (var i = 0; i < numPosicoes; i++) tentativaAtual.push(null);
+        slotAtivo = 0;
+        som.clicar();
+        renderizarSlots();
+    }
+
+    // ==========================================================
+    // VERIFICAR TENTATIVA
+    // ==========================================================
+    function confirmarTentativa() {
+        if (!aceitandoInput) return;
+        if (tentativaAtual.length !== numPosicoes) return;
+        if (tentativaAtual.some(function(v) { return v === null || v === undefined; })) return;
+
+        // Calcula pretos e brancos
+        var resultado = calcularFeedback(tentativaAtual, senhaSecreta);
+
+        // Adiciona ao histórico
+        historico.push({
+            cores: tentativaAtual.slice(),
+            pretos: resultado.pretos,
+            brancos: resultado.brancos
+        });
+
+        tentativasUsadas++;
+        som.enviar();
+        renderizarHistorico();
+        atualizarPlacar();
+
+        // Vitória?
+        if (resultado.pretos === numPosicoes) {
+            setTimeout(function() { vitoria(); }, 500);
+            return;
+        }
+
+        // Derrota?
+        if (tentativasUsadas >= maxTentativas) {
+            setTimeout(function() { derrota(); }, 500);
+            return;
+        }
+
+        // Prepara próxima tentativa
+        limparTentativa();
+
+        var pretos = resultado.pretos;
+        var brancos = resultado.brancos;
+        if (pretos > 0 || brancos > 0) {
+            atualizarBadge('✅ ' + pretos + ' ⬛ · ' + brancos + ' ⚪', 'ok');
+        } else {
+            atualizarBadge('❌ Nenhuma cor correta!', 'erro');
+        }
+    }
+
+    function calcularFeedback(tentativa, senha) {
+        var pretos = 0;
+        var brancos = 0;
+
+        var senhaCopia = senha.slice();
+        var tentativaCopia = tentativa.slice();
+
+        // Primeira passagem: conta PRETOS (cor + posição corretas)
+        for (var i = 0; i < numPosicoes; i++) {
+            if (tentativaCopia[i] === senhaCopia[i]) {
+                pretos++;
+                senhaCopia[i] = -1;
+                tentativaCopia[i] = -2;
+            }
+        }
+
+        // Segunda passagem: conta BRANCOS (cor correta, posição errada)
+        for (var j = 0; j < numPosicoes; j++) {
+            if (tentativaCopia[j] < 0) continue;
+            for (var k = 0; k < numPosicoes; k++) {
+                if (senhaCopia[k] < 0) continue;
+                if (tentativaCopia[j] === senhaCopia[k]) {
+                    brancos++;
+                    senhaCopia[k] = -1;
+                    tentativaCopia[j] = -2;
+                    break;
+                }
+            }
+        }
+
+        return { pretos: pretos, brancos: brancos };
+    }
+
+    // ==========================================================
+    // VITÓRIA / DERROTA
+    // ==========================================================
+    function vitoria() {
+        jogoAtivo = false;
+        aceitandoInput = false;
+        pararTimer();
+
+        renderizarSenha(true);
+        som.vitoria();
+
+        // Pontuação: base 500 + bónus por tentativas poupadas + bónus de tempo
+        var bonusTentativas = (maxTentativas - tentativasUsadas) * 50;
+        var bonusTempo = Math.ceil(tempoRestante);
+        pontos = 500 + bonusTentativas + bonusTempo;
+
+        var recAntigo = carregarRecorde();
+        if (pontos > recAntigo) {
+            salvarRecorde(pontos);
+        }
+        atualizarPlacar();
+
+        var senhaHTML = '<div class="senha-final">';
+        for (var i = 0; i < numPosicoes; i++) {
+            senhaHTML += '<div class="bolinha" style="background:' + getCor(senhaSecreta[i]).hex + '; color:' + getCor(senhaSecreta[i]).hex + ';"></div>';
+        }
+        senhaHTML += '</div>';
+
+        mostrarOverlay({
+            titulo: '🎉 Senha Descoberta!',
+            htmlExtra:
+                '<div class="trofeu">🏆</div>' +
+                senhaHTML +
+                '<div class="grande">+' + pontos + '</div>' +
+                '<div style="font-size:12px; color:var(--text-muted); margin-top:8px;">' +
+                    '🎯 ' + tentativasUsadas + ' tentativas · ⏱️ ' + Math.ceil(tempoRestante) + 's restantes' +
+                '</div>',
+            subtitulo: 'Excelente dedução lógica!',
+            botao: { texto: '🔄 Jogar Novamente', acao: function() { iniciarJogo(); } }
+        });
+
+        atualizarBadge('🏆 Venceu!', 'ok');
+    }
+
+    function derrota() {
+        jogoAtivo = false;
+        aceitandoInput = false;
+        pararTimer();
+
+        renderizarSenha(true);
+        som.derrota();
+
+        var senhaHTML = '<div class="senha-final">';
+        for (var i = 0; i < numPosicoes; i++) {
+            senhaHTML += '<div class="bolinha" style="background:' + getCor(senhaSecreta[i]).hex + '; color:' + getCor(senhaSecreta[i]).hex + ';"></div>';
+        }
+        senhaHTML += '</div>';
+
+        mostrarOverlay({
+            titulo: '🔒 Não foi desta vez',
+            htmlExtra:
+                senhaHTML +
+                '<div style="font-size:13px; color:var(--text-muted); margin-top:8px;">A senha secreta era essa.</div>',
+            subtitulo: 'Use as tentativas anteriores para deduzir melhor!',
+            botao: { texto: '🔄 Tentar Novamente', acao: function() { iniciarJogo(); } }
+        });
+
+        atualizarBadge('🔒 Não descobriu', 'erro');
+    }
+
+    function tempoEsgotado() {
+        if (!jogoAtivo) return;
+        derrota();
+    }
+
+    // ==========================================================
+    // TIMER
+    // ==========================================================
+    function iniciarTimer() {
+        tempoRestante = tempoTotal;
+        atualizarTimerBar();
+        if (timerGlobal) clearInterval(timerGlobal);
+        timerGlobal = setInterval(function() {
+            if (!jogoAtivo) return;
+            tempoRestante -= 0.1;
+            if (tempoRestante <= 0) {
+                tempoRestante = 0;
+                atualizarTimerBar();
+                clearInterval(timerGlobal);
+                timerGlobal = null;
+                tempoEsgotado();
+                return;
+            }
+            atualizarTimerBar();
+            if (Math.floor(tempoRestante * 10) % 10 === 0) {
+                $('display-tempo').textContent = formatarTempo(Math.ceil(tempoRestante));
+            }
+        }, 100);
+    }
+
+    function atualizarTimerBar() {
+        var pct = (tempoRestante / tempoTotal) * 100;
+        $('timer-fill').style.width = pct + '%';
+    }
+
+    function pararTimer() {
+        if (timerGlobal) {
+            clearInterval(timerGlobal);
+            timerGlobal = null;
+        }
+    }
+
+    // ==========================================================
+    // INÍCIO DE JOGO
+    // ==========================================================
+    function iniciarJogo() {
+        var cfg = MODOS[modoAtual];
+        numPosicoes = cfg.posicoes;
+        numCores = cfg.cores;
+        maxTentativas = cfg.tentativas;
+        tempoTotal = cfg.tempo;
+
+        senhaSecreta = gerarSenha();
+        tentativaAtual = [];
+        for (var i = 0; i < numPosicoes; i++) tentativaAtual.push(null);
+        slotAtivo = 0;
+        historico = [];
+        tentativasUsadas = 0;
+        jogoAtivo = true;
+        aceitandoInput = true;
+        pontos = 0;
+
+        esconderOverlay();
+        renderizarSenha(false);
+        renderizarSlots();
+        renderizarPaleta();
+        renderizarHistorico();
+        atualizarPlacar();
+        iniciarTimer();
+
+        atualizarBadge('👉 Faça sua primeira tentativa!', '');
+        $('info-instrucao').textContent = '🎯 Preencha 4 cores na sua tentativa e clique em Confirmar.';
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            document.querySelector('.container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+
+        jogoAtivo = false;
+        aceitandoInput = false;
+        pararTimer();
+        esconderOverlay();
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        var cfg = MODOS[novoModo];
+        numPosicoes = cfg.posicoes;
+        numCores = cfg.cores;
+        maxTentativas = cfg.tentativas;
+        tempoTotal = cfg.tempo;
+
+        senhaSecreta = [];
+        for (var i = 0; i < numPosicoes; i++) senhaSecreta.push(0);
+        tentativaAtual = [];
+        for (var j = 0; j < numPosicoes; j++) tentativaAtual.push(null);
+        historico = [];
+        tentativasUsadas = 0;
+        tempoRestante = tempoTotal;
+
+        renderizarSenha(false);
+        renderizarSlots();
+        renderizarPaleta();
+        renderizarHistorico();
+        atualizarPlacar();
+        atualizarTimerBar();
+
+        atualizarBadge('Pronto', '');
+        $('info-instrucao').textContent = '🧩 Modo ' + cfg.nome + ': ' + cfg.posicoes + ' posições, ' + cfg.cores + ' cores, ' + cfg.tentativas + ' tentativas.';
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-iniciar').addEventListener('click', iniciarJogo);
+    $('btn-confirmar').addEventListener('click', confirmarTentativa);
+    $('btn-limpar').addEventListener('click', limparTentativa);
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    trocarModo('medio');
+    console.log('[brain-mastermind] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
