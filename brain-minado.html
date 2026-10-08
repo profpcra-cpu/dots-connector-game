@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Campo Minado — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+/* ==========================================================
+   SELETOR DE MODO
+   ========================================================== */
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 9px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+/* ==========================================================
+   PLACAR
+   ========================================================== */
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-minas { color: var(--c-red); }
+#display-tempo { color: #60a5fa; }
+#display-recorde { color: var(--c-amber); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* ==========================================================
+   TIMER
+   ========================================================== */
+.timer-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    border-radius: 99px;
+    transition: width 1s linear;
+    width: 100%;
+}
+
+/* ==========================================================
+   MODO BANDEIRA (toggle)
+   ========================================================== */
+.modo-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    background: var(--input-bg);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+.modo-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.modo-btn-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 999px;
+    padding: 3px;
+}
+.toggle-btn {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.toggle-btn.ativo {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+}
+.toggle-btn.ativo.bandeira {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+}
+
+/* ==========================================================
+   GRID
+   ========================================================== */
+.grid-wrapper {
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    padding: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    -webkit-user-select: none;
+    user-select: none;
+}
+.grid-tabela {
+    display: grid;
+    gap: 3px;
+    margin: 0 auto;
+}
+.cel-mina {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    border-top: 1px solid rgba(255,255,255,0.15);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.35);
+    border-right: 1px solid rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: background 0.1s ease, transform 0.1s ease;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(11px, 2.6vmin, 18px);
+    font-weight: 900;
+    color: #ffffff;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 0;
+    min-height: 0;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.cel-mina:hover:not(.revelada):not(.bandeira):not(.explodida) {
+    background: linear-gradient(135deg, #5c6b81 0%, #455066 100%);
+    transform: scale(0.97);
+}
+.cel-mina.revelada {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    cursor: default;
+}
+.cel-mina.revelada:hover {
+    transform: none;
+    background: rgba(15, 23, 42, 0.75);
+}
+.cel-mina.bandeira {
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    color: #ffffff;
+    font-size: clamp(14px, 3.5vmin, 22px);
+}
+.cel-mina.bandeira:hover {
+    transform: scale(0.97);
+}
+.cel-mina.explodida {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    animation: explodir 0.5s ease;
+}
+@keyframes explodir {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.4); box-shadow: 0 0 30px #ef4444; }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+.cel-mina.mina-revelada {
+    background: rgba(127, 29, 29, 0.6);
+    cursor: default;
+    font-size: clamp(14px, 3.5vmin, 22px);
+}
+.cel-mina.bandeira-errada {
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    position: relative;
+}
+.cel-mina.bandeira-errada::after {
+    content: "✗";
+    position: absolute;
+    font-size: 26px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 900;
+    text-shadow: 0 0 8px rgba(0,0,0,0.9);
+}
+
+/* Cores clássicas dos números */
+.num-1 { color: #60a5fa; }
+.num-2 { color: #4ade80; }
+.num-3 { color: #f87171; }
+.num-4 { color: #a855f7; }
+.num-5 { color: #fb923c; }
+.num-6 { color: #22d3ee; }
+.num-7 { color: #f8fafc; }
+.num-8 { color: #94a3b8; }
+
+/* ==========================================================
+   CONTROLES
+   ========================================================== */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.hidden { display: none !important; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button { max-width: 260px; }
+.overlay .trofeu {
+    font-size: 56px;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+/* Feedback flutuante */
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 44px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+
+/* Badge de fase */
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+</style>
+</head>
+<body>
+<div class="container" id="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <div style="display: flex; gap: 6px;">
+            <button id="sound-toggle" class="btn-small">🔊 Som</button>
+            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+        </div>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="facil">🟢 Fácil</button>
+        <button class="mode-btn" data-mode="medio">🟡 Médio</button>
+        <button class="mode-btn" data-mode="dificil">🔴 Difícil</button>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">💣 Minas<br><strong id="display-minas">10</strong></div>
+        <div id="label-bloco2">Tempo<br><strong id="display-tempo">00:00</strong></div>
+        <div id="label-bloco3">Recorde<br><strong id="display-recorde">—</strong></div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        💣 Clique nas células para revelar. Clique direito (ou toque longo) para colocar 🚩.
+    </p>
+
+    <div class="modo-wrapper">
+        <span class="modo-label">Modo:</span>
+        <div class="modo-btn-toggle">
+            <button class="toggle-btn ativo" id="toggle-revelar">🔍 Revelar</button>
+            <button class="toggle-btn bandeira" id="toggle-bandeira">🚩 Bandeira</button>
+        </div>
+    </div>
+
+    <div class="grid-wrapper">
+        <div class="grid-tabela" id="grid-tabela"></div>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-iniciar">🎲 Novo Tabuleiro</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-minado] Inicializando...');
+
+    // ==========================================================
+    // CONFIGURAÇÃO POR MODO
+    // ==========================================================
+    var MODOS = {
+        facil:   { linhas: 8,  colunas: 8,  minas: 10, tempoMax: 300, nome: 'Fácil' },
+        medio:   { linhas: 12, colunas: 12, minas: 30, tempoMax: 600, nome: 'Médio' },
+        dificil: { linhas: 16, colunas: 16, minas: 60, tempoMax: 900, nome: 'Difícil' }
+    };
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'facil';
+    var linhas = 8;
+    var colunas = 8;
+    var numMinas = 10;
+    var tabuleiro = [];         // [{ mina: bool, revelada: bool, bandeira: bool, vizinhas: 0-8 }]
+    var primeiraJogada = true;
+    var jogoAtivo = false;
+    var jogoFinalizado = false;
+    var modoBandeira = false;   // toggle
+    var tempoDecorrido = 0;
+    var tempoMax = 300;
+    var timerInterval = null;
+    var celulasReveladas = 0;
+    var totalCelulasSeguras = 0;
+    var bandeirasErradas = 0;
+    var toqueLongoTimer = null;
+
+    // Recordes (melhor tempo em segundos)
+    var recordes = {
+        facil:   parseInt(localStorage.getItem('brain_minado_recorde_facil')   || '999999', 10),
+        medio:   parseInt(localStorage.getItem('brain_minado_recorde_medio')   || '999999', 10),
+        dificil: parseInt(localStorage.getItem('brain_minado_recorde_dificil') || '999999', 10)
+    };
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.08, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        revelar:    function() { this.play(700, 'triangle', 0.06); },
+        revelarBloco: function() { this.play(500, 'sine', 0.15); },
+        bandeira:   function() { this.play(880, 'triangle', 0.1); },
+        explosao:   function() {
+            this.play(100, 'sawtooth', 0.5, 0.15);
+            var self = this;
+            setTimeout(function() { self.play(60, 'sawtooth', 0.4, 0.1); }, 100);
+        },
+        vitoria:    function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function formatarTempo(s) {
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function atualizarPlacar() {
+        var bandeiras = 0;
+        for (var i = 0; i < tabuleiro.length; i++) {
+            if (tabuleiro[i].bandeira) bandeiras++;
+        }
+        var restantes = numMinas - bandeiras;
+        $('display-minas').textContent = restantes;
+        $('display-tempo').textContent = formatarTempo(tempoDecorrido);
+        var rec = recordes[modoAtual];
+        $('display-recorde').textContent = rec >= 999999 ? '—' : formatarTempo(rec);
+    }
+
+    // ==========================================================
+    // CRIAR TABULEIRO
+    // ==========================================================
+    function criarTabuleiroVazio() {
+        var t = [];
+        var total = linhas * colunas;
+        for (var i = 0; i < total; i++) {
+            t.push({
+                mina: false,
+                revelada: false,
+                bandeira: false,
+                vizinhas: 0,
+                explodida: false
+            });
+        }
+        return t;
+    }
+
+    function idx(l, c) {
+        return l * colunas + c;
+    }
+
+    function colocarMinas(excluirIdx) {
+        // Coloca minas aleatoriamente, evitando a célula inicial (e suas vizinhas)
+        var posicoesExcluidas = {};
+        posicoesExcluidas[excluirIdx] = true;
+
+        // Exclui também as vizinhas do primeiro clique (primeira jogada sempre abre bloco)
+        var lEx = Math.floor(excluirIdx / colunas);
+        var cEx = excluirIdx % colunas;
+        var viz = obterVizinhos(lEx, cEx);
+        for (var v = 0; v < viz.length; v++) {
+            posicoesExcluidas[idx(viz[v].l, viz[v].c)] = true;
+        }
+
+        var colocadas = 0;
+        var tentativas = 0;
+        var maxTentativas = 10000;
+
+        while (colocadas < numMinas && tentativas < maxTentativas) {
+            tentativas++;
+            var pos = randInt(0, linhas * colunas - 1);
+            if (posicoesExcluidas[pos]) continue;
+            if (tabuleiro[pos].mina) continue;
+            tabuleiro[pos].mina = true;
+            colocadas++;
+        }
+    }
+
+    function calcularVizinhanca() {
+        for (var l = 0; l < linhas; l++) {
+            for (var c = 0; c < colunas; c++) {
+                var i = idx(l, c);
+                if (tabuleiro[i].mina) continue;
+                var viz = obterVizinhos(l, c);
+                var count = 0;
+                for (var v = 0; v < viz.length; v++) {
+                    if (tabuleiro[idx(viz[v].l, viz[v].c)].mina) count++;
+                }
+                tabuleiro[i].vizinhas = count;
+            }
+        }
+    }
+
+    function obterVizinhos(l, c) {
+        var viz = [];
+        for (var dl = -1; dl <= 1; dl++) {
+            for (var dc = -1; dc <= 1; dc++) {
+                if (dl === 0 && dc === 0) continue;
+                var nl = l + dl;
+                var nc = c + dc;
+                if (nl < 0 || nl >= linhas || nc < 0 || nc >= colunas) continue;
+                viz.push({ l: nl, c: nc });
+            }
+        }
+        return viz;
+    }
+
+    // ==========================================================
+    // RENDERIZAÇÃO
+    // ==========================================================
+    function renderizarGrid() {
+        var tabela = $('grid-tabela');
+        tabela.innerHTML = '';
+        tabela.style.gridTemplateColumns = 'repeat(' + colunas + ', 1fr)';
+        tabela.style.gap = colunas > 12 ? '2px' : '3px';
+
+        // Ajusta tamanho da célula conforme grid
+        var tamanhoCel = colunas > 12 ? '22px' : (colunas > 8 ? '28px' : '36px');
+        tabela.style.maxWidth = '100%';
+
+        for (var l = 0; l < linhas; l++) {
+            for (var c = 0; c < colunas; c++) {
+                (function(linha, col) {
+                    var i = idx(linha, col);
+                    var cel = document.createElement('div');
+                    cel.className = 'cel-mina';
+                    cel.dataset.l = linha;
+                    cel.dataset.c = col;
+                    cel.dataset.i = i;
+                    cel.style.minHeight = tamanhoCel;
+
+                    // Aplica estado visual
+                    aplicarEstadoCelula(cel, i);
+
+                    // Eventos
+                    cel.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (!jogoAtivo) return;
+                        if (modoBandeira) {
+                            toggleBandeira(linha, col);
+                        } else {
+                            revelarCelula(linha, col);
+                        }
+                    });
+
+                    cel.addEventListener('contextmenu', function(e) {
+                        e.preventDefault();
+                        if (!jogoAtivo) return;
+                        toggleBandeira(linha, col);
+                    });
+
+                    // Toque longo para bandeira (mobile)
+                    cel.addEventListener('touchstart', function(e) {
+                        if (!jogoAtivo) return;
+                        toqueLongoTimer = setTimeout(function() {
+                            toggleBandeira(linha, col);
+                            toqueLongoTimer = null;
+                            e.preventDefault();
+                        }, 500);
+                    }, { passive: true });
+
+                    cel.addEventListener('touchend', function(e) {
+                        if (toqueLongoTimer) {
+                            clearTimeout(toqueLongoTimer);
+                            toqueLongoTimer = null;
+                        }
+                    });
+
+                    cel.addEventListener('touchmove', function() {
+                        if (toqueLongoTimer) {
+                            clearTimeout(toqueLongoTimer);
+                            toqueLongoTimer = null;
+                        }
+                    });
+
+                    tabela.appendChild(cel);
+                })(l, c);
+            }
+        }
+    }
+
+    function aplicarEstadoCelula(cel, i) {
+        var c = tabuleiro[i];
+        cel.className = 'cel-mina';
+        cel.textContent = '';
+
+        if (c.revelada) {
+            cel.classList.add('revelada');
+            if (c.mina) {
+                if (c.explodida) {
+                    cel.classList.add('explodida');
+                    cel.textContent = '💥';
+                } else {
+                    cel.classList.add('mina-revelada');
+                    cel.textContent = '💣';
+                }
+            } else if (c.vizinhas > 0) {
+                cel.classList.add('num-' + c.vizinhas);
+                cel.textContent = String(c.vizinhas);
+            }
+        } else if (c.bandeira) {
+            cel.classList.add('bandeira');
+            cel.textContent = '🚩';
+        }
+    }
+
+    function atualizarGrid() {
+        var celulas = document.querySelectorAll('.cel-mina');
+        for (var k = 0; k < celulas.length; k++) {
+            var i = parseInt(celulas[k].dataset.i, 10);
+            aplicarEstadoCelula(celulas[k], i);
+        }
+    }
+
+    // ==========================================================
+    // AÇÕES
+    // ==========================================================
+    function revelarCelula(l, c) {
+        if (!jogoAtivo) return;
+        var i = idx(l, c);
+        var cel = tabuleiro[i];
+
+        if (cel.revelada || cel.bandeira) return;
+
+        // Primeira jogada: coloca minas evitando esta célula
+        if (primeiraJogada) {
+            primeiraJogada = false;
+            colocarMinas(i);
+            calcularVizinhanca();
+        }
+
+        // Se é mina → perdeu
+        if (cel.mina) {
+            cel.revelada = true;
+            cel.explodida = true;
+            atualizarGrid();
+            som.explosao();
+            perder();
+            return;
+        }
+
+        // Revela a célula (com BFS se for zero)
+        revelarEmCascata(l, c);
+        som.revelar();
+        atualizarGrid();
+        atualizarPlacar();
+
+        verificarVitoria();
+    }
+
+    function revelarEmCascata(l, c) {
+        var fila = [{ l: l, c: c }];
+        var visitados = {};
+
+        while (fila.length > 0) {
+            var pos = fila.shift();
+            var i = idx(pos.l, pos.c);
+            if (visitados[i]) continue;
+            visitados[i] = true;
+
+            var cel = tabuleiro[i];
+            if (cel.revelada || cel.bandeira || cel.mina) continue;
+
+            cel.revelada = true;
+            celulasReveladas++;
+
+            // Se for zero, abre os vizinhos
+            if (cel.vizinhas === 0) {
+                var viz = obterVizinhos(pos.l, pos.c);
+                for (var v = 0; v < viz.length; v++) {
+                    var vi = idx(viz[v].l, viz[v].c);
+                    if (!visitados[vi] && !tabuleiro[vi].revelada && !tabuleiro[vi].bandeira) {
+                        fila.push({ l: viz[v].l, c: viz[v].c });
+                    }
+                }
+            }
+        }
+        som.revelarBloco();
+    }
+
+    function toggleBandeira(l, c) {
+        if (!jogoAtivo) return;
+        var i = idx(l, c);
+        var cel = tabuleiro[i];
+        if (cel.revelada) return;
+
+        cel.bandeira = !cel.bandeira;
+        som.bandeira();
+        atualizarGrid();
+        atualizarPlacar();
+    }
+
+    function verificarVitoria() {
+        // Conta células seguras reveladas
+        var segurasReveladas = 0;
+        var totalSeguras = linhas * colunas - numMinas;
+
+        for (var i = 0; i < tabuleiro.length; i++) {
+            if (tabuleiro[i].revelada && !tabuleiro[i].mina) segurasReveladas++;
+        }
+
+        if (segurasReveladas === totalSeguras) {
+            vencer();
+        }
+    }
+
+    // ==========================================================
+    // VITÓRIA / DERROTA
+    // ==========================================================
+    function vencer() {
+        jogoAtivo = false;
+        jogoFinalizado = true;
+        pararTimer();
+
+        // Conta bandeiras erradas
+        var bandeirasErradas = 0;
+        for (var i = 0; i < tabuleiro.length; i++) {
+            if (tabuleiro[i].bandeira && !tabuleiro[i].mina) {
+                bandeirasErradas++;
+                tabuleiro[i].bandeira = false;
+                // marca como bandeira errada
+            }
+        }
+        atualizarGrid();
+
+        som.vitoria();
+
+        var tempoFinal = tempoDecorrido;
+        var recAtual = recordes[modoAtual];
+        var novoRecorde = tempoFinal < recAtual;
+
+        if (novoRecorde) {
+            recordes[modoAtual] = tempoFinal;
+            localStorage.setItem('brain_minado_recorde_' + modoAtual, String(tempoFinal));
+        }
+
+        // Pontos
+        var pontos = 500 + Math.max(0, (tempoMax - tempoFinal));
+        if (bandeirasErradas === 0) pontos += 100;
+
+        var medalha, mensagem;
+        if (bandeirasErradas === 0 && tempoFinal < tempoMax * 0.3) {
+            medalha = '🏆'; mensagem = 'PERFEITO! Sem bandeiras erradas e super rápido!';
+        } else if (tempoFinal < tempoMax * 0.5) {
+            medalha = '🥇'; mensagem = 'Excelente! Dedução perfeita!';
+        } else if (tempoFinal < tempoMax * 0.8) {
+            medalha = '🥈'; mensagem = 'Bom trabalho! Continue praticando.';
+        } else {
+            medalha = '🥉'; mensagem = 'Conseguiu! Tente ser mais rápido na próxima.';
+        }
+
+        mostrarOverlay({
+            titulo: medalha + ' Vitória!',
+            htmlExtra:
+                '<div class="trofeu">' + medalha + '</div>' +
+                '<div class="grande">' + pontos + ' pts</div>' +
+                '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px; flex-wrap:wrap;">' +
+                    '<span style="color:var(--c-cyan)">⏱️ ' + formatarTempo(tempoFinal) + '</span>' +
+                    (bandeirasErradas > 0 ? '<span style="color:var(--c-amber)">🚩 ' + bandeirasErradas + ' erradas</span>' : '<span style="color:var(--c-green)">✅ Sem erros</span>') +
+                    (novoRecorde ? '<span style="color:var(--c-amber)">🏆 RECORDE!</span>' : '') +
+                '</div>',
+            subtitulo: mensagem,
+            botao: { texto: '🎲 Novo Tabuleiro', acao: function() { iniciarJogo(); } }
+        });
+
+        atualizarBadge('🏆 Vitória!', 'ok');
+        atualizarPlacar();
+    }
+
+    function perder() {
+        jogoAtivo = false;
+        jogoFinalizado = true;
+        pararTimer();
+        atualizarBadge('💥 Boom!', 'erro');
+
+        // Revela todas as minas
+        setTimeout(function() {
+            for (var i = 0; i < tabuleiro.length; i++) {
+                if (tabuleiro[i].mina && !tabuleiro[i].revelada) {
+                    tabuleiro[i].revelada = true;
+                }
+                // Marca bandeiras erradas
+                if (tabuleiro[i].bandeira && !tabuleiro[i].mina) {
+                    tabuleiro[i].bandeira = false;
+                }
+            }
+            atualizarGrid();
+
+            setTimeout(function() {
+                mostrarOverlay({
+                    titulo: '💥 Boom!',
+                    htmlExtra:
+                        '<div class="trofeu" style="animation:shake 0.8s;">💣</div>' +
+                        '<div style="font-size:13px; color:var(--text-muted); margin-top:8px;">' +
+                            'Você pisou numa mina em ' + formatarTempo(tempoDecorrido) + '.' +
+                        '</div>' +
+                        '<div style="font-size:12px; color:var(--text-muted); margin-top:4px;">' +
+                            'Tente novamente! Cada tabuleiro é único.' +
+                        '</div>',
+                    subtitulo: 'Dedução é a chave. Boa sorte na próxima!',
+                    botao: { texto: '🎲 Novo Tabuleiro', acao: function() { iniciarJogo(); } }
+                });
+            }, 800);
+        }, 300);
+    }
+
+    // ==========================================================
+    // TIMER
+    // ==========================================================
+    function iniciarTimer() {
+        pararTimer();
+        tempoDecorrido = 0;
+        $('display-tempo').textContent = '00:00';
+        $('timer-fill').style.width = '100%';
+
+        timerInterval = setInterval(function() {
+            if (!jogoAtivo) return;
+            tempoDecorrido++;
+            $('display-tempo').textContent = formatarTempo(tempoDecorrido);
+            var pct = Math.max(0, 100 - (tempoDecorrido / tempoMax) * 100);
+            $('timer-fill').style.width = pct + '%';
+            if (tempoDecorrido >= tempoMax) {
+                perder();
+            }
+        }, 1000);
+    }
+
+    function pararTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    // ==========================================================
+    // INÍCIO DE JOGO
+    // ==========================================================
+    function iniciarJogo() {
+        var cfg = MODOS[modoAtual];
+        linhas = cfg.linhas;
+        colunas = cfg.colunas;
+        numMinas = cfg.minas;
+        tempoMax = cfg.tempoMax;
+
+        tabuleiro = criarTabuleiroVazio();
+        primeiraJogada = true;
+        jogoAtivo = true;
+        jogoFinalizado = false;
+        tempoDecorrido = 0;
+        celulasReveladas = 0;
+        bandeirasErradas = 0;
+
+        esconderOverlay();
+        renderizarGrid();
+        atualizarPlacar();
+        iniciarTimer();
+
+        atualizarBadge('🎯 Faça o primeiro clique', '');
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            $('container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+
+        jogoAtivo = false;
+        pararTimer();
+        esconderOverlay();
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        var cfg = MODOS[novoModo];
+        linhas = cfg.linhas;
+        colunas = cfg.colunas;
+        numMinas = cfg.minas;
+        tempoMax = cfg.tempoMax;
+
+        tabuleiro = criarTabuleiroVazio();
+        celulasReveladas = 0;
+        tempoDecorrido = 0;
+
+        renderizarGrid();
+        atualizarPlacar();
+        atualizarBadge('Pronto', '');
+        $('timer-fill').style.width = '0%';
+    }
+
+    // ==========================================================
+    // TOGGLE MODO BANDEIRA
+    // ==========================================================
+    var btnToggleRevelar = $('toggle-revelar');
+    var btnToggleBandeira = $('toggle-bandeira');
+
+    btnToggleRevelar.addEventListener('click', function() {
+        modoBandeira = false;
+        btnToggleRevelar.classList.add('ativo');
+        btnToggleBandeira.classList.remove('ativo');
+    });
+
+    btnToggleBandeira.addEventListener('click', function() {
+        modoBandeira = true;
+        btnToggleBandeira.classList.add('ativo');
+        btnToggleRevelar.classList.remove('ativo');
+    });
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-iniciar').addEventListener('click', iniciarJogo);
+
+    var soundToggleBtn = $('sound-toggle');
+    soundToggleBtn.addEventListener('click', function() {
+        som.ativo = !som.ativo;
+        soundToggleBtn.textContent = som.ativo ? '🔊 Som' : '🔇 Mudo';
+    });
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // Previne menu de contexto global (para bandeiras)
+    document.addEventListener('contextmenu', function(e) {
+        if (e.target.closest('.grid-wrapper')) e.preventDefault();
+    });
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    trocarModo('facil');
+    console.log('[brain-minado] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
