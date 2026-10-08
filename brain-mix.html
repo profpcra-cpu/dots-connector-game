@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gênio das Cores — Brain Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-cyan: #38bdf8;
+    --c-green: #4ade80;
+    --c-red: #ef4444;
+    --c-amber: #fbbf24;
+    --c-pink: #ec4899;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+}
+[data-theme="light"] {
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+/* ==========================================================
+   SELETOR DE MODO
+   ========================================================== */
+.mode-switch {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 5px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+}
+.mode-btn {
+    padding: 8px 6px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+
+/* ==========================================================
+   PLACAR
+   ========================================================== */
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--text-color);
+}
+#display-rodada { color: var(--c-cyan); }
+#display-pontos { color: var(--c-green); }
+#display-recorde { color: var(--c-amber); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* ==========================================================
+   TIMER
+   ========================================================== */
+.timer-bar {
+    height: 6px;
+    background: rgba(148, 163, 184, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 0 0 12px;
+}
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-green), var(--c-amber), var(--c-red));
+    border-radius: 99px;
+    transition: width 0.15s linear;
+    width: 100%;
+}
+
+/* ==========================================================
+   ALVO (cor a adivinhar)
+   ========================================================== */
+.alvo-wrapper {
+    position: relative;
+    padding: 24px 16px;
+    background: linear-gradient(135deg, #0f172a 0%, #050914 100%);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 12px 40px -14px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+}
+.alvo-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.alvo-cor {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    box-shadow: 0 0 40px 8px currentColor, inset 0 4px 20px rgba(255,255,255,0.3);
+    position: relative;
+    transition: transform 0.3s ease;
+}
+.alvo-cor.pulsar {
+    animation: alvo-pulsa 2s infinite ease-in-out;
+}
+@keyframes alvo-pulsa {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+.alvo-nome {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+.alvo-nome span {
+    display: inline-block;
+}
+
+/* ==========================================================
+   PALETA DE CORES
+   ========================================================== */
+.paleta-titulo {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-align: left;
+    padding-left: 4px;
+}
+.paleta-cores {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.cor-btn {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+.cor-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+    z-index: 0;
+}
+.cor-btn > span {
+    position: relative;
+    z-index: 1;
+}
+.cor-btn:hover:not(:disabled) {
+    transform: scale(1.08);
+}
+.cor-btn.selecionada {
+    border-color: #ffffff;
+    box-shadow: 0 0 20px currentColor, 0 4px 10px rgba(0,0,0,0.3);
+    transform: scale(1.12);
+}
+.cor-btn:disabled {
+    cursor: not-allowed;
+}
+.cor-btn.enviada-certa {
+    box-shadow: 0 0 24px var(--c-green), 0 0 0 3px var(--c-green);
+}
+.cor-btn.enviada-errada {
+    box-shadow: 0 0 24px var(--c-red), 0 0 0 3px var(--c-red);
+}
+
+/* ==========================================================
+   ÁREA DE MISTURA
+   ========================================================== */
+.mistura-wrapper {
+    padding: 16px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 100px;
+    justify-content: center;
+}
+.mistura-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-height: 44px;
+}
+.bolha-cores {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 2px 8px rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
+    animation: aparecer 0.3s ease;
+}
+@keyframes aparecer {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.simbolo-mais {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--text-muted);
+    padding: 0 4px;
+}
+.igual-sinal {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text-muted);
+    padding: 0 6px;
+}
+.bolha-resultado {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    box-shadow: 0 0 30px currentColor, inset 0 2px 10px rgba(255,255,255,0.3);
+    transition: transform 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    animation: aparecer 0.5s ease;
+}
+.mistura-placeholder {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-style: italic;
+    padding: 10px;
+}
+.mistura-texto {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.4;
+}
+.mistura-texto strong {
+    color: var(--text-color);
+}
+
+/* ==========================================================
+   CONTROLES
+   ========================================================== */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+}
+button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: linear-gradient(135deg, #475569, #334155); }
+.hidden { display: none !important; }
+
+/* ==========================================================
+   OVERLAY
+   ========================================================== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.94);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+    border-radius: 14px;
+}
+.overlay h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.overlay .subtitulo { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.overlay .grande {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #fbbf24, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.overlay button {
+    max-width: 260px;
+}
+
+/* Feedback flutuante */
+.feedback-float {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 42px;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 20;
+    animation: float-up 0.9s ease-out forwards;
+}
+.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
+.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
+@keyframes float-up {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+}
+
+/* Badge */
+.fase-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 99px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--c-cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-height: 24px;
+    line-height: 14px;
+}
+.fase-badge.ok {
+    background: rgba(74, 222, 128, 0.15);
+    color: var(--c-green);
+    border-color: rgba(74, 222, 128, 0.3);
+}
+.fase-badge.erro {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--c-red);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+    </div>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" data-mode="basico">🎨 2 Cores</button>
+        <button class="mode-btn" data-mode="triplo">🎨 3 Cores</button>
+        <button class="mode-btn" data-mode="reverso">🔄 Reverso</button>
+    </div>
+
+    <div class="score-board">
+        <div id="label-bloco1">Rodada<br><strong id="display-rodada">1</strong></div>
+        <div id="label-bloco2">Pontos<br><strong id="display-pontos">0</strong></div>
+        <div id="label-bloco3">Recorde<br><strong id="display-recorde">0</strong></div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div style="text-align:center;">
+        <span class="fase-badge" id="fase-badge">Pronto</span>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        🎨 Escolha as cores que misturadas formam a cor-alvo!
+    </p>
+
+    <div class="alvo-wrapper">
+        <div class="alvo-label" id="alvo-label">Cor Alvo</div>
+        <div class="alvo-cor pulsar" id="alvo-cor"></div>
+        <div class="alvo-nome" id="alvo-nome">—</div>
+    </div>
+
+    <div class="paleta-titulo" id="paleta-titulo">🎨 Toque nas cores para misturar</div>
+    <div class="paleta-cores" id="paleta-cores"></div>
+
+    <div class="mistura-wrapper">
+        <div class="mistura-display" id="mistura-display">
+            <div class="mistura-placeholder">Toque nas cores acima para ver a mistura</div>
+        </div>
+        <div class="mistura-texto" id="mistura-texto"></div>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-iniciar">▶️ Iniciar Jogo</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    console.log('[brain-mix] Inicializando...');
+
+    // ==========================================================
+    // PALETA BASE
+    // ==========================================================
+    // Cores primárias e secundárias (modelo subtrativo simplificado)
+    var CORES_BASE = [
+        { id: 'vermelho', nome: 'Vermelho', hex: '#ef4444', emoji: '🔴' },
+        { id: 'azul',     nome: 'Azul',     hex: '#3b82f6', emoji: '🔵' },
+        { id: 'amarelo',  nome: 'Amarelo',  hex: '#fbbf24', emoji: '🟡' },
+        { id: 'verde',    nome: 'Verde',    hex: '#22c55e', emoji: '🟢' },
+        { id: 'roxo',     nome: 'Roxo',     hex: '#a855f7', emoji: '🟣' },
+        { id: 'laranja',  nome: 'Laranja',  hex: '#fb923c', emoji: '🟠' }
+    ];
+
+    // ==========================================================
+    // RECEITAS DE MISTURA
+    // ==========================================================
+    // Mapa: resultado → lista de combinações que o produzem
+    // Em modo Básico: 2 cores | Modo Triplo: 3 cores
+    var RECEITAS = {
+        'roxo': [
+            ['vermelho', 'azul']
+        ],
+        'verde': [
+            ['azul', 'amarelo']
+        ],
+        'laranja': [
+            ['vermelho', 'amarelo']
+        ],
+        'preto': [ // conceito: mistura das 3 primárias
+            ['vermelho', 'azul', 'amarelo']
+        ]
+    };
+
+    // Alvos possíveis por modo
+    var ALVOS_2_CORES = [
+        { cor: 'roxo',    nome: 'Roxo',    hex: '#a855f7', emoji: '🟣', combos: [['vermelho', 'azul']] },
+        { cor: 'verde',   nome: 'Verde',   hex: '#22c55e', emoji: '🟢', combos: [['azul', 'amarelo']] },
+        { cor: 'laranja', nome: 'Laranja', hex: '#fb923c', emoji: '🟠', combos: [['vermelho', 'amarelo']] }
+    ];
+
+    var ALVOS_3_CORES = [
+        { cor: 'marrom',  nome: 'Marrom',  hex: '#78350f', emoji: '🟤', combos: [['vermelho', 'amarelo', 'azul']] },
+        { cor: 'cinza',   nome: 'Cinza',   hex: '#6b7280', emoji: '⚪', combos: [['vermelho', 'azul', 'verde']] }
+    ];
+
+    // ==========================================================
+    // ESTADO
+    // ==========================================================
+    var modoAtual = 'basico';           // basico | triplo | reverso
+    var rodada = 1;
+    var pontos = 0;
+    var acertos = 0;
+    var erros = 0;
+    var comboAtual = 0;
+    var jogoAtivo = false;
+    var aceitandoResposta = false;
+    var alvoAtual = null;               // { cor, nome, hex, combos }
+    var coresSelecionadas = [];         // lista de ids ['vermelho', 'azul', ...]
+    var timerRodada = null;
+    var tempoRestante = 0;
+    var tempoMax = 15;
+
+    // Recordes por modo
+    var recordes = {
+        basico:  parseInt(localStorage.getItem('brain_mix_recorde_basico')  || '0', 10),
+        triplo:  parseInt(localStorage.getItem('brain_mix_recorde_triplo')  || '0', 10),
+        reverso: parseInt(localStorage.getItem('brain_mix_recorde_reverso') || '0', 10)
+    };
+
+    // ==========================================================
+    // SOM
+    // ==========================================================
+    var som = {
+        ativo: true,
+        ctx: null,
+        init: function() {
+            if (!this.ctx) {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { this.ctx = null; }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(function(){});
+            }
+        },
+        play: function(freq, type, duration, vol) {
+            if (!this.ativo) return;
+            this.init();
+            if (!this.ctx) return;
+            try {
+                var o = this.ctx.createOscillator();
+                var g = this.ctx.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                var agora = this.ctx.currentTime;
+                g.gain.setValueAtTime(0, agora);
+                g.gain.linearRampToValueAtTime(vol || 0.08, agora + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, agora + duration);
+                o.connect(g);
+                g.connect(this.ctx.destination);
+                o.start(agora);
+                o.stop(agora + duration + 0.02);
+            } catch (e) {}
+        },
+        selecionar: function() { this.play(600, 'triangle', 0.08); },
+        acerto: function() {
+            var self = this;
+            [523, 659, 783].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.18); }, i * 70);
+            });
+        },
+        erro: function() { this.play(180, 'sawtooth', 0.3); },
+        vitoria: function() {
+            var self = this;
+            [523, 659, 783, 1046].forEach(function(f, i) {
+                setTimeout(function() { self.play(f, 'sine', 0.22); }, i * 100);
+            });
+        }
+    };
+
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
+    function $(id) { return document.getElementById(id); }
+
+    function getCorBase(id) {
+        for (var i = 0; i < CORES_BASE.length; i++) {
+            if (CORES_BASE[i].id === id) return CORES_BASE[i];
+        }
+        return null;
+    }
+
+    function embaralhar(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+        }
+        return a;
+    }
+
+    function compararConjuntos(a, b) {
+        // Verifica se 2 arrays têm os mesmos elementos (sem contar ordem ou duplicados)
+        if (a.length !== b.length) return false;
+        var sa = a.slice().sort();
+        var sb = b.slice().sort();
+        for (var i = 0; i < sa.length; i++) {
+            if (sa[i] !== sb[i]) return false;
+        }
+        return true;
+    }
+
+    function atualizarBadge(texto, classe) {
+        var b = $('fase-badge');
+        b.textContent = texto;
+        b.className = 'fase-badge' + (classe ? ' ' + classe : '');
+    }
+
+    function atualizarPlacar() {
+        $('display-rodada').textContent = String(rodada);
+        $('display-pontos').textContent = String(pontos);
+        $('display-recorde').textContent = String(recordes[modoAtual]);
+    }
+
+    // ==========================================================
+    // MISTURA VISUAL (interpolação de cores em RGB)
+    // ==========================================================
+    function hexParaRgb(hex) {
+        var h = hex.replace('#', '');
+        return {
+            r: parseInt(h.substring(0, 2), 16),
+            g: parseInt(h.substring(2, 4), 16),
+            b: parseInt(h.substring(4, 6), 16)
+        };
+    }
+
+    function rgbParaHex(r, g, b) {
+        var toHex = function(v) {
+            var s = Math.max(0, Math.min(255, Math.round(v))).toString(16);
+            return s.length === 1 ? '0' + s : s;
+        };
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+
+    function misturarCores(ids) {
+        if (ids.length === 0) return null;
+        var r = 0, g = 0, b = 0;
+        for (var i = 0; i < ids.length; i++) {
+            var base = getCorBase(ids[i]);
+            if (!base) continue;
+            var rgb = hexParaRgb(base.hex);
+            r += rgb.r;
+            g += rgb.g;
+            b += rgb.b;
+        }
+        // Média das cores
+        r = r / ids.length;
+        g = g / ids.length;
+        b = b / ids.length;
+        return rgbParaHex(r, g, b);
+    }
+
+    // ==========================================================
+    // PALETA
+    // ==========================================================
+    function montarPaleta() {
+        var paleta = $('paleta-cores');
+        paleta.innerHTML = '';
+
+        CORES_BASE.forEach(function(cor) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'cor-btn';
+            btn.dataset.corId = cor.id;
+            btn.style.setProperty('background-color', cor.hex, 'important');
+            btn.style.setProperty('background-image', 'none', 'important');
+            btn.style.setProperty('color', cor.hex, 'important');
+            btn.setAttribute('aria-label', cor.nome);
+            btn.title = cor.nome;
+
+            btn.addEventListener('click', function() {
+                if (!aceitandoResposta) return;
+                toggleCorSelecionada(cor.id, btn);
+            });
+
+            paleta.appendChild(btn);
+        });
+    }
+
+    function toggleCorSelecionada(corId, btn) {
+        var idx = coresSelecionadas.indexOf(corId);
+        if (idx !== -1) {
+            // Desseleciona
+            coresSelecionadas.splice(idx, 1);
+            btn.classList.remove('selecionada');
+        } else {
+            // Seleciona (limite máximo)
+            var maxCores = (modoAtual === 'triplo') ? 3 : 2;
+            if (coresSelecionadas.length >= maxCores) {
+                // Remove a primeira e adiciona a nova (comportamento "fila")
+                var removida = coresSelecionadas.shift();
+                var botoes = document.querySelectorAll('.cor-btn');
+                for (var i = 0; i < botoes.length; i++) {
+                    if (botoes[i].dataset.corId === removida) {
+                        botoes[i].classList.remove('selecionada');
+                    }
+                }
+            }
+            coresSelecionadas.push(corId);
+            btn.classList.add('selecionada');
+        }
+
+        som.selecionar();
+        atualizarMistura();
+    }
+
+    function atualizarMistura() {
+        var display = $('mistura-display');
+        var texto = $('mistura-texto');
+
+        if (coresSelecionadas.length === 0) {
+            display.innerHTML = '<div class="mistura-placeholder">Toque nas cores acima para ver a mistura</div>';
+            texto.innerHTML = '';
+            return;
+        }
+
+        display.innerHTML = '';
+
+        coresSelecionadas.forEach(function(id, idx) {
+            if (idx > 0) {
+                var mais = document.createElement('span');
+                mais.className = 'simbolo-mais';
+                mais.textContent = '+';
+                display.appendChild(mais);
+            }
+            var base = getCorBase(id);
+            var bolha = document.createElement('div');
+            bolha.className = 'bolha-cores';
+            bolha.style.background = base.hex;
+            display.appendChild(bolha);
+        });
+
+        // Resultado se tiver pelo menos 2 cores
+        if (coresSelecionadas.length >= 2) {
+            var igual = document.createElement('span');
+            igual.className = 'igual-sinal';
+            igual.textContent = '=';
+            display.appendChild(igual);
+
+            var corFinal = misturarCores(coresSelecionadas);
+            var bolhaFinal = document.createElement('div');
+            bolhaFinal.className = 'bolha-resultado';
+            bolhaFinal.style.background = corFinal;
+            bolhaFinal.style.color = corFinal;
+            display.appendChild(bolhaFinal);
+
+            // Texto descritivo
+            var nomes = coresSelecionadas.map(function(id) { return getCorBase(id).nome; }).join(' + ');
+            texto.innerHTML = '<strong>' + nomes + '</strong> = ' + corFinal;
+        } else {
+            texto.innerHTML = 'Adicione mais ' + (2 - coresSelecionadas.length) + ' cor(es)';
+        }
+    }
+
+    // ==========================================================
+    // GERAR RODADA
+    // ==========================================================
+    function gerarRodada() {
+        aceitandoResposta = true;
+        coresSelecionadas = [];
+
+        // Reseta paleta visual
+        var botoes = document.querySelectorAll('.cor-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.remove('selecionada', 'enviada-certa', 'enviada-errada');
+            botoes[i].disabled = false;
+        }
+
+        // Escolhe alvo com base no modo
+        var alvos;
+        if (modoAtual === 'triplo' || modoAtual === 'reverso') {
+            alvos = ALVOS_3_CORES;
+        } else {
+            alvos = ALVOS_2_CORES;
+        }
+
+        alvoAtual = alvos[Math.floor(Math.random() * alvos.length)];
+
+        // Atualiza alvo visual
+        $('alvo-cor').style.background = alvoAtual.hex;
+        $('alvo-cor').style.color = alvoAtual.hex;
+        $('alvo-nome').textContent = alvoAtual.emoji + ' ' + alvoAtual.nome;
+
+        // Instrução conforme modo
+        if (modoAtual === 'basico') {
+            $('alvo-label').textContent = 'Que 2 cores formam...';
+            $('paleta-titulo').textContent = '🎨 Toque em 2 cores para misturar';
+        } else if (modoAtual === 'triplo') {
+            $('alvo-label').textContent = 'Que 3 cores formam...';
+            $('paleta-titulo').textContent = '🎨 Toque em 3 cores para misturar';
+        } else {
+            $('alvo-label').textContent = 'Modo Reverso — Qual a mistura?';
+            $('paleta-titulo').textContent = '🎨 Toque nas cores para testar';
+        }
+
+        // Reset mistura display
+        atualizarMistura();
+
+        atualizarBadge('👉 Escolha as cores!', '');
+        atualizarPlacar();
+
+        // Inicia timer
+        iniciarTimer(tempoMax);
+    }
+
+    // ==========================================================
+    // TIMER
+    // ==========================================================
+    function iniciarTimer(segundos) {
+        tempoRestante = segundos;
+        atualizarTimerBar();
+        if (timerRodada) clearInterval(timerRodada);
+        timerRodada = setInterval(function() {
+            tempoRestante -= 0.1;
+            if (tempoRestante <= 0) {
+                tempoRestante = 0;
+                atualizarTimerBar();
+                clearInterval(timerRodada);
+                timerRodada = null;
+                tempoEsgotado();
+                return;
+            }
+            atualizarTimerBar();
+        }, 100);
+    }
+
+    function atualizarTimerBar() {
+        var pct = (tempoRestante / tempoMax) * 100;
+        $('timer-fill').style.width = pct + '%';
+    }
+
+    function pararTimer() {
+        if (timerRodada) {
+            clearInterval(timerRodada);
+            timerRodada = null;
+        }
+    }
+
+    // ==========================================================
+    // VERIFICAÇÃO AUTOMÁTICA
+    // ==========================================================
+    // Assim que o jogador seleciona o número correto de cores, verificamos
+    function verificarAuto() {
+        if (!aceitandoResposta) return;
+
+        var coresNecessarias = (modoAtual === 'triplo' || modoAtual === 'reverso') ? 3 : 2;
+        if (coresSelecionadas.length !== coresNecessarias) return;
+
+        // Verifica se bate com alguma combinação válida
+        var correto = false;
+        for (var i = 0; i < alvoAtual.combos.length; i++) {
+            if (compararConjuntos(coresSelecionadas, alvoAtual.combos[i])) {
+                correto = true;
+                break;
+            }
+        }
+
+        if (correto) {
+            acertou();
+        }
+        // Não penaliza automaticamente — o jogador pode continuar tentando
+    }
+
+    // ==========================================================
+    // AÇÃO: ACERTO
+    // ==========================================================
+    function acertou() {
+        aceitandoResposta = false;
+        pararTimer();
+
+        acertos++;
+        comboAtual++;
+        var bonus = Math.min(comboAtual, 5);
+        var bonusTempo = Math.ceil(tempoRestante);
+        var ganho = 10 + bonus * 2 + bonusTempo;
+        pontos += ganho;
+
+        // Marca visualmente
+        var botoes = document.querySelectorAll('.cor-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].disabled = true;
+            if (coresSelecionadas.indexOf(botoes[i].dataset.corId) !== -1) {
+                botoes[i].classList.add('enviada-certa');
+            }
+        }
+
+        // Anima a bolha resultado
+        var bolha = document.querySelector('.bolha-resultado');
+        if (bolha) {
+            bolha.style.transform = 'scale(1.3)';
+            setTimeout(function() {
+                if (bolha) bolha.style.transform = 'scale(1)';
+            }, 400);
+        }
+
+        // Pisca o alvo
+        var alvo = $('alvo-cor');
+        alvo.classList.remove('pulsar');
+        void alvo.offsetWidth;
+        alvo.classList.add('pulsar');
+
+        som.acerto();
+        atualizarBadge('✅ Correto! +' + ganho, 'ok');
+        mostrarFeedbackFloat('+' + ganho, 'positivo');
+
+        if (pontos > recordes[modoAtual]) {
+            recordes[modoAtual] = pontos;
+            localStorage.setItem('brain_mix_recorde_' + modoAtual, String(pontos));
+        }
+        atualizarPlacar();
+
+        rodada++;
+        setTimeout(function() {
+            if (jogoAtivo) gerarRodada();
+        }, 1600);
+    }
+
+    // ==========================================================
+    // AÇÃO: ERRO (manual via botão "Tentar Novamente" não existe mais — auto)
+    // ==========================================================
+    function tempoEsgotado() {
+        if (!aceitandoResposta) return;
+        aceitandoResposta = false;
+        comboAtual = 0;
+        erros++;
+
+        // Revela a resposta correta
+        var correta = alvoAtual.combos[0];
+        var texto = correta.map(function(id) { return getCorBase(id).emoji + ' ' + getCorBase(id).nome; }).join(' + ');
+
+        var botoes = document.querySelectorAll('.cor-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].disabled = true;
+            if (correta.indexOf(botoes[i].dataset.corId) !== -1) {
+                botoes[i].classList.add('enviada-certa');
+            } else if (coresSelecionadas.indexOf(botoes[i].dataset.corId) !== -1) {
+                botoes[i].classList.add('enviada-errada');
+            }
+        }
+
+        som.erro();
+        atualizarBadge('⏰ Era: ' + texto, 'erro');
+        mostrarFeedbackFloat('✗', 'negativo');
+        atualizarPlacar();
+
+        rodada++;
+        setTimeout(function() {
+            if (jogoAtivo) gerarRodada();
+        }, 2200);
+    }
+
+    // ==========================================================
+    // FEEDBACK FLUTUANTE
+    // ==========================================================
+    function mostrarFeedbackFloat(texto, tipo) {
+        var el = document.createElement('div');
+        el.className = 'feedback-float ' + tipo;
+        el.textContent = texto;
+        $('alvo-cor').parentNode.appendChild(el);
+        setTimeout(function() {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 900);
+    }
+
+    // ==========================================================
+    // INÍCIO / FIM DE JOGO
+    // ==========================================================
+    function iniciarJogo() {
+        jogoAtivo = true;
+        rodada = 1;
+        pontos = 0;
+        acertos = 0;
+        erros = 0;
+        comboAtual = 0;
+        aceitandoResposta = false;
+        coresSelecionadas = [];
+
+        esconderOverlay();
+        montarPaleta();
+        atualizarPlacar();
+        atualizarBadge('🎨 Prepare-se...', 'ok');
+
+        setTimeout(function() {
+            gerarRodada();
+        }, 400);
+    }
+
+    function fimDeJogo() {
+        jogoAtivo = false;
+        aceitandoResposta = false;
+        pararTimer();
+
+        var total = acertos + erros;
+        var precisao = total > 0 ? Math.round((acertos / total) * 100) : 0;
+
+        var medalha, titulo, mensagem;
+        if (pontos >= 60) {
+            medalha = '🏆'; titulo = 'Gênio das Cores!';
+            mensagem = 'Impressionante! Você domina a teoria das cores.';
+        } else if (pontos >= 40) {
+            medalha = '🥇'; titulo = 'Artista Cromático!';
+            mensagem = 'Excelente trabalho! Continue a pintar o mundo.';
+        } else if (pontos >= 20) {
+            medalha = '🥈'; titulo = 'Aprendiz Colorido!';
+            mensagem = 'Muito bem! Você está no caminho certo.';
+        } else {
+            medalha = '🥉'; titulo = 'Primeiros Traços!';
+            mensagem = 'Bom começo! As cores são mágicas, continue a explorar.';
+        }
+
+        som.vitoria();
+
+        mostrarOverlay({
+            titulo: medalha + ' ' + titulo,
+            htmlExtra:
+                '<div class="grande">' + pontos + ' pts</div>' +
+                '<div style="display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:13px;">' +
+                    '<span style="color:var(--c-green)">✅ ' + acertos + '</span>' +
+                    '<span style="color:var(--c-red)">❌ ' + erros + '</span>' +
+                    '<span style="color:var(--c-cyan)">🎯 ' + precisao + '%</span>' +
+                '</div>' +
+                '<div style="font-size:12px; color:var(--text-muted); margin-top:8px;">' +
+                    'Recorde: <strong style="color:var(--c-amber)">' + recordes[modoAtual] + ' pts</strong>' +
+                '</div>',
+            subtitulo: mensagem,
+            botao: { texto: '🔄 Jogar Novamente', acao: function() { iniciarJogo(); } }
+        });
+
+        atualizarBadge('🏁 Fim de jogo', 'erro');
+    }
+
+    // ==========================================================
+    // OVERLAYS
+    // ==========================================================
+    function esconderOverlay() {
+        var ov = $('overlay');
+        if (!ov) return;
+        ov.classList.add('hidden');
+        ov.innerHTML = '';
+    }
+
+    function mostrarOverlay(cfg) {
+        var ov = $('overlay');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'overlay';
+            ov.className = 'overlay';
+            document.querySelector('.container').appendChild(ov);
+        }
+        ov.innerHTML = '';
+
+        if (cfg.titulo) {
+            var h2 = document.createElement('h2');
+            h2.textContent = cfg.titulo;
+            ov.appendChild(h2);
+        }
+        if (cfg.htmlExtra) {
+            var div = document.createElement('div');
+            div.innerHTML = cfg.htmlExtra;
+            ov.appendChild(div);
+        }
+        if (cfg.subtitulo) {
+            var p = document.createElement('div');
+            p.className = 'subtitulo';
+            p.textContent = cfg.subtitulo;
+            ov.appendChild(p);
+        }
+        if (cfg.botao) {
+            var btn = document.createElement('button');
+            btn.textContent = cfg.botao.texto;
+            btn.addEventListener('click', cfg.botao.acao);
+            ov.appendChild(btn);
+        }
+
+        ov.classList.remove('hidden');
+    }
+
+    // ==========================================================
+    // TROCA DE MODO
+    // ==========================================================
+    function trocarModo(novoModo) {
+        if (novoModo === modoAtual) return;
+        modoAtual = novoModo;
+
+        jogoAtivo = false;
+        aceitandoResposta = false;
+        pararTimer();
+        esconderOverlay();
+
+        var botoes = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < botoes.length; i++) {
+            botoes[i].classList.toggle('active', botoes[i].dataset.mode === novoModo);
+        }
+
+        rodada = 1;
+        pontos = 0;
+        acertos = 0;
+        erros = 0;
+        comboAtual = 0;
+        coresSelecionadas = [];
+
+        montarPaleta();
+        atualizarPlacar();
+        atualizarBadge('Pronto', '');
+        atualizarMistura();
+
+        // Reset visual
+        $('alvo-cor').style.background = '#334155';
+        $('alvo-cor').style.color = '#334155';
+        $('alvo-nome').textContent = '—';
+        $('timer-fill').style.width = '0%';
+
+        if (novoModo === 'basico') {
+            $('info-instrucao').textContent = '🎨 Escolha 2 cores que misturadas formam a cor-alvo!';
+            $('alvo-label').textContent = 'Que 2 cores formam...';
+            tempoMax = 15;
+        } else if (novoModo === 'triplo') {
+            $('info-instrucao').textContent = '🎨 Escolha 3 cores que misturadas formam a cor-alvo!';
+            $('alvo-label').textContent = 'Que 3 cores formam...';
+            tempoMax = 20;
+        } else {
+            $('info-instrucao').textContent = '🔄 Modo Reverso: descubra a receita da cor mostrada!';
+            $('alvo-label').textContent = 'Modo Reverso — Qual a mistura?';
+            tempoMax = 20;
+        }
+    }
+
+    // ==========================================================
+    // EVENTOS DE UI
+    // ==========================================================
+    var modeBtns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < modeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModo(btn.dataset.mode); });
+        })(modeBtns[i]);
+    }
+
+    $('btn-iniciar').addEventListener('click', iniciarJogo);
+
+    var savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    $('theme-toggle').addEventListener('click', function() {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+    });
+
+    // ==========================================================
+    // HOOK: verificar auto após atualizar mistura
+    // ==========================================================
+    var _originalAtualizarMistura = atualizarMistura;
+    atualizarMistura = function() {
+        _originalAtualizarMistura();
+        // Pequeno delay para deixar a UI atualizar primeiro
+        setTimeout(verificarAuto, 100);
+    };
+
+    // ==========================================================
+    // BOOT
+    // ==========================================================
+    montarPaleta();
+    atualizarPlacar();
+    atualizarBadge('Pronto para jogar', '');
+    $('timer-fill').style.width = '0%';
+    console.log('[brain-mix] Pronto! Modo:', modoAtual);
+})();
+</script>
+</body>
+</html>
