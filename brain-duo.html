@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Brain Duo — Coordenação Bilateral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-color: #0b1020;
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.85);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.18);
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-left: #38bdf8;
+    --c-right: #f43f5e;
+    --c-green: #4ade80;
+    --c-gold: #fbbf24;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+}
+[data-theme="light"] {
+    --bg-color: #eef2ff;
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+    animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.btn-small {
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+.btn-small:hover { color: var(--text-color); border-color: var(--text-muted); }
+
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.score-board strong {
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-color);
+}
+#display-fase { color: var(--c-left); }
+#display-pontos { color: var(--c-green); }
+#display-combo { color: var(--c-gold); }
+#display-vidas { color: var(--c-right); }
+
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    min-height: 18px;
+    line-height: 1.5;
+    transition: color 0.3s ease;
+}
+.instructions.ok { color: var(--c-green); }
+.instructions.erro { color: var(--c-right); }
+.instructions.dica { color: var(--c-gold); }
+
+#game-canvas-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    margin: 0 auto 12px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow:
+        0 12px 40px -14px rgba(0, 0, 0, 0.55),
+        0 0 0 1px var(--card-border),
+        0 0 24px -6px rgba(99, 102, 241, 0.35);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #050914;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    border: none;
+    box-shadow: var(--shadow-btn);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-secondary {
+    background: linear-gradient(135deg, #475569, #334155);
+}
+.btn-secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 9, 20, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #f8fafc;
+    z-index: 10;
+    padding: 20px;
+    text-align: center;
+}
+.overlay h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+.overlay .subtitulo {
+    font-size: 14px;
+    color: #94a3b8;
+}
+.overlay .metricas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 12px 0;
+    width: 100%;
+    max-width: 280px;
+}
+.overlay .metricas > div {
+    background: rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+.overlay .metricas strong {
+    display: block;
+    font-size: 20px;
+    color: #f8fafc;
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: none;
+}
+.overlay button {
+    width: auto;
+    padding: 12px 28px;
+    font-size: 15px;
+}
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <button id="theme-toggle" class="btn-small">🌙 Tema</button>
+    </div>
+
+    <div class="score-board">
+        <div>Fase<br><strong id="display-fase">1</strong></div>
+        <div>Pontos<br><strong id="display-pontos">0</strong></div>
+        <div>Combo<br><strong id="display-combo">x1</strong></div>
+        <div>Vidas<br><strong id="display-vidas">❤❤❤</strong></div>
+    </div>
+
+    <p class="instructions" id="info-instrucao">
+        👆👆 Toque nos <b>dois círculos ao mesmo tempo</b> com dois dedos. Desktop: <b>A</b> e <b>L</b>.
+    </p>
+
+    <div id="game-canvas-wrap">
+        <canvas id="game-canvas"></canvas>
+        <div id="overlay" class="overlay hidden">
+            <h2 id="overlay-titulo">Fim de Jogo</h2>
+            <div class="subtitulo" id="overlay-sub"></div>
+            <div class="metricas" id="overlay-metricas"></div>
+            <button id="btn-overlay-acao">Tentar de novo</button>
+        </div>
+    </div>
+
+    <div class="controls-grid">
+        <button id="btn-reiniciar" class="btn-secondary">🔄 Reiniciar</button>
+        <button id="btn-como-jogar">❓ Como Jogar</button>
+    </div>
+</div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+/* ==========================================================
+   SESSÃO
+   ========================================================== */
+const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+if (!jogadorSessao) { window.location.href = 'index.html'; }
+
+const VERSAO = 'v1-duo-2026-10-09';
+console.log(`✅ Brain Duo ${VERSAO}`);
+
+/* ==========================================================
+   CANVAS + DIMENSÕES
+   ========================================================== */
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const W = 600;
+const H = 800;
+const dpr = Math.min(window.devicePixelRatio || 1, 3);
+canvas.width = W * dpr;
+canvas.height = H * dpr;
+ctx.scale(dpr, dpr);
+
+/* ==========================================================
+   CONFIG DE FASES
+   ========================================================== */
+const FASES = {
+    1: { raio: 70, tempo: 3500, mover: 0, pulsar: false, encolher: false },
+    2: { raio: 65, tempo: 3200, mover: 0, pulsar: true, encolher: false },
+    3: { raio: 60, tempo: 3000, mover: 0.6, pulsar: true, encolher: false },
+    4: { raio: 55, tempo: 2800, mover: 0.9, pulsar: true, encolher: true },
+    5: { raio: 50, tempo: 2600, mover: 1.3, pulsar: true, encolher: true },
+    6: { raio: 45, tempo: 2400, mover: 1.7, pulsar: true, encolher: true },
+    7: { raio: 42, tempo: 2200, mover: 2.2, pulsar: true, encolher: true },
+    8: { raio: 40, tempo: 2000, mover: 2.7, pulsar: true, encolher: true },
+    9: { raio: 38, tempo: 1800, mover: 3.2, pulsar: true, encolher: true },
+    10: { raio: 36, tempo: 1600, mover: 4.0, pulsar: true, encolher: true }
+};
+function getFase(n) {
+    return FASES[Math.min(n, 10)] || FASES[10];
+}
+
+/* ==========================================================
+   ESTADO
+   ========================================================== */
+const estado = {
+    fase: 1,
+    pontos: 0,
+    combo: 1,
+    comboMax: 1,
+    vidas: 3,
+    acertos: 0,
+    erros: 0,
+    tempoTotal: 0,
+    rodando: false,
+    gameOver: false,
+    recordes: {},
+    pontosTotais: 0,
+    modo: 'touch' // 'touch' | 'keyboard'
+};
+
+const jogo = {
+    esq: { x: 150, y: 400, raio: 70, ativo: true, tocado: false, fase: 0, baseX: 150, baseY: 400 },
+    dir: { x: 450, y: 400, raio: 70, ativo: true, tocado: false, fase: 0, baseX: 450, baseY: 400 },
+    tempoRestante: 3000,
+    toquesAtivos: new Map(), // pointerId → {x, y, t}
+    timerInicio: 0,
+    ultimoFrame: 0,
+    tempoDesdeUltimoErro: 0,
+    streak: 0
+};
+
+/* ==========================================================
+   DOM
+   ========================================================== */
+const displayFase = document.getElementById('display-fase');
+const displayPontos = document.getElementById('display-pontos');
+const displayCombo = document.getElementById('display-combo');
+const displayVidas = document.getElementById('display-vidas');
+const infoInstrucao = document.getElementById('info-instrucao');
+const overlay = document.getElementById('overlay');
+const overlayTitulo = document.getElementById('overlay-titulo');
+const overlaySub = document.getElementById('overlay-sub');
+const overlayMetricas = document.getElementById('overlay-metricas');
+const btnOverlayAcao = document.getElementById('btn-overlay-acao');
+
+/* ==========================================================
+   TEMA
+   ========================================================== */
+const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('brain_flow_theme', next);
+});
+
+/* ==========================================================
+   UTILITÁRIOS
+   ========================================================== */
+function atualizarUI() {
+    displayFase.textContent = estado.fase;
+    displayPontos.textContent = estado.pontos;
+    displayCombo.textContent = `x${estado.combo}`;
+    displayVidas.textContent = '❤'.repeat(estado.vidas) + '·'.repeat(Math.max(0, 3 - estado.vidas));
+}
+
+function setInstrucao(txt, tipo = '') {
+    infoInstrucao.innerHTML = txt;
+    infoInstrucao.className = 'instructions' + (tipo ? ' ' + tipo : '');
+}
+
+/* ==========================================================
+   INICIALIZAÇÃO
+   ========================================================== */
+function iniciarJogo() {
+    estado.fase = 1;
+    estado.pontos = 0;
+    estado.combo = 1;
+    estado.comboMax = 1;
+    estado.vidas = 3;
+    estado.acertos = 0;
+    estado.erros = 0;
+    estado.tempoTotal = 0;
+    estado.rodando = true;
+    estado.gameOver = false;
+    estado.modo = detectarModo();
+
+    resetarAlvos();
+    atualizarUI();
+    esconderOverlay();
+    setInstrucao('👆👆 Toque nos <b>dois círculos ao mesmo tempo</b> com dois dedos. Desktop: <b>A</b> e <b>L</b>.', 'dica');
+    jogo.timerInicio = performance.now();
+    jogo.ultimoFrame = performance.now();
+}
+
+function detectarModo() {
+    // Detecta se é touch pela primeira interação; padrão touch para mobile
+    return ('ontouchstart' in window || navigator.maxTouchPoints > 0) ? 'touch' : 'keyboard';
+}
+
+function resetarAlvos() {
+    const cfg = getFase(estado.fase);
+    const margem = cfg.raio + 20;
+    const alturaDisponivel = H - margem * 2;
+
+    // Esquerdo: canto esquerdo, entre 25-45% da largura
+    jogo.esq.baseX = margem + Math.random() * (W / 2 - margem * 1.5);
+    jogo.esq.baseY = margem + Math.random() * alturaDisponivel;
+    jogo.esq.x = jogo.esq.baseX;
+    jogo.esq.y = jogo.esq.baseY;
+    jogo.esq.raio = cfg.raio;
+    jogo.esq.ativo = true;
+    jogo.esq.tocado = false;
+    jogo.esq.fase = Math.random() * Math.PI * 2;
+
+    // Direito: canto direito, entre 55-75% da largura
+    jogo.dir.baseX = W / 2 + margem / 2 + Math.random() * (W / 2 - margem * 1.5);
+    jogo.dir.baseY = margem + Math.random() * alturaDisponivel;
+    jogo.dir.x = jogo.dir.baseX;
+    jogo.dir.y = jogo.dir.baseY;
+    jogo.dir.raio = cfg.raio;
+    jogo.dir.ativo = true;
+    jogo.dir.tocado = false;
+    jogo.dir.fase = Math.random() * Math.PI * 2;
+
+    jogo.tempoRestante = cfg.tempo;
+    jogo.timerInicio = performance.now();
+
+    // Garante que não estão muito próximos
+    const dx = jogo.dir.x - jogo.esq.x;
+    const dy = jogo.dir.y - jogo.esq.y;
+    const dist = Math.hypot(dx, dy);
+    const minDist = cfg.raio * 2.2;
+    if (dist < minDist) {
+        // Empurra para os cantos opostos
+        jogo.esq.baseX = margem;
+        jogo.esq.baseY = margem;
+        jogo.esq.x = jogo.esq.baseX;
+        jogo.esq.y = jogo.esq.baseY;
+        jogo.dir.baseX = W - margem;
+        jogo.dir.baseY = H - margem;
+        jogo.dir.x = jogo.dir.baseX;
+        jogo.dir.y = jogo.dir.baseY;
+    }
+}
+
+/* ==========================================================
+   INPUT — TOUCH + MOUSE
+   ========================================================== */
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+}
+
+function getPosFromTouch(t) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return { x: (t.clientX - rect.left) * scaleX, y: (t.clientY - rect.top) * scaleY };
+}
+
+function processarToques() {
+    if (!estado.rodando || estado.gameOver) return;
+
+    // Conta quantos toques estão sobre cada alvo
+    let tocouEsq = false;
+    let tocouDir = false;
+
+    for (const [id, t] of jogo.toquesAtivos) {
+        const pos = t;
+        const dEsq = Math.hypot(pos.x - jogo.esq.x, pos.y - jogo.esq.y);
+        const dDir = Math.hypot(pos.x - jogo.dir.x, pos.y - jogo.dir.y);
+        if (dEsq <= jogo.esq.raio) tocouEsq = true;
+        if (dDir <= jogo.dir.raio) tocouDir = true;
+    }
+
+    if (tocouEsq && tocouDir) {
+        acertou();
+    } else if (tocouEsq) {
+        // Toque apenas no esquerdo — só penaliza se o direito não está sendo tocado
+        // Espera um instante para ver se o segundo dedo chega
+        if (!jogo.esq.tocado) {
+            jogo.esq.tocado = true;
+            jogo.esq.tempoToque = performance.now();
+        }
+    } else if (tocouDir) {
+        if (!jogo.dir.tocado) {
+            jogo.dir.tocado = true;
+            jogo.dir.tempoToque = performance.now();
+        }
+    }
+}
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    estado.modo = 'touch';
+    for (const t of e.changedTouches) {
+        jogo.toquesAtivos.set(t.identifier, getPosFromTouch(t));
+    }
+    processarToques();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+        if (jogo.toquesAtivos.has(t.identifier)) {
+            jogo.toquesAtivos.set(t.identifier, getPosFromTouch(t));
+        }
+    }
+    processarToques();
+}, { passive: false });
+
+function removerToques(e) {
+    for (const t of e.changedTouches) {
+        jogo.toquesAtivos.delete(t.identifier);
+    }
+    // Se ambos soltaram antes de acertar → penaliza
+    if (estado.rodando && !estado.gameOver) {
+        const algumAtivo = jogo.toquesAtivos.size > 0;
+        if (!algumAtivo && (jogo.esq.tocado || jogo.dir.tocado)) {
+            penalizarToqueParcial();
+        }
+        jogo.esq.tocado = false;
+        jogo.dir.tocado = false;
+    }
+}
+canvas.addEventListener('touchend', removerToques);
+canvas.addEventListener('touchcancel', removerToques);
+
+// Mouse (desktop) — funciona com 1 mouse, então usamos 'A' e 'L' também
+canvas.addEventListener('mousedown', (e) => {
+    if (estado.modo === 'keyboard') return;
+    estado.modo = 'mouse';
+    const pos = getPos(e);
+    jogo.toquesAtivos.set('mouse', pos);
+    processarToques();
+});
+canvas.addEventListener('mousemove', (e) => {
+    if (!jogo.toquesAtivos.has('mouse')) return;
+    jogo.toquesAtivos.set('mouse', getPos(e));
+    processarToques();
+});
+window.addEventListener('mouseup', () => {
+    jogo.toquesAtivos.delete('mouse');
+    if (estado.rodando && !estado.gameOver && estado.modo === 'mouse') {
+        if (jogo.esq.tocado || jogo.dir.tocado) {
+            penalizarToqueParcial();
+        }
+        jogo.esq.tocado = false;
+        jogo.dir.tocado = false;
+    }
+});
+
+/* ==========================================================
+   INPUT — TECLADO (desktop)
+   ========================================================== */
+const teclasPressionadas = new Set();
+window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'a' || k === 'l' || k === 'arrowleft' || k === 'arrowright') {
+        e.preventDefault();
+        estado.modo = 'keyboard';
+        const tecla = (k === 'a' || k === 'arrowleft') ? 'esq' : 'dir';
+        if (!teclasPressionadas.has(tecla)) {
+            teclasPressionadas.add(tecla);
+            if (estado.rodando && !estado.gameOver) {
+                if (tecla === 'esq') jogo.esq.tocado = true;
+                if (tecla === 'dir') jogo.dir.tocado = true;
+                // Se ambos estão pressionados → acerto
+                if (jogo.esq.tocado && jogo.dir.tocado) acertou();
+            }
+        }
+    }
+});
+window.addEventListener('keyup', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'a' || k === 'arrowleft') {
+        teclasPressionadas.delete('esq');
+        if (jogo.esq.tocado && !jogo.dir.tocado) penalizarToqueParcial();
+        jogo.esq.tocado = false;
+    }
+    if (k === 'l' || k === 'arrowright') {
+        teclasPressionadas.delete('dir');
+        if (jogo.dir.tocado && !jogo.esq.tocado) penalizarToqueParcial();
+        jogo.dir.tocado = false;
+    }
+});
+
+/* ==========================================================
+   LÓGICA DO JOGO
+   ========================================================== */
+function acertou() {
+    if (!estado.rodando || estado.gameOver) return;
+    if (jogo.esq.tocado && jogo.dir.tocado) {
+        // Verifica se o alvo já foi acertado nesse ciclo
+        if (jogo.esq.ativo && jogo.dir.ativo) {
+            jogo.esq.ativo = false;
+            jogo.dir.ativo = false;
+            jogo.esq.tocado = false;
+            jogo.dir.tocado = false;
+
+            // Calcula pontos por velocidade
+            const tempoUsado = performance.now() - jogo.timerInicio;
+            const cfg = getFase(estado.fase);
+            const rapidez = Math.max(0, 1 - tempoUsado / cfg.tempo); // 1.0 = instantâneo
+            const ganhoBase = 10;
+            const bonusVelocidade = Math.round(rapidez * 15);
+            const ganho = (ganhoBase + bonusVelocidade) * estado.combo;
+
+            estado.pontos += ganho;
+            estado.acertos++;
+            estado.streak++;
+            estado.comboMax = Math.max(estado.comboMax, estado.combo);
+
+            // Combo aumenta a cada 3 acertos
+            if (estado.streak % 3 === 0) {
+                estado.combo = Math.min(estado.combo + 1, 10);
+            }
+
+            atualizarUI();
+            setInstrucao(`✅ Perfeito! +${ganho} pts  (x${estado.combo})`, 'ok');
+
+            // Aguarda um instante e gera novo alvo
+            setTimeout(() => {
+                if (estado.rodando && !estado.gameOver) {
+                    // A cada 5 acertos sobe fase
+                    if (estado.acertos % 5 === 0 && estado.fase < 10) {
+                        estado.fase++;
+                        setInstrucao(`🚀 Fase ${estado.fase}!`, 'dica');
+                    }
+                    resetarAlvos();
+                    atualizarUI();
+                }
+            }, 250);
+        }
+    }
+}
+
+function penalizarToqueParcial() {
+    if (!estado.rodando || estado.gameOver) return;
+    // Tolerância de 200ms para o segundo dedo chegar
+    setTimeout(() => {
+        if (!estado.rodando || estado.gameOver) return;
+        if (jogo.esq.tocado && !jogo.dir.tocado) {
+            erro('Você tocou só o círculo esquerdo!');
+        } else if (jogo.dir.tocado && !jogo.esq.tocado) {
+            erro('Você tocou só o círculo direito!');
+        }
+    }, 220);
+}
+
+function erro(motivo = '') {
+    if (!estado.rodando || estado.gameOver) return;
+    estado.vidas--;
+    estado.erros++;
+    estado.streak = 0;
+    estado.combo = 1;
+    jogo.esq.tocado = false;
+    jogo.dir.tocado = false;
+    atualizarUI();
+
+    if (estado.vidas <= 0) {
+        finalizarJogo(false);
+        return;
+    }
+
+    setInstrucao(`❌ ${motivo} (${estado.vidas} vida${estado.vidas > 1 ? 's' : ''} restante${estado.vidas > 1 ? 's' : ''})`, 'erro');
+    resetarAlvos();
+}
+
+function tempoEsgotado() {
+    erro('Tempo esgotado!');
+}
+
+function finalizarJogo() {
+    estado.rodando = false;
+    estado.gameOver = true;
+
+    const precisao = estado.acertos + estado.erros > 0
+        ? Math.round((estado.acertos / (estado.acertos + estado.erros)) * 100)
+        : 0;
+
+    // Bônus final
+    const bonusFinal = estado.fase * 50 + estado.comboMax * 100;
+    estado.pontos += bonusFinal;
+
+    // Salva no Firebase
+    salvarProgresso();
+
+    overlayTitulo.textContent = `🎯 Fase ${estado.fase} Alcançada`;
+    overlaySub.textContent = `Você fez ${estado.pontos} pontos!`;
+    overlayMetricas.innerHTML = `
+        <div>Acertos<strong>${estado.acertos}</strong></div>
+        <div>Precisão<strong>${precisao}%</strong></div>
+        <div>Combo Máx<strong>x${estado.comboMax}</strong></div>
+        <div>Bônus<strong>+${bonusFinal}</strong></div>
+    `;
+    btnOverlayAcao.textContent = 'Tentar de novo';
+    overlay.classList.remove('hidden');
+    atualizarUI();
+}
+
+function esconderOverlay() {
+    overlay.classList.add('hidden');
+}
+
+/* ==========================================================
+   LOOP
+   ========================================================== */
+function loop(timestamp) {
+    requestAnimationFrame(loop);
+    if (!estado.rodando) {
+        jogo.ultimoFrame = timestamp;
+        return;
+    }
+
+    const dt = Math.min(timestamp - jogo.ultimoFrame, 50);
+    jogo.ultimoFrame = timestamp;
+
+    update(dt);
+    render();
+}
+
+function update(dt) {
+    const cfg = getFase(estado.fase);
+
+    // Movimento dos alvos (a partir da fase 3)
+    if (cfg.mover > 0) {
+        jogo.esq.fase += dt * 0.002 * cfg.mover;
+        jogo.dir.fase += dt * 0.0025 * cfg.mover * 1.3;
+
+        const amp = 40 * cfg.mover;
+        jogo.esq.x = jogo.esq.baseX + Math.sin(jogo.esq.fase) * amp;
+        jogo.esq.y = jogo.esq.baseY + Math.cos(jogo.esq.fase * 0.7) * amp;
+        jogo.dir.x = jogo.dir.baseX + Math.sin(jogo.dir.fase + 1.5) * amp;
+        jogo.dir.y = jogo.dir.baseY + Math.cos(jogo.dir.fase * 0.8 + 1.2) * amp;
+
+        // Mantém dentro da tela
+        const margem = jogo.esq.raio + 10;
+        jogo.esq.x = Math.max(margem, Math.min(W - margem, jogo.esq.x));
+        jogo.esq.y = Math.max(margem, Math.min(H - margem, jogo.esq.y));
+        jogo.dir.x = Math.max(margem, Math.min(W - margem, jogo.dir.x));
+        jogo.dir.y = Math.max(margem, Math.min(H - margem, jogo.dir.y));
+    }
+
+    // Encolher (pulsar) — a partir da fase 4
+    if (cfg.encolher) {
+        const pulso = 0.85 + Math.sin(performance.now() * 0.005) * 0.15;
+        jogo.esq.raioAtual = cfg.raio * pulso;
+        jogo.dir.raioAtual = cfg.raio * pulso;
+    } else {
+        jogo.esq.raioAtual = cfg.raio;
+        jogo.dir.raioAtual = cfg.raio;
+    }
+
+    // Pulsar (piscar) — a partir da fase 2
+    if (cfg.pulsar) {
+        const visivel = Math.sin(performance.now() * 0.004) > -0.3;
+        jogo.esq.visivel = visivel;
+        jogo.dir.visivel = visivel;
+    } else {
+        jogo.esq.visivel = true;
+        jogo.dir.visivel = true;
+    }
+
+    // Verifica tempo restante
+    const tempoUsado = performance.now() - jogo.timerInicio;
+    if (jogo.esq.ativo && tempoUsado > cfg.tempo) {
+        tempoEsgotado();
+        return;
+    }
+
+    // Processa teclas (desktop)
+    if (estado.modo === 'keyboard' && estado.rodando) {
+        if (jogo.esq.tocado && jogo.dir.tocado) acertou();
+    }
+}
+
+/* ==========================================================
+   RENDER
+   ========================================================== */
+function render() {
+    // Fundo
+    const grad = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, Math.max(W, H));
+    grad.addColorStop(0, '#0a1030');
+    grad.addColorStop(1, '#020510');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Linha divisória central
+    ctx.save();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+    ctx.setLineDash([8, 12]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, H);
+    ctx.stroke();
+    ctx.restore();
+
+    // Rótulos esquerda / direita
+    ctx.save();
+    ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('ESQUERDA', W / 4, 30);
+    ctx.fillText('DIREITA', 3 * W / 4, 30);
+    ctx.restore();
+
+    // Barra de tempo
+    const cfg = getFase(estado.fase);
+    const tempoUsado = performance.now() - jogo.timerInicio;
+    const tempoFrac = Math.max(0, 1 - tempoUsado / cfg.tempo);
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.15)';
+    ctx.fillRect(20, H - 20, W - 40, 6);
+    ctx.fillStyle = tempoFrac > 0.5 ? '#4ade80' : (tempoFrac > 0.25 ? '#fbbf24' : '#f43f5e');
+    ctx.fillRect(20, H - 20, (W - 40) * tempoFrac, 6);
+
+    // Desenha alvos
+    desenharAlvo(jogo.esq, '#38bdf8', 'A');
+    desenharAlvo(jogo.dir, '#f43f5e', 'L');
+
+    // Contador de combo grande no centro (sutil)
+    if (estado.combo > 1 && estado.rodando) {
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        ctx.font = 'bold 120px "Plus Jakarta Sans", sans-serif';
+        ctx.fillStyle = '#fbbf24';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`x${estado.combo}`, W / 2, H / 2);
+        ctx.restore();
+    }
+}
+
+function desenharAlvo(alvo, cor, letra) {
+    if (!alvo.ativo) return;
+    if (!alvo.visivel) return;
+
+    const raio = alvo.raioAtual || alvo.raio;
+    const tocado = alvo.tocado;
+
+    // Glow externo
+    ctx.save();
+    ctx.shadowColor = cor;
+    ctx.shadowBlur = tocado ? 40 : 20;
+
+    // Anel externo
+    ctx.beginPath();
+    ctx.arc(alvo.x, alvo.y, raio, 0, Math.PI * 2);
+    ctx.strokeStyle = cor;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Preenchimento
+    ctx.beginPath();
+    ctx.arc(alvo.x, alvo.y, raio, 0, Math.PI * 2);
+    const grad = ctx.createRadialGradient(alvo.x - raio * 0.3, alvo.y - raio * 0.3, 5, alvo.x, alvo.y, raio);
+    if (tocado) {
+        grad.addColorStop(0, cor + 'cc');
+        grad.addColorStop(1, cor + '55');
+    } else {
+        grad.addColorStop(0, cor + '55');
+        grad.addColorStop(1, cor + '11');
+    }
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Círculo interno (indicador de toque)
+    ctx.beginPath();
+    ctx.arc(alvo.x, alvo.y, raio * 0.6, 0, Math.PI * 2);
+    ctx.fillStyle = tocado ? cor + 'aa' : cor + '33';
+    ctx.fill();
+
+    // Letra central
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.round(raio * 0.7)}px "JetBrains Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letra, alvo.x, alvo.y + 2);
+
+    ctx.restore();
+}
+
+/* ==========================================================
+   FIREBASE
+   ========================================================== */
+async function salvarProgresso() {
+    try {
+        await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
+            pontosDuo: estado.pontos,
+            recordeDuo: Math.max(estado.recordes.recordeDuo || 0, estado.pontos),
+            comboDuo: Math.max(estado.recordes.comboDuo || 1, estado.comboMax),
+            faseDuo: Math.max(estado.recordes.faseDuo || 1, estado.fase),
+            ultimaAtualizacao: new Date().toISOString()
+        });
+    } catch (e) {
+        console.warn('Erro ao salvar (offline?):', e);
+    }
+}
+
+async function carregarProgresso() {
+    try {
+        const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
+        if (snap.exists()) {
+            const dados = snap.val();
+            estado.recordes.recordeDuo = dados.recordeDuo || 0;
+            estado.recordes.comboDuo = dados.comboDuo || 1;
+            estado.recordes.faseDuo = dados.faseDuo || 1;
+        }
+    } catch (e) {
+        console.warn('Modo offline:', e);
+    }
+}
+
+/* ==========================================================
+   EVENTOS UI
+   ========================================================== */
+document.getElementById('btn-reiniciar').addEventListener('click', () => {
+    iniciarJogo();
+});
+
+document.getElementById('btn-como-jogar').addEventListener('click', () => {
+    alert(
+        'BRAIN DUO — Como Jogar\n\n' +
+        '👆👆 MOBILE: Use dois dedos — toque nos dois círculos ao mesmo tempo.\n\n' +
+        '⌨️ DESKTOP: Pressione A (esquerda) e L (direita) simultaneamente.\n\n' +
+        '⭐ Quanto mais rápido você tocar, mais pontos ganha.\n' +
+        '🔥 A cada 3 acertos o combo sobe (multiplica pontos).\n' +
+        '⚡ A cada 5 acertos sobe a fase (mais rápido, mais difícil).\n' +
+        '❤️ Você tem 3 vidas. Toque só um lado ou deixe o tempo esgotar = perde vida.'
+    );
+});
+
+btnOverlayAcao.addEventListener('click', () => {
+    iniciarJogo();
+});
+
+/* ==========================================================
+   START
+   ========================================================== */
+async function iniciar() {
+    await carregarProgresso();
+    iniciarJogo();
+    requestAnimationFrame(loop);
+}
+
+iniciar();
+</script>
+</body>
+</html>
