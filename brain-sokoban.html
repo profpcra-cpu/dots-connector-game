@@ -24,6 +24,7 @@
     --c-red: #ef4444;
     --c-amber: #fbbf24;
     --c-orange: #fb923c;
+    --c-purple: #c084fc;
     --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
     --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
     --radius-lg: 20px;
@@ -185,6 +186,11 @@ body {
     color: var(--c-red);
     border-color: rgba(239, 68, 68, 0.3);
 }
+.fase-badge.puxar {
+    background: rgba(192, 132, 252, 0.18);
+    color: var(--c-purple);
+    border-color: rgba(192, 132, 252, 0.4);
+}
 
 .grid-wrapper {
     background: #030712;
@@ -274,6 +280,19 @@ body {
 .cel.jogador.left::after { transform: rotate(180deg); }
 .cel.jogador.right::after { transform: rotate(0deg); }
 
+/* Modo puxar — jogador pisca em roxo */
+body.modo-puxar .cel.jogador {
+    border-color: var(--c-purple);
+    box-shadow: 0 0 24px rgba(192, 132, 252, 0.75);
+}
+body.modo-puxar .dir-btn {
+    border-color: rgba(192, 132, 252, 0.35);
+}
+body.modo-puxar .dir-btn:hover:not(:disabled) {
+    border-color: var(--c-purple);
+    box-shadow: 0 6px 20px rgba(192, 132, 252, 0.5);
+}
+
 .direcoes-wrapper {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -315,6 +334,39 @@ body {
 .dir-left  { grid-column: 1; grid-row: 2; }
 .dir-down  { grid-column: 2; grid-row: 2; }
 .dir-right { grid-column: 3; grid-row: 2; }
+
+.modo-movimento {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 5px;
+    background: var(--input-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+.mov-btn {
+    padding: 12px 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+.mov-btn.ativo {
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    color: #fff;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.6);
+}
+.mov-btn[data-mov="puxar"].ativo {
+    background: linear-gradient(135deg, #a855f7, #c084fc);
+    box-shadow: 0 4px 12px -4px rgba(192, 132, 252, 0.6);
+}
 
 .acoes {
     display: grid;
@@ -441,11 +493,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     </div>
 
     <p class="instructions" id="info-instrucao">
-        📦 Empurre as caixas até os destinos ◎. Você só pode empurrar, nunca puxar!
+        📦 Empurre ou puxe as caixas até os destinos ◎.
     </p>
 
     <div class="grid-wrapper">
         <div class="grid-tabela" id="grid-tabela"></div>
+    </div>
+
+    <!-- NOVO: seletor de modo empurrar/puxar -->
+    <div class="modo-movimento">
+        <button class="mov-btn ativo" data-mov="empurrar" id="btn-empurrar">🫸 Empurrar</button>
+        <button class="mov-btn" data-mov="puxar" id="btn-puxar">🫷 Puxar</button>
     </div>
 
     <div class="direcoes-wrapper">
@@ -484,6 +542,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ESTADO
     // ==========================================================
     var modoAtual = 'facil';
+    var modoMovimento = 'empurrar'; // 'empurrar' | 'puxar'
     var tamanho = 7;
     var numCaixas = 2;
     var numMovimentos = 8;
@@ -540,6 +599,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         },
         mover:      function() { this.play(600, 'triangle', 0.06); },
         empurrar:   function() { this.play(500, 'sine', 0.1); },
+        puxar:      function() { this.play(450, 'triangle', 0.12); },
         caixaOk:    function() {
             var self = this;
             [700, 900, 1100].forEach(function(f, i) {
@@ -597,39 +657,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     function celulaLivre(l, c) {
         if (l < 0 || l >= tamanho || c < 0 || c >= tamanho) return false;
         if (grid[l][c] === 'parede') return false;
-        // Não pode ter caixa
         for (var i = 0; i < caixas.length; i++) {
             if (caixas[i].l === l && caixas[i].c === c) return false;
         }
         return true;
     }
 
-    function obterVizinhosLivres(l, c) {
-        var dirs = [
-            { dl: -1, dc: 0, dir: 'UP' },
-            { dl: 1,  dc: 0, dir: 'DOWN' },
-            { dl: 0,  dc: -1, dir: 'LEFT' },
-            { dl: 0,  dc: 1, dir: 'RIGHT' }
-        ];
-        var livres = [];
-        for (var i = 0; i < dirs.length; i++) {
-            var nl = l + dirs[i].dl;
-            var nc = c + dirs[i].dc;
-            if (celulaLivre(nl, nc)) {
-                livres.push({ l: nl, c: nc, dir: dirs[i].dir, dl: dirs[i].dl, dc: dirs[i].dc });
-            }
-        }
-        return livres;
-    }
-
     // ==========================================================
-    // GERAR NÍVEL — TÉCNICA REVERSE PLAY
-    // ==========================================================
-    // 1. Criar grid com bordas e paredes internas
-    // 2. Colocar caixas NOS DESTINOS (estado resolvido)
-    // 3. Aplicar N movimentos reversos (puxar caixas)
-    // 4. Colocar jogador numa posição válida
-    // → Resultado: 100% solucionável
+    // GERAR NÍVEL — REVERSE PLAY (com suporte a puxar)
     // ==========================================================
     function gerarNivel() {
         var tentativas = 0;
@@ -638,7 +673,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         while (!nivelValido && tentativas < 50) {
             tentativas++;
 
-            // === PASSO 1: Grid com paredes ===
+            // PASSO 1: Grid
             grid = [];
             for (var l = 0; l < tamanho; l++) {
                 var linha = [];
@@ -652,7 +687,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 grid.push(linha);
             }
 
-            // Coloca algumas paredes internas (com cuidado para não bloquear)
+            // Paredes internas
             var paredesInternas = Math.floor((tamanho - 2) * (tamanho - 2) * 0.08);
             var paredesColocadas = 0;
             var tentativasPar = 0;
@@ -661,7 +696,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 var lp = randInt(1, tamanho - 2);
                 var cp = randInt(1, tamanho - 2);
                 if (grid[lp][cp] === 'parede') continue;
-                // Verifica se tem pelo menos 2 vizinhos livres (evita bloquear)
                 var vizinhosLivres = 0;
                 if (grid[lp-1][cp] === 'chao') vizinhosLivres++;
                 if (grid[lp+1][cp] === 'chao') vizinhosLivres++;
@@ -673,7 +707,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 }
             }
 
-            // === PASSO 2: Coloca caixas NOS DESTINOS ===
+            // PASSO 2: Caixas nos destinos
             caixas = [];
             destinos = [];
             var tentativasCaixas = 0;
@@ -683,7 +717,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 var cd = randInt(1, tamanho - 2);
                 if (grid[ld][cd] !== 'chao') continue;
 
-                // Verifica não sobrepor
                 var sobrepoe = false;
                 for (var k = 0; k < destinos.length; k++) {
                     if (destinos[k].l === ld && destinos[k].c === cd) {
@@ -693,7 +726,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 }
                 if (sobrepoe) continue;
 
-                // Verifica se o destino tem pelo menos 2 vizinhos livres
                 var viz = 0;
                 if (grid[ld-1][cd] === 'chao') viz++;
                 if (grid[ld+1][cd] === 'chao') viz++;
@@ -702,20 +734,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 if (viz < 2) continue;
 
                 destinos.push({ l: ld, c: cd });
-                caixas.push({ l: ld, c: cd }); // Caixa começa NO destino
+                caixas.push({ l: ld, c: cd });
             }
 
             if (destinos.length < numCaixas) continue;
 
-            // === PASSO 3: Movimentos reversos ===
-            // Aqui simulamos "puxar" cada caixa para longe do destino
-            // A cada iteração:
-            //   - Escolhe uma caixa aleatória
-            //   - Escolhe uma direção aleatória
-            //   - Verifica se o movimento reverso é válido:
-            //     * Caixa pode mover para a célula adjacente (na direção oposta)
-            //     * Jogador pode estar na posição onde a caixa estava
-            //   - Se válido, aplica
+            // PASSO 3: Movimentos reversos (puxar caixas)
             var movimentosAplicados = 0;
             var tentativasMov = 0;
             var maxTentativasMov = numMovimentos * 20;
@@ -723,36 +747,22 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             while (movimentosAplicados < numMovimentos && tentativasMov < maxTentativasMov) {
                 tentativasMov++;
 
-                // Escolhe caixa aleatória
                 var idxCaixa = randInt(0, caixas.length - 1);
                 var cx = caixas[idxCaixa];
 
-                // Escolhe direção aleatória
                 var dirs = [
-                    { dl: -1, dc: 0 },  // Cima
-                    { dl: 1,  dc: 0 },  // Baixo
-                    { dl: 0,  dc: -1 }, // Esquerda
-                    { dl: 0,  dc: 1 }   // Direita
+                    { dl: -1, dc: 0 },
+                    { dl: 1,  dc: 0 },
+                    { dl: 0,  dc: -1 },
+                    { dl: 0,  dc: 1 }
                 ];
                 var dir = dirs[randInt(0, 3)];
 
-                // Direção reversa: caixa move-se "para trás" (oposta ao sentido de empurrar)
-                // Empurrar para cima = caixa vai para cima, jogador fica em baixo
-                // Reverse: caixa vai para baixo, jogador fica em cima
-                // Simplificação: a caixa move-se para (cx + dl, cx + dc)
-                // e a posição original da caixa será ocupada pelo jogador temporariamente.
-                // Mas queremos apenas posições finais válidas.
-                //
-                // Abordagem mais simples: mover a caixa numa direção, verificando:
-                //   - destino da caixa está livre
-                //   - NÃO criamos caixa presa em canto
                 var nlC = cx.l + dir.dl;
                 var ncC = cx.c + dir.dc;
 
-                // Verifica se pode mover a caixa para lá
                 if (!celulaLivre(nlC, ncC)) continue;
 
-                // Verifica se a nova posição não é canto fechado (a menos que seja destino)
                 var ehDestino = false;
                 for (var d = 0; d < destinos.length; d++) {
                     if (destinos[d].l === nlC && destinos[d].c === ncC) {
@@ -761,31 +771,24 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                     }
                 }
 
-                // Conta paredes adjacentes na nova posição
                 var paredesAdj = 0;
                 if (grid[nlC-1][ncC] === 'parede') paredesAdj++;
                 if (grid[nlC+1][ncC] === 'parede') paredesAdj++;
                 if (grid[nlC][ncC-1] === 'parede') paredesAdj++;
                 if (grid[nlC][ncC+1] === 'parede') paredesAdj++;
 
-                // Se for canto (2+ paredes) e não for destino, pula
                 if (paredesAdj >= 2 && !ehDestino) continue;
 
-                // Também evita ficar contra parede em linha reta bloqueada
                 if (paredesAdj === 1 && !ehDestino) {
-                    // Verifica se a caixa pode ser empurrada de volta
-                    // (o lado oposto está livre)
                     var ladoOposto = { l: cx.l - dir.dl, c: cx.c - dir.dc };
                     if (!celulaLivre(ladoOposto.l, ladoOposto.c)) continue;
                 }
 
-                // Aplica movimento reverso
                 caixas[idxCaixa].l = nlC;
                 caixas[idxCaixa].c = ncC;
                 movimentosAplicados++;
             }
 
-            // Verifica se pelo menos UMA caixa saiu do destino
             var algumaSaiu = false;
             for (var i = 0; i < caixas.length; i++) {
                 var estaNoDestino = false;
@@ -799,8 +802,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             }
             if (!algumaSaiu) continue;
 
-            // === PASSO 4: Coloca jogador numa célula vazia válida ===
-            // O jogador deve estar LIVRE e poder mover-se para começar
+            // PASSO 4: Jogador
             var posJogador = null;
             var tentativasJog = 0;
             while (!posJogador && tentativasJog < 100) {
@@ -809,7 +811,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 var cj = randInt(1, tamanho - 2);
                 if (!celulaLivre(lj, cj)) continue;
 
-                // Verifica se tem pelo menos 1 vizinho livre
                 var vizLivres = 0;
                 if (celulaLivre(lj-1, cj)) vizLivres++;
                 if (celulaLivre(lj+1, cj)) vizLivres++;
@@ -823,13 +824,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
             jogador = { l: posJogador.l, c: posJogador.c, dir: 'down' };
 
-            // === PASSO 5: Validação final ===
-            // Verifica se todas as caixas podem ser empurradas de volta aos destinos
-            // Simplificação: confirma que nenhuma caixa está presa
+            // PASSO 5: Validação
             var todasValidas = true;
             for (var j = 0; j < caixas.length; j++) {
                 var cx2 = caixas[j];
-                // Verifica se a caixa tem pelo menos 2 direções livres para ser movida
                 var dirsLivres = 0;
                 if (celulaLivre(cx2.l-1, cx2.c)) dirsLivres++;
                 if (celulaLivre(cx2.l+1, cx2.c)) dirsLivres++;
@@ -852,7 +850,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         renderizarGrid();
         atualizarPlacar();
-        atualizarBadge('🎯 Empurre as caixas!', '');
+        atualizarBadge('🎯 Empurre ou puxe as caixas!', '');
     }
 
     // ==========================================================
@@ -915,7 +913,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // MOVIMENTO
+    // MOVIMENTO — agora com EMPURRAR e PUXAR
     // ==========================================================
     function mover(dir) {
         if (!jogoAtivo) return;
@@ -926,6 +924,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         if (dir === 'LEFT')  dc = -1;
         if (dir === 'RIGHT') dc = 1;
 
+        if (modoMovimento === 'empurrar') {
+            moverEmpurrar(dl, dc, dir);
+        } else {
+            moverPuxar(dl, dc, dir);
+        }
+    }
+
+    // ----------------------------------------------------------
+    // EMPURRAR (modo clássico)
+    // ----------------------------------------------------------
+    function moverEmpurrar(dl, dc, dir) {
         var nl = jogador.l + dl;
         var nc = jogador.c + dc;
 
@@ -936,7 +945,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             renderizarGrid();
             return;
         }
-
         if (grid[nl][nc] === 'parede') {
             som.bloqueado();
             renderizarGrid();
@@ -953,13 +961,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 renderizarGrid();
                 return;
             }
-
             if (grid[nlC][ncC] === 'parede') {
                 som.bloqueado();
                 renderizarGrid();
                 return;
             }
-
             if (caixaEm(nlC, ncC) !== -1) {
                 som.bloqueado();
                 renderizarGrid();
@@ -972,7 +978,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 jogadorDir: jogador.dir,
                 caixaIdx: idxCaixa,
                 caixaL: caixas[idxCaixa].l,
-                caixaC: caixas[idxCaixa].c
+                caixaC: caixas[idxCaixa].c,
+                tipo: 'empurrar'
             });
 
             caixas[idxCaixa].l = nlC;
@@ -991,7 +998,94 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 jogadorL: jogador.l,
                 jogadorC: jogador.c,
                 jogadorDir: jogador.dir,
-                caixaIdx: -1
+                caixaIdx: -1,
+                tipo: 'empurrar'
+            });
+
+            jogador.l = nl;
+            jogador.c = nc;
+            som.mover();
+            passos++;
+        }
+
+        atualizarPlacar();
+        renderizarGrid();
+        verificarVitoria();
+    }
+
+    // ----------------------------------------------------------
+    // PUXAR — jogador recua e arrasta a caixa que estava atrás
+    // ----------------------------------------------------------
+    // Se o usuário toca em "UP" no modo puxar:
+    //   - Jogador anda PARA BAIXO (recua na direção oposta)
+    //   - A caixa que estava ACIMA do jogador vem junto
+    //   - A caixa vai para onde o jogador estava
+    // ----------------------------------------------------------
+    function moverPuxar(dl, dc, dir) {
+        // Direção para onde o jogador se move = OPOSTA
+        var nl = jogador.l - dl;
+        var nc = jogador.c - dc;
+
+        // Direção de onde a caixa vem = MESMA (a que o usuário indicou)
+        var lCaixa = jogador.l + dl;
+        var cCaixa = jogador.c + dc;
+
+        jogador.dir = dir.toLowerCase();
+
+        // 1) Verifica se o jogador pode recuar
+        if (nl < 0 || nl >= tamanho || nc < 0 || nc >= tamanho) {
+            som.bloqueado();
+            renderizarGrid();
+            return;
+        }
+        if (grid[nl][nc] === 'parede') {
+            som.bloqueado();
+            renderizarGrid();
+            return;
+        }
+        if (caixaEm(nl, nc) !== -1) {
+            som.bloqueado();
+            renderizarGrid();
+            return;
+        }
+
+        // 2) Verifica se tem uma caixa na direção indicada
+        var idxCaixa = caixaEm(lCaixa, cCaixa);
+
+        if (idxCaixa !== -1) {
+            // Tem caixa → puxa ela
+            historicoMovimentos.push({
+                jogadorL: jogador.l,
+                jogadorC: jogador.c,
+                jogadorDir: jogador.dir,
+                caixaIdx: idxCaixa,
+                caixaL: caixas[idxCaixa].l,
+                caixaC: caixas[idxCaixa].c,
+                tipo: 'puxar'
+            });
+
+            // Caixa vai para onde o jogador estava
+            caixas[idxCaixa].l = jogador.l;
+            caixas[idxCaixa].c = jogador.c;
+
+            // Jogador recua
+            jogador.l = nl;
+            jogador.c = nc;
+
+            som.puxar();
+            passos++;
+
+            if (destinoEm(caixas[idxCaixa].l, caixas[idxCaixa].c)) {
+                som.caixaOk();
+            }
+        } else {
+            // Sem caixa atrás → só recua (movimento normal)
+            historicoMovimentos.push({
+                jogadorL: jogador.l,
+                jogadorC: jogador.c,
+                jogadorDir: jogador.dir,
+                caixaIdx: -1,
+                tipo: 'puxar'
             });
 
             jogador.l = nl;
@@ -1054,7 +1148,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     function mostrarVitoriaNivel() {
         var pontos = Math.max(50, 500 - passos * 5);
-
         mostrarOverlay({
             titulo: '✅ Nível ' + nivelAtual + ' Completo!',
             htmlExtra:
@@ -1070,7 +1163,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     function mostrarVitoriaFinal() {
         var pontos = Math.max(100, 1000 - passos * 3);
-
         mostrarOverlay({
             titulo: '🏆 Missão Completa!',
             htmlExtra:
@@ -1195,6 +1287,25 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
+    // TROCA EMPURRAR/PUXAR
+    // ==========================================================
+    function trocarModoMovimento(novo) {
+        modoMovimento = novo;
+        document.body.classList.toggle('modo-puxar', novo === 'puxar');
+
+        var btnEmpurrar = $('btn-empurrar');
+        var btnPuxar = $('btn-puxar');
+        btnEmpurrar.classList.toggle('ativo', novo === 'empurrar');
+        btnPuxar.classList.toggle('ativo', novo === 'puxar');
+
+        if (novo === 'puxar') {
+            atualizarBadge('🫷 Modo PUXAR — recue para arrastar', 'puxar');
+        } else {
+            atualizarBadge('🫸 Modo EMPURRAR — avance para empurrar', '');
+        }
+    }
+
+    // ==========================================================
     // EVENTOS DE UI
     // ==========================================================
     var dirBtns = document.querySelectorAll('.dir-btn');
@@ -1213,6 +1324,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         })(modeBtns[j]);
     }
 
+    var movBtns = document.querySelectorAll('.mov-btn');
+    for (var m = 0; m < movBtns.length; m++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { trocarModoMovimento(btn.dataset.mov); });
+        })(movBtns[m]);
+    }
+
     $('btn-desfazer').addEventListener('click', desfazer);
     $('btn-reiniciar').addEventListener('click', function() {
         esconderOverlay();
@@ -1223,25 +1341,44 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         gerarNivel();
     });
 
+    // Teclado
     document.addEventListener('keydown', function(e) {
         if (!jogoAtivo) return;
         var tecla = e.key;
+
+        // Atalho: Shift + direção = puxar (temporário, sem trocar modo)
+        var puxarTemporario = e.shiftKey;
+
         if (tecla === 'ArrowUp' || tecla === 'w' || tecla === 'W') {
             e.preventDefault();
-            mover('UP');
+            alternarEExecutar('UP', puxarTemporario);
         } else if (tecla === 'ArrowDown' || tecla === 's' || tecla === 'S') {
             e.preventDefault();
-            mover('DOWN');
+            alternarEExecutar('DOWN', puxarTemporario);
         } else if (tecla === 'ArrowLeft' || tecla === 'a' || tecla === 'A') {
             e.preventDefault();
-            mover('LEFT');
+            alternarEExecutar('LEFT', puxarTemporario);
         } else if (tecla === 'ArrowRight' || tecla === 'd' || tecla === 'D') {
             e.preventDefault();
-            mover('RIGHT');
+            alternarEExecutar('RIGHT', puxarTemporario);
         } else if (tecla === 'z' || tecla === 'Z') {
             desfazer();
+        } else if (tecla === 'p' || tecla === 'P') {
+            // Alterna modo puxar/empurrar
+            trocarModoMovimento(modoMovimento === 'puxar' ? 'empurrar' : 'puxar');
         }
     });
+
+    function alternarEExecutar(dir, puxarForcado) {
+        var modoOriginal = modoMovimento;
+        if (puxarForcado && modoMovimento === 'empurrar') {
+            modoMovimento = 'puxar';
+        } else if (!puxarForcado && modoMovimento === 'puxar') {
+            // Sem shift, mantém modo atual
+        }
+        mover(dir);
+        modoMovimento = modoOriginal;
+    }
 
     var soundToggleBtn = $('sound-toggle');
     soundToggleBtn.addEventListener('click', function() {
@@ -1262,7 +1399,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ==========================================================
     gerarNivel();
     atualizarPlacar();
-    console.log('[brain-sokoban] Pronto! Modo:', modoAtual);
+    trocarModoMovimento('empurrar'); // define estado inicial
+    console.log('[brain-sokoban] Pronto! Modo:', modoAtual, '· Movimento:', modoMovimento);
 })();
 </script>
 </body>
