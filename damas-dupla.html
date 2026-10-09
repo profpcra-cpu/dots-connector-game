@@ -527,9 +527,9 @@
     <!-- TOASTS -->
     <div class="toast-container" id="toast-container"></div>
 
-<script type="module">
+    <script type="module">
 import { db } from "./firebase-config.js";
-import { ref, get, set, update, onValue, runTransaction, onDisconnect, serverTimestamp, off }
+import { ref, get, set, update, onValue, runTransaction, onDisconnect, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 /* ==========================================================
@@ -664,10 +664,10 @@ let movimentosValidos = [];
 let turnoAtual = 'white';
 let jogoEncerrado = false;
 let unsubscribeFirebase = null;
-let listenerAtivo = false;               // ⬅️ Bug 8
+let listenerAtivo = false;
 let oponenteConectado = false;
-let capturaMultiplaEmAndamento = false;  // ⬅️ Bug 2
-let ultimaContagemPecas = null;          // ⬅️ Bug 3
+let capturaMultiplaEmAndamento = false;
+let ultimaContagemPecas = null;
 
 /* ==========================================================
    TEMA
@@ -726,6 +726,8 @@ function limparSessao() {
     const url = new URL(window.location.href);
     url.searchParams.delete('sala');
     url.searchParams.delete('cor');
+    url.searchParams.delete('convite');
+    url.searchParams.delete('host');
     window.history.replaceState({}, '', url.toString());
 }
 
@@ -735,7 +737,165 @@ function limparSessao() {
 async function registrarPresenca(codigo) {
     const presencaRef = ref(db, `salas_damas/${codigo}/jogadores/${jogadorSessao.chave}/online`);
     await set(presencaRef, true);
-    onDisconnect(presencaRef).set(false);  // Firebase cuida quando desconectar
+    onDisconnect(presencaRef).set(false);
+}
+
+/* ==========================================================
+   ENTRADA DIRETA POR CONVITE
+   ==========================================================
+   Se a URL tem ?sala=X&convite=1, o jogador entra DIRETO
+   na sala sem passar pelo lobby.
+   ========================================================== */
+async function detectarConvite() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sala = urlParams.get('sala');
+    const convite = urlParams.get('convite');
+    const host = urlParams.get('host');
+
+    // Se é um convite explícito e não somos o host → entra direto
+    if (sala && convite === '1') {
+        // Se somos o próprio host, não faz sentido entrar de novo
+        if (host && host === jogadorSessao.chave) {
+            console.log('Você é o host deste convite. Abrindo como jogador normal.');
+            return false;
+        }
+
+        console.log(`🎟️ Convite detectado para sala ${sala}. Entrando direto...`);
+        toast('🎟️ Entrando na sala...', 'info', 1800);
+        await entrarDiretoPorConvite(sala);
+        return true;
+    }
+
+    return false;
+}
+
+async function entrarDiretoPorConvite(codigo) {
+    try {
+        const salaRef = ref(db, 'salas_damas/' + codigo);
+        const snapshot = await get(salaRef);
+
+        if (!snapshot.exists()) {
+            abrirModal({
+                icon: '🚫',
+                title: 'Sala não encontrada',
+                message: 'O convite expirou ou a sala foi removida pelo anfitrião.',
+                actions: [{ label: 'Ir ao lobby', onClick: () => {
+                    limparSessao();
+                    location.href = URL_BASE;
+                }}]
+            });
+            return;
+        }
+
+        const dados = snapshot.val();
+
+        if (dados.status === 'encerrado') {
+            abrirModal({
+                icon: '🏁',
+                title: 'Partida encerrada',
+                message: 'Esta partida já foi encerrada. Peça ao anfitrião para criar uma nova.',
+                actions: [{ label: 'Ir ao lobby', onClick: () => {
+                    limparSessao();
+                    location.href = URL_BASE;
+                }}]
+            });
+            return;
+        }
+
+        const jogadores = dados.jogadores || {};
+        const jaEsta = jogadores[jogadorSessao.chave];
+
+        // Se já está na sala, apenas reconecta
+        if (jaEsta) {
+            console.log('Já estava na sala. Reconectando...');
+            idSalaAtual = codigo;
+            minhaCor = jaEsta.cor;
+            tabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
+            ultimaContagemPecas = contarPecas(tabuleiro);
+            turnoAtual = dados.turno || 'white';
+            jogoEncerrado = dados.status === 'encerrado';
+
+            await registrarPresenca(codigo);
+            salvarSessao();
+            entrarInterfaceJogo();
+            escutarFirebase();
+            toast('✅ Reconectado à partida!', 'success');
+            return;
+        }
+
+        // Tenta entrar via transação (escolhe cor livre)
+        let corEscolhida = null;
+        let motivoFalha = null;
+
+        const salaTransRef = ref(db, 'salas_damas/' + codigo);
+        const resultado = await runTransaction(salaTransRef, (atual) => {
+            if (!atual) { motivoFalha = 'Sala removida.'; return; }
+            if (atual.status === 'encerrado') { motivoFalha = 'Partida encerrada.'; return; }
+
+            atual.jogadores = atual.jogadores || {};
+            if (atual.jogadores[jogadorSessao.chave]) {
+                motivoFalha = 'JA_ESTA';
+                return;
+            }
+
+            const total = Object.keys(atual.jogadores).length;
+            if (total >= 2) { motivoFalha = 'CHEIA'; return; }
+
+            const cores = Object.values(atual.jogadores).map(j => j.cor);
+            const corLivre = cores.includes('white') ? 'red' : 'white';
+
+            atual.jogadores[jogadorSessao.chave] = {
+                nome: jogadorSessao.nome,
+                cor: corLivre,
+                online: true
+            };
+            corEscolhida = corLivre;
+            return atual;
+        });
+
+        if (!resultado.committed) {
+            if (motivoFalha === 'JA_ESTA') {
+                return entrarDiretoPorConvite(codigo);
+            }
+            if (motivoFalha === 'CHEIA') {
+                abrirModal({
+                    icon: '👥',
+                    title: 'Sala cheia',
+                    message: 'Esta sala já tem dois jogadores. Peça ao anfitrião para criar uma nova.',
+                    actions: [
+                        { label: 'Ir ao lobby', onClick: () => {
+                            limparSessao();
+                            location.href = URL_BASE;
+                        }},
+                        { label: 'Fechar', secondary: true, onClick: () => limparSessao() }
+                    ]
+                });
+                return;
+            }
+            toast(motivoFalha || 'Não foi possível entrar.', 'error');
+            limparSessao();
+            return;
+        }
+
+        // Sucesso
+        const dadosAtualizados = resultado.snapshot.val();
+        idSalaAtual = codigo;
+        minhaCor = corEscolhida || 'red';
+        tabuleiro = firebaseParaTabuleiro(dadosAtualizados.tabuleiro);
+        ultimaContagemPecas = contarPecas(tabuleiro);
+        turnoAtual = dadosAtualizados.turno || 'white';
+
+        await registrarPresenca(codigo);
+
+        salvarSessao();
+        entrarInterfaceJogo();
+        escutarFirebase();
+        toast(`🎉 Você entrou na partida como ${minhaCor === 'white' ? '⚪ Brancas' : '🔴 Vermelhas'}!`, 'success', 4000);
+    } catch (e) {
+        console.error('Erro no convite direto:', e);
+        toast('Erro ao entrar pelo convite.', 'error');
+        limparSessao();
+    }
 }
 
 /* ==========================================================
@@ -745,6 +905,11 @@ async function inicializarPerfil() {
     document.getElementById('display-nome').textContent = jogadorSessao.nome;
     document.getElementById('display-avatar').textContent = jogadorSessao.avatar;
 
+    // ⬅️ NOVO: tenta entrar direto por convite primeiro
+    const entrouPorConvite = await detectarConvite();
+    if (entrouPorConvite) return;
+
+    // Fluxo normal (reentrada por sessão salva ou URL)
     const urlParams = new URLSearchParams(window.location.search);
     const salaUrl = urlParams.get('sala');
     const corUrl = urlParams.get('cor');
@@ -754,20 +919,17 @@ async function inicializarPerfil() {
         sessaoSalva = JSON.parse(localStorage.getItem('brain_damas_sessao'));
     } catch (_) {}
 
-    // Prioridade: sessão salva > URL
     const sala = (sessaoSalva && sessaoSalva.sala) || salaUrl;
     let cor = (sessaoSalva && sessaoSalva.cor) || corUrl;
 
     if (sala) {
         document.getElementById('input-codigo-sala').value = sala;
-        // ⬅️ Bug 6 e 10: se não tem cor, busca no Firebase
         if (!cor) {
             try {
                 const snap = await get(ref(db, 'salas_damas/' + sala + '/jogadores/' + jogadorSessao.chave));
                 if (snap.exists()) {
                     cor = snap.val().cor;
                 } else {
-                    // Não está na sala ainda: descobre cor livre
                     const snapSala = await get(ref(db, 'salas_damas/' + sala));
                     if (snapSala.exists()) {
                         const jogadores = snapSala.val().jogadores || {};
@@ -798,7 +960,6 @@ async function reentrarNaSala(codigo, cor) {
 
         const jaEsta = jogadores[jogadorSessao.chave];
 
-        // ⬅️ Bug 6: se já está na sala, confia na cor do Firebase
         if (jaEsta) {
             cor = jaEsta.cor;
         } else {
@@ -874,7 +1035,7 @@ document.getElementById('btn-criar-sala').addEventListener('click', async () => 
         entrarInterfaceJogo();
         document.getElementById('div-whatsapp').classList.remove('hidden');
         escutarFirebase();
-        toast('Sala criada com sucesso!', 'success');
+        toast('Sala criada! Envie o convite pelo WhatsApp.', 'success', 4000);
     } catch (e) {
         console.error('Erro ao criar sala:', e);
         toast('Erro ao criar sala.', 'error');
@@ -906,7 +1067,7 @@ async function entrarNaSala(codigo) {
             abrirModal({
                 icon: '🏁',
                 title: 'Partida encerrada',
-                message: 'Esta partida já foi encerrada. Crie uma nova sala para jogar novamente.',
+                message: 'Esta partida já foi encerrada. Crie uma nova sala.',
                 actions: [{ label: 'OK' }]
             });
             return;
@@ -929,7 +1090,6 @@ async function entrarNaSala(codigo) {
             return;
         }
 
-        // ⬅️ Bug 1: transação escolhe cor LIVRE, não fixa 'red'
         let corEscolhida = null;
         let motivoFalha = null;
 
@@ -1005,20 +1165,21 @@ function entrarInterfaceJogo() {
 }
 
 /* ==========================================================
-   WHATSAPP
+   WHATSAPP — agora com convite automático
    ========================================================== */
 document.getElementById('btn-whatsapp').addEventListener('click', () => {
-    // ⬅️ Bug 7: link do convite sem a cor do host
-    // (para o convidado não herdar cor por URL)
     const url = new URL(window.location.href);
     url.searchParams.set('sala', idSalaAtual);
-    url.searchParams.delete('cor');
+    url.searchParams.set('convite', '1');       // ⬅️ marca como convite
     url.searchParams.set('host', jogadorSessao.chave);
+    url.searchParams.delete('cor');              // ⬅️ não vaza a cor do host
+
     const link = url.toString();
     const msg = encodeURIComponent(
-        `♟️ Vamos disputar uma partida de Damas no Brain Hub?\n\n` +
-        `Entre na sala pelo link: ${link}\n` +
-        `Código: ${idSalaAtual}`
+        `♟️ *Convite para Damas — Brain Hub*\n\n` +
+        `Você foi desafiado(a) por *${jogadorSessao.nome}*!\n\n` +
+        `👉 Clique para entrar direto:\n${link}\n\n` +
+        `_Ou use o código:_ *${idSalaAtual}*`
     );
     window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
 });
@@ -1064,7 +1225,6 @@ function renderizarTabuleiro() {
                 const isDama = peca.includes('king') ? ' king' : '';
 
                 let classeExtra = '';
-                // ⬅️ Bug 5: não marca peças móveis se não é a vez
                 if (!jogoEncerrado && turnoAtual === minhaCor && peca.startsWith(minhaCor)) {
                     const movsPeca = calcularMovimentos(r, c);
                     if (movsPeca.length > 0) {
@@ -1116,7 +1276,6 @@ function clicarCasa(r, c) {
 
     const peca = tabuleiro[r][c];
 
-    // Se já tem captura múltipla em andamento, só pode mexer na peça que está capturando
     if (capturaMultiplaEmAndamento) {
         const movs = movimentosValidos.find(m => m.r === r && m.c === c);
         if (movs) {
@@ -1225,14 +1384,12 @@ async function executarMovimento(deR, deC, paraR, paraC) {
         houveCaptura = true;
     }
 
-    // Promoção a dama
     const ehPeaoBranco = pecaMovida === 'white';
     const ehPeaoVermelho = pecaMovida === 'red';
     let promoveu = false;
     if (ehPeaoBranco && paraR === 0)   { tabuleiro[paraR][paraC] = 'white-king'; promoveu = true; }
     if (ehPeaoVermelho && paraR === 7) { tabuleiro[paraR][paraC] = 'red-king'; promoveu = true; }
 
-    // ⬅️ Bug 2: se capturou e a peça ainda tem mais capturas, continua
     if (houveCaptura && !promoveu) {
         const maisCapturas = calcularMovimentos(paraR, paraC).filter(m => m.captura);
         if (maisCapturas.length > 0) {
@@ -1241,7 +1398,6 @@ async function executarMovimento(deR, deC, paraR, paraC) {
             movimentosValidos = maisCapturas;
             renderizarTabuleiro();
             document.getElementById('info-instrucao').textContent = '🔥 Captura múltipla! Continue capturando.';
-            // Sincroniza o estado intermediário
             try {
                 await update(ref(db, `salas_damas/${idSalaAtual}`), {
                     tabuleiro: tabuleiroParaFirebase(tabuleiro),
@@ -1255,7 +1411,6 @@ async function executarMovimento(deR, deC, paraR, paraC) {
         }
     }
 
-    // Turno passa
     capturaMultiplaEmAndamento = false;
     celulaSelecionada = null;
     movimentosValidos = [];
@@ -1338,7 +1493,7 @@ function escutarFirebase() {
         try { unsubscribeFirebase(); } catch (_) {}
         unsubscribeFirebase = null;
     }
-    if (listenerAtivo) return;  // ⬅️ Bug 8
+    if (listenerAtivo) return;
     listenerAtivo = true;
 
     const salaRef = ref(db, 'salas_damas/' + idSalaAtual);
@@ -1355,7 +1510,6 @@ function escutarFirebase() {
         const novoTabuleiro = firebaseParaTabuleiro(dados.tabuleiro);
         const novaContagem = contarPecas(novoTabuleiro);
 
-        // ⬅️ Bug 3: detecta perda drástica de peças (possível erro)
         if (ultimaContagemPecas && !jogoEncerrado) {
             const deltaWhite = ultimaContagemPecas.white - novaContagem.white;
             const deltaRed = ultimaContagemPecas.red - novaContagem.red;
@@ -1369,7 +1523,6 @@ function escutarFirebase() {
         turnoAtual = dados.turno || 'white';
         jogoEncerrado = dados.status === 'encerrado';
 
-        // Se o jogo acabou e não é a nossa vez de ver, fecha captura múltipla
         if (jogoEncerrado) {
             capturaMultiplaEmAndamento = false;
             celulaSelecionada = null;
@@ -1412,11 +1565,10 @@ function escutarFirebase() {
 }
 
 window.addEventListener('beforeunload', () => {
-    // ⬅️ Bug 4: o onDisconnect cuida da presença — só cancela o listener
     if (unsubscribeFirebase) {
         try { unsubscribeFirebase(); } catch (_) {}
     }
 });
-</script>    
+</script>
 </body>
 </html>
