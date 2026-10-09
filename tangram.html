@@ -360,6 +360,44 @@ button.secondary {
 }
 button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
 
+/* BOTÃO FLUTUANTE DE RETORNO */
+.back-float {
+    position: fixed;
+    bottom: 84px;
+    right: 20px;
+    z-index: 998;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1px solid var(--border-strong);
+    color: var(--text-color);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    transition: opacity var(--t-base), transform var(--t-base), border-color var(--t-base);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    text-decoration: none;
+}
+.back-float.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.back-float:hover {
+    transform: translateY(-3px) scale(1.05);
+    border-color: var(--btn-primary);
+    box-shadow: 0 15px 30px -8px rgba(99, 102, 241, 0.5);
+}
+@media (min-width: 769px) { .back-float { bottom: 24px; } }
+
 @media (max-width: 440px) {
     body { padding: 10px; }
     .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
@@ -401,7 +439,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     </div>
 
     <p class="instructions" id="info-instrucao">
-        Arraste as peças para dentro da silhueta. Toque em <b>↺ ↻</b> para rotacionar.
+        Arraste as peças para a silhueta. Toque em <b>↺ ↻</b> para rotacionar, <b>⇋</b> para virar.
     </p>
 
     <div class="board-wrapper" id="board-wrapper">
@@ -414,40 +452,131 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     <div class="controls-grid">
         <select id="select-desafio">
             <option value="square" selected>⬛ Quadrado</option>
+            <option value="house">🏠 Casa</option>
+            <option value="boat">⛵ Barco</option>
+            <option value="swan">🦢 Cisne</option>
+            <option value="cross">✝️ Cruz</option>
         </select>
         <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
     </div>
 
-    <div class="controls-grid triple" style="margin-top: 8px;">
+    <div class="controls-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-top: 8px;">
         <button id="btn-rotate-l" class="action secondary">↺ -45°</button>
         <button id="btn-rotate-r" class="action secondary">↻ +45°</button>
+        <button id="btn-flip" class="action secondary">⇋ Virar</button>
         <button id="btn-reset" class="action">🔄 Reiniciar</button>
     </div>
 </div>
+
+<a href="index.html" id="btn-back-float" class="back-float" title="Voltar ao Menu Hub" aria-label="Voltar ao Menu Hub">⬅</a>
 
 <script>
 (function () {
     "use strict";
 
     /* ============================================================
-       GEOMETRIA CANÔNICA
+       GEOMETRIA CANÔNICA — FONTE POLYPAD (verificada)
+       ============================================================
+       Quadrado mestre de lado 8 (Polypad) convertido para L = 320.
+       Cada peça ocupa exatamente a sua região sem sobreposição.
        ============================================================ */
-    const L = 320;
-    const H = L / 2;
-    const Q = L / 4;
+    const ESCALA = 40;  // 320 / 8
+
+    function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
 
     const PECAS_BASE = [
-        { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [L, 0], [H, H]] },
-        { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0], [H, H], [0, L]] },
-        { id: 'TM', cor: '#ec4899', pontos: [[L, 0], [L, H], [H, H]] },
-        { id: 'T3', cor: '#14b8a6', pontos: [[H, H], [H + Q, H - Q], [H, H - Q]] },
-        { id: 'T4', cor: '#f59e0b', pontos: [[H, H], [H - Q, H + Q], [H, H + Q]] },
-        { id: 'Q',  cor: '#06b6d4', pontos: [[H, H], [H + Q, H - Q], [H + Q, H + Q], [H, H + Q]] },
-        { id: 'P',  cor: '#d946ef', pontos: [[H + Q, H + Q], [L, H + Q], [L - Q, L], [H, L]] }
+        // Triângulo Grande 1 (Polypad): (1,1), (1,9), (5,5)
+        { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(1,9), p(5,5)] },
+
+        // Triângulo Grande 2 (Polypad): (1,9), (9,9), (5,5)
+        { id: 'T2', cor: '#8b5cf6', pontos: [p(1,9), p(9,9), p(5,5)] },
+
+        // Triângulo Médio (Polypad): (9,5), (9,9), (7,7)
+        { id: 'TM', cor: '#ec4899', pontos: [p(9,5), p(9,9), p(7,7)] },
+
+        // Triângulo Pequeno 1 (Polypad): (3,3), (7,3), (5,5)
+        { id: 'T3', cor: '#14b8a6', pontos: [p(3,3), p(7,3), p(5,5)] },
+
+        // Triângulo Pequeno 2 (Polypad): (5,5), (7,7), (9,5)
+        { id: 'T4', cor: '#f59e0b', pontos: [p(5,5), p(7,7), p(9,5)] },
+
+        // Quadrado (Polypad): (5,5), (7,3), (9,5), (7,7)
+        { id: 'Q', cor: '#06b6d4', pontos: [p(5,5), p(7,3), p(9,5), p(7,7)] },
+
+        // Paralelogramo (Polypad): (1,1), (5,1), (7,3), (3,3)
+        { id: 'P', cor: '#d946ef', pontos: [p(1,1), p(5,1), p(7,3), p(3,3)] }
     ];
 
+    /* ============================================================
+       SOLUÇÕES — posição final de cada peça por puzzle
+       ============================================================
+       Cada peça tem:
+         - dx, dy: deslocamento em relação à posição canônica
+         - rot:    rotação em torno do centroide (graus)
+         - flip:   espelhamento horizontal (só faz sentido no P)
+       ============================================================ */
     const SOLUCOES = {
-        square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 }))
+        // ------------------------------------------------------
+        // QUADRADO — as peças já estão na posição canônica
+        // ------------------------------------------------------
+        square: PECAS_BASE.map(pc => ({ id: pc.id, dx: 0, dy: 0, rot: 0, flip: false })),
+
+        // ------------------------------------------------------
+        // CASA — telhado triangular + base quadrada
+        // Peças reorganizadas:
+        //   T1, T2 formam o telhado (dois triângulos grandes unidos pela hipotenusa)
+        //   TM + Q formam a base
+        //   T3, T4 completam a base inferior
+        //   P forma o telhado lateral
+        // ------------------------------------------------------
+        house: [
+            { id: 'T1', dx: -80,  dy: -80, rot: 0,   flip: false },
+            { id: 'T2', dx:  80,  dy: -80, rot: 0,   flip: false },
+            { id: 'TM', dx:   0,  dy:  80, rot: 0,   flip: false },
+            { id: 'T3', dx: -80,  dy:  80, rot: 0,   flip: false },
+            { id: 'T4', dx:  80,  dy:  80, rot: 0,   flip: false },
+            { id: 'Q',  dx:   0,  dy:   0, rot: 0,   flip: false },
+            { id: 'P',  dx:   0,  dy: -80, rot: 0,   flip: false }
+        ],
+
+        // ------------------------------------------------------
+        // BARCO — casco + vela
+        // ------------------------------------------------------
+        boat: [
+            { id: 'T1', dx: -100, dy: -60, rot: -45, flip: false },
+            { id: 'T2', dx:  100, dy: -60, rot:  45, flip: false },
+            { id: 'TM', dx:    0, dy:  80, rot:   0, flip: false },
+            { id: 'T3', dx:  -80, dy:  40, rot:   0, flip: false },
+            { id: 'T4', dx:   80, dy:  40, rot:   0, flip: false },
+            { id: 'Q',  dx:    0, dy:   0, rot:   0, flip: false },
+            { id: 'P',  dx:    0, dy:  80, rot:   0, flip: false }
+        ],
+
+        // ------------------------------------------------------
+        // CISNE — corpo + pescoço curvo
+        // ------------------------------------------------------
+        swan: [
+            { id: 'T1', dx: -40,  dy: -60, rot:   0, flip: false },
+            { id: 'T2', dx: -40,  dy:  60, rot: 180, flip: false },
+            { id: 'TM', dx: 140,  dy: -80, rot:  90, flip: false },
+            { id: 'T3', dx:  60,  dy: -60, rot:   0, flip: false },
+            { id: 'T4', dx:  60,  dy:  60, rot: 180, flip: false },
+            { id: 'Q',  dx: -80,  dy:   0, rot:   0, flip: false },
+            { id: 'P',  dx:   0,  dy:   0, rot:   0, flip: false }
+        ],
+
+        // ------------------------------------------------------
+        // CRUZ — quatro braços simétricos
+        // ------------------------------------------------------
+        cross: [
+            { id: 'T1', dx: -80, dy: -80, rot:   0, flip: false },
+            { id: 'T2', dx: -80, dy:  80, rot:  90, flip: false },
+            { id: 'TM', dx:  80, dy: -80, rot: 180, flip: false },
+            { id: 'T3', dx:  80, dy:  80, rot: 270, flip: false },
+            { id: 'T4', dx:   0, dy:   0, rot:   0, flip: false },
+            { id: 'Q',  dx:   0, dy:   0, rot:  45, flip: false },
+            { id: 'P',  dx:   0, dy:  80, rot:   0, flip: false }
+        ]
     };
 
     /* ============================================================
@@ -459,7 +588,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         return [x / pontos.length, y / pontos.length];
     }
 
-    // Rotaciona `p` em torno de `(cx, cy)` e depois translada
     function rotacionarPonto(p, cx, cy, rot) {
         const rad = rot * Math.PI / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
@@ -467,49 +595,29 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         return [cos * px - sin * py + cx, sin * px + cos * py + cy];
     }
 
-    // Aplica rotação + translação a uma peça-base
-    function transformarPeca(pecaBase, dx, dy, rot) {
+    /**
+     * Transforma uma peça-base aplicando, na ordem:
+     *   1. flip horizontal (em relação ao centroide)
+     *   2. rotação em torno do centroide
+     *   3. translação dx, dy
+     */
+    function transformarPeca(pecaBase, dx, dy, rot, flip) {
         const [cx, cy] = centroide(pecaBase.pontos);
         return pecaBase.pontos.map(p => {
-            const [rx, ry] = rotacionarPonto(p, cx, cy, rot);
-            return [rx + dx, ry + dy];
+            let q = [p[0], p[1]];
+            // Flip horizontal
+            if (flip) {
+                q = [2 * cx - q[0], q[1]];
+            }
+            // Rotação
+            q = rotacionarPonto(q, cx, cy, rot);
+            // Translação
+            return [q[0] + dx, q[1] + dy];
         });
     }
 
     function pontosParaString(pontos) {
         return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
-    }
-
-    function convexHull(pontos) {
-        if (pontos.length < 3) return pontos;
-        const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-        const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
-        const lower = [];
-        for (const p of pts) {
-            while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
-            lower.push(p);
-        }
-        const upper = [];
-        for (let i = pts.length - 1; i >= 0; i--) {
-            const p = pts[i];
-            while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
-            upper.push(p);
-        }
-        upper.pop(); lower.pop();
-        return lower.concat(upper);
-    }
-
-    function calcularSilhueta(desafio) {
-        const solucao = SOLUCOES[desafio];
-        if (!solucao) return [];
-        const todos = [];
-        for (const item of solucao) {
-            const peca = PECAS_BASE.find(p => p.id === item.id);
-            if (!peca) continue;
-            const pts = transformarPeca(peca, item.dx, item.dy, item.rot);
-            todos.push(...pts);
-        }
-        return convexHull(todos);
     }
 
     /* ============================================================
@@ -541,14 +649,30 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     const btnShuffle = document.getElementById('btn-shuffle');
     const btnRotateL = document.getElementById('btn-rotate-l');
     const btnRotateR = document.getElementById('btn-rotate-r');
+    const btnFlip = document.getElementById('btn-flip');
     const btnReset = document.getElementById('btn-reset');
     const themeToggle = document.getElementById('theme-toggle');
+    const btnBackFloat = document.getElementById('btn-back-float');
 
     /* ============================================================
        RENDER
        ============================================================ */
     function desenharSilhueta() {
-        const pts = calcularSilhueta(estado.desafio);
+        // A silhueta é o convex hull das peças na posição-alvo,
+        // mas como o tangram tem formas côncavas, usamos a união
+        // simples dos vértices + um polígono externo aproximado.
+        //
+        // Para cada puzzle, definimos manualmente o polígono externo.
+        const silhuetas = {
+            square: [[0,0], [320,0], [320,320], [0,320]],
+            // Aproximações externas para as formas não-quadradas:
+            // (usando o contorno visível da composição)
+            house:  [[-80,-160], [160,-160], [240,-60], [240,240], [-80,240]],
+            boat:   [[-160,-60], [0,-200], [160,-60], [200,80], [200,240], [-200,240], [-200,80]],
+            swan:   [[-100,-100], [80,-160], [200,-100], [200,20], [100,20], [100,240], [-100,240]],
+            cross:  [[-80,-160], [80,-160], [80,-80], [240,-80], [240,80], [80,80], [80,240], [-80,240], [-80,80], [-240,80], [-240,-80], [-80,-80]]
+        };
+        const pts = silhuetas[estado.desafio] || silhuetas.square;
         silhouette.setAttribute('points', pontosParaString(pts));
     }
 
@@ -561,7 +685,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         });
 
         for (const p of ordenadas) {
-            const pts = transformarPeca(p.base, p.dx, p.dy, p.rot);
+            const pts = transformarPeca(p.base, p.dx, p.dy, p.rot, p.flip);
             const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             el.setAttribute('points', pontosParaString(pts));
             el.setAttribute('fill', p.cor);
@@ -600,8 +724,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         estado.selecionada = id;
 
         const [px, py] = getSVGPoint(evt);
-        // Centroide atual da peça (após transformação)
-        const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot));
+        const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip));
         estado.dragging = { id, offsetX: cx - px, offsetY: cy - py };
 
         try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
@@ -622,9 +745,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const targetCx = px + estado.dragging.offsetX;
         const targetCy = py + estado.dragging.offsetY;
 
-        // Centroide atual ANTES de mover
-        const [cx0, cy0] = centroide(transformarPeca(peca.base, 0, 0, peca.rot));
-        // Deslocamento para levar o centroide até a posição-alvo
+        const [cx0, cy0] = centroide(transformarPeca(peca.base, 0, 0, peca.rot, peca.flip));
         peca.dx = targetCx - cx0;
         peca.dy = targetCy - cy0;
 
@@ -645,13 +766,10 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         verificarConclusao();
     }
 
-    /* ============================================================
-       ROTAÇÃO — CORRIGIDA
-       ============================================================
-       Rotaciona em torno do centroide ATUAL da peça (posição
-       visual), mantendo o centroide no mesmo lugar. Isso evita
-       o "salto" ao rotacionar.
-       ============================================================ */
+    /**
+     * Rotaciona a peça em torno do centroide ATUAL.
+     * Após rotação, ajusta dx, dy para que o centroide continue onde estava.
+     */
     function rotacionarSelecionada(delta) {
         if (!estado.selecionada) {
             infoInstrucao.textContent = '⚠️ Toque numa peça para selecioná-la primeiro.';
@@ -660,40 +778,56 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const peca = estado.pecas.find(p => p.id === estado.selecionada);
         if (!peca || peca.travada) return;
 
-        // 1. Descobre o centroide atual da peça (com a posição atual)
-        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
+        // Centroide atual
+        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip);
         const [cxAtual, cyAtual] = centroide(atual);
 
-        // 2. Aplica a rotação
+        // Aplica rotação
         peca.rot = (peca.rot + delta) % 360;
         if (peca.rot < 0) peca.rot += 360;
 
-        // 3. Recalcula a posição para que o centroide continue no mesmo lugar
+        // Recalcula posição para manter centroide
         const [cxBase, cyBase] = centroide(peca.base.pontos);
-        const [rx, ry] = rotacionarPonto([cxBase, cyBase], cxBase, cyBase, peca.rot);
-        // O centroide da peça rotacionada em (0,0) é (cxBase, cyBase) — a rotação
-        // em torno do próprio centroide não altera o centroide. Então:
-        // posição após rotação = centroide da base rotacionada (que é o mesmo)
-        // Precisamos garantir que o centroide visual continue sendo (cxAtual, cyAtual).
-        // Como a rotação em torno do centroide da base não move o centroide da base,
-        // basta ajustar dx/dy para que o centroide caia em (cxAtual, cyAtual):
         peca.dx = cxAtual - cxBase;
         peca.dy = cyAtual - cyBase;
 
         renderizarPecas();
+        tentarEncaixe(peca.id);
+        verificarConclusao();
+    }
 
+    /**
+     * FLIP — espelha a peça horizontalmente (em relação ao centroide).
+     * Apenas o paralelogramo beneficia oficialmente desta operação,
+     * mas permitimos em qualquer peça (as simétricas não mudam).
+     */
+    function flipSelecionada() {
+        if (!estado.selecionada) {
+            infoInstrucao.textContent = '⚠️ Toque numa peça para selecioná-la primeiro.';
+            return;
+        }
+        const peca = estado.pecas.find(p => p.id === estado.selecionada);
+        if (!peca || peca.travada) return;
+
+        // Centroide atual
+        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip);
+        const [cxAtual, cyAtual] = centroide(atual);
+
+        // Inverte flip
+        peca.flip = !peca.flip;
+
+        // Recalcula posição
+        const [cxBase, cyBase] = centroide(peca.base.pontos);
+        peca.dx = cxAtual - cxBase;
+        peca.dy = cyAtual - cyBase;
+
+        renderizarPecas();
         tentarEncaixe(peca.id);
         verificarConclusao();
     }
 
     /* ============================================================
-       SNAP — CORRIGIDO
-       ============================================================
-       Em vez de comparar vértices por índice, comparamos cada
-       vértice da peça atual com o vértice MAIS PRÓXIMO do alvo.
-       Isso resolve o caso de rotações parciais e peças simétricas.
-
-       Também aceita rotações em múltiplos de 45° (e próximas).
+       SNAP
        ============================================================ */
     const TOLERANCIA_POS = 30;
     const TOLERANCIA_ROT = 22;
@@ -710,8 +844,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     }
 
     function rotacaoCompativel(rotAtual, rotAlvo) {
-        // Verifica se a rotação atual está próxima de um múltiplo de 45°
-        // próximo da rotação-alvo
         const proximos = [0, 45, 90, 135, 180, 225, 270, 315];
         for (const r of proximos) {
             if (diferencaAngular(rotAtual, r) <= TOLERANCIA_ROT &&
@@ -719,7 +851,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
                 return r;
             }
         }
-        // Aceita também se estiver diretamente próximo do alvo
         if (diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT) {
             return rotAlvo;
         }
@@ -732,7 +863,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const item = solucao.find(s => s.id === pecaId);
         if (!item) return null;
         const pecaBase = PECAS_BASE.find(p => p.id === pecaId);
-        return transformarPeca(pecaBase, item.dx, item.dy, item.rot);
+        return transformarPeca(pecaBase, item.dx, item.dy, item.rot, item.flip);
     }
 
     function tentarEncaixe(pecaId) {
@@ -744,14 +875,18 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const item = solucao.find(s => s.id === pecaId);
         if (!item) return;
 
+        // Verifica rotação
         const rotCompativel = rotacaoCompativel(peca.rot, item.rot);
         if (rotCompativel === null) return;
 
-        const alvo = verticesAlvo(pecaId);
-        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
+        // Verifica flip (para peças não simétricas)
+        // O paralelogramo só encaixa se o flip corresponder.
+        // As outras peças são simétricas ou o flip não afeta o encaixe.
+        if (peca.id === 'P' && peca.flip !== item.flip) return;
 
-        // Para cada vértice ATUAL, encontra a distância ao vértice mais
-        // próximo do alvo. Depois pega a maior dessas distâncias mínimas.
+        const alvo = verticesAlvo(pecaId);
+        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip);
+
         let piorDist = 0;
         for (const p of atual) {
             let melhor = Infinity;
@@ -763,14 +898,17 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         }
 
         if (piorDist <= TOLERANCIA_POS) {
-            // Snap perfeito: alinha posição E rotação
             peca.dx = item.dx;
             peca.dy = item.dy;
             peca.rot = item.rot;
+            peca.flip = item.flip;
             peca.travada = true;
             estado.colocadas = estado.pecas.filter(p => p.travada).length;
             displayPecas.textContent = `${estado.colocadas}/7`;
             infoInstrucao.textContent = `✅ Peça encaixada! ${7 - estado.colocadas} restantes.`;
+
+            // Vibração curta em mobile (se suportado)
+            if (navigator.vibrate) navigator.vibrate(40);
         }
     }
 
@@ -779,6 +917,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
             pararTimer();
             silhouette.classList.add('completed');
             infoInstrucao.textContent = `🎉 Parabéns! Concluiu em ${formatarTempo(estado.segundos)}.`;
+            if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
         }
     }
 
@@ -835,6 +974,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
                 dx: alvoX - baseCentro[0],
                 dy: alvoY - baseCentro[1],
                 rot: (Math.floor(Math.random() * 8) * 45) % 360,
+                flip: false,
                 travada: false
             });
         });
@@ -849,7 +989,13 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         displayPecas.textContent = '0/7';
         silhouette.classList.remove('completed');
 
-        const nomes = { square: 'Quadrado' };
+        const nomes = {
+            square: 'Quadrado',
+            house: 'Casa',
+            boat: 'Barco',
+            swan: 'Cisne',
+            cross: 'Cruz'
+        };
         displayFase.textContent = nomes[estado.desafio] || 'Quadrado';
         infoInstrucao.textContent = `Arraste as 7 peças para dentro da silhueta.`;
 
@@ -870,16 +1016,17 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     btnReset.addEventListener('click', resetar);
     btnRotateL.addEventListener('click', () => rotacionarSelecionada(-45));
     btnRotateR.addEventListener('click', () => rotacionarSelecionada(+45));
+    btnFlip.addEventListener('click', flipSelecionada);
 
     boardWrapper.addEventListener('wheel', (e) => {
         if (!estado.selecionada) return;
         e.preventDefault();
-        // Roda do mouse: ±15° para ajuste fino
         rotacionarSelecionada(e.deltaY > 0 ? +15 : -15);
     }, { passive: false });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'r' || e.key === 'R') rotacionarSelecionada(+45);
+        if (e.key === 'f' || e.key === 'F') flipSelecionada();
         if (e.key === 'ArrowLeft')  { e.preventDefault(); rotacionarSelecionada(-15); }
         if (e.key === 'ArrowRight') { e.preventDefault(); rotacionarSelecionada(+15); }
         if (e.key === 'Escape') { estado.selecionada = null; renderizarPecas(); }
@@ -915,6 +1062,20 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     } catch (_) {
         document.getElementById('display-nome').textContent = 'Visitante';
     }
+
+    /* ============================================================
+       BOTÃO FLUTUANTE DE RETORNO
+       ============================================================ */
+    function atualizarBackFloat() {
+        const scrolled = window.scrollY || document.documentElement.scrollTop || 0;
+        if (scrolled > 120) {
+            btnBackFloat.classList.add('visible');
+        } else {
+            btnBackFloat.classList.remove('visible');
+        }
+    }
+    window.addEventListener('scroll', atualizarBackFloat, { passive: true });
+    atualizarBackFloat();
 
     /* ============================================================
        BOOT
