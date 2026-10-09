@@ -373,8 +373,6 @@ button.magic {
     color: #1c1917;
     font-weight: 800;
     box-shadow: 0 6px 20px -6px rgba(245, 158, 11, 0.6);
-    position: relative;
-    overflow: hidden;
 }
 button.magic:hover {
     transform: translateY(-2px);
@@ -481,10 +479,7 @@ button.auto:hover {
     <div class="controls-grid">
         <select id="select-desafio">
             <option value="square" selected>⬛ Quadrado</option>
-            <option value="house">🏠 Casa</option>
-            <option value="boat">⛵ Barco</option>
-            <option value="swan">🦢 Cisne</option>
-            <option value="cross">✝️ Cruz</option>
+            <option value="free">🎨 Modo Livre</option>
         </select>
         <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
     </div>
@@ -510,16 +505,14 @@ button.auto:hover {
 
     /* ============================================================
        GEOMETRIA CANÔNICA — FONTE POLYPAD (verificada)
+       ============================================================
+       Quadrado mestre de lado 8 (Polypad) convertido para L = 320.
+       Cada peça ocupa exatamente a sua região sem sobreposição.
+       Soma das áreas = L² = 102 400.
        ============================================================ */
     const ESCALA = 40;
     function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
 
-    /* ============================================================
-       PEÇAS BASE — geometria padrão do Tangram
-       Cada peça tem uma forma fixa em coordenadas absolutas
-       próximas ao centro (0,0). A posição final por puzzle
-       é dada pela SOLUÇÃO (transformação dx, dy, rot, flip).
-       ============================================================ */
     const PECAS_BASE = [
         { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(1,9), p(5,5)] },
         { id: 'T2', cor: '#8b5cf6', pontos: [p(1,9), p(9,9), p(5,5)] },
@@ -531,77 +524,13 @@ button.auto:hover {
     ];
 
     /* ============================================================
-       SOLUÇÕES — posições finais das peças por puzzle
+       SOLUÇÕES — apenas "square" (verificado)
        ============================================================
-       Cada puzzle:
-         - square: as peças já estão na posição canônica
-         - outros: cada peça é posicionada para formar a silhueta
-           alvo SEM sobreposição.
-
-       Abordagem: cada peça é definida por coordenadas absolutas
-       finais (não por transformações relativas), evitando erros.
-       A silhueta é o convex hull dessas posições finais.
+       As peças-base já estão na posição final do quadrado mestre.
+       Não há transformações — cada peça tem dx=0, dy=0, rot=0.
        ============================================================ */
     const SOLUCOES = {
-        // Quadrado mestre — peças na posição canônica
-        square: PECAS_BASE.map(pc => ({ id: pc.id, dx: 0, dy: 0, rot: 0, flip: false })),
-
-        // Casa — telhado triangular + base retangular
-        // Organização:
-        //   Telhado: T1 (triângulo) formando o pico
-        //   Base esquerda: T3 + T4
-        //   Base central: Q
-        //   Base direita: TM
-        //   Laterais: T2 + P
-        house: [
-            // Telhado: T1 grande no centro-superior
-            { id: 'T1', dx: 160,  dy: 160,  rot: 0,   flip: false },
-            // Base esquerda
-            { id: 'T3', dx: -40,  dy: 40,   rot: 0,   flip: false },
-            // Base centro
-            { id: 'Q',  dx: -40,  dy: 40,   rot: 0,   flip: false },
-            // Base direita
-            { id: 'TM', dx: 80,   dy: 40,   rot: 0,   flip: false },
-            // Canto inferior esquerdo
-            { id: 'T4', dx: -120, dy: 40,   rot: 0,   flip: false },
-            // Lado direito
-            { id: 'T2', dx: 160,  dy: 40,   rot: 0,   flip: false },
-            // Telhado lateral
-            { id: 'P',  dx: 40,   dy: 120,  rot: 0,   flip: false }
-        ],
-
-        // Barco — casco largo + vela alta
-        boat: [
-            { id: 'T1', dx: -80,  dy: 40,  rot: 0,   flip: false },
-            { id: 'T2', dx: 80,   dy: 40,  rot: 0,   flip: false },
-            { id: 'TM', dx: 0,    dy: -40, rot: 0,   flip: false },
-            { id: 'T3', dx: -80,  dy: -80, rot: 0,   flip: false },
-            { id: 'T4', dx: 80,   dy: -80, rot: 0,   flip: false },
-            { id: 'Q',  dx: 0,    dy: 40,  rot: 0,   flip: false },
-            { id: 'P',  dx: 0,    dy: 120, rot: 0,   flip: false }
-        ],
-
-        // Cisne — corpo e pescoço
-        swan: [
-            { id: 'T1', dx: -80, dy: 80,  rot: 0,   flip: false },
-            { id: 'T2', dx: 80,  dy: 80,  rot: 0,   flip: false },
-            { id: 'TM', dx: -40, dy: -40, rot: 0,   flip: false },
-            { id: 'T3', dx: 40,  dy: -40, rot: 0,   flip: false },
-            { id: 'T4', dx: -40, dy: -120, rot: 0,   flip: false },
-            { id: 'Q',  dx: 0,   dy: 40,  rot: 0,   flip: false },
-            { id: 'P',  dx: 0,   dy: -80, rot: 0,   flip: false }
-        ],
-
-        // Cruz — quatro braços simétricos
-        cross: [
-            { id: 'T1', dx: -80, dy: -80, rot: 0,   flip: false },
-            { id: 'T2', dx: 80,  dy: -80, rot: 0,   flip: false },
-            { id: 'TM', dx: -80, dy: 80,  rot: 0,   flip: false },
-            { id: 'T3', dx: 80,  dy: 80,  rot: 0,   flip: false },
-            { id: 'T4', dx: 0,   dy: 0,   rot: 0,   flip: false },
-            { id: 'Q',  dx: 0,   dy: 0,   rot: 0,   flip: false },
-            { id: 'P',  dx: 0,   dy: 0,   rot: 0,   flip: false }
-        ]
+        square: PECAS_BASE.map(pc => ({ id: pc.id, dx: 0, dy: 0, rot: 0, flip: false }))
     };
 
     /* ============================================================
@@ -688,7 +617,7 @@ button.auto:hover {
     const btnBackFloat = document.getElementById('btn-back-float');
 
     /* ============================================================
-       SONS SUTIS (Web Audio API)
+       SONS
        ============================================================ */
     let audioCtx = null;
     function tocarSom(tipo) {
@@ -735,9 +664,16 @@ button.auto:hover {
        RENDER
        ============================================================ */
     function desenharSilhueta() {
-        // A silhueta é o convex hull da união das peças na posição-alvo.
+        if (estado.desafio === 'free') {
+            silhouette.setAttribute('points', '');
+            silhouette.style.display = 'none';
+            return;
+        }
+        silhouette.style.display = '';
+
+        // Silhueta = convex hull da união das peças na posição final.
         // Isso GARANTE coesão: o que se vê é exatamente o que as
-        // peças cobrem quando encaixadas corretamente.
+        // peças cobrem quando encaixadas.
         const solucao = SOLUCOES[estado.desafio];
         if (!solucao) return;
 
@@ -926,6 +862,7 @@ button.auto:hover {
     }
 
     function tentarEncaixe(pecaId) {
+        if (estado.desafio === 'free') return;
         const peca = estado.pecas.find(p => p.id === pecaId);
         if (!peca || peca.travada) return;
 
@@ -937,7 +874,6 @@ button.auto:hover {
         const rotCompativel = rotacaoCompativel(peca.rot, item.rot);
         if (rotCompativel === null) return;
 
-        // Verifica flip (para o paralelogramo)
         if (peca.id === 'P' && peca.flip !== item.flip) return;
 
         const alvo = verticesAlvo(pecaId);
@@ -969,6 +905,7 @@ button.auto:hover {
     }
 
     function verificarConclusao() {
+        if (estado.desafio === 'free') return;
         if (estado.colocadas === 7) {
             pararTimer();
             silhouette.classList.add('completed');
@@ -1046,15 +983,14 @@ button.auto:hover {
         displayPecas.textContent = '0/7';
         silhouette.classList.remove('completed');
 
-        const nomes = {
-            square: 'Quadrado',
-            house: 'Casa',
-            boat: 'Barco',
-            swan: 'Cisne',
-            cross: 'Cruz'
-        };
+        const nomes = { square: 'Quadrado', free: 'Livre' };
         displayFase.textContent = nomes[estado.desafio] || 'Quadrado';
-        infoInstrucao.textContent = `Arraste as 7 peças para dentro da silhueta.`;
+
+        if (estado.desafio === 'free') {
+            infoInstrucao.textContent = '🎨 Modo livre: arraste e rotacione as peças como quiser.';
+        } else {
+            infoInstrucao.textContent = 'Arraste as 7 peças para dentro da silhueta.';
+        }
 
         desenharSilhueta();
         renderizarPecas();
@@ -1066,6 +1002,7 @@ button.auto:hover {
        ============================================================ */
     function moverPecaParaAlvo(peca, duracaoMs, aoFinal) {
         const solucao = SOLUCOES[estado.desafio];
+        if (!solucao) { if (aoFinal) aoFinal(); return; }
         const item = solucao.find(s => s.id === peca.id);
         if (!item) { if (aoFinal) aoFinal(); return; }
 
@@ -1117,6 +1054,10 @@ button.auto:hover {
        DICA E AUTO
        ============================================================ */
     function darDica() {
+        if (estado.desafio === 'free') {
+            infoInstrucao.textContent = '🎨 Modo livre não tem dica — é pura criatividade!';
+            return;
+        }
         const pendentes = estado.pecas.filter(p => !p.travada);
         if (pendentes.length === 0) {
             infoInstrucao.textContent = '🎉 Todas as peças já foram encaixadas!';
@@ -1145,6 +1086,10 @@ button.auto:hover {
 
     let autoEmProgresso = false;
     function autoResolver() {
+        if (estado.desafio === 'free') {
+            infoInstrucao.textContent = '🎨 Modo livre não tem resolução automática.';
+            return;
+        }
         if (autoEmProgresso) return;
         autoEmProgresso = true;
 
