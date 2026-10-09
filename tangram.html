@@ -297,6 +297,14 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     cursor: default;
     filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.85)) brightness(1.05);
 }
+.piece.solving {
+    animation: solveGlow 0.7s ease;
+}
+@keyframes solveGlow {
+    0%   { filter: drop-shadow(0 0 0 rgba(34,197,94,0)); }
+    40%  { filter: drop-shadow(0 0 24px rgba(34,197,94,1)) brightness(1.3); }
+    100% { filter: drop-shadow(0 0 12px rgba(34,197,94,0.85)) brightness(1.05); }
+}
 
 .controls-grid {
     display: grid;
@@ -360,7 +368,42 @@ button.secondary {
 }
 button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
 
-/* BOTÃO FLUTUANTE DE RETORNO */
+button.magic {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #1c1917;
+    font-weight: 800;
+    box-shadow: 0 6px 20px -6px rgba(245, 158, 11, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+button.magic:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 10px 28px -8px rgba(245, 158, 11, 0.8);
+}
+button.magic::after {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+}
+button.magic:hover::after {
+    transform: translateX(100%);
+}
+
+button.auto {
+    background: linear-gradient(135deg, #ec4899, #d946ef);
+    color: #fff;
+    box-shadow: 0 6px 20px -6px rgba(217, 70, 239, 0.6);
+}
+button.auto:hover {
+    box-shadow: 0 10px 28px -8px rgba(217, 70, 239, 0.8);
+}
+
 .back-float {
     position: fixed;
     bottom: 84px;
@@ -460,10 +503,15 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
     </div>
 
-    <div class="controls-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-top: 8px;">
+    <div class="controls-grid triple" style="margin-top: 8px;">
         <button id="btn-rotate-l" class="action secondary">↺ -45°</button>
         <button id="btn-rotate-r" class="action secondary">↻ +45°</button>
         <button id="btn-flip" class="action secondary">⇋ Virar</button>
+    </div>
+
+    <div class="controls-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 8px;">
+        <button id="btn-hint" class="action magic">💡 Dica</button>
+        <button id="btn-auto" class="action magic auto">✨ Auto</button>
         <button id="btn-reset" class="action">🔄 Reiniciar</button>
     </div>
 </div>
@@ -480,55 +528,25 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
        Quadrado mestre de lado 8 (Polypad) convertido para L = 320.
        Cada peça ocupa exatamente a sua região sem sobreposição.
        ============================================================ */
-    const ESCALA = 40;  // 320 / 8
+    const ESCALA = 40;
 
     function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
 
     const PECAS_BASE = [
-        // Triângulo Grande 1 (Polypad): (1,1), (1,9), (5,5)
         { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(1,9), p(5,5)] },
-
-        // Triângulo Grande 2 (Polypad): (1,9), (9,9), (5,5)
         { id: 'T2', cor: '#8b5cf6', pontos: [p(1,9), p(9,9), p(5,5)] },
-
-        // Triângulo Médio (Polypad): (9,5), (9,9), (7,7)
         { id: 'TM', cor: '#ec4899', pontos: [p(9,5), p(9,9), p(7,7)] },
-
-        // Triângulo Pequeno 1 (Polypad): (3,3), (7,3), (5,5)
         { id: 'T3', cor: '#14b8a6', pontos: [p(3,3), p(7,3), p(5,5)] },
-
-        // Triângulo Pequeno 2 (Polypad): (5,5), (7,7), (9,5)
         { id: 'T4', cor: '#f59e0b', pontos: [p(5,5), p(7,7), p(9,5)] },
-
-        // Quadrado (Polypad): (5,5), (7,3), (9,5), (7,7)
-        { id: 'Q', cor: '#06b6d4', pontos: [p(5,5), p(7,3), p(9,5), p(7,7)] },
-
-        // Paralelogramo (Polypad): (1,1), (5,1), (7,3), (3,3)
-        { id: 'P', cor: '#d946ef', pontos: [p(1,1), p(5,1), p(7,3), p(3,3)] }
+        { id: 'Q',  cor: '#06b6d4', pontos: [p(5,5), p(7,3), p(9,5), p(7,7)] },
+        { id: 'P',  cor: '#d946ef', pontos: [p(1,1), p(5,1), p(7,3), p(3,3)] }
     ];
 
     /* ============================================================
        SOLUÇÕES — posição final de cada peça por puzzle
-       ============================================================
-       Cada peça tem:
-         - dx, dy: deslocamento em relação à posição canônica
-         - rot:    rotação em torno do centroide (graus)
-         - flip:   espelhamento horizontal (só faz sentido no P)
        ============================================================ */
     const SOLUCOES = {
-        // ------------------------------------------------------
-        // QUADRADO — as peças já estão na posição canônica
-        // ------------------------------------------------------
         square: PECAS_BASE.map(pc => ({ id: pc.id, dx: 0, dy: 0, rot: 0, flip: false })),
-
-        // ------------------------------------------------------
-        // CASA — telhado triangular + base quadrada
-        // Peças reorganizadas:
-        //   T1, T2 formam o telhado (dois triângulos grandes unidos pela hipotenusa)
-        //   TM + Q formam a base
-        //   T3, T4 completam a base inferior
-        //   P forma o telhado lateral
-        // ------------------------------------------------------
         house: [
             { id: 'T1', dx: -80,  dy: -80, rot: 0,   flip: false },
             { id: 'T2', dx:  80,  dy: -80, rot: 0,   flip: false },
@@ -538,10 +556,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
             { id: 'Q',  dx:   0,  dy:   0, rot: 0,   flip: false },
             { id: 'P',  dx:   0,  dy: -80, rot: 0,   flip: false }
         ],
-
-        // ------------------------------------------------------
-        // BARCO — casco + vela
-        // ------------------------------------------------------
         boat: [
             { id: 'T1', dx: -100, dy: -60, rot: -45, flip: false },
             { id: 'T2', dx:  100, dy: -60, rot:  45, flip: false },
@@ -551,10 +565,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
             { id: 'Q',  dx:    0, dy:   0, rot:   0, flip: false },
             { id: 'P',  dx:    0, dy:  80, rot:   0, flip: false }
         ],
-
-        // ------------------------------------------------------
-        // CISNE — corpo + pescoço curvo
-        // ------------------------------------------------------
         swan: [
             { id: 'T1', dx: -40,  dy: -60, rot:   0, flip: false },
             { id: 'T2', dx: -40,  dy:  60, rot: 180, flip: false },
@@ -564,10 +574,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
             { id: 'Q',  dx: -80,  dy:   0, rot:   0, flip: false },
             { id: 'P',  dx:   0,  dy:   0, rot:   0, flip: false }
         ],
-
-        // ------------------------------------------------------
-        // CRUZ — quatro braços simétricos
-        // ------------------------------------------------------
         cross: [
             { id: 'T1', dx: -80, dy: -80, rot:   0, flip: false },
             { id: 'T2', dx: -80, dy:  80, rot:  90, flip: false },
@@ -595,23 +601,12 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         return [cos * px - sin * py + cx, sin * px + cos * py + cy];
     }
 
-    /**
-     * Transforma uma peça-base aplicando, na ordem:
-     *   1. flip horizontal (em relação ao centroide)
-     *   2. rotação em torno do centroide
-     *   3. translação dx, dy
-     */
     function transformarPeca(pecaBase, dx, dy, rot, flip) {
         const [cx, cy] = centroide(pecaBase.pontos);
         return pecaBase.pontos.map(p => {
             let q = [p[0], p[1]];
-            // Flip horizontal
-            if (flip) {
-                q = [2 * cx - q[0], q[1]];
-            }
-            // Rotação
+            if (flip) q = [2 * cx - q[0], q[1]];
             q = rotacionarPonto(q, cx, cy, rot);
-            // Translação
             return [q[0] + dx, q[1] + dy];
         });
     }
@@ -655,18 +650,57 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     const btnBackFloat = document.getElementById('btn-back-float');
 
     /* ============================================================
+       SONS SUTIS (Web Audio API — sem arquivos externos)
+       ============================================================ */
+    let audioCtx = null;
+    function tocarSom(tipo) {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (tipo === 'encaixe') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(990, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.10, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.18);
+            } else if (tipo === 'auto') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } else if (tipo === 'vitoria') {
+                [523, 659, 784, 1047].forEach((freq, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g); g.connect(audioCtx.destination);
+                    o.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+                    g.gain.setValueAtTime(0.09, audioCtx.currentTime + i * 0.1);
+                    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 0.25);
+                    o.start(audioCtx.currentTime + i * 0.1);
+                    o.stop(audioCtx.currentTime + i * 0.1 + 0.25);
+                });
+            }
+        } catch (_) { /* silencioso */ }
+    }
+
+    /* ============================================================
        RENDER
        ============================================================ */
     function desenharSilhueta() {
-        // A silhueta é o convex hull das peças na posição-alvo,
-        // mas como o tangram tem formas côncavas, usamos a união
-        // simples dos vértices + um polígono externo aproximado.
-        //
-        // Para cada puzzle, definimos manualmente o polígono externo.
         const silhuetas = {
             square: [[0,0], [320,0], [320,320], [0,320]],
-            // Aproximações externas para as formas não-quadradas:
-            // (usando o contorno visível da composição)
             house:  [[-80,-160], [160,-160], [240,-60], [240,240], [-80,240]],
             boat:   [[-160,-60], [0,-200], [160,-60], [200,80], [200,240], [-200,240], [-200,80]],
             swan:   [[-100,-100], [80,-160], [200,-100], [200,20], [100,20], [100,240], [-100,240]],
@@ -766,10 +800,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         verificarConclusao();
     }
 
-    /**
-     * Rotaciona a peça em torno do centroide ATUAL.
-     * Após rotação, ajusta dx, dy para que o centroide continue onde estava.
-     */
     function rotacionarSelecionada(delta) {
         if (!estado.selecionada) {
             infoInstrucao.textContent = '⚠️ Toque numa peça para selecioná-la primeiro.';
@@ -778,15 +808,12 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const peca = estado.pecas.find(p => p.id === estado.selecionada);
         if (!peca || peca.travada) return;
 
-        // Centroide atual
         const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip);
         const [cxAtual, cyAtual] = centroide(atual);
 
-        // Aplica rotação
         peca.rot = (peca.rot + delta) % 360;
         if (peca.rot < 0) peca.rot += 360;
 
-        // Recalcula posição para manter centroide
         const [cxBase, cyBase] = centroide(peca.base.pontos);
         peca.dx = cxAtual - cxBase;
         peca.dy = cyAtual - cyBase;
@@ -796,11 +823,6 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         verificarConclusao();
     }
 
-    /**
-     * FLIP — espelha a peça horizontalmente (em relação ao centroide).
-     * Apenas o paralelogramo beneficia oficialmente desta operação,
-     * mas permitimos em qualquer peça (as simétricas não mudam).
-     */
     function flipSelecionada() {
         if (!estado.selecionada) {
             infoInstrucao.textContent = '⚠️ Toque numa peça para selecioná-la primeiro.';
@@ -809,14 +831,11 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const peca = estado.pecas.find(p => p.id === estado.selecionada);
         if (!peca || peca.travada) return;
 
-        // Centroide atual
         const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip);
         const [cxAtual, cyAtual] = centroide(atual);
 
-        // Inverte flip
         peca.flip = !peca.flip;
 
-        // Recalcula posição
         const [cxBase, cyBase] = centroide(peca.base.pontos);
         peca.dx = cxAtual - cxBase;
         peca.dy = cyAtual - cyBase;
@@ -851,9 +870,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
                 return r;
             }
         }
-        if (diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT) {
-            return rotAlvo;
-        }
+        if (diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT) return rotAlvo;
         return null;
     }
 
@@ -875,13 +892,9 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const item = solucao.find(s => s.id === pecaId);
         if (!item) return;
 
-        // Verifica rotação
         const rotCompativel = rotacaoCompativel(peca.rot, item.rot);
         if (rotCompativel === null) return;
 
-        // Verifica flip (para peças não simétricas)
-        // O paralelogramo só encaixa se o flip corresponder.
-        // As outras peças são simétricas ou o flip não afeta o encaixe.
         if (peca.id === 'P' && peca.flip !== item.flip) return;
 
         const alvo = verticesAlvo(pecaId);
@@ -907,7 +920,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
             displayPecas.textContent = `${estado.colocadas}/7`;
             infoInstrucao.textContent = `✅ Peça encaixada! ${7 - estado.colocadas} restantes.`;
 
-            // Vibração curta em mobile (se suportado)
+            tocarSom('encaixe');
             if (navigator.vibrate) navigator.vibrate(40);
         }
     }
@@ -917,6 +930,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
             pararTimer();
             silhouette.classList.add('completed');
             infoInstrucao.textContent = `🎉 Parabéns! Concluiu em ${formatarTempo(estado.segundos)}.`;
+            tocarSom('vitoria');
             if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
         }
     }
@@ -1005,6 +1019,131 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     }
 
     /* ============================================================
+       ANIMAÇÃO — move uma peça suavemente até a posição-alvo
+       ============================================================ */
+    function moverPecaParaAlvo(peca, duracaoMs, aoFinal) {
+        const solucao = SOLUCOES[estado.desafio];
+        const item = solucao.find(s => s.id === peca.id);
+        if (!item) { if (aoFinal) aoFinal(); return; }
+
+        const dxIni = peca.dx, dyIni = peca.dy;
+        const rotIni = peca.rot;
+
+        let rotAlvo = item.rot;
+        let diff = rotAlvo - rotIni;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        rotAlvo = rotIni + diff;
+
+        const t0 = performance.now();
+        function animar(t) {
+            const prog = Math.min(1, (t - t0) / duracaoMs);
+            const e = 1 - Math.pow(1 - prog, 3);
+
+            peca.dx = dxIni + (item.dx - dxIni) * e;
+            peca.dy = dyIni + (item.dy - dyIni) * e;
+            peca.rot = rotIni + (rotAlvo - rotIni) * e;
+
+            renderizarPecas();
+
+            if (prog < 1) {
+                requestAnimationFrame(animar);
+            } else {
+                peca.dx = item.dx;
+                peca.dy = item.dy;
+                peca.rot = item.rot;
+                peca.flip = item.flip;
+                peca.travada = true;
+                estado.colocadas = estado.pecas.filter(p => p.travada).length;
+                displayPecas.textContent = `${estado.colocadas}/7`;
+                renderizarPecas();
+
+                const el = piecesLayer.querySelector(`[data-id="${peca.id}"]`);
+                if (el) {
+                    el.classList.add('solving');
+                    setTimeout(() => el.classList.remove('solving'), 700);
+                }
+
+                if (aoFinal) aoFinal();
+            }
+        }
+        requestAnimationFrame(animar);
+    }
+
+    /* ============================================================
+       DICA — resolve UMA peça
+       ============================================================ */
+    function darDica() {
+        const pendentes = estado.pecas.filter(p => !p.travada);
+        if (pendentes.length === 0) {
+            infoInstrucao.textContent = '🎉 Todas as peças já foram encaixadas!';
+            return;
+        }
+
+        const solucao = SOLUCOES[estado.desafio];
+        let melhor = null, melhorDist = Infinity;
+        for (const p of pendentes) {
+            const item = solucao.find(s => s.id === p.id);
+            if (!item) continue;
+            const d = Math.hypot(p.dx - item.dx, p.dy - item.dy);
+            if (d < melhorDist) { melhorDist = d; melhor = p; }
+        }
+
+        if (melhor) {
+            infoInstrucao.textContent = `💡 Dica: encaixando "${melhor.id}"...`;
+            moverPecaParaAlvo(melhor, 600, () => {
+                tocarSom('encaixe');
+                if (navigator.vibrate) navigator.vibrate(30);
+                infoInstrucao.textContent = `💡 "${melhor.id}" encaixada! ${7 - estado.colocadas} restantes.`;
+                verificarConclusao();
+            });
+        }
+    }
+
+    /* ============================================================
+       AUTO-RESOLVER
+       ============================================================ */
+    let autoEmProgresso = false;
+    function autoResolver() {
+        if (autoEmProgresso) return;
+        autoEmProgresso = true;
+
+        const pendentes = estado.pecas.filter(p => !p.travada);
+        if (pendentes.length === 0) {
+            infoInstrucao.textContent = '🎉 Já está resolvido!';
+            autoEmProgresso = false;
+            return;
+        }
+
+        infoInstrucao.textContent = '✨ A resolver...';
+        tocarSom('auto');
+
+        const solucao = SOLUCOES[estado.desafio];
+        const ordenadas = pendentes
+            .map(p => {
+                const item = solucao.find(s => s.id === p.id);
+                const dist = item ? Math.hypot(p.dx - item.dx, p.dy - item.dy) : Infinity;
+                return { p, dist };
+            })
+            .sort((a, b) => a.dist - b.dist)
+            .map(o => o.p);
+
+        ordenadas.forEach((peca, idx) => {
+            setTimeout(() => {
+                moverPecaParaAlvo(peca, 500, () => {
+                    tocarSom('encaixe');
+                    if (navigator.vibrate) navigator.vibrate(20);
+                    if (idx === ordenadas.length - 1) {
+                        infoInstrucao.textContent = '✨ Puzzle resolvido automaticamente!';
+                        verificarConclusao();
+                        autoEmProgresso = false;
+                    }
+                });
+            }, idx * 180);
+        });
+    }
+
+    /* ============================================================
        EVENTOS
        ============================================================ */
     selectDesafio.addEventListener('change', () => {
@@ -1017,6 +1156,8 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     btnRotateL.addEventListener('click', () => rotacionarSelecionada(-45));
     btnRotateR.addEventListener('click', () => rotacionarSelecionada(+45));
     btnFlip.addEventListener('click', flipSelecionada);
+    document.getElementById('btn-hint').addEventListener('click', darDica);
+    document.getElementById('btn-auto').addEventListener('click', autoResolver);
 
     boardWrapper.addEventListener('wheel', (e) => {
         if (!estado.selecionada) return;
@@ -1068,11 +1209,8 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
        ============================================================ */
     function atualizarBackFloat() {
         const scrolled = window.scrollY || document.documentElement.scrollTop || 0;
-        if (scrolled > 120) {
-            btnBackFloat.classList.add('visible');
-        } else {
-            btnBackFloat.classList.remove('visible');
-        }
+        if (scrolled > 120) btnBackFloat.classList.add('visible');
+        else btnBackFloat.classList.remove('visible');
     }
     window.addEventListener('scroll', atualizarBackFloat, { passive: true });
     atualizarBackFloat();
