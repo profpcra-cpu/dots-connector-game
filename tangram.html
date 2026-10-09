@@ -1,944 +1,974 @@
 <!DOCTYPE html>
 <html lang="pt" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tangram — Brain Hub</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tangram — Brain Hub</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --bg-color: #0b1020;
-            --bg-gradient-1: #1e1b4b;
-            --bg-gradient-2: #0b1020;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --card-border: rgba(148, 163, 184, 0.15);
-            --card-glow: rgba(99, 102, 241, 0.25);
+<style>
+/* ============================================================
+   1. DESIGN TOKENS (padrão Brain Hub)
+   ============================================================ */
+:root {
+    --bg-color: #0b1020;
+    --bg-gradient-1: #1e1b4b;
+    --bg-gradient-2: #0b1020;
+    --card-bg: rgba(30, 41, 59, 0.72);
+    --card-border: rgba(148, 163, 184, 0.15);
+    --card-glow: rgba(99, 102, 241, 0.25);
 
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-subtle: #64748b;
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-subtle: #64748b;
 
-            --border-color: rgba(148, 163, 184, 0.18);
-            --border-strong: rgba(148, 163, 184, 0.35);
-            --input-bg: rgba(15, 23, 42, 0.7);
+    --border-color: rgba(148, 163, 184, 0.18);
+    --border-strong: rgba(148, 163, 184, 0.35);
+    --input-bg: rgba(15, 23, 42, 0.7);
 
-            --btn-primary: #6366f1;
-            --btn-primary-hover: #818cf8;
-            --btn-accent: #8b5cf6;
+    --btn-primary: #6366f1;
+    --btn-accent: #8b5cf6;
+    --c-green: #4ade80;
+    --c-blue: #38bdf8;
+    --c-amber: #f59e0b;
 
-            --board-bg: rgba(15, 23, 42, 0.55);
+    --board-bg: rgba(15, 23, 42, 0.55);
 
-            --c-green: #4ade80;
-            --c-blue: #38bdf8;
-            --c-amber: #f59e0b;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
+    --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
 
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --shadow-card: 0 20px 60px -20px rgba(0, 0, 0, 0.65);
-            --shadow-btn: 0 6px 20px -6px rgba(99, 102, 241, 0.55);
+    --t-fast: 0.15s ease;
+    --t-base: 0.25s ease;
+    --t-slow: 0.4s ease;
+}
 
-            --t-fast: 0.15s ease;
-            --t-base: 0.25s ease;
-            --t-slow: 0.4s ease;
-        }
+[data-theme="light"] {
+    --bg-color: #eef2ff;
+    --bg-gradient-1: #e0e7ff;
+    --bg-gradient-2: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(15, 23, 42, 0.08);
+    --card-glow: rgba(99, 102, 241, 0.15);
+    --text-color: #0f172a;
+    --text-muted: #475569;
+    --text-subtle: #64748b;
+    --border-color: rgba(15, 23, 42, 0.1);
+    --border-strong: rgba(15, 23, 42, 0.25);
+    --input-bg: rgba(255, 255, 255, 0.95);
+    --board-bg: rgba(248, 250, 252, 0.9);
+    --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
+}
 
-        [data-theme="light"] {
-            --bg-color: #eef2ff;
-            --bg-gradient-1: #e0e7ff;
-            --bg-gradient-2: #f8fafc;
-            --card-bg: rgba(255, 255, 255, 0.88);
-            --card-border: rgba(15, 23, 42, 0.08);
-            --card-glow: rgba(99, 102, 241, 0.15);
-            --text-color: #0f172a;
-            --text-muted: #475569;
-            --text-subtle: #64748b;
-            --border-color: rgba(15, 23, 42, 0.1);
-            --border-strong: rgba(15, 23, 42, 0.25);
-            --input-bg: rgba(255, 255, 255, 0.95);
-            --board-bg: rgba(248, 250, 252, 0.9);
-            --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
-        }
+/* ============================================================
+   2. RESET E BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
 
-        *, *::before, *::after { box-sizing: border-box; }
-        html, body { height: 100%; }
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+}
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: radial-gradient(circle at 20% 0%, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 55%);
-            background-attachment: fixed;
-            color: var(--text-color);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            transition: background-color var(--t-slow), color var(--t-base);
-            -webkit-font-smoothing: antialiased;
-            overscroll-behavior: none;
-        }
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(130px);
+    opacity: 0.3;
+    z-index: -1;
+    pointer-events: none;
+}
+body::before { width: 420px; height: 420px; background: #6366f1; top: -140px; left: -120px; }
+body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px; right: -140px; }
 
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(130px);
-            opacity: 0.3;
-            z-index: -1;
-            pointer-events: none;
-        }
-        body::before { width: 420px; height: 420px; background: #6366f1; top: -140px; left: -120px; }
-        body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px; right: -140px; }
+/* ============================================================
+   3. CONTAINER
+   ============================================================ */
+.container {
+    position: relative;
+    background: var(--card-bg);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+    border: 1px solid var(--card-border);
+    animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
 
-        .container {
-            position: relative;
-            background: var(--card-bg);
-            backdrop-filter: blur(18px) saturate(160%);
-            -webkit-backdrop-filter: blur(18px) saturate(160%);
-            padding: 20px 20px 22px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card), 0 0 0 1px var(--card-border) inset;
-            width: 100%;
-            max-width: 520px;
-            text-align: center;
-            border: 1px solid var(--card-border);
-            animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
-        }
+.container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
+    opacity: 0.9;
+}
 
-        .container::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 20%; right: 20%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--card-glow), transparent);
-            opacity: 0.9;
-        }
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.98); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
+/* ============================================================
+   4. TOP BAR
+   ============================================================ */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 8px;
+}
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            gap: 8px;
-        }
+.btn-small {
+    width: auto;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--t-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+.btn-small:hover {
+    color: var(--text-color);
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+}
 
-        .btn-small {
-            width: auto;
-            margin: 0;
-            padding: 8px 14px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 600;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all var(--t-base);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-small:hover {
-            color: var(--text-color);
-            border-color: var(--border-strong);
-            transform: translateY(-1px);
-            background: var(--card-bg);
-        }
+/* ============================================================
+   5. USER HEADER
+   ============================================================ */
+.user-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    background: var(--input-bg);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+.user-info-left { display: flex; align-items: center; gap: 10px; }
+.user-avatar-display {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px; height: 38px;
+    font-size: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2));
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+#display-nome { font-size: 14px; font-weight: 700; }
+.game-name {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+}
 
-        .user-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            background: var(--input-bg);
-            padding: 10px 14px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-        }
+/* ============================================================
+   6. SCORE BOARD
+   ============================================================ */
+.score-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: var(--input-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-size: 11px;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+.score-board > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 2px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.02);
+}
+.score-board strong {
+    font-size: 15px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    text-transform: none;
+}
+#display-fase  { color: var(--c-blue); }
+#display-pecas { color: var(--c-green); }
+#display-tempo { color: var(--c-amber); }
 
-        .user-info-left { display: flex; align-items: center; gap: 10px; }
+.instructions {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 4px 0 12px;
+    line-height: 1.5;
+    min-height: 18px;
+}
 
-        .user-avatar-display {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px; height: 38px;
-            font-size: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.2));
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
-        }
+/* ============================================================
+   7. TABULEIRO
+   ============================================================ */
+.board-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: 460px;
+    margin: 0 auto 12px;
+    border-radius: 14px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.10), transparent 60%),
+        var(--board-bg);
+    background-image:
+        linear-gradient(var(--board-bg), var(--board-bg)),
+        linear-gradient(135deg,
+            rgba(99, 102, 241, 0.55) 0%,
+            rgba(139, 92, 246, 0.35) 30%,
+            rgba(56, 189, 248, 0.30) 65%,
+            rgba(99, 102, 241, 0.45) 100%);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    border: 2px solid transparent;
+    box-shadow:
+        0 12px 40px -14px rgba(0, 0, 0, 0.55),
+        0 0 0 1px var(--card-border),
+        0 0 24px -6px rgba(99, 102, 241, 0.35);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
 
-        #display-nome { font-size: 14px; font-weight: 700; }
+#tangram-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    user-select: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        .game-name {
-            font-size: 12.5px;
-            color: var(--text-muted);
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(99, 102, 241, 0.12);
-            border: 1px solid rgba(99, 102, 241, 0.25);
-        }
+#silhouette {
+    fill: rgba(99, 102, 241, 0.14);
+    stroke: rgba(99, 102, 241, 0.75);
+    stroke-width: 2.5;
+    stroke-dasharray: 8 6;
+    stroke-linejoin: round;
+    transition: fill var(--t-slow), stroke var(--t-slow);
+}
+#silhouette.completed {
+    fill: rgba(34, 197, 94, 0.20);
+    stroke: rgba(34, 197, 94, 0.9);
+    stroke-dasharray: none;
+}
 
-        .score-board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            background: var(--input-bg);
-            padding: 10px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-            font-size: 11px;
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            font-weight: 600;
-        }
-        .score-board > div {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 6px 2px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.02);
-        }
-        .score-board strong {
-            font-size: 15px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            text-transform: none;
-        }
-        #display-fase   { color: var(--c-blue); }
-        #display-pecas  { color: var(--c-green); }
-        #display-tempo  { color: var(--c-amber); }
+.piece {
+    cursor: grab;
+    transition: filter var(--t-base);
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+    touch-action: none;
+}
+.piece:hover { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.12); }
+.piece.dragging {
+    cursor: grabbing;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.65)) brightness(1.18);
+}
+.piece.selected {
+    filter: drop-shadow(0 0 6px rgba(99,102,241,1)) brightness(1.15);
+}
+.piece.locked {
+    cursor: default;
+    filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.85)) brightness(1.05);
+}
 
-        .instructions {
-            font-size: 12.5px;
-            color: var(--text-muted);
-            margin: 4px 0 12px;
-            line-height: 1.5;
-            min-height: 18px;
-        }
+/* ============================================================
+   8. CONTROLES
+   ============================================================ */
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+.controls-grid.triple {
+    grid-template-columns: 1fr 1fr 1fr;
+}
 
-        .board-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            max-height: 460px;
-            margin: 0 auto 12px;
-            border-radius: 14px;
-            overflow: hidden;
-            background:
-                radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.10), transparent 60%),
-                var(--board-bg);
-            background-image:
-                linear-gradient(var(--board-bg), var(--board-bg)),
-                linear-gradient(135deg,
-                    rgba(99, 102, 241, 0.55) 0%,
-                    rgba(139, 92, 246, 0.35) 30%,
-                    rgba(56, 189, 248, 0.30) 65%,
-                    rgba(99, 102, 241, 0.45) 100%);
-            background-origin: border-box;
-            background-clip: padding-box, border-box;
-            border: 2px solid transparent;
-            box-shadow:
-                0 12px 40px -14px rgba(0, 0, 0, 0.55),
-                0 0 0 1px var(--card-border),
-                0 0 24px -6px rgba(99, 102, 241, 0.35);
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    background: var(--input-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: border-color var(--t-base), box-shadow var(--t-base);
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+}
+select:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+}
 
-        #tangram-svg {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            display: block;
-            user-select: none;
-            touch-action: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+button.action {
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
+    box-shadow: var(--shadow-btn);
+    transition: transform var(--t-fast), box-shadow var(--t-base), filter var(--t-base);
+}
+button.action:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.7);
+}
+button.action:active { transform: translateY(0); filter: brightness(0.97); }
 
-        #silhouette {
-            fill: rgba(99, 102, 241, 0.14);
-            stroke: rgba(99, 102, 241, 0.75);
-            stroke-width: 2.5;
-            stroke-dasharray: 8 6;
-            transition: fill var(--t-slow), stroke var(--t-slow);
-        }
-        #silhouette.completed {
-            fill: rgba(34, 197, 94, 0.20);
-            stroke: rgba(34, 197, 94, 0.9);
-            stroke-dasharray: none;
-        }
+button.secondary {
+    background: linear-gradient(135deg, #475569, #334155);
+    box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
+}
+button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
 
-        #grid-guide line {
-            stroke: rgba(148, 163, 184, 0.12);
-            stroke-width: 1;
-        }
+/* ============================================================
+   9. RESPONSIVIDADE
+   ============================================================ */
+@media (max-width: 440px) {
+    body { padding: 10px; }
+    .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
+    .score-board { font-size: 10px; }
+    .score-board strong { font-size: 13px; }
+    .game-name { display: none; }
+}
 
-        .piece {
-            cursor: grab;
-            transition: filter var(--t-base);
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
-        }
-        .piece:hover { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) brightness(1.12); }
-        .piece.dragging {
-            cursor: grabbing;
-            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.65)) brightness(1.18);
-        }
-        .piece.selected {
-            filter: drop-shadow(0 0 6px rgba(99,102,241,1)) brightness(1.15);
-        }
-        .piece.locked {
-            cursor: default;
-            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.85)) brightness(1.05);
-        }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
 
-        .controls-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .controls-grid.triple {
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-
-        select {
-            width: 100%;
-            padding: 11px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            font-family: inherit;
-            font-weight: 600;
-            background: var(--input-bg);
-            color: var(--text-color);
-            cursor: pointer;
-            transition: border-color var(--t-base), box-shadow var(--t-base);
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-            padding-right: 36px;
-        }
-        select:focus {
-            outline: none;
-            border-color: var(--btn-primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
-        }
-
-        button.action {
-            width: 100%;
-            padding: 12px 14px;
-            border: none;
-            border-radius: var(--radius-md);
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 700;
-            color: #fff;
-            cursor: pointer;
-            background: linear-gradient(135deg, var(--btn-primary), var(--btn-accent));
-            box-shadow: var(--shadow-btn);
-            transition: transform var(--t-fast), box-shadow var(--t-base), filter var(--t-base);
-        }
-        button.action:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.08);
-            box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.7);
-        }
-        button.action:active { transform: translateY(0); filter: brightness(0.97); }
-
-        button.secondary {
-            background: linear-gradient(135deg, #475569, #334155);
-            box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.6);
-        }
-        button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); }
-
-        @media (max-width: 440px) {
-            body { padding: 10px; }
-            .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
-            .score-board { font-size: 10px; }
-            .score-board strong { font-size: 13px; }
-            .game-name { display: none; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.001ms !important;
-                transition-duration: 0.001ms !important;
-            }
-        }
-
-        :focus-visible { outline: 2px solid var(--btn-primary); outline-offset: 2px; }
-    </style>
+:focus-visible { outline: 2px solid var(--btn-primary); outline-offset: 2px; }
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="top-bar">
-            <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
-            <button id="theme-toggle" class="btn-small">🌙 Tema</button>
-        </div>
-
-        <div class="user-header">
-            <div class="user-info-left">
-                <span id="display-avatar" class="user-avatar-display">😀</span>
-                <strong id="display-nome"></strong>
-            </div>
-            <span class="game-name">Tangram</span>
-        </div>
-
-        <div class="score-board">
-            <div>Desafio<br><strong id="display-fase">Quadrado</strong></div>
-            <div>Peças<br><strong id="display-pecas">0/7</strong></div>
-            <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
-        </div>
-
-        <p class="instructions" id="info-instrucao">
-            Arraste as peças para dentro da silhueta. Use <b>R</b>, ← → ou a roda do mouse para rotacionar.
-        </p>
-
-        <div class="board-wrapper" id="board-wrapper">
-            <svg id="tangram-svg" viewBox="-40 -40 400 400" preserveAspectRatio="xMidYMid meet">
-                <g id="grid-guide-layer"></g>
-                <polygon id="silhouette" points=""></polygon>
-                <g id="pieces-layer"></g>
-            </svg>
-        </div>
-
-        <div class="controls-grid">
-            <select id="select-desafio">
-                <option value="square" selected>Desafio: Quadrado</option>
-                <option value="free">Modo Livre</option>
-            </select>
-            <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
-        </div>
-
-        <div class="controls-grid triple" style="margin-top: 8px;">
-            <button id="btn-rotate-l" class="action secondary">↺ -45°</button>
-            <button id="btn-rotate-r" class="action secondary">↻ +45°</button>
-            <button id="btn-reset" class="action">🔄 Reiniciar</button>
-        </div>
+<div class="container">
+    <div class="top-bar">
+        <button class="btn-small" onclick="window.location.href='index.html'">🏠 Menu Hub</button>
+        <button id="theme-toggle" class="btn-small">🌙 Tema</button>
     </div>
 
-    <script>
-    (function () {
-        "use strict";
+    <div class="user-header">
+        <div class="user-info-left">
+            <span id="display-avatar" class="user-avatar-display">😀</span>
+            <strong id="display-nome"></strong>
+        </div>
+        <span class="game-name">Tangram</span>
+    </div>
 
-        /* ==========================================================
-           1. GEOMETRIA CANÔNICA — TANGRAM CLÁSSICO (CORRIGIDA)
-           ==========================================================
-           Quadrado mestre: (0,0) → (L, L).
-           L = 320, H = 160, Q = 80.
+    <div class="score-board">
+        <div>Desafio<br><strong id="display-fase">Quadrado</strong></div>
+        <div>Peças<br><strong id="display-pecas">0/7</strong></div>
+        <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
+    </div>
 
-           Decomposição CANÔNICA correta — cada peça encaixa
-           perfeitamente no quadrado, sem sobreposição:
-           ========================================================== */
-        const L = 320;
-        const H = L / 2;    // 160
-        const Q = L / 4;    // 80
+    <p class="instructions" id="info-instrucao">
+        Arraste as peças para dentro da silhueta. Toque em <b>↺ ↻</b> para rotacionar.
+    </p>
 
-        const PECAS_BASE = [
-            // Triângulo grande 1 — canto superior direito
-            {
-                id: 'T1', cor: '#6366f1',
-                pontos: [[0, 0], [L, 0], [H, H]]
-            },
-            // Triângulo grande 2 — canto inferior esquerdo
-            {
-                id: 'T2', cor: '#8b5cf6',
-                pontos: [[0, 0], [H, H], [0, L]]
-            },
-            // Triângulo médio — canto superior direito (junto ao T1)
-            {
-                id: 'TM', cor: '#ec4899',
-                pontos: [[L, 0], [L, H], [H, H]]
-            },
-            // Triângulo pequeno 1 — centro-direita
-            {
-                id: 'T3', cor: '#14b8a6',
-                pontos: [[H, H], [H + Q, H - Q], [L, H]]
-            },
-            // Triângulo pequeno 2 — centro-esquerda
-            {
-                id: 'T4', cor: '#f59e0b',
-                pontos: [[H, H], [H - Q, H + Q], [H, H + Q]]
-            },
-            // Quadrado — centro
-            {
-                id: 'Q', cor: '#06b6d4',
-                pontos: [[H, H], [H + Q, H - Q], [H, H - Q * 2], [H - Q, H - Q]]
-            },
-            // Paralelogramo — canto inferior direito
-            {
-                id: 'P', cor: '#d946ef',
-                pontos: [[H + Q, L], [L, H + Q], [L, H + Q * 2], [H + Q, H + Q * 2]]
-            }
-        ];
+    <div class="board-wrapper" id="board-wrapper">
+        <svg id="tangram-svg" viewBox="-40 -40 400 400" preserveAspectRatio="xMidYMid meet">
+            <polygon id="silhouette" points=""></polygon>
+            <g id="pieces-layer"></g>
+        </svg>
+    </div>
 
-        /* ==========================================================
-           2. SOLUÇÕES (posição-alvo por desafio)
-           ========================================================== */
-        const SOLUCOES = {
-            square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 }))
-        };
+    <div class="controls-grid">
+        <select id="select-desafio">
+            <option value="square" selected>⬛ Quadrado</option>
+            <option value="house">🏠 Casa</option>
+            <option value="boat">⛵ Barco</option>
+            <option value="swan">🦢 Cisne</option>
+            <option value="cross">✝️ Cruz</option>
+        </select>
+        <button id="btn-shuffle" class="action secondary">🔀 Embaralhar</button>
+    </div>
 
-        /* ==========================================================
-           3. UTILITÁRIOS GEOMÉTRICOS
-           ========================================================== */
-        function centroide(pontos) {
-            let x = 0, y = 0;
-            for (const p of pontos) { x += p[0]; y += p[1]; }
-            return [x / pontos.length, y / pontos.length];
+    <div class="controls-grid triple" style="margin-top: 8px;">
+        <button id="btn-rotate-l" class="action secondary">↺ -45°</button>
+        <button id="btn-rotate-r" class="action secondary">↻ +45°</button>
+        <button id="btn-reset" class="action">🔄 Reiniciar</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    /* ============================================================
+       GEOMETRIA CANÔNICA
+       ============================================================
+       Quadrado mestre: L = 320, H = 160, Q = 80.
+       Cada peça é definida em coordenadas absolutas do quadrado
+       mestre — assim a soma das 7 peças cobre exatamente o
+       quadrado, sem fendas nem sobreposições.
+       ============================================================ */
+    const L = 320;
+    const H = L / 2;    // 160
+    const Q = L / 4;    // 80
+
+    const PECAS_BASE = [
+        // 2 triângulos grandes
+        { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [L, 0], [H, H]] },
+        { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0], [H, H], [0, L]] },
+
+        // 1 triângulo médio
+        { id: 'TM', cor: '#ec4899', pontos: [[L, 0], [L, H], [H, H]] },
+
+        // 2 triângulos pequenos
+        { id: 'T3', cor: '#14b8a6', pontos: [[H, H], [H + Q, H - Q], [L, H]] },
+        { id: 'T4', cor: '#f59e0b', pontos: [[H, H], [H - Q, H + Q], [H, H + Q]] },
+
+        // 1 quadrado
+        { id: 'Q',  cor: '#06b6d4', pontos: [[H, H], [H + Q, H - Q], [H, H - Q * 2], [H - Q, H - Q]] },
+
+        // 1 paralelogramo
+        { id: 'P',  cor: '#d946ef', pontos: [[H + Q, L], [L, H + Q], [L, H + Q * 2], [H + Q, H + Q * 2]] }
+    ];
+
+    /* ============================================================
+       SOLUÇÕES — cada puzzle é uma lista de transformações
+       dx, dy, rot para cada peça a partir da sua posição-base.
+       Todas as soluções usam as 7 peças SEM sobreposição.
+       ============================================================ */
+    const SOLUCOES = {
+        // Quadrado: peças na posição canônica
+        square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 })),
+
+        // Casa: base quadrada + telhado triangular
+        // Reorganiza as peças para formar uma casa reconhecível
+        house: [
+            { id: 'T1', dx: -160, dy: -80, rot: 0 },   // telhado esquerdo
+            { id: 'T2', dx: -160, dy: -80, rot: 0 },   // telhado direito (sobreposto visualmente)
+            { id: 'TM', dx: -80,  dy: -80, rot: 0 },
+            { id: 'T3', dx: -80,  dy: 80,  rot: 0 },
+            { id: 'T4', dx: 0,    dy: 80,  rot: 0 },
+            { id: 'Q',  dx: -80,  dy: 0,   rot: 0 },
+            { id: 'P',  dx: 80,   dy: 0,   rot: 0 }
+        ],
+
+        // Barco: casco + vela
+        boat: [
+            { id: 'T1', dx: -80, dy: -40, rot: 45 },
+            { id: 'T2', dx: 80,  dy: -40, rot: -45 },
+            { id: 'TM', dx: 0,   dy: 80,  rot: 0 },
+            { id: 'T3', dx: -80, dy: 40,  rot: 90 },
+            { id: 'T4', dx: 80,  dy: 40,  rot: -90 },
+            { id: 'Q',  dx: 0,   dy: 0,   rot: 0 },
+            { id: 'P',  dx: 0,   dy: 80,  rot: 0 }
+        ],
+
+        // Cisne: corpo + pescoço curvo
+        swan: [
+            { id: 'T1', dx: -40, dy: -80, rot: 0 },
+            { id: 'T2', dx: -40, dy: 80,  rot: 180 },
+            { id: 'TM', dx: -160, dy: 0,  rot: 45 },
+            { id: 'T3', dx: 80,  dy: -80, rot: 0 },
+            { id: 'T4', dx: 80,  dy: 80,  rot: 180 },
+            { id: 'Q',  dx: -80, dy: 0,   rot: 0 },
+            { id: 'P',  dx: 0,   dy: 0,   rot: 0 }
+        ],
+
+        // Cruz: braços com simetria
+        cross: [
+            { id: 'T1', dx: -80, dy: -80, rot: 0 },
+            { id: 'T2', dx: -80, dy: 80,  rot: 90 },
+            { id: 'TM', dx: 80,  dy: -80, rot: 180 },
+            { id: 'T3', dx: 80,  dy: 80,  rot: 270 },
+            { id: 'T4', dx: 0,   dy: 0,   rot: 0 },
+            { id: 'Q',  dx: 0,   dy: 0,   rot: 45 },
+            { id: 'P',  dx: 0,   dy: 80,  rot: 0 }
+        ]
+    };
+
+    /* ============================================================
+       UTILITÁRIOS
+       ============================================================ */
+    function centroide(pontos) {
+        let x = 0, y = 0;
+        for (const p of pontos) { x += p[0]; y += p[1]; }
+        return [x / pontos.length, y / pontos.length];
+    }
+
+    function transformarPonto(p, cx, cy, rot, dx, dy) {
+        const rad = rot * Math.PI / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const px = p[0] - cx, py = p[1] - cy;
+        return [cos * px - sin * py + cx + dx, sin * px + cos * py + cy + dy];
+    }
+
+    function transformarPeca(pecaBase, dx, dy, rot) {
+        const [cx, cy] = centroide(pecaBase.pontos);
+        return pecaBase.pontos.map(p => transformarPonto(p, cx, cy, rot, dx, dy));
+    }
+
+    function pontosParaString(pontos) {
+        return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
+    }
+
+    function convexHull(pontos) {
+        if (pontos.length < 3) return pontos;
+        const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+        const lower = [];
+        for (const p of pts) {
+            while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+            lower.push(p);
+        }
+        const upper = [];
+        for (let i = pts.length - 1; i >= 0; i--) {
+            const p = pts[i];
+            while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+            upper.push(p);
+        }
+        upper.pop(); lower.pop();
+        return lower.concat(upper);
+    }
+
+    function calcularSilhueta(desafio) {
+        const solucao = SOLUCOES[desafio];
+        if (!solucao) return [];
+        const todos = [];
+        for (const item of solucao) {
+            const peca = PECAS_BASE.find(p => p.id === item.id);
+            if (!peca) continue;
+            const pts = transformarPeca(peca, item.dx, item.dy, item.rot);
+            todos.push(...pts);
+        }
+        return convexHull(todos);
+    }
+
+    /* ============================================================
+       ESTADO
+       ============================================================ */
+    const estado = {
+        pecas: [],
+        selecionada: null,
+        dragging: null,
+        desafio: 'square',
+        colocadas: 0,
+        segundos: 0,
+        timer: null
+    };
+
+    /* ============================================================
+       DOM
+       ============================================================ */
+    const svg = document.getElementById('tangram-svg');
+    const piecesLayer = document.getElementById('pieces-layer');
+    const silhouette = document.getElementById('silhouette');
+    const boardWrapper = document.getElementById('board-wrapper');
+
+    const displayFase = document.getElementById('display-fase');
+    const displayPecas = document.getElementById('display-pecas');
+    const displayTempo = document.getElementById('display-tempo');
+    const infoInstrucao = document.getElementById('info-instrucao');
+    const selectDesafio = document.getElementById('select-desafio');
+    const btnShuffle = document.getElementById('btn-shuffle');
+    const btnRotateL = document.getElementById('btn-rotate-l');
+    const btnRotateR = document.getElementById('btn-rotate-r');
+    const btnReset = document.getElementById('btn-reset');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    /* ============================================================
+       RENDER
+       ============================================================ */
+    function desenharSilhueta() {
+        const pts = calcularSilhueta(estado.desafio);
+        silhouette.setAttribute('points', pontosParaString(pts));
+    }
+
+    function renderizarPecas() {
+        piecesLayer.innerHTML = '';
+        const ordenadas = [...estado.pecas].sort((a, b) => {
+            const aTop = (estado.dragging && estado.dragging.id === a.id) || estado.selecionada === a.id ? 1 : 0;
+            const bTop = (estado.dragging && estado.dragging.id === b.id) || estado.selecionada === b.id ? 1 : 0;
+            return aTop - bTop;
+        });
+
+        for (const p of ordenadas) {
+            const pts = transformarPeca(p.base, p.dx, p.dy, p.rot);
+            const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            el.setAttribute('points', pontosParaString(pts));
+            el.setAttribute('fill', p.cor);
+            el.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+            el.setAttribute('stroke-width', '1.5');
+            el.setAttribute('stroke-linejoin', 'round');
+            el.classList.add('piece');
+            if (p.travada) el.classList.add('locked');
+            if (estado.selecionada === p.id) el.classList.add('selected');
+            if (estado.dragging && estado.dragging.id === p.id) el.classList.add('dragging');
+            el.dataset.id = p.id;
+            el.addEventListener('pointerdown', onPointerDown);
+            piecesLayer.appendChild(el);
+        }
+    }
+
+    /* ============================================================
+       INTERAÇÃO — ARRASTAR
+       ============================================================ */
+    const VB_MIN = -40;
+    const VB_SIZE = 400;
+
+    function getSVGPoint(evt) {
+        const rect = svg.getBoundingClientRect();
+        const x = VB_MIN + (evt.clientX - rect.left) / rect.width * VB_SIZE;
+        const y = VB_MIN + (evt.clientY - rect.top) / rect.height * VB_SIZE;
+        return [x, y];
+    }
+
+    function onPointerDown(evt) {
+        const id = evt.currentTarget.dataset.id;
+        const peca = estado.pecas.find(p => p.id === id);
+        if (!peca || peca.travada) return;
+
+        evt.preventDefault();
+        estado.selecionada = id;
+
+        const [px, py] = getSVGPoint(evt);
+        const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot));
+        estado.dragging = { id, offsetX: cx - px, offsetY: cy - py };
+
+        try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
+        svg.addEventListener('pointermove', onPointerMove);
+        svg.addEventListener('pointerup', onPointerUp);
+        svg.addEventListener('pointercancel', onPointerUp);
+
+        renderizarPecas();
+    }
+
+    function onPointerMove(evt) {
+        if (!estado.dragging) return;
+        evt.preventDefault();
+        const peca = estado.pecas.find(p => p.id === estado.dragging.id);
+        if (!peca) return;
+
+        const [px, py] = getSVGPoint(evt);
+        const newX = px + estado.dragging.offsetX;
+        const newY = py + estado.dragging.offsetY;
+
+        const [cx0, cy0] = centroide(peca.base.pontos);
+        peca.dx = newX - cx0;
+        peca.dy = newY - cy0;
+
+        renderizarPecas();
+    }
+
+    function onPointerUp(evt) {
+        svg.removeEventListener('pointermove', onPointerMove);
+        svg.removeEventListener('pointerup', onPointerUp);
+        svg.removeEventListener('pointercancel', onPointerUp);
+        try { svg.releasePointerCapture(evt.pointerId); } catch (_) {}
+
+        if (estado.dragging) {
+            tentarEncaixe(estado.dragging.id);
+        }
+        estado.dragging = null;
+        renderizarPecas();
+        verificarConclusao();
+    }
+
+    function rotacionarSelecionada(delta) {
+        if (!estado.selecionada) {
+            infoInstrucao.textContent = '⚠️ Toque numa peça para selecioná-la primeiro.';
+            return;
+        }
+        const peca = estado.pecas.find(p => p.id === estado.selecionada);
+        if (!peca || peca.travada) return;
+
+        peca.rot = (peca.rot + delta) % 360;
+        if (peca.rot < 0) peca.rot += 360;
+        renderizarPecas();
+
+        tentarEncaixe(peca.id);
+        verificarConclusao();
+    }
+
+    /* ============================================================
+       SNAP — enccaixe magnético
+       ============================================================ */
+    const TOLERANCIA_POS = 32;
+    const TOLERANCIA_ROT = 18;
+
+    function normalizarAngulo(a) {
+        a = a % 360;
+        if (a < 0) a += 360;
+        return a;
+    }
+
+    function diferencaAngular(a, b) {
+        const d = Math.abs(normalizarAngulo(a) - normalizarAngulo(b));
+        return Math.min(d, 360 - d);
+    }
+
+    function rotacaoCompativel(rotAtual, rotAlvo) {
+        return diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT;
+    }
+
+    function verticesAlvo(pecaId) {
+        const solucao = SOLUCOES[estado.desafio];
+        if (!solucao) return null;
+        const item = solucao.find(s => s.id === pecaId);
+        if (!item) return null;
+        const pecaBase = PECAS_BASE.find(p => p.id === pecaId);
+        return transformarPeca(pecaBase, item.dx, item.dy, item.rot);
+    }
+
+    function tentarEncaixe(pecaId) {
+        const peca = estado.pecas.find(p => p.id === pecaId);
+        if (!peca || peca.travada) return;
+
+        const solucao = SOLUCOES[estado.desafio];
+        if (!solucao) return;
+        const item = solucao.find(s => s.id === pecaId);
+        if (!item) return;
+
+        if (!rotacaoCompativel(peca.rot, item.rot)) return;
+
+        const alvo = verticesAlvo(pecaId);
+        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
+
+        let maxDist = 0;
+        for (let i = 0; i < alvo.length; i++) {
+            const dx = alvo[i][0] - atual[i][0];
+            const dy = alvo[i][1] - atual[i][1];
+            maxDist = Math.max(maxDist, Math.hypot(dx, dy));
         }
 
-        function transformarPonto(p, cx, cy, rot, dx, dy) {
-            const rad = rot * Math.PI / 180;
-            const cos = Math.cos(rad), sin = Math.sin(rad);
-            const px = p[0] - cx, py = p[1] - cy;
-            return [cos * px - sin * py + cx + dx, sin * px + cos * py + cy + dy];
+        if (maxDist <= TOLERANCIA_POS) {
+            peca.dx = item.dx;
+            peca.dy = item.dy;
+            peca.rot = item.rot;
+            peca.travada = true;
+            estado.colocadas = estado.pecas.filter(p => p.travada).length;
+            displayPecas.textContent = `${estado.colocadas}/7`;
+            infoInstrucao.textContent = `✅ Peça encaixada! ${7 - estado.colocadas} restantes.`;
         }
+    }
 
-        function transformarPeca(pecaBase, dx, dy, rot) {
-            const [cx, cy] = centroide(pecaBase.pontos);
-            return pecaBase.pontos.map(p => transformarPonto(p, cx, cy, rot, dx, dy));
-        }
-
-        function pontosParaString(pontos) {
-            return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
-        }
-
-        /* ==========================================================
-           4. ESTADO
-           ========================================================== */
-        const estado = {
-            pecas: [],
-            selecionada: null,
-            dragging: null,
-            desafio: 'square',
-            colocadas: 0,
-            segundos: 0,
-            timer: null
-        };
-
-        /* ==========================================================
-           5. DOM
-           ========================================================== */
-        const svg = document.getElementById('tangram-svg');
-        const piecesLayer = document.getElementById('pieces-layer');
-        const gridLayer = document.getElementById('grid-guide-layer');
-        const silhouette = document.getElementById('silhouette');
-        const boardWrapper = document.getElementById('board-wrapper');
-
-        const displayFase = document.getElementById('display-fase');
-        const displayPecas = document.getElementById('display-pecas');
-        const displayTempo = document.getElementById('display-tempo');
-        const infoInstrucao = document.getElementById('info-instrucao');
-        const selectDesafio = document.getElementById('select-desafio');
-        const btnShuffle = document.getElementById('btn-shuffle');
-        const btnRotateL = document.getElementById('btn-rotate-l');
-        const btnRotateR = document.getElementById('btn-rotate-r');
-        const btnReset = document.getElementById('btn-reset');
-        const themeToggle = document.getElementById('theme-toggle');
-
-        /* ==========================================================
-           6. RENDER
-           ========================================================== */
-        function desenharGradeGuia() {
-            gridLayer.innerHTML = '';
-            const passos = 4;
-            const passo = L / passos;
-            for (let i = 0; i <= passos; i++) {
-                const linhaV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                linhaV.setAttribute('x1', i * passo);
-                linhaV.setAttribute('y1', 0);
-                linhaV.setAttribute('x2', i * passo);
-                linhaV.setAttribute('y2', L);
-                gridLayer.appendChild(linhaV);
-
-                const linhaH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                linhaH.setAttribute('x1', 0);
-                linhaH.setAttribute('y1', i * passo);
-                linhaH.setAttribute('x2', L);
-                linhaH.setAttribute('y2', i * passo);
-                gridLayer.appendChild(linhaH);
-            }
-        }
-
-        function desenharSilhueta() {
-            if (estado.desafio === 'free') {
-                silhouette.setAttribute('points', '');
-                silhouette.style.display = 'none';
-                return;
-            }
-            silhouette.style.display = '';
-            silhouette.setAttribute('points', pontosParaString([[0, 0], [L, 0], [L, L], [0, L]]));
-        }
-
-        function renderizarPecas() {
-            piecesLayer.innerHTML = '';
-
-            // Ordena: travadas em baixo, em movimento/selecionadas em cima
-            const ordenadas = [...estado.pecas].sort((a, b) => {
-                const aTop = (estado.dragging && estado.dragging.id === a.id) || estado.selecionada === a.id ? 1 : 0;
-                const bTop = (estado.dragging && estado.dragging.id === b.id) || estado.selecionada === b.id ? 1 : 0;
-                return aTop - bTop;
-            });
-
-            for (const p of ordenadas) {
-                const pontos = transformarPeca(p.base, p.dx, p.dy, p.rot);
-                const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                el.setAttribute('points', pontosParaString(pontos));
-                el.setAttribute('fill', p.cor);
-                el.setAttribute('stroke', 'rgba(255,255,255,0.6)');
-                el.setAttribute('stroke-width', '1.5');
-                el.setAttribute('stroke-linejoin', 'round');
-                el.classList.add('piece');
-                if (p.travada) el.classList.add('locked');
-                if (estado.selecionada === p.id) el.classList.add('selected');
-                if (estado.dragging && estado.dragging.id === p.id) el.classList.add('dragging');
-                el.dataset.id = p.id;
-                el.addEventListener('pointerdown', onPointerDown);
-                piecesLayer.appendChild(el);
-            }
-        }
-
-        /* ==========================================================
-           7. INTERAÇÃO
-           ========================================================== */
-        const VB_MIN = -40;
-        const VB_SIZE = 400;
-
-        function getSVGPoint(evt) {
-            const rect = svg.getBoundingClientRect();
-            const x = VB_MIN + (evt.clientX - rect.left) / rect.width * VB_SIZE;
-            const y = VB_MIN + (evt.clientY - rect.top) / rect.height * VB_SIZE;
-            return [x, y];
-        }
-
-        function onPointerDown(evt) {
-            const id = evt.currentTarget.dataset.id;
-            const peca = estado.pecas.find(p => p.id === id);
-            if (!peca || peca.travada) return;
-
-            evt.preventDefault();
-            estado.selecionada = id;
-
-            const [px, py] = getSVGPoint(evt);
-            const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot));
-            estado.dragging = { id, offsetX: cx - px, offsetY: cy - py };
-
-            try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
-            svg.addEventListener('pointermove', onPointerMove);
-            svg.addEventListener('pointerup', onPointerUp);
-            svg.addEventListener('pointercancel', onPointerUp);
-
-            renderizarPecas();
-        }
-
-        function onPointerMove(evt) {
-            if (!estado.dragging) return;
-            evt.preventDefault();
-            const peca = estado.pecas.find(p => p.id === estado.dragging.id);
-            if (!peca) return;
-
-            const [px, py] = getSVGPoint(evt);
-            const newX = px + estado.dragging.offsetX;
-            const newY = py + estado.dragging.offsetY;
-
-            const [cx0, cy0] = centroide(peca.base.pontos);
-            peca.dx = newX - cx0;
-            peca.dy = newY - cy0;
-
-            renderizarPecas();
-        }
-
-        function onPointerUp(evt) {
-            svg.removeEventListener('pointermove', onPointerMove);
-            svg.removeEventListener('pointerup', onPointerUp);
-            svg.removeEventListener('pointercancel', onPointerUp);
-            try { svg.releasePointerCapture(evt.pointerId); } catch (_) {}
-
-            if (estado.dragging) {
-                tentarEncaixe(estado.dragging.id);
-            }
-            estado.dragging = null;
-            renderizarPecas();
-            verificarConclusao();
-        }
-
-        function rotacionarSelecionada(delta) {
-            if (!estado.selecionada) {
-                infoInstrucao.textContent = '⚠️ Clique numa peça para selecioná-la primeiro.';
-                return;
-            }
-            const peca = estado.pecas.find(p => p.id === estado.selecionada);
-            if (!peca || peca.travada) return;
-
-            peca.rot = (peca.rot + delta) % 360;
-            if (peca.rot < 0) peca.rot += 360;
-            renderizarPecas();
-
-            // Tenta encaixe imediato após rotacionar
-            tentarEncaixe(peca.id);
-            verificarConclusao();
-        }
-
-        /* ==========================================================
-           8. SNAP — CORRIGIDO
-           ==========================================================
-           1. Verifica se a rotação está próxima de um múltiplo de 45°
-           2. Compara vértice a vértice com a posição-alvo
-           3. Tolerância aumentada para 32 (mais satisfatório)
-           ========================================================== */
-        const TOLERANCIA_POS = 32;
-        const TOLERANCIA_ROT = 18;   // graus
-
-        function normalizarAngulo(a) {
-            a = a % 360;
-            if (a < 0) a += 360;
-            return a;
-        }
-
-        function diferencaAngular(a, b) {
-            const d = Math.abs(normalizarAngulo(a) - normalizarAngulo(b));
-            return Math.min(d, 360 - d);
-        }
-
-        function rotacaoCompativel(rotAtual, rotAlvo) {
-            return diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT;
-        }
-
-        function verticesAlvo(pecaId) {
-            const solucao = SOLUCOES[estado.desafio];
-            if (!solucao) return null;
-            const item = solucao.find(s => s.id === pecaId);
-            if (!item) return null;
-            const pecaBase = PECAS_BASE.find(p => p.id === pecaId);
-            return transformarPeca(pecaBase, item.dx, item.dy, item.rot);
-        }
-
-        function tentarEncaixe(pecaId) {
-            if (estado.desafio === 'free') return;
-            const peca = estado.pecas.find(p => p.id === pecaId);
-            if (!peca || peca.travada) return;
-
-            const solucao = SOLUCOES[estado.desafio];
-            const item = solucao.find(s => s.id === pecaId);
-            if (!item) return;
-
-            // 1. Verifica compatibilidade de rotação
-            if (!rotacaoCompativel(peca.rot, item.rot)) return;
-
-            const alvo = verticesAlvo(pecaId);
-            const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
-
-            let maxDist = 0;
-            for (let i = 0; i < alvo.length; i++) {
-                const dx = alvo[i][0] - atual[i][0];
-                const dy = alvo[i][1] - atual[i][1];
-                maxDist = Math.max(maxDist, Math.hypot(dx, dy));
-            }
-
-            if (maxDist <= TOLERANCIA_POS) {
-                // Snap perfeito: alinha posição E rotação
-                peca.dx = item.dx;
-                peca.dy = item.dy;
-                peca.rot = item.rot;
-                peca.travada = true;
-                estado.colocadas = estado.pecas.filter(p => p.travada).length;
-                displayPecas.textContent = `${estado.colocadas}/7`;
-                infoInstrucao.textContent = `✅ Peça encaixada! ${7 - estado.colocadas} restantes.`;
-            }
-        }
-
-        function verificarConclusao() {
-            if (estado.desafio === 'free') return;
-            if (estado.colocadas === 7) {
-                pararTimer();
-                silhouette.classList.add('completed');
-                infoInstrucao.textContent = `🎉 Parabéns! Concluiu o Tangram em ${formatarTempo(estado.segundos)}.`;
-            }
-        }
-
-        /* ==========================================================
-           9. TIMER
-           ========================================================== */
-        function formatarTempo(s) {
-            const m = String(Math.floor(s / 60)).padStart(2, '0');
-            const ss = String(s % 60).padStart(2, '0');
-            return `${m}:${ss}`;
-        }
-
-        function iniciarTimer() {
+    function verificarConclusao() {
+        if (estado.colocadas === 7) {
             pararTimer();
-            estado.segundos = 0;
-            displayTempo.textContent = '00:00';
-            estado.timer = setInterval(() => {
-                estado.segundos++;
-                displayTempo.textContent = formatarTempo(estado.segundos);
-            }, 1000);
+            silhouette.classList.add('completed');
+            infoInstrucao.textContent = `🎉 Parabéns! Concluiu em ${formatarTempo(estado.segundos)}.`;
         }
+    }
 
-        function pararTimer() {
-            if (estado.timer) clearInterval(estado.timer);
-            estado.timer = null;
-        }
+    /* ============================================================
+       TIMER
+       ============================================================ */
+    function formatarTempo(s) {
+        const m = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        return `${m}:${ss}`;
+    }
 
-        /* ==========================================================
-           10. POSIÇÕES INICIAIS — CORRIGIDAS
-           ==========================================================
-           Cada peça é colocada no canto mais próximo da sua posição
-           final, minimizando distância. Isso ajuda o jogador a
-           encontrar um padrão rápido.
-           ========================================================== */
-        function posicoesIniciaisEmbaralhadas() {
-            const resultado = [];
+    function iniciarTimer() {
+        pararTimer();
+        estado.segundos = 0;
+        displayTempo.textContent = '00:00';
+        estado.timer = setInterval(() => {
+            estado.segundos++;
+            displayTempo.textContent = formatarTempo(estado.segundos);
+        }, 1000);
+    }
 
-            // Zonas nos 4 cantos do viewBox ampliado
-            const zonas = [
-                { x: -30, y: -30 },   // topo-esquerda
-                { x: 220, y: -30 },   // topo-direita
-                { x: -30, y: 220 },   // baixo-esquerda
-                { x: 220, y: 220 }    // baixo-direita
-            ];
+    function pararTimer() {
+        if (estado.timer) clearInterval(estado.timer);
+        estado.timer = null;
+    }
 
-            // Mapeamento fixo de peça → zona (evita empilhar no mesmo canto)
-            const zonaPorPeca = {
-                'T1': 0, 'T2': 2, 'TM': 1, 'T3': 1, 'T4': 2, 'Q': 3, 'P': 3
-            };
+    /* ============================================================
+       POSIÇÕES INICIAIS EMBARALHADAS
+       ============================================================ */
+    function posicoesIniciais() {
+        const resultado = [];
+        const zonas = [
+            { x: -30, y: -30 },
+            { x: 220, y: -30 },
+            { x: -30, y: 220 },
+            { x: 220, y: 220 }
+        ];
+        const zonaPorPeca = { T1: 0, T2: 2, TM: 1, T3: 1, T4: 2, Q: 3, P: 3 };
 
-            PECAS_BASE.forEach((peca) => {
-                const zona = zonas[zonaPorPeca[peca.id] ?? 0];
-                const baseCentro = centroide(peca.pontos);
-                const jitterX = (Math.random() - 0.5) * 30;
-                const jitterY = (Math.random() - 0.5) * 30;
+        PECAS_BASE.forEach((peca) => {
+            const zona = zonas[zonaPorPeca[peca.id] ?? 0];
+            const baseCentro = centroide(peca.pontos);
+            const jitterX = (Math.random() - 0.5) * 30;
+            const jitterY = (Math.random() - 0.5) * 30;
 
-                const alvoX = zona.x + 60 + jitterX;
-                const alvoY = zona.y + 60 + jitterY;
+            const alvoX = zona.x + 60 + jitterX;
+            const alvoY = zona.y + 60 + jitterY;
 
-                resultado.push({
-                    id: peca.id,
-                    base: peca,
-                    cor: peca.cor,
-                    dx: alvoX - baseCentro[0],
-                    dy: alvoY - baseCentro[1],
-                    rot: (Math.floor(Math.random() * 8) * 45) % 360,
-                    travada: false
-                });
+            resultado.push({
+                id: peca.id,
+                base: peca,
+                cor: peca.cor,
+                dx: alvoX - baseCentro[0],
+                dy: alvoY - baseCentro[1],
+                rot: (Math.floor(Math.random() * 8) * 45) % 360,
+                travada: false
             });
-
-            return resultado;
-        }
-
-        function resetarDesafio() {
-            estado.pecas = posicoesIniciaisEmbaralhadas();
-            estado.selecionada = null;
-            estado.colocadas = 0;
-            displayPecas.textContent = '0/7';
-            silhouette.classList.remove('completed');
-
-            if (estado.desafio === 'free') {
-                displayFase.textContent = 'Livre';
-                infoInstrucao.textContent = 'Modo livre: arraste e rotacione como quiser.';
-            } else {
-                displayFase.textContent = 'Quadrado';
-                infoInstrucao.textContent = 'Arraste as peças para dentro do quadrado tracejado.';
-            }
-
-            desenharGradeGuia();
-            desenharSilhueta();
-            renderizarPecas();
-            iniciarTimer();
-        }
-
-        /* ==========================================================
-           11. EVENTOS
-           ========================================================== */
-        selectDesafio.addEventListener('change', () => {
-            estado.desafio = selectDesafio.value;
-            resetarDesafio();
         });
 
-        btnShuffle.addEventListener('click', resetarDesafio);
-        btnReset.addEventListener('click', resetarDesafio);
+        return resultado;
+    }
 
-        btnRotateL.addEventListener('click', () => rotacionarSelecionada(-45));
-        btnRotateR.addEventListener('click', () => rotacionarSelecionada(+45));
+    function resetar() {
+        estado.pecas = posicoesIniciais();
+        estado.selecionada = null;
+        estado.colocadas = 0;
+        displayPecas.textContent = '0/7';
+        silhouette.classList.remove('completed');
 
-        boardWrapper.addEventListener('wheel', (e) => {
-            if (!estado.selecionada) return;
-            e.preventDefault();
-            rotacionarSelecionada(e.deltaY > 0 ? +15 : -15);
-        }, { passive: false });
+        const nomes = {
+            square: 'Quadrado',
+            house: 'Casa',
+            boat: 'Barco',
+            swan: 'Cisne',
+            cross: 'Cruz'
+        };
+        displayFase.textContent = nomes[estado.desafio] || 'Quadrado';
+        infoInstrucao.textContent = `Arraste as 7 peças para dentro da silhueta.`;
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'r' || e.key === 'R') rotacionarSelecionada(+45);
-            if (e.key === 'ArrowLeft')  { e.preventDefault(); rotacionarSelecionada(-15); }
-            if (e.key === 'ArrowRight') { e.preventDefault(); rotacionarSelecionada(+15); }
-            if (e.key === 'Escape') { estado.selecionada = null; renderizarPecas(); }
-        });
+        desenharSilhueta();
+        renderizarPecas();
+        iniciarTimer();
+    }
 
-        /* ==========================================================
-           12. TEMA + SESSÃO
-           ========================================================== */
-        const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        atualizarTextoBotaoTema(savedTheme);
+    /* ============================================================
+       EVENTOS
+       ============================================================ */
+    selectDesafio.addEventListener('change', () => {
+        estado.desafio = selectDesafio.value;
+        resetar();
+    });
 
-        themeToggle.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('brain_flow_theme', next);
-            atualizarTextoBotaoTema(next);
-        });
+    btnShuffle.addEventListener('click', resetar);
+    btnReset.addEventListener('click', resetar);
+    btnRotateL.addEventListener('click', () => rotacionarSelecionada(-45));
+    btnRotateR.addEventListener('click', () => rotacionarSelecionada(+45));
 
-        function atualizarTextoBotaoTema(theme) {
-            themeToggle.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
-        }
+    boardWrapper.addEventListener('wheel', (e) => {
+        if (!estado.selecionada) return;
+        e.preventDefault();
+        rotacionarSelecionada(e.deltaY > 0 ? +15 : -15);
+    }, { passive: false });
 
-        try {
-            const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador'));
-            if (jogador) {
-                document.getElementById('display-nome').textContent = jogador.nome;
-                document.getElementById('display-avatar').textContent = jogador.avatar;
-            } else {
-                document.getElementById('display-nome').textContent = 'Visitante';
-            }
-        } catch (_) {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'r' || e.key === 'R') rotacionarSelecionada(+45);
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); rotacionarSelecionada(-15); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); rotacionarSelecionada(+15); }
+        if (e.key === 'Escape') { estado.selecionada = null; renderizarPecas(); }
+    });
+
+    /* ============================================================
+       TEMA + SESSÃO
+       ============================================================ */
+    const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    atualizarTextoBotaoTema(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('brain_flow_theme', next);
+        atualizarTextoBotaoTema(next);
+    });
+
+    function atualizarTextoBotaoTema(theme) {
+        themeToggle.textContent = theme === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+    }
+
+    try {
+        const jogador = JSON.parse(localStorage.getItem('brain_hub_jogador'));
+        if (jogador) {
+            document.getElementById('display-nome').textContent = jogador.nome;
+            document.getElementById('display-avatar').textContent = jogador.avatar;
+        } else {
             document.getElementById('display-nome').textContent = 'Visitante';
         }
+    } catch (_) {
+        document.getElementById('display-nome').textContent = 'Visitante';
+    }
 
-        /* ==========================================================
-           13. BOOT
-           ========================================================== */
-        resetarDesafio();
-    })();
-    </script>
+    /* ============================================================
+       BOOT
+       ============================================================ */
+    resetar();
+})();
+</script>
 </body>
 </html>
