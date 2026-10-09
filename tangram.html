@@ -430,55 +430,28 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     "use strict";
 
     /* ============================================================
-       GEOMETRIA CANÔNICA — CORRIGIDA
-       ============================================================
-       Quadrado mestre: L = 320, H = 160, Q = 80.
-       Soma das 7 peças = L² = 102 400 — cobre o quadrado.
-
-       Decomposição correta:
-         T1: (0,0),(L,0),(H,H)                → área = L²/4
-         T2: (0,0),(H,H),(0,L)                → área = L²/4
-         TM: (L,0),(L,H),(H,H)                → área = L²/8
-         T3: (H,H),(H+Q,H-Q),(H,H-Q)          → área = L²/16
-         T4: (H,H),(H-Q,H+Q),(H,H+Q)          → área = L²/16
-         Q:  (H,H),(H+Q,H-Q),(H+Q,H+Q),(H,H+Q)→ área = L²/8
-         P:  (H+Q,H+Q),(L,H+Q),(L-Q,L),(H,L)  → área = L²/8
+       GEOMETRIA CANÔNICA
        ============================================================ */
     const L = 320;
-    const H = L / 2;    // 160
-    const Q = L / 4;    // 80
+    const H = L / 2;
+    const Q = L / 4;
 
     const PECAS_BASE = [
-        // Dois triângulos grandes
         { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [L, 0], [H, H]] },
         { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0], [H, H], [0, L]] },
-
-        // Triângulo médio
         { id: 'TM', cor: '#ec4899', pontos: [[L, 0], [L, H], [H, H]] },
-
-        // Dois triângulos pequenos (corrigidos)
         { id: 'T3', cor: '#14b8a6', pontos: [[H, H], [H + Q, H - Q], [H, H - Q]] },
         { id: 'T4', cor: '#f59e0b', pontos: [[H, H], [H - Q, H + Q], [H, H + Q]] },
-
-        // Quadrado (corrigido)
         { id: 'Q',  cor: '#06b6d4', pontos: [[H, H], [H + Q, H - Q], [H + Q, H + Q], [H, H + Q]] },
-
-        // Paralelogramo (corrigido)
         { id: 'P',  cor: '#d946ef', pontos: [[H + Q, H + Q], [L, H + Q], [L - Q, L], [H, L]] }
     ];
 
-    /* ============================================================
-       SOLUÇÕES
-       ============================================================
-       Apenas o puzzle "Quadrado" está ativo — os outros exigem
-       recálculo manual das posições-alvo com a nova geometria.
-       ============================================================ */
     const SOLUCOES = {
         square: PECAS_BASE.map(p => ({ id: p.id, dx: 0, dy: 0, rot: 0 }))
     };
 
     /* ============================================================
-       UTILITÁRIOS
+       UTILITÁRIOS GEOMÉTRICOS
        ============================================================ */
     function centroide(pontos) {
         let x = 0, y = 0;
@@ -486,16 +459,21 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         return [x / pontos.length, y / pontos.length];
     }
 
-    function transformarPonto(p, cx, cy, rot, dx, dy) {
+    // Rotaciona `p` em torno de `(cx, cy)` e depois translada
+    function rotacionarPonto(p, cx, cy, rot) {
         const rad = rot * Math.PI / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
         const px = p[0] - cx, py = p[1] - cy;
-        return [cos * px - sin * py + cx + dx, sin * px + cos * py + cy + dy];
+        return [cos * px - sin * py + cx, sin * px + cos * py + cy];
     }
 
+    // Aplica rotação + translação a uma peça-base
     function transformarPeca(pecaBase, dx, dy, rot) {
         const [cx, cy] = centroide(pecaBase.pontos);
-        return pecaBase.pontos.map(p => transformarPonto(p, cx, cy, rot, dx, dy));
+        return pecaBase.pontos.map(p => {
+            const [rx, ry] = rotacionarPonto(p, cx, cy, rot);
+            return [rx + dx, ry + dy];
+        });
     }
 
     function pontosParaString(pontos) {
@@ -622,6 +600,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         estado.selecionada = id;
 
         const [px, py] = getSVGPoint(evt);
+        // Centroide atual da peça (após transformação)
         const [cx, cy] = centroide(transformarPeca(peca.base, peca.dx, peca.dy, peca.rot));
         estado.dragging = { id, offsetX: cx - px, offsetY: cy - py };
 
@@ -640,12 +619,14 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         if (!peca) return;
 
         const [px, py] = getSVGPoint(evt);
-        const newX = px + estado.dragging.offsetX;
-        const newY = py + estado.dragging.offsetY;
+        const targetCx = px + estado.dragging.offsetX;
+        const targetCy = py + estado.dragging.offsetY;
 
-        const [cx0, cy0] = centroide(peca.base.pontos);
-        peca.dx = newX - cx0;
-        peca.dy = newY - cy0;
+        // Centroide atual ANTES de mover
+        const [cx0, cy0] = centroide(transformarPeca(peca.base, 0, 0, peca.rot));
+        // Deslocamento para levar o centroide até a posição-alvo
+        peca.dx = targetCx - cx0;
+        peca.dy = targetCy - cy0;
 
         renderizarPecas();
     }
@@ -664,6 +645,13 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         verificarConclusao();
     }
 
+    /* ============================================================
+       ROTAÇÃO — CORRIGIDA
+       ============================================================
+       Rotaciona em torno do centroide ATUAL da peça (posição
+       visual), mantendo o centroide no mesmo lugar. Isso evita
+       o "salto" ao rotacionar.
+       ============================================================ */
     function rotacionarSelecionada(delta) {
         if (!estado.selecionada) {
             infoInstrucao.textContent = '⚠️ Toque numa peça para selecioná-la primeiro.';
@@ -672,8 +660,26 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const peca = estado.pecas.find(p => p.id === estado.selecionada);
         if (!peca || peca.travada) return;
 
+        // 1. Descobre o centroide atual da peça (com a posição atual)
+        const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
+        const [cxAtual, cyAtual] = centroide(atual);
+
+        // 2. Aplica a rotação
         peca.rot = (peca.rot + delta) % 360;
         if (peca.rot < 0) peca.rot += 360;
+
+        // 3. Recalcula a posição para que o centroide continue no mesmo lugar
+        const [cxBase, cyBase] = centroide(peca.base.pontos);
+        const [rx, ry] = rotacionarPonto([cxBase, cyBase], cxBase, cyBase, peca.rot);
+        // O centroide da peça rotacionada em (0,0) é (cxBase, cyBase) — a rotação
+        // em torno do próprio centroide não altera o centroide. Então:
+        // posição após rotação = centroide da base rotacionada (que é o mesmo)
+        // Precisamos garantir que o centroide visual continue sendo (cxAtual, cyAtual).
+        // Como a rotação em torno do centroide da base não move o centroide da base,
+        // basta ajustar dx/dy para que o centroide caia em (cxAtual, cyAtual):
+        peca.dx = cxAtual - cxBase;
+        peca.dy = cyAtual - cyBase;
+
         renderizarPecas();
 
         tentarEncaixe(peca.id);
@@ -681,10 +687,16 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     }
 
     /* ============================================================
-       SNAP
+       SNAP — CORRIGIDO
+       ============================================================
+       Em vez de comparar vértices por índice, comparamos cada
+       vértice da peça atual com o vértice MAIS PRÓXIMO do alvo.
+       Isso resolve o caso de rotações parciais e peças simétricas.
+
+       Também aceita rotações em múltiplos de 45° (e próximas).
        ============================================================ */
-    const TOLERANCIA_POS = 32;
-    const TOLERANCIA_ROT = 18;
+    const TOLERANCIA_POS = 30;
+    const TOLERANCIA_ROT = 22;
 
     function normalizarAngulo(a) {
         a = a % 360;
@@ -698,7 +710,20 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     }
 
     function rotacaoCompativel(rotAtual, rotAlvo) {
-        return diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT;
+        // Verifica se a rotação atual está próxima de um múltiplo de 45°
+        // próximo da rotação-alvo
+        const proximos = [0, 45, 90, 135, 180, 225, 270, 315];
+        for (const r of proximos) {
+            if (diferencaAngular(rotAtual, r) <= TOLERANCIA_ROT &&
+                diferencaAngular(r, rotAlvo) <= TOLERANCIA_ROT) {
+                return r;
+            }
+        }
+        // Aceita também se estiver diretamente próximo do alvo
+        if (diferencaAngular(rotAtual, rotAlvo) <= TOLERANCIA_ROT) {
+            return rotAlvo;
+        }
+        return null;
     }
 
     function verticesAlvo(pecaId) {
@@ -719,19 +744,26 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
         const item = solucao.find(s => s.id === pecaId);
         if (!item) return;
 
-        if (!rotacaoCompativel(peca.rot, item.rot)) return;
+        const rotCompativel = rotacaoCompativel(peca.rot, item.rot);
+        if (rotCompativel === null) return;
 
         const alvo = verticesAlvo(pecaId);
         const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot);
 
-        let maxDist = 0;
-        for (let i = 0; i < alvo.length; i++) {
-            const dx = alvo[i][0] - atual[i][0];
-            const dy = alvo[i][1] - atual[i][1];
-            maxDist = Math.max(maxDist, Math.hypot(dx, dy));
+        // Para cada vértice ATUAL, encontra a distância ao vértice mais
+        // próximo do alvo. Depois pega a maior dessas distâncias mínimas.
+        let piorDist = 0;
+        for (const p of atual) {
+            let melhor = Infinity;
+            for (const q of alvo) {
+                const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+                if (d < melhor) melhor = d;
+            }
+            if (melhor > piorDist) piorDist = melhor;
         }
 
-        if (maxDist <= TOLERANCIA_POS) {
+        if (piorDist <= TOLERANCIA_POS) {
+            // Snap perfeito: alinha posição E rotação
             peca.dx = item.dx;
             peca.dy = item.dy;
             peca.rot = item.rot;
@@ -842,6 +874,7 @@ button.secondary:hover { background: linear-gradient(135deg, #64748b, #475569); 
     boardWrapper.addEventListener('wheel', (e) => {
         if (!estado.selecionada) return;
         e.preventDefault();
+        // Roda do mouse: ±15° para ajuste fino
         rotacionarSelecionada(e.deltaY > 0 ? +15 : -15);
     }, { passive: false });
 
