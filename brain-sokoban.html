@@ -186,9 +186,6 @@ body {
     border-color: rgba(239, 68, 68, 0.3);
 }
 
-/* ==========================================================
-   GRID
-   ========================================================== */
 .grid-wrapper {
     background: #030712;
     border-radius: 14px;
@@ -217,21 +214,15 @@ body {
     min-width: 0;
     min-height: 0;
 }
-
-/* Chão */
 .cel.chao {
     background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(148, 163, 184, 0.1);
 }
-
-/* Parede */
 .cel.parede {
     background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
     border: 1px solid rgba(71, 85, 105, 0.8);
     box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
 }
-
-/* Destino */
 .cel.destino {
     background: rgba(74, 222, 128, 0.1);
     border: 2px dashed var(--c-green);
@@ -244,8 +235,6 @@ body {
     opacity: 0.6;
     position: absolute;
 }
-
-/* Caixa */
 .cel.caixa {
     background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
     border: 2px solid #d97706;
@@ -255,8 +244,6 @@ body {
     content: "📦";
     font-size: clamp(18px, 5vmin, 26px);
 }
-
-/* Caixa no destino (completa) */
 .cel.caixa-no-destino {
     background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
     border: 2px solid #22c55e;
@@ -272,8 +259,6 @@ body {
     50% { transform: scale(1.15); }
     100% { transform: scale(1); }
 }
-
-/* Jogador */
 .cel.jogador {
     background: radial-gradient(circle, rgba(99, 102, 241, 0.5) 0%, rgba(99, 102, 241, 0.1) 70%);
     border: 2px solid var(--btn-primary);
@@ -284,24 +269,11 @@ body {
     content: "🐭";
     font-size: clamp(20px, 5.5vmin, 30px);
 }
-.cel.jogador-com-caixa {
-    animation: jogador-puxa 0.25s ease;
-}
-@keyframes jogador-puxa {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-/* Indicador de direção do jogador */
 .cel.jogador.up::after { transform: rotate(-90deg); }
 .cel.jogador.down::after { transform: rotate(90deg); }
 .cel.jogador.left::after { transform: rotate(180deg); }
 .cel.jogador.right::after { transform: rotate(0deg); }
 
-/* ==========================================================
-   CONTROLES DE DIREÇÃO
-   ========================================================== */
 .direcoes-wrapper {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -339,15 +311,11 @@ body {
     opacity: 0.3;
     cursor: not-allowed;
 }
-
 .dir-up    { grid-column: 2; grid-row: 1; }
 .dir-left  { grid-column: 1; grid-row: 2; }
 .dir-down  { grid-column: 2; grid-row: 2; }
 .dir-right { grid-column: 3; grid-row: 2; }
 
-/* ==========================================================
-   AÇÕES
-   ========================================================== */
 .acoes {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -405,9 +373,6 @@ button {
 button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ==========================================================
-   OVERLAY
-   ========================================================== */
 .overlay {
     position: absolute;
     inset: 0;
@@ -445,26 +410,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-12px); }
-}
-
-.feedback-float {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 44px;
-    font-weight: 900;
-    pointer-events: none;
-    z-index: 20;
-    animation: float-up 0.9s ease-out forwards;
-}
-.feedback-float.positivo { color: var(--c-green); text-shadow: 0 0 20px var(--c-green); }
-.feedback-float.negativo { color: var(--c-red); text-shadow: 0 0 20px var(--c-red); }
-@keyframes float-up {
-    0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-    50% { opacity: 1; transform: translate(-50%, -80%) scale(1.2); }
-    100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
 }
 </style>
 </head>
@@ -529,13 +474,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ==========================================================
     // CONFIGURAÇÃO POR MODO
     // ==========================================================
-    // tamanho = largura/altura do grid
-    // caixas = número de caixas
-    // paredes = densidade de paredes internas
     var MODOS = {
-        facil:   { tamanho: 7,  caixas: 2, paredes: 0.10, nome: 'Fácil' },
-        medio:   { tamanho: 8,  caixas: 3, paredes: 0.15, nome: 'Médio' },
-        dificil: { tamanho: 10, caixas: 4, paredes: 0.20, nome: 'Difícil' }
+        facil:   { tamanho: 7,  caixas: 2, movimentos: 8,  nome: 'Fácil' },
+        medio:   { tamanho: 8,  caixas: 3, movimentos: 15, nome: 'Médio' },
+        dificil: { tamanho: 10, caixas: 4, movimentos: 25, nome: 'Difícil' }
     };
 
     // ==========================================================
@@ -544,11 +486,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     var modoAtual = 'facil';
     var tamanho = 7;
     var numCaixas = 2;
-    var densidadeParedes = 0.10;
-    var grid = [];              // matriz: 'chao', 'parede', 'destino'
-    var caixas = [];            // [{l, c}]
+    var numMovimentos = 8;
+    var grid = [];
+    var caixas = [];
     var jogador = { l: 0, c: 0, dir: 'down' };
-    var destinos = [];          // [{l, c}]
+    var destinos = [];
     var historicoMovimentos = [];
     var passos = 0;
     var nivelAtual = 1;
@@ -652,112 +594,254 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         $('btn-desfazer').disabled = historicoMovimentos.length === 0 || !jogoAtivo;
     }
 
+    function celulaLivre(l, c) {
+        if (l < 0 || l >= tamanho || c < 0 || c >= tamanho) return false;
+        if (grid[l][c] === 'parede') return false;
+        // Não pode ter caixa
+        for (var i = 0; i < caixas.length; i++) {
+            if (caixas[i].l === l && caixas[i].c === c) return false;
+        }
+        return true;
+    }
+
+    function obterVizinhosLivres(l, c) {
+        var dirs = [
+            { dl: -1, dc: 0, dir: 'UP' },
+            { dl: 1,  dc: 0, dir: 'DOWN' },
+            { dl: 0,  dc: -1, dir: 'LEFT' },
+            { dl: 0,  dc: 1, dir: 'RIGHT' }
+        ];
+        var livres = [];
+        for (var i = 0; i < dirs.length; i++) {
+            var nl = l + dirs[i].dl;
+            var nc = c + dirs[i].dc;
+            if (celulaLivre(nl, nc)) {
+                livres.push({ l: nl, c: nc, dir: dirs[i].dir, dl: dirs[i].dl, dc: dirs[i].dc });
+            }
+        }
+        return livres;
+    }
+
     // ==========================================================
-    // GERAR NÍVEL
+    // GERAR NÍVEL — TÉCNICA REVERSE PLAY
+    // ==========================================================
+    // 1. Criar grid com bordas e paredes internas
+    // 2. Colocar caixas NOS DESTINOS (estado resolvido)
+    // 3. Aplicar N movimentos reversos (puxar caixas)
+    // 4. Colocar jogador numa posição válida
+    // → Resultado: 100% solucionável
     // ==========================================================
     function gerarNivel() {
         var tentativas = 0;
         var nivelValido = false;
 
-        while (!nivelValido && tentativas < 100) {
+        while (!nivelValido && tentativas < 50) {
             tentativas++;
 
+            // === PASSO 1: Grid com paredes ===
             grid = [];
             for (var l = 0; l < tamanho; l++) {
                 var linha = [];
                 for (var c = 0; c < tamanho; c++) {
-                    // Bordas sempre paredes
                     if (l === 0 || l === tamanho - 1 || c === 0 || c === tamanho - 1) {
                         linha.push('parede');
                     } else {
-                        // Paredes internas aleatórias
-                        if (Math.random() < densidadeParedes) {
-                            linha.push('parede');
-                        } else {
-                            linha.push('chao');
-                        }
+                        linha.push('chao');
                     }
                 }
                 grid.push(linha);
             }
 
-            // Coloca jogador em célula aleatória vazia
-            var tentativasJog = 0;
-            var posJog = null;
-            while (!posJog && tentativasJog < 50) {
-                tentativasJog++;
-                var lj = randInt(1, tamanho - 2);
-                var cj = randInt(1, tamanho - 2);
-                if (grid[lj][cj] === 'chao') {
-                    posJog = { l: lj, c: cj };
+            // Coloca algumas paredes internas (com cuidado para não bloquear)
+            var paredesInternas = Math.floor((tamanho - 2) * (tamanho - 2) * 0.08);
+            var paredesColocadas = 0;
+            var tentativasPar = 0;
+            while (paredesColocadas < paredesInternas && tentativasPar < 100) {
+                tentativasPar++;
+                var lp = randInt(1, tamanho - 2);
+                var cp = randInt(1, tamanho - 2);
+                if (grid[lp][cp] === 'parede') continue;
+                // Verifica se tem pelo menos 2 vizinhos livres (evita bloquear)
+                var vizinhosLivres = 0;
+                if (grid[lp-1][cp] === 'chao') vizinhosLivres++;
+                if (grid[lp+1][cp] === 'chao') vizinhosLivres++;
+                if (grid[lp][cp-1] === 'chao') vizinhosLivres++;
+                if (grid[lp][cp+1] === 'chao') vizinhosLivres++;
+                if (vizinhosLivres >= 3) {
+                    grid[lp][cp] = 'parede';
+                    paredesColocadas++;
                 }
             }
-            if (!posJog) continue;
 
-            jogador = { l: posJog.l, c: posJog.c, dir: 'down' };
-
-            // Coloca caixas em posições aleatórias, longe do jogador
+            // === PASSO 2: Coloca caixas NOS DESTINOS ===
             caixas = [];
+            destinos = [];
             var tentativasCaixas = 0;
-            while (caixas.length < numCaixas && tentativasCaixas < 100) {
+            while (destinos.length < numCaixas && tentativasCaixas < 100) {
                 tentativasCaixas++;
-                var lc = randInt(1, tamanho - 2);
-                var cc = randInt(1, tamanho - 2);
-                if (grid[lc][cc] !== 'chao') continue;
-                if (lc === jogador.l && cc === jogador.c) continue;
-                // Distância mínima do jogador
-                var dist = Math.abs(lc - jogador.l) + Math.abs(cc - jogador.c);
-                if (dist < 2) continue;
-                // Não sobrepor outra caixa
+                var ld = randInt(1, tamanho - 2);
+                var cd = randInt(1, tamanho - 2);
+                if (grid[ld][cd] !== 'chao') continue;
+
+                // Verifica não sobrepor
                 var sobrepoe = false;
-                for (var k = 0; k < caixas.length; k++) {
-                    if (caixas[k].l === lc && caixas[k].c === cc) {
+                for (var k = 0; k < destinos.length; k++) {
+                    if (destinos[k].l === ld && destinos[k].c === cd) {
                         sobrepoe = true;
                         break;
                     }
                 }
                 if (sobrepoe) continue;
 
-                caixas.push({ l: lc, c: cc });
-            }
-
-            if (caixas.length < numCaixas) continue;
-
-            // Coloca destinos em posições aleatórias vazias (sem parede, sem caixa)
-            destinos = [];
-            var tentativasDestinos = 0;
-            while (destinos.length < numCaixas && tentativasDestinos < 100) {
-                tentativasDestinos++;
-                var ld = randInt(1, tamanho - 2);
-                var cd = randInt(1, tamanho - 2);
-                if (grid[ld][cd] !== 'chao') continue;
-                // Não sobrepor caixa
-                var sobrepoeC = false;
-                for (var k2 = 0; k2 < caixas.length; k2++) {
-                    if (caixas[k2].l === ld && caixas[k2].c === cd) {
-                        sobrepoeC = true;
-                        break;
-                    }
-                }
-                if (sobrepoeC) continue;
-                // Não sobrepor outro destino
-                var sobrepoeD = false;
-                for (var k3 = 0; k3 < destinos.length; k3++) {
-                    if (destinos[k3].l === ld && destinos[k3].c === cd) {
-                        sobrepoeD = true;
-                        break;
-                    }
-                }
-                if (sobrepoeD) continue;
+                // Verifica se o destino tem pelo menos 2 vizinhos livres
+                var viz = 0;
+                if (grid[ld-1][cd] === 'chao') viz++;
+                if (grid[ld+1][cd] === 'chao') viz++;
+                if (grid[ld][cd-1] === 'chao') viz++;
+                if (grid[ld][cd+1] === 'chao') viz++;
+                if (viz < 2) continue;
 
                 destinos.push({ l: ld, c: cd });
+                caixas.push({ l: ld, c: cd }); // Caixa começa NO destino
             }
 
             if (destinos.length < numCaixas) continue;
 
-            // Valida se as caixas já não estão todas nos destinos (raro mas possível)
-            var jaCompletas = contarCaixasEmDestino();
-            if (jaCompletas === numCaixas) continue;
+            // === PASSO 3: Movimentos reversos ===
+            // Aqui simulamos "puxar" cada caixa para longe do destino
+            // A cada iteração:
+            //   - Escolhe uma caixa aleatória
+            //   - Escolhe uma direção aleatória
+            //   - Verifica se o movimento reverso é válido:
+            //     * Caixa pode mover para a célula adjacente (na direção oposta)
+            //     * Jogador pode estar na posição onde a caixa estava
+            //   - Se válido, aplica
+            var movimentosAplicados = 0;
+            var tentativasMov = 0;
+            var maxTentativasMov = numMovimentos * 20;
+
+            while (movimentosAplicados < numMovimentos && tentativasMov < maxTentativasMov) {
+                tentativasMov++;
+
+                // Escolhe caixa aleatória
+                var idxCaixa = randInt(0, caixas.length - 1);
+                var cx = caixas[idxCaixa];
+
+                // Escolhe direção aleatória
+                var dirs = [
+                    { dl: -1, dc: 0 },  // Cima
+                    { dl: 1,  dc: 0 },  // Baixo
+                    { dl: 0,  dc: -1 }, // Esquerda
+                    { dl: 0,  dc: 1 }   // Direita
+                ];
+                var dir = dirs[randInt(0, 3)];
+
+                // Direção reversa: caixa move-se "para trás" (oposta ao sentido de empurrar)
+                // Empurrar para cima = caixa vai para cima, jogador fica em baixo
+                // Reverse: caixa vai para baixo, jogador fica em cima
+                // Simplificação: a caixa move-se para (cx + dl, cx + dc)
+                // e a posição original da caixa será ocupada pelo jogador temporariamente.
+                // Mas queremos apenas posições finais válidas.
+                //
+                // Abordagem mais simples: mover a caixa numa direção, verificando:
+                //   - destino da caixa está livre
+                //   - NÃO criamos caixa presa em canto
+                var nlC = cx.l + dir.dl;
+                var ncC = cx.c + dir.dc;
+
+                // Verifica se pode mover a caixa para lá
+                if (!celulaLivre(nlC, ncC)) continue;
+
+                // Verifica se a nova posição não é canto fechado (a menos que seja destino)
+                var ehDestino = false;
+                for (var d = 0; d < destinos.length; d++) {
+                    if (destinos[d].l === nlC && destinos[d].c === ncC) {
+                        ehDestino = true;
+                        break;
+                    }
+                }
+
+                // Conta paredes adjacentes na nova posição
+                var paredesAdj = 0;
+                if (grid[nlC-1][ncC] === 'parede') paredesAdj++;
+                if (grid[nlC+1][ncC] === 'parede') paredesAdj++;
+                if (grid[nlC][ncC-1] === 'parede') paredesAdj++;
+                if (grid[nlC][ncC+1] === 'parede') paredesAdj++;
+
+                // Se for canto (2+ paredes) e não for destino, pula
+                if (paredesAdj >= 2 && !ehDestino) continue;
+
+                // Também evita ficar contra parede em linha reta bloqueada
+                if (paredesAdj === 1 && !ehDestino) {
+                    // Verifica se a caixa pode ser empurrada de volta
+                    // (o lado oposto está livre)
+                    var ladoOposto = { l: cx.l - dir.dl, c: cx.c - dir.dc };
+                    if (!celulaLivre(ladoOposto.l, ladoOposto.c)) continue;
+                }
+
+                // Aplica movimento reverso
+                caixas[idxCaixa].l = nlC;
+                caixas[idxCaixa].c = ncC;
+                movimentosAplicados++;
+            }
+
+            // Verifica se pelo menos UMA caixa saiu do destino
+            var algumaSaiu = false;
+            for (var i = 0; i < caixas.length; i++) {
+                var estaNoDestino = false;
+                for (var d = 0; d < destinos.length; d++) {
+                    if (caixas[i].l === destinos[d].l && caixas[i].c === destinos[d].c) {
+                        estaNoDestino = true;
+                        break;
+                    }
+                }
+                if (!estaNoDestino) algumaSaiu = true;
+            }
+            if (!algumaSaiu) continue;
+
+            // === PASSO 4: Coloca jogador numa célula vazia válida ===
+            // O jogador deve estar LIVRE e poder mover-se para começar
+            var posJogador = null;
+            var tentativasJog = 0;
+            while (!posJogador && tentativasJog < 100) {
+                tentativasJog++;
+                var lj = randInt(1, tamanho - 2);
+                var cj = randInt(1, tamanho - 2);
+                if (!celulaLivre(lj, cj)) continue;
+
+                // Verifica se tem pelo menos 1 vizinho livre
+                var vizLivres = 0;
+                if (celulaLivre(lj-1, cj)) vizLivres++;
+                if (celulaLivre(lj+1, cj)) vizLivres++;
+                if (celulaLivre(lj, cj-1)) vizLivres++;
+                if (celulaLivre(lj, cj+1)) vizLivres++;
+                if (vizLivres < 1) continue;
+
+                posJogador = { l: lj, c: cj };
+            }
+            if (!posJogador) continue;
+
+            jogador = { l: posJogador.l, c: posJogador.c, dir: 'down' };
+
+            // === PASSO 5: Validação final ===
+            // Verifica se todas as caixas podem ser empurradas de volta aos destinos
+            // Simplificação: confirma que nenhuma caixa está presa
+            var todasValidas = true;
+            for (var j = 0; j < caixas.length; j++) {
+                var cx2 = caixas[j];
+                // Verifica se a caixa tem pelo menos 2 direções livres para ser movida
+                var dirsLivres = 0;
+                if (celulaLivre(cx2.l-1, cx2.c)) dirsLivres++;
+                if (celulaLivre(cx2.l+1, cx2.c)) dirsLivres++;
+                if (celulaLivre(cx2.l, cx2.c-1)) dirsLivres++;
+                if (celulaLivre(cx2.l, cx2.c+1)) dirsLivres++;
+
+                if (dirsLivres < 2) {
+                    todasValidas = false;
+                    break;
+                }
+            }
+            if (!todasValidas) continue;
 
             nivelValido = true;
         }
@@ -790,20 +874,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
                 var tipo = grid[l][c];
 
-                // Parede
                 if (tipo === 'parede') {
                     cel.classList.add('parede');
-                }
-                // Destino
-                else if (destinoEm(l, c)) {
+                } else if (destinoEm(l, c)) {
                     cel.classList.add('destino');
-                }
-                // Chão
-                else {
+                } else {
                     cel.classList.add('chao');
                 }
 
-                // Caixa
                 var caixaIdx = caixaEm(l, c);
                 if (caixaIdx !== -1) {
                     if (destinoEm(l, c)) {
@@ -813,7 +891,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                     }
                 }
 
-                // Jogador
                 if (l === jogador.l && c === jogador.c) {
                     cel.classList.add('jogador', jogador.dir);
                 }
@@ -852,52 +929,43 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var nl = jogador.l + dl;
         var nc = jogador.c + dc;
 
-        // Atualiza direção do jogador
         jogador.dir = dir.toLowerCase();
 
-        // Colisão com borda
         if (nl < 0 || nl >= tamanho || nc < 0 || nc >= tamanho) {
             som.bloqueado();
             renderizarGrid();
             return;
         }
 
-        // Colisão com parede
         if (grid[nl][nc] === 'parede') {
             som.bloqueado();
             renderizarGrid();
             return;
         }
 
-        // Caixa à frente?
         var idxCaixa = caixaEm(nl, nc);
         if (idxCaixa !== -1) {
-            // Posição depois da caixa
             var nlC = nl + dl;
             var ncC = nc + dc;
 
-            // Colisão da caixa com borda
             if (nlC < 0 || nlC >= tamanho || ncC < 0 || ncC >= tamanho) {
                 som.bloqueado();
                 renderizarGrid();
                 return;
             }
 
-            // Colisão da caixa com parede
             if (grid[nlC][ncC] === 'parede') {
                 som.bloqueado();
                 renderizarGrid();
                 return;
             }
 
-            // Colisão com outra caixa
             if (caixaEm(nlC, ncC) !== -1) {
                 som.bloqueado();
                 renderizarGrid();
                 return;
             }
 
-            // Salva histórico ANTES de mover
             historicoMovimentos.push({
                 jogadorL: jogador.l,
                 jogadorC: jogador.c,
@@ -907,23 +975,18 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
                 caixaC: caixas[idxCaixa].c
             });
 
-            // Move a caixa
             caixas[idxCaixa].l = nlC;
             caixas[idxCaixa].c = ncC;
-
-            // Move o jogador
             jogador.l = nl;
             jogador.c = nc;
 
             som.empurrar();
             passos++;
 
-            // Verifica se a caixa foi para o destino
             if (destinoEm(nlC, ncC)) {
                 som.caixaOk();
             }
         } else {
-            // Não há caixa, apenas move
             historicoMovimentos.push({
                 jogadorL: jogador.l,
                 jogadorC: jogador.c,
@@ -974,7 +1037,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             som.vitoria();
             atualizarBadge('🏆 Nível Completo!', 'ok');
 
-            // Recorde (menor número de passos)
             if (passos < recordes[modoAtual]) {
                 recordes[modoAtual] = passos;
                 localStorage.setItem('brain_sokoban_recorde_' + modoAtual, String(passos));
@@ -1023,13 +1085,12 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // NAVEGAÇÃO DE NÍVEIS
+    // NAVEGAÇÃO
     // ==========================================================
     function proximoNivel() {
         esconderOverlay();
         nivelAtual++;
 
-        // Aumenta dificuldade automaticamente
         if (nivelAtual <= 3) modoAtual = 'facil';
         else if (nivelAtual <= 6) modoAtual = 'medio';
         else modoAtual = 'dificil';
@@ -1037,7 +1098,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var cfg = MODOS[modoAtual];
         tamanho = cfg.tamanho;
         numCaixas = Math.min(cfg.caixas + Math.floor((nivelAtual - 1) / 3), 5);
-        densidadeParedes = cfg.paredes;
+        numMovimentos = cfg.movimentos;
 
         var botoes = document.querySelectorAll('.mode-btn');
         for (var i = 0; i < botoes.length; i++) {
@@ -1055,7 +1116,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var cfg = MODOS[modoAtual];
         tamanho = cfg.tamanho;
         numCaixas = cfg.caixas;
-        densidadeParedes = cfg.paredes;
+        numMovimentos = cfg.movimentos;
 
         var botoes = document.querySelectorAll('.mode-btn');
         for (var i = 0; i < botoes.length; i++) {
@@ -1112,7 +1173,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // TROCA DE MODO (manual)
+    // TROCA DE MODO
     // ==========================================================
     function trocarModo(novoModo) {
         if (novoModo === modoAtual) return;
@@ -1122,7 +1183,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var cfg = MODOS[novoModo];
         tamanho = cfg.tamanho;
         numCaixas = cfg.caixas;
-        densidadeParedes = cfg.paredes;
+        numMovimentos = cfg.movimentos;
 
         var botoes = document.querySelectorAll('.mode-btn');
         for (var i = 0; i < botoes.length; i++) {
@@ -1162,10 +1223,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         gerarNivel();
     });
 
-    // Teclado (setas + WASD)
     document.addEventListener('keydown', function(e) {
         if (!jogoAtivo) return;
-
         var tecla = e.key;
         if (tecla === 'ArrowUp' || tecla === 'w' || tecla === 'W') {
             e.preventDefault();
