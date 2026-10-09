@@ -250,14 +250,16 @@ body {
     color: var(--c-amber);
     text-shadow: 0 0 20px var(--c-amber);
 }
+
+/* Shape dentro da célula da matriz — 100% do container */
 .matrix-cel .shape {
-    width: 60%;
-    height: 60%;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(28px, 8vmin, 56px);
     line-height: 1;
+    transform-origin: center center;
 }
 
 /* ==========================================================
@@ -295,22 +297,25 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px;
+    padding: 6px;
     position: relative;
     overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
+
+/* Shape dentro da opção — 100% do container */
 .opcao .shape {
-    width: 60%;
-    height: 60%;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(28px, 8vmin, 56px);
     line-height: 1;
+    transform-origin: center center;
 }
+
 .opcao:hover:not(:disabled) {
     border-color: var(--btn-primary);
     background: rgba(99, 102, 241, 0.25);
@@ -606,17 +611,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     // ==========================================================
     // GERADORES DE MATRIZ
     // ==========================================================
-    // Cada gerador retorna:
-    //   {
-    //     matriz: array 9 de itens (8 visíveis + 1 null no índice 8)
-    //     resposta: item correto
-    //     distratores: array de 3 itens errados
-    //   }
-    // Cada item é: { forma: '●', cor: '#ff0000', tamanho: 1.0, rotacao: 0 }
-    // ==========================================================
 
-    // --- Gerador 1: ROTAÇÃO ---
-    // Formas iguais, girando progressivamente. Linha 1: 0°,45°,90°; Linha 2: 45°,90°,135°; etc.
+    // --- 1. ROTAÇÃO ---
     function gerarRotacao() {
         var forma = FORMAS[randInt(0, FORMAS.length - 1)];
         var cor = CORES[randInt(0, CORES.length - 1)];
@@ -624,20 +620,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var matriz = [];
         for (var l = 0; l < 3; l++) {
             for (var c = 0; c < 3; c++) {
-                var rot = (l + c) * 45;
                 matriz.push({
                     forma: forma,
                     cor: cor,
-                    rotacao: rot,
+                    rotacao: (l + c) * 45,
                     tamanho: 1.0
                 });
             }
         }
-        // Remove último (resposta correta)
         var resposta = matriz[8];
         matriz[8] = null;
 
-        // Distratores: rotações erradas
         var distratores = [
             { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0 },
             { forma: forma, cor: cor, rotacao: 45, tamanho: 1.0 },
@@ -647,8 +640,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         return { matriz: matriz, resposta: resposta, distratores: distratores };
     }
 
-    // --- Gerador 2: CRESCIMENTO ---
-    // Tamanho cresce da esquerda para a direita e de cima para baixo
+    // --- 2. CRESCIMENTO ---
     function gerarCrescimento() {
         var forma = FORMAS[randInt(0, FORMAS.length - 1)];
         var cor = CORES[randInt(0, CORES.length - 1)];
@@ -656,7 +648,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var matriz = [];
         for (var l = 0; l < 3; l++) {
             for (var c = 0; c < 3; c++) {
-                var tamanho = 0.5 + (l + c) * 0.15;
+                var tamanho = 0.55 + (l + c) * 0.12;
                 matriz.push({
                     forma: forma,
                     cor: cor,
@@ -669,23 +661,20 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         matriz[8] = null;
 
         var distratores = [
-            { forma: forma, cor: cor, rotacao: 0, tamanho: 0.5 },
-            { forma: forma, cor: cor, rotacao: 0, tamanho: 0.8 },
+            { forma: forma, cor: cor, rotacao: 0, tamanho: 0.55 },
+            { forma: forma, cor: cor, rotacao: 0, tamanho: 0.85 },
             { forma: forma, cor: cor, rotacao: 0, tamanho: 1.15 }
         ];
 
         return { matriz: matriz, resposta: resposta, distratores: distratores };
     }
 
-    // --- Gerador 3: CORES ---
-    // Cores variam em cada linha/coluna (matriz de permutação)
+    // --- 3. CORES ---
     function gerarCor() {
         var forma = FORMAS[randInt(0, FORMAS.length - 1)];
-        // Embaralha 3 cores
         var cores = embaralhar(CORES).slice(0, 3);
 
         var matriz = [];
-        // Cada linha tem as 3 cores em ordem diferente (deslocamento)
         for (var l = 0; l < 3; l++) {
             for (var c = 0; c < 3; c++) {
                 var corIdx = (l + c) % 3;
@@ -700,7 +689,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var resposta = matriz[8];
         matriz[8] = null;
 
-        // Distratores: cores diferentes
         var todasCores = CORES.slice();
         var outras = [];
         for (var i = 0; i < todasCores.length; i++) {
@@ -715,8 +703,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         return { matriz: matriz, resposta: resposta, distratores: distratores };
     }
 
-    // --- Gerador 4: CONTAGEM ---
-    // Número de formas cresce em cada linha
+    // --- 4. CONTAGEM ---
     function gerarContagem() {
         var forma = FORMAS[randInt(0, FORMAS.length - 1)];
         var cor = CORES[randInt(0, CORES.length - 1)];
@@ -737,18 +724,26 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var resposta = matriz[8];
         matriz[8] = null;
 
-        // Distratores: quantidades erradas
+        // Distratores com quantidades próximas
         var distratores = [
-            { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: 3 },
-            { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: 4 },
-            { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: 6 }
+            { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: resposta.quantidade - 1 },
+            { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: resposta.quantidade + 1 },
+            { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: resposta.quantidade + 2 }
         ];
+        // Filtra quantidade inválida (<1)
+        distratores = distratores.filter(function(d) { return d.quantidade >= 1 && d.quantidade <= 9; });
+        // Garante 3 distratores
+        while (distratores.length < 3) {
+            var q = randInt(1, 9);
+            if (q !== resposta.quantidade) {
+                distratores.push({ forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: q });
+            }
+        }
 
         return { matriz: matriz, resposta: resposta, distratores: distratores };
     }
 
-    // --- Gerador 5: SUBTRAÇÃO ---
-    // Coluna 3 = Coluna 1 - Coluna 2 (em número de formas)
+    // --- 5. SUBTRAÇÃO ---
     function gerarSubstracao() {
         var forma = FORMAS[randInt(0, FORMAS.length - 1)];
         var cor = CORES[randInt(0, CORES.length - 1)];
@@ -757,11 +752,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         for (var l = 0; l < 3; l++) {
             var a = randInt(4, 7);
             var b = randInt(1, 3);
-            // Coluna 1: a formas
             matriz.push({ forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: a });
-            // Coluna 2: b formas
             matriz.push({ forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: b });
-            // Coluna 3: a - b formas
             matriz.push({ forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: a - b });
         }
         var resposta = matriz[8];
@@ -773,7 +765,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             { forma: forma, cor: cor, rotacao: 0, tamanho: 1.0, quantidade: resposta.quantidade + 2 }
         ].filter(function(d) { return d.quantidade >= 1; });
 
-        // Garante 3 distratores
         while (distratores.length < 3) {
             var q = randInt(1, 8);
             if (q !== resposta.quantidade) {
@@ -784,11 +775,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         return { matriz: matriz, resposta: resposta, distratores: distratores };
     }
 
-    // --- Gerador 6: COMPOSIÇÃO ---
-    // Combina 2 regras (ex: rotação + mudança de cor)
+    // --- 6. COMPOSIÇÃO ---
     function gerarComposicao() {
-        // Regra 1: forma gira 45° por coluna
-        // Regra 2: cor muda a cada linha
         var forma = FORMAS[randInt(0, FORMAS.length - 1)];
         var cores = embaralhar(CORES).slice(0, 3);
 
@@ -837,34 +825,48 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
     }
 
     // ==========================================================
-    // RENDERIZAÇÃO
+    // RENDERIZAÇÃO — CORRIGIDA
     // ==========================================================
     function renderizarShape(item) {
         var wrapper = document.createElement('div');
         wrapper.className = 'shape';
         wrapper.style.color = item.cor || '#ffffff';
 
-        // Tamanho base
         var escala = item.tamanho || 1.0;
-        var baseSize = 100 * escala;
-        wrapper.style.transform = 'rotate(' + (item.rotacao || 0) + 'deg)';
+        var rotacao = item.rotacao || 0;
 
         if (item.quantidade) {
-            // Mostra N formas pequenas
+            // === MODO CONTAGEM: N formas dentro ===
             wrapper.style.display = 'flex';
             wrapper.style.flexWrap = 'wrap';
             wrapper.style.alignItems = 'center';
             wrapper.style.justifyContent = 'center';
             wrapper.style.gap = '2px';
-            wrapper.style.fontSize = (48 / Math.max(2, Math.sqrt(item.quantidade))) + 'px';
+            wrapper.style.transform = 'rotate(' + rotacao + 'deg) scale(' + escala + ')';
+
+            // Calcula tamanho da fonte conforme quantidade
+            var tamanhoFonte;
+            if (item.quantidade <= 1) tamanhoFonte = 42;
+            else if (item.quantidade === 2) tamanhoFonte = 32;
+            else if (item.quantidade === 3) tamanhoFonte = 26;
+            else if (item.quantidade <= 4) tamanhoFonte = 22;
+            else if (item.quantidade <= 6) tamanhoFonte = 18;
+            else if (item.quantidade <= 8) tamanhoFonte = 15;
+            else tamanhoFonte = 13;
+
             for (var i = 0; i < item.quantidade; i++) {
                 var s = document.createElement('span');
                 s.textContent = item.forma;
+                s.style.fontSize = tamanhoFonte + 'px';
+                s.style.lineHeight = '1';
+                s.style.display = 'inline-block';
                 wrapper.appendChild(s);
             }
         } else {
+            // === MODO FORMA ÚNICA: 1 forma com escala e rotação ===
             wrapper.textContent = item.forma;
             wrapper.style.fontSize = '48px';
+            wrapper.style.transform = 'rotate(' + rotacao + 'deg) scale(' + escala + ')';
         }
 
         return wrapper;
@@ -881,7 +883,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
             cel.className = 'matrix-cel';
 
             if (m[i] === null) {
-                // Célula da incógnita
                 cel.classList.add('interrogacao');
             } else {
                 cel.appendChild(renderizarShape(m[i]));
@@ -895,7 +896,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
         var grid = $('opcoes-grid');
         grid.innerHTML = '';
 
-        // Junta resposta + distratores e embaralha
         var todas = [puzzleAtual.resposta].concat(puzzleAtual.distratores);
         todas = embaralhar(todas);
 
