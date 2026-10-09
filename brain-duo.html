@@ -267,7 +267,7 @@ button:hover { filter: brightness(1.08); transform: translateY(-1px); }
     </div>
 
     <p class="instructions" id="info-instrucao">
-        👆👆 Toque nos <b>dois círculos ao mesmo tempo</b> com dois dedos. Desktop: <b>A</b> e <b>L</b>.
+        👆👆 Toque nos <b>dois círculos ao mesmo tempo</b>. Desktop: <b>A</b> e <b>L</b>.
     </p>
 
     <div id="game-canvas-wrap">
@@ -300,7 +300,7 @@ const VERSAO = 'v2-duo-2026-10-09';
 console.log(`✅ Brain Duo ${VERSAO}`);
 
 /* ==========================================================
-   CANVAS + DIMENSÕES
+   CANVAS
    ========================================================== */
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
@@ -312,19 +312,19 @@ canvas.height = H * dpr;
 ctx.scale(dpr, dpr);
 
 /* ==========================================================
-   CONFIG DE FASES
+   FASES
    ========================================================== */
 const FASES = {
-    1: { raio: 70, tempo: 3500, mover: 0, pulsar: false, encolher: false },
-    2: { raio: 65, tempo: 3200, mover: 0, pulsar: true, encolher: false },
-    3: { raio: 60, tempo: 3000, mover: 0.6, pulsar: true, encolher: false },
-    4: { raio: 55, tempo: 2800, mover: 0.9, pulsar: true, encolher: true },
-    5: { raio: 50, tempo: 2600, mover: 1.3, pulsar: true, encolher: true },
-    6: { raio: 45, tempo: 2400, mover: 1.7, pulsar: true, encolher: true },
-    7: { raio: 42, tempo: 2200, mover: 2.2, pulsar: true, encolher: true },
-    8: { raio: 40, tempo: 2000, mover: 2.7, pulsar: true, encolher: true },
-    9: { raio: 38, tempo: 1800, mover: 3.2, pulsar: true, encolher: true },
-    10: { raio: 36, tempo: 1600, mover: 4.0, pulsar: true, encolher: true }
+    1:  { raio: 70, tempo: 3500, mover: 0,   pulsar: false, encolher: false },
+    2:  { raio: 65, tempo: 3200, mover: 0,   pulsar: true,  encolher: false },
+    3:  { raio: 60, tempo: 3000, mover: 0.6, pulsar: true,  encolher: false },
+    4:  { raio: 55, tempo: 2800, mover: 0.9, pulsar: true,  encolher: true  },
+    5:  { raio: 50, tempo: 2600, mover: 1.3, pulsar: true,  encolher: true  },
+    6:  { raio: 45, tempo: 2400, mover: 1.7, pulsar: true,  encolher: true  },
+    7:  { raio: 42, tempo: 2200, mover: 2.2, pulsar: true,  encolher: true  },
+    8:  { raio: 40, tempo: 2000, mover: 2.7, pulsar: true,  encolher: true  },
+    9:  { raio: 38, tempo: 1800, mover: 3.2, pulsar: true,  encolher: true  },
+    10: { raio: 36, tempo: 1600, mover: 4.0, pulsar: true,  encolher: true  }
 };
 function getFase(n) {
     return FASES[Math.min(n, 10)] || FASES[10];
@@ -345,14 +345,19 @@ const estado = {
     gameOver: false,
     recordes: {},
     modo: 'touch',
-    tokenSessao: 0,           // ⬅️ corrige bug 2
-    tokenToqueParcial: 0      // ⬅️ corrige bug 3
+    tokenSessao: 0,
+    tokenToqueParcial: 0
 };
 
 const jogo = {
-    esq: { x: 150, y: 400, raio: 70, baseX: 150, baseY: 400, fase: 0, ativo: true, tocado: false, visivel: true, raioAtual: 70 },
-    dir: { x: 450, y: 400, raio: 70, baseX: 450, baseY: 400, fase: 0, ativo: true, tocado: false, visivel: true, raioAtual: 70 },
-    tempoRestante: 3000,
+    esq: {
+        x: 150, y: 400, raio: 70, baseX: 150, baseY: 400, fase: 0,
+        ativo: true, tocado: false, visivel: true, raioAtual: 70
+    },
+    dir: {
+        x: 450, y: 400, raio: 70, baseX: 450, baseY: 400, fase: 0,
+        ativo: true, tocado: false, visivel: true, raioAtual: 70
+    },
     toquesAtivos: new Map(),
     timerInicio: 0,
     ultimoFrame: 0
@@ -402,8 +407,8 @@ function setInstrucao(txt, tipo = '') {
    INICIALIZAÇÃO
    ========================================================== */
 function iniciarJogo() {
-    estado.tokenSessao++;         // ⬅️ invalida timers antigos
-    estado.tokenToqueParcial++;   // ⬅️ invalida timers antigos
+    estado.tokenSessao++;
+    estado.tokenToqueParcial++;
 
     estado.fase = 1;
     estado.pontos = 0;
@@ -429,13 +434,13 @@ function detectarModo() {
 }
 
 /* ==========================================================
-   RESET DE ALVOS — com validação anti-sobreposição
+   RESET DE ALVOS
    ========================================================== */
 function resetarAlvos() {
     const cfg = getFase(estado.fase);
     const margem = cfg.raio + 25;
 
-    // Gera 20 tentativas para achar posições bem separadas
+    // Tenta achar o par mais distante possível (anti-sobreposição)
     let melhorPar = null;
     let melhorDist = -1;
     for (let t = 0; t < 20; t++) {
@@ -480,31 +485,30 @@ function resetarAlvos() {
 }
 
 /* ==========================================================
-   INPUT — TOUCH
+   INPUT
    ========================================================== */
 function getPosFromTouch(t) {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    return { x: (t.clientX - rect.left) * scaleX, y: (t.clientY - rect.top) * scaleY };
+    const sx = W / rect.width;
+    const sy = H / rect.height;
+    return { x: (t.clientX - rect.left) * sx, y: (t.clientY - rect.top) * sy };
 }
 
 function getPosFromMouse(e) {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    const sx = W / rect.width;
+    const sy = H / rect.height;
+    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
 }
 
 function avaliarToques() {
     if (!estado.rodando || estado.gameOver) return;
-    if (!jogo.esq.ativo || !jogo.dir.ativo) return; // já acertou este ciclo
+    if (!jogo.esq.ativo || !jogo.dir.ativo) return;
 
     let tocouEsq = false;
     let tocouDir = false;
 
     for (const [, pos] of jogo.toquesAtivos) {
-        // ⬅️ Bug 9: só conta se estiver visível
         if (jogo.esq.visivel) {
             const d = Math.hypot(pos.x - jogo.esq.x, pos.y - jogo.esq.y);
             if (d <= jogo.esq.raioAtual) tocouEsq = true;
@@ -515,16 +519,14 @@ function avaliarToques() {
         }
     }
 
-    // Se ambos tocados simultaneamente → acerto
     if (tocouEsq && tocouDir) {
         acertou();
         return;
     }
 
-    // Se só um foi tocado, inicia temporizador para penalizar
+    // Toque parcial → agenda penalização
     if (tocouEsq !== tocouDir) {
         if (!jogo.esq.tocado && !jogo.dir.tocado) {
-            // Primeiro toque parcial detectado
             if (tocouEsq) jogo.esq.tocado = true;
             if (tocouDir) jogo.dir.tocado = true;
             agendarPenalizacaoParcial();
@@ -532,9 +534,6 @@ function avaliarToques() {
     }
 }
 
-/* ==========================================================
-   INPUT — Eventos de touch
-   ========================================================== */
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     estado.modo = 'touch';
@@ -558,15 +557,10 @@ function removerToques(e) {
     for (const t of e.changedTouches) {
         jogo.toquesAtivos.delete(t.identifier);
     }
-    // Não penaliza aqui — deixa o timeout de penalização decidir
 }
-
 canvas.addEventListener('touchend', removerToques);
 canvas.addEventListener('touchcancel', removerToques);
 
-/* ==========================================================
-   INPUT — Mouse (desktop com mouse)
-   ========================================================== */
 canvas.addEventListener('mousedown', (e) => {
     if (estado.modo === 'keyboard') return;
     estado.modo = 'mouse';
@@ -584,9 +578,6 @@ window.addEventListener('mouseup', () => {
     jogo.toquesAtivos.delete('mouse');
 });
 
-/* ==========================================================
-   INPUT — Teclado (desktop)
-   ========================================================== */
 window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     let tecla = null;
@@ -600,11 +591,9 @@ window.addEventListener('keydown', (e) => {
         if (tecla === 'esq') jogo.esq.tocado = true;
         if (tecla === 'dir') jogo.dir.tocado = true;
 
-        // Verifica acerto
         if (jogo.esq.tocado && jogo.dir.tocado) {
             acertou();
         } else {
-            // Só uma tecla → agenda penalização
             agendarPenalizacaoParcial();
         }
     }
@@ -617,7 +606,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 /* ==========================================================
-   LÓGICA CENTRAL
+   LÓGICA
    ========================================================== */
 function agendarPenalizacaoParcial() {
     estado.tokenToqueParcial++;
@@ -625,18 +614,17 @@ function agendarPenalizacaoParcial() {
     const sessionAtual = estado.tokenSessao;
 
     setTimeout(() => {
-        // ⬅️ Cancela se outra ação aconteceu ou sessão mudou
         if (tokenAtual !== estado.tokenToqueParcial) return;
         if (sessionAtual !== estado.tokenSessao) return;
         if (!estado.rodando || estado.gameOver) return;
         if (!jogo.esq.ativo || !jogo.dir.ativo) return;
 
-        const tocouEsq = jogo.esq.tocado;
-        const tocouDir = jogo.dir.tocado;
+        const te = jogo.esq.tocado;
+        const td = jogo.dir.tocado;
 
-        if (tocouEsq && !tocouDir) {
+        if (te && !td) {
             erro('Você tocou só o círculo esquerdo!');
-        } else if (tocouDir && !tocouEsq) {
+        } else if (td && !te) {
             erro('Você tocou só o círculo direito!');
         }
     }, 250);
@@ -646,12 +634,11 @@ function acertou() {
     if (!estado.rodando || estado.gameOver) return;
     if (!jogo.esq.ativo || !jogo.dir.ativo) return;
 
-    // ⬅️ Marca como inativo IMEDIATAMENTE para evitar chamadas duplicadas
     jogo.esq.ativo = false;
     jogo.dir.ativo = false;
     jogo.esq.tocado = false;
     jogo.dir.tocado = false;
-    estado.tokenToqueParcial++; // cancela penalizações pendentes
+    estado.tokenToqueParcial++;
 
     const tempoUsado = performance.now() - jogo.timerInicio;
     const cfg = getFase(estado.fase);
@@ -664,7 +651,6 @@ function acertou() {
     estado.acertos++;
     estado.comboMax = Math.max(estado.comboMax, estado.combo);
 
-    // Combo sobe a cada 3 acertos
     if (estado.acertos % 3 === 0) {
         estado.combo = Math.min(estado.combo + 1, 10);
     }
@@ -674,10 +660,9 @@ function acertou() {
 
     const sessionAtual = estado.tokenSessao;
     setTimeout(() => {
-        if (sessionAtual !== estado.tokenSessao) return; // sessão trocou
+        if (sessionAtual !== estado.tokenSessao) return;
         if (!estado.rodando || estado.gameOver) return;
 
-        // A cada 5 acertos sobe fase
         if (estado.acertos % 5 === 0 && estado.fase < 10) {
             estado.fase++;
             setInstrucao(`🚀 Fase ${estado.fase}!`, 'dica');
@@ -689,7 +674,7 @@ function acertou() {
 
 function erro(motivo = '') {
     if (!estado.rodando || estado.gameOver) return;
-    if (estado.vidas <= 0) return; // ⬅️ guard extra (bug 8)
+    if (estado.vidas <= 0) return;
 
     estado.vidas--;
     estado.erros++;
@@ -714,11 +699,8 @@ function erro(motivo = '') {
     }, 350);
 }
 
-/* ==========================================================
-   FIM DE JOGO
-   ========================================================== */
 function finalizarJogo() {
-    if (estado.gameOver) return; // ⬅️ guard contra dupla execução
+    if (estado.gameOver) return;
     estado.rodando = false;
     estado.gameOver = true;
 
@@ -767,7 +749,6 @@ function update(dt) {
     const cfg = getFase(estado.fase);
     const agora = performance.now();
 
-    // Movimento
     if (cfg.mover > 0 && jogo.esq.ativo) {
         jogo.esq.fase += dt * 0.002 * cfg.mover;
         jogo.dir.fase += dt * 0.0025 * cfg.mover * 1.3;
@@ -785,7 +766,6 @@ function update(dt) {
         jogo.dir.y = Math.max(m, Math.min(H - m, jogo.dir.y));
     }
 
-    // Encolher
     if (cfg.encolher) {
         const pulso = 0.85 + Math.sin(agora * 0.005) * 0.15;
         jogo.esq.raioAtual = cfg.raio * pulso;
@@ -795,7 +775,6 @@ function update(dt) {
         jogo.dir.raioAtual = cfg.raio;
     }
 
-    // Pulsar
     if (cfg.pulsar) {
         const visivel = Math.sin(agora * 0.004) > -0.3;
         jogo.esq.visivel = visivel;
@@ -805,7 +784,6 @@ function update(dt) {
         jogo.dir.visivel = true;
     }
 
-    // Verifica tempo restante (só se ainda está ativo)
     if (jogo.esq.ativo) {
         const tempoUsado = agora - jogo.timerInicio;
         if (tempoUsado > cfg.tempo) {
@@ -841,7 +819,6 @@ function render() {
     ctx.fillText('DIREITA', 3 * W / 4, 30);
     ctx.restore();
 
-    // Barra de tempo
     if (jogo.esq.ativo) {
         const cfg = getFase(estado.fase);
         const tempoUsado = performance.now() - jogo.timerInicio;
@@ -914,13 +891,12 @@ function desenharAlvo(alvo, cor, letra) {
    ========================================================== */
 async function salvarProgresso() {
     try {
-        // ⬅️ Bug 7 corrigido: soma ao total
         const snap = await get(ref(db, 'jogadores/' + jogadorSessao.chave));
         const dados = snap.exists() ? snap.val() : {};
         const totalAntes = dados.pontosDuo || 0;
 
         await update(ref(db, 'jogadores/' + jogadorSessao.chave), {
-            pontosDuo: totalAntes + estado.pontos,       // soma
+            pontosDuo: totalAntes + estado.pontos,
             recordeDuo: Math.max(dados.recordeDuo || 0, estado.pontos),
             comboDuo: Math.max(dados.comboDuo || 1, estado.comboMax),
             faseDuo: Math.max(dados.faseDuo || 1, estado.fase),
@@ -975,5 +951,5 @@ async function iniciar() {
 
 iniciar();
 </script>
-    </body>
+</body>
 </html>
