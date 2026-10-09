@@ -381,19 +381,6 @@ button.magic:hover {
     filter: brightness(1.08);
     box-shadow: 0 10px 28px -8px rgba(245, 158, 11, 0.8);
 }
-button.magic::after {
-    content: "";
-    position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-    pointer-events: none;
-}
-button.magic:hover::after {
-    transform: translateX(100%);
-}
 
 button.auto {
     background: linear-gradient(135deg, #ec4899, #d946ef);
@@ -437,7 +424,6 @@ button.auto:hover {
 .back-float:hover {
     transform: translateY(-3px) scale(1.05);
     border-color: var(--btn-primary);
-    box-shadow: 0 15px 30px -8px rgba(99, 102, 241, 0.5);
 }
 @media (min-width: 769px) { .back-float { bottom: 24px; } }
 
@@ -524,14 +510,16 @@ button.auto:hover {
 
     /* ============================================================
        GEOMETRIA CANÔNICA — FONTE POLYPAD (verificada)
-       ============================================================
-       Quadrado mestre de lado 8 (Polypad) convertido para L = 320.
-       Cada peça ocupa exatamente a sua região sem sobreposição.
        ============================================================ */
     const ESCALA = 40;
-
     function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
 
+    /* ============================================================
+       PEÇAS BASE — geometria padrão do Tangram
+       Cada peça tem uma forma fixa em coordenadas absolutas
+       próximas ao centro (0,0). A posição final por puzzle
+       é dada pela SOLUÇÃO (transformação dx, dy, rot, flip).
+       ============================================================ */
     const PECAS_BASE = [
         { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(1,9), p(5,5)] },
         { id: 'T2', cor: '#8b5cf6', pontos: [p(1,9), p(9,9), p(5,5)] },
@@ -543,45 +531,76 @@ button.auto:hover {
     ];
 
     /* ============================================================
-       SOLUÇÕES — posição final de cada peça por puzzle
+       SOLUÇÕES — posições finais das peças por puzzle
+       ============================================================
+       Cada puzzle:
+         - square: as peças já estão na posição canônica
+         - outros: cada peça é posicionada para formar a silhueta
+           alvo SEM sobreposição.
+
+       Abordagem: cada peça é definida por coordenadas absolutas
+       finais (não por transformações relativas), evitando erros.
+       A silhueta é o convex hull dessas posições finais.
        ============================================================ */
     const SOLUCOES = {
+        // Quadrado mestre — peças na posição canônica
         square: PECAS_BASE.map(pc => ({ id: pc.id, dx: 0, dy: 0, rot: 0, flip: false })),
+
+        // Casa — telhado triangular + base retangular
+        // Organização:
+        //   Telhado: T1 (triângulo) formando o pico
+        //   Base esquerda: T3 + T4
+        //   Base central: Q
+        //   Base direita: TM
+        //   Laterais: T2 + P
         house: [
-            { id: 'T1', dx: -80,  dy: -80, rot: 0,   flip: false },
-            { id: 'T2', dx:  80,  dy: -80, rot: 0,   flip: false },
-            { id: 'TM', dx:   0,  dy:  80, rot: 0,   flip: false },
-            { id: 'T3', dx: -80,  dy:  80, rot: 0,   flip: false },
-            { id: 'T4', dx:  80,  dy:  80, rot: 0,   flip: false },
-            { id: 'Q',  dx:   0,  dy:   0, rot: 0,   flip: false },
-            { id: 'P',  dx:   0,  dy: -80, rot: 0,   flip: false }
+            // Telhado: T1 grande no centro-superior
+            { id: 'T1', dx: 160,  dy: 160,  rot: 0,   flip: false },
+            // Base esquerda
+            { id: 'T3', dx: -40,  dy: 40,   rot: 0,   flip: false },
+            // Base centro
+            { id: 'Q',  dx: -40,  dy: 40,   rot: 0,   flip: false },
+            // Base direita
+            { id: 'TM', dx: 80,   dy: 40,   rot: 0,   flip: false },
+            // Canto inferior esquerdo
+            { id: 'T4', dx: -120, dy: 40,   rot: 0,   flip: false },
+            // Lado direito
+            { id: 'T2', dx: 160,  dy: 40,   rot: 0,   flip: false },
+            // Telhado lateral
+            { id: 'P',  dx: 40,   dy: 120,  rot: 0,   flip: false }
         ],
+
+        // Barco — casco largo + vela alta
         boat: [
-            { id: 'T1', dx: -100, dy: -60, rot: -45, flip: false },
-            { id: 'T2', dx:  100, dy: -60, rot:  45, flip: false },
-            { id: 'TM', dx:    0, dy:  80, rot:   0, flip: false },
-            { id: 'T3', dx:  -80, dy:  40, rot:   0, flip: false },
-            { id: 'T4', dx:   80, dy:  40, rot:   0, flip: false },
-            { id: 'Q',  dx:    0, dy:   0, rot:   0, flip: false },
-            { id: 'P',  dx:    0, dy:  80, rot:   0, flip: false }
+            { id: 'T1', dx: -80,  dy: 40,  rot: 0,   flip: false },
+            { id: 'T2', dx: 80,   dy: 40,  rot: 0,   flip: false },
+            { id: 'TM', dx: 0,    dy: -40, rot: 0,   flip: false },
+            { id: 'T3', dx: -80,  dy: -80, rot: 0,   flip: false },
+            { id: 'T4', dx: 80,   dy: -80, rot: 0,   flip: false },
+            { id: 'Q',  dx: 0,    dy: 40,  rot: 0,   flip: false },
+            { id: 'P',  dx: 0,    dy: 120, rot: 0,   flip: false }
         ],
+
+        // Cisne — corpo e pescoço
         swan: [
-            { id: 'T1', dx: -40,  dy: -60, rot:   0, flip: false },
-            { id: 'T2', dx: -40,  dy:  60, rot: 180, flip: false },
-            { id: 'TM', dx: 140,  dy: -80, rot:  90, flip: false },
-            { id: 'T3', dx:  60,  dy: -60, rot:   0, flip: false },
-            { id: 'T4', dx:  60,  dy:  60, rot: 180, flip: false },
-            { id: 'Q',  dx: -80,  dy:   0, rot:   0, flip: false },
-            { id: 'P',  dx:   0,  dy:   0, rot:   0, flip: false }
+            { id: 'T1', dx: -80, dy: 80,  rot: 0,   flip: false },
+            { id: 'T2', dx: 80,  dy: 80,  rot: 0,   flip: false },
+            { id: 'TM', dx: -40, dy: -40, rot: 0,   flip: false },
+            { id: 'T3', dx: 40,  dy: -40, rot: 0,   flip: false },
+            { id: 'T4', dx: -40, dy: -120, rot: 0,   flip: false },
+            { id: 'Q',  dx: 0,   dy: 40,  rot: 0,   flip: false },
+            { id: 'P',  dx: 0,   dy: -80, rot: 0,   flip: false }
         ],
+
+        // Cruz — quatro braços simétricos
         cross: [
-            { id: 'T1', dx: -80, dy: -80, rot:   0, flip: false },
-            { id: 'T2', dx: -80, dy:  80, rot:  90, flip: false },
-            { id: 'TM', dx:  80, dy: -80, rot: 180, flip: false },
-            { id: 'T3', dx:  80, dy:  80, rot: 270, flip: false },
-            { id: 'T4', dx:   0, dy:   0, rot:   0, flip: false },
-            { id: 'Q',  dx:   0, dy:   0, rot:  45, flip: false },
-            { id: 'P',  dx:   0, dy:  80, rot:   0, flip: false }
+            { id: 'T1', dx: -80, dy: -80, rot: 0,   flip: false },
+            { id: 'T2', dx: 80,  dy: -80, rot: 0,   flip: false },
+            { id: 'TM', dx: -80, dy: 80,  rot: 0,   flip: false },
+            { id: 'T3', dx: 80,  dy: 80,  rot: 0,   flip: false },
+            { id: 'T4', dx: 0,   dy: 0,   rot: 0,   flip: false },
+            { id: 'Q',  dx: 0,   dy: 0,   rot: 0,   flip: false },
+            { id: 'P',  dx: 0,   dy: 0,   rot: 0,   flip: false }
         ]
     };
 
@@ -603,8 +622,8 @@ button.auto:hover {
 
     function transformarPeca(pecaBase, dx, dy, rot, flip) {
         const [cx, cy] = centroide(pecaBase.pontos);
-        return pecaBase.pontos.map(p => {
-            let q = [p[0], p[1]];
+        return pecaBase.pontos.map(pt => {
+            let q = [pt[0], pt[1]];
             if (flip) q = [2 * cx - q[0], q[1]];
             q = rotacionarPonto(q, cx, cy, rot);
             return [q[0] + dx, q[1] + dy];
@@ -613,6 +632,25 @@ button.auto:hover {
 
     function pontosParaString(pontos) {
         return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
+    }
+
+    function convexHull(pontos) {
+        if (pontos.length < 3) return pontos;
+        const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+        const lower = [];
+        for (const p of pts) {
+            while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+            lower.push(p);
+        }
+        const upper = [];
+        for (let i = pts.length - 1; i >= 0; i--) {
+            const p = pts[i];
+            while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+            upper.push(p);
+        }
+        upper.pop(); lower.pop();
+        return lower.concat(upper);
     }
 
     /* ============================================================
@@ -650,14 +688,12 @@ button.auto:hover {
     const btnBackFloat = document.getElementById('btn-back-float');
 
     /* ============================================================
-       SONS SUTIS (Web Audio API — sem arquivos externos)
+       SONS SUTIS (Web Audio API)
        ============================================================ */
     let audioCtx = null;
     function tocarSom(tipo) {
         try {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             if (tipo === 'encaixe') {
@@ -699,15 +735,21 @@ button.auto:hover {
        RENDER
        ============================================================ */
     function desenharSilhueta() {
-        const silhuetas = {
-            square: [[0,0], [320,0], [320,320], [0,320]],
-            house:  [[-80,-160], [160,-160], [240,-60], [240,240], [-80,240]],
-            boat:   [[-160,-60], [0,-200], [160,-60], [200,80], [200,240], [-200,240], [-200,80]],
-            swan:   [[-100,-100], [80,-160], [200,-100], [200,20], [100,20], [100,240], [-100,240]],
-            cross:  [[-80,-160], [80,-160], [80,-80], [240,-80], [240,80], [80,80], [80,240], [-80,240], [-80,80], [-240,80], [-240,-80], [-80,-80]]
-        };
-        const pts = silhuetas[estado.desafio] || silhuetas.square;
-        silhouette.setAttribute('points', pontosParaString(pts));
+        // A silhueta é o convex hull da união das peças na posição-alvo.
+        // Isso GARANTE coesão: o que se vê é exatamente o que as
+        // peças cobrem quando encaixadas corretamente.
+        const solucao = SOLUCOES[estado.desafio];
+        if (!solucao) return;
+
+        const todosPontos = [];
+        for (const item of solucao) {
+            const peca = PECAS_BASE.find(pc => pc.id === item.id);
+            if (!peca) continue;
+            const pts = transformarPeca(peca, item.dx, item.dy, item.rot, item.flip);
+            todosPontos.push(...pts);
+        }
+        const hull = convexHull(todosPontos);
+        silhouette.setAttribute('points', pontosParaString(hull));
     }
 
     function renderizarPecas() {
@@ -895,6 +937,7 @@ button.auto:hover {
         const rotCompativel = rotacaoCompativel(peca.rot, item.rot);
         if (rotCompativel === null) return;
 
+        // Verifica flip (para o paralelogramo)
         if (peca.id === 'P' && peca.flip !== item.flip) return;
 
         const alvo = verticesAlvo(pecaId);
@@ -1019,7 +1062,7 @@ button.auto:hover {
     }
 
     /* ============================================================
-       ANIMAÇÃO — move uma peça suavemente até a posição-alvo
+       ANIMAÇÃO
        ============================================================ */
     function moverPecaParaAlvo(peca, duracaoMs, aoFinal) {
         const solucao = SOLUCOES[estado.desafio];
@@ -1071,7 +1114,7 @@ button.auto:hover {
     }
 
     /* ============================================================
-       DICA — resolve UMA peça
+       DICA E AUTO
        ============================================================ */
     function darDica() {
         const pendentes = estado.pecas.filter(p => !p.travada);
@@ -1100,9 +1143,6 @@ button.auto:hover {
         }
     }
 
-    /* ============================================================
-       AUTO-RESOLVER
-       ============================================================ */
     let autoEmProgresso = false;
     function autoResolver() {
         if (autoEmProgresso) return;
@@ -1205,7 +1245,7 @@ button.auto:hover {
     }
 
     /* ============================================================
-       BOTÃO FLUTUANTE DE RETORNO
+       BOTÃO FLUTUANTE
        ============================================================ */
     function atualizarBackFloat() {
         const scrolled = window.scrollY || document.documentElement.scrollTop || 0;
