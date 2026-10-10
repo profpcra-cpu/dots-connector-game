@@ -29,7 +29,6 @@
     --c-blue: #38bdf8;
     --c-amber: #f59e0b;
     --board-bg: rgba(15, 23, 42, 0.55);
-    --board-light: #f8fafc;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 20px;
@@ -267,7 +266,6 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Bolinhas (endpoints) */
 .dot {
     cursor: grab;
     touch-action: none;
@@ -275,7 +273,6 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
 }
 .dot:hover { filter: brightness(1.2) drop-shadow(0 0 8px currentColor); }
 
-/* Traços */
 .trail {
     fill: none;
     stroke-width: 8;
@@ -466,61 +463,190 @@ const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
 if (!jogadorSessao) { window.location.href = 'index.html'; }
 
 /* ============================================================
-   NÍVEIS — bolinhas pré-posicionadas (coordenadas no viewBox 400x400)
-   ============================================================
-   Cada nível tem pares de bolinhas. Cada par tem uma cor.
-   Bolinhas: { x, y, cor, parId }
+   CONFIGURAÇÃO DO TABULEIRO
    ============================================================ */
-const NIVEIS = {
-    1: {
-        pares: 2,
-        dots: [
-            { x: 80,  y: 80,  cor: '#22c55e', parId: 0 },
-            { x: 320, y: 80,  cor: '#22c55e', parId: 0 },
-            { x: 80,  y: 320, cor: '#3b82f6', parId: 1 },
-            { x: 320, y: 320, cor: '#3b82f6', parId: 1 }
-        ]
-    },
-    2: {
-        pares: 3,
-        dots: [
-            { x: 80,  y: 80,  cor: '#22c55e', parId: 0 },
-            { x: 320, y: 80,  cor: '#22c55e', parId: 0 },
-            { x: 80,  y: 320, cor: '#3b82f6', parId: 1 },
-            { x: 320, y: 320, cor: '#3b82f6', parId: 1 },
-            { x: 200, y: 200, cor: '#ef4444', parId: 2 },
-            { x: 340, y: 200, cor: '#ef4444', parId: 2 }
-        ]
-    },
-    3: {
-        pares: 4,
-        dots: [
-            { x: 60,  y: 60,  cor: '#22c55e', parId: 0 },
-            { x: 340, y: 60,  cor: '#22c55e', parId: 0 },
-            { x: 60,  y: 340, cor: '#3b82f6', parId: 1 },
-            { x: 340, y: 340, cor: '#3b82f6', parId: 1 },
-            { x: 200, y: 60,  cor: '#ef4444', parId: 2 },
-            { x: 200, y: 340, cor: '#ef4444', parId: 2 },
-            { x: 60,  y: 200, cor: '#f59e0b', parId: 3 },
-            { x: 340, y: 200, cor: '#f59e0b', parId: 3 }
-        ]
-    },
-    4: {
-        pares: 5,
-        dots: [
-            { x: 60,  y: 60,  cor: '#22c55e', parId: 0 },
-            { x: 340, y: 60,  cor: '#22c55e', parId: 0 },
-            { x: 60,  y: 340, cor: '#3b82f6', parId: 1 },
-            { x: 340, y: 340, cor: '#3b82f6', parId: 1 },
-            { x: 200, y: 60,  cor: '#ef4444', parId: 2 },
-            { x: 200, y: 340, cor: '#ef4444', parId: 2 },
-            { x: 60,  y: 200, cor: '#f59e0b', parId: 3 },
-            { x: 340, y: 200, cor: '#f59e0b', parId: 3 },
-            { x: 200, y: 200, cor: '#a855f7', parId: 4 },
-            { x: 300, y: 200, cor: '#a855f7', parId: 4 }
-        ]
-    }
+const BOARD = {
+    largura: 400,
+    altura: 400,
+    margemSegura: 55,     // bolinha nunca fica a menos de 55px das bordas
+    minDistPares: 60,     // distância mínima entre bolinhas de pares diferentes
+    minDistPar: 220,      // distância mínima entre as duas do mesmo par
+    raioBolinha: 22
 };
+
+const PALETA = [
+    '#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#a855f7',
+    '#06b6d4', '#ec4899', '#84cc16'
+];
+
+/* ============================================================
+   GERADOR DE NÍVEIS — embaralhamento inteligente
+   ============================================================
+   Estratégia em 3 fases:
+     1. Dividir o tabuleiro em regiões angulares (radiais)
+     2. Para cada par, escolher uma região e posicionar as 2 bolinhas
+        nas extremidades opostas da região
+     3. Validar e regenerar se necessário
+   ============================================================ */
+function gerarNivel(quantidadePares) {
+    const tentativasMax = 80;
+    for (let tentativa = 0; tentativa < tentativasMax; tentativa++) {
+        const resultado = tentarGerar(quantidadePares);
+        if (resultado) return resultado;
+    }
+    // Fallback: layout em grade simples
+    return gerarFallback(quantidadePares);
+}
+
+function tentarGerar(quantidadePares) {
+    const dots = [];
+    const pontosUsados = [];  // pontos já ocupados (todas as bolinhas)
+
+    // Divide o tabuleiro em N regiões angulares a partir do centro
+    const centro = { x: BOARD.largura / 2, y: BOARD.altura / 2 };
+    const raio = Math.min(BOARD.largura, BOARD.altura) / 2 - BOARD.margemSegura;
+
+    // Ângulo base aleatório para variar a cada partida
+    const anguloBase = Math.random() * Math.PI * 2;
+
+    for (let parId = 0; parId < quantidadePares; parId++) {
+        const anguloCentro = anguloBase + (parId * 2 * Math.PI / quantidadePares);
+        const anguloSpread = (2 * Math.PI / quantidadePares) * 0.7;
+
+        let posicaoA = null, posicaoB = null;
+
+        // Tenta 100 vezes gerar um par válido
+        for (let tent = 0; tent < 100; tent++) {
+            const anguloA = anguloCentro + (Math.random() - 0.5) * anguloSpread;
+            const anguloB = anguloCentro + Math.PI + (Math.random() - 0.5) * anguloSpread;
+
+            const raioA = raio * (0.6 + Math.random() * 0.4);
+            const raioB = raio * (0.6 + Math.random() * 0.4);
+
+            const a = {
+                x: centro.x + Math.cos(anguloA) * raioA,
+                y: centro.y + Math.sin(anguloA) * raioA
+            };
+            const b = {
+                x: centro.x + Math.cos(anguloB) * raioB,
+                y: centro.y + Math.sin(anguloB) * raioB
+            };
+
+            // Valida: dentro da margem segura
+            if (!dentroDaMargem(a) || !dentroDaMargem(b)) continue;
+
+            // Valida: distância mínima entre as duas do par
+            if (Math.hypot(a.x - b.x, a.y - b.y) < BOARD.minDistPar) continue;
+
+            // Valida: distância mínima às outras bolinhas
+            let ok = true;
+            for (const p of pontosUsados) {
+                if (Math.hypot(a.x - p.x, a.y - p.y) < BOARD.minDistPares ||
+                    Math.hypot(b.x - p.x, b.y - p.y) < BOARD.minDistPares) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) continue;
+
+            // Valida: o segmento reto A-B não deve passar por nenhuma bolinha
+            // já existente (força curva se houver interseção com terceira bolinha)
+            // — este critério é uma PREFERÊNCIA, não um bloqueio.
+            // Aceitamos mesmo sem interseção.
+
+            posicaoA = a;
+            posicaoB = b;
+            break;
+        }
+
+        if (!posicaoA || !posicaoB) return null; // falhou, regenera o nível todo
+
+        // Registra as duas bolinhas
+        dots.push({ ...posicaoA, cor: PALETA[parId % PALETA.length], parId });
+        dots.push({ ...posicaoB, cor: PALETA[parId % PALETA.length], parId });
+        pontosUsados.push(posicaoA, posicaoB);
+    }
+
+    // Validação final: existe pelo menos 1 par com traço reto bloqueado?
+    const temBloqueio = verificarSeTemBloqueioReto(dots);
+    if (!temBloqueio && quantidadePares >= 3) {
+        // Tenta pelo menos 1 par bloqueado para forçar curvatura
+        // Se não conseguiu, aceita mesmo assim (mas só vale para níveis altos)
+        if (tentativasContador < 3) return null;
+    }
+
+    return dots;
+}
+
+/**
+ * Verifica se existe pelo menos 1 par cujo segmento reto entre as duas
+ * bolinhas passa perto de uma terceira bolinha (forçando o jogador a
+ * fazer uma curva).
+ */
+function verificarSeTemBloqueioReto(dots) {
+    for (let i = 0; i < dots.length; i += 2) {
+        const a = dots[i];
+        const b = dots[i + 1];
+        for (let j = 0; j < dots.length; j++) {
+            if (j === i || j === i + 1) continue;
+            const p = dots[j];
+            const dist = distanciaPontoSegmento(p, a, b);
+            if (dist < BOARD.raioBolinha * 1.8) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function distanciaPontoSegmento(p, a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    const projX = a.x + t * dx;
+    const projY = a.y + t * dy;
+    return Math.hypot(p.x - projX, p.y - projY);
+}
+
+function dentroDaMargem(p) {
+    return p.x >= BOARD.margemSegura &&
+           p.x <= BOARD.largura - BOARD.margemSegura &&
+           p.y >= BOARD.margemSegura &&
+           p.y <= BOARD.altura - BOARD.margemSegura;
+}
+
+/**
+ * Fallback: layout em grade — usado se o gerador falhar várias vezes.
+ */
+function gerarFallback(quantidadePares) {
+    const dots = [];
+    const total = quantidadePares * 2;
+    const colunas = Math.ceil(Math.sqrt(total));
+    const linhas = Math.ceil(total / colunas);
+    const passoX = (BOARD.largura - 2 * BOARD.margemSegura) / (colunas - 1 || 1);
+    const passoY = (BOARD.altura - 2 * BOARD.margemSegura) / (linhas - 1 || 1);
+
+    let idx = 0;
+    for (let parId = 0; parId < quantidadePares; parId++) {
+        for (let k = 0; k < 2; k++) {
+            const col = idx % colunas;
+            const lin = Math.floor(idx / colunas);
+            dots.push({
+                x: BOARD.margemSegura + col * passoX,
+                y: BOARD.margemSegura + lin * passoY,
+                cor: PALETA[parId % PALETA.length],
+                parId
+            });
+            idx++;
+        }
+    }
+    return dots;
+}
+
+let tentativasContador = 0;
 
 /* ============================================================
    ESTADO
@@ -528,13 +654,14 @@ const NIVEIS = {
 const estado = {
     nivel: 1,
     dots: [],
-    trilhas: {},          // parId -> { cor, pontos: [{x,y}] }
-    desenhando: null,     // { parId, cor, pontos: [] }
+    trilhas: {},
+    desenhando: null,
     paresConcluidos: 0,
     pontos: 0,
     segundos: 0,
     timer: null,
-    concluido: false
+    concluido: false,
+    totalPares: 0
 };
 
 /* ============================================================
@@ -543,7 +670,6 @@ const estado = {
 const svg = document.getElementById('canvas-svg');
 const trailsLayer = document.getElementById('trails-layer');
 const dotsLayer = document.getElementById('dots-layer');
-const boardWrapper = document.getElementById('board-wrapper');
 
 const displayNivel = document.getElementById('display-nivel');
 const displayPontos = document.getElementById('display-pontos');
@@ -585,16 +711,6 @@ function tocarSom(tipo) {
                 o.start(audioCtx.currentTime + i * 0.1);
                 o.stop(audioCtx.currentTime + i * 0.1 + 0.25);
             });
-        } else if (tipo === 'erro') {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.15);
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.18);
         }
     } catch (_) { /* silencioso */ }
 }
@@ -626,18 +742,12 @@ function segmentosSeCruzam(p1, p2, p3, p4) {
     return false;
 }
 
-/**
- * Verifica se um novo segmento cruzaria qualquer trilha existente
- * (exceto a própria trilha em construção).
- */
 function cruzariaAlgumaTrilha(p1, p2, parIdAtual) {
     for (const parId in estado.trilhas) {
         if (parseInt(parId) === parIdAtual) continue;
         const trilha = estado.trilhas[parId].pontos;
         for (let i = 0; i < trilha.length - 1; i++) {
-            if (segmentosSeCruzam(p1, p2, trilha[i], trilha[i + 1])) {
-                return true;
-            }
+            if (segmentosSeCruzam(p1, p2, trilha[i], trilha[i + 1])) return true;
         }
     }
     return false;
@@ -647,9 +757,12 @@ function cruzariaAlgumaTrilha(p1, p2, parIdAtual) {
    INICIALIZAÇÃO DO NÍVEL
    ============================================================ */
 function iniciarNivel(nivel) {
-    const def = NIVEIS[nivel] || NIVEIS[1];
+    const quantidadePares = nivel + 1;   // 1→2, 2→3, 3→4, 4→5
+
+    // Gera as bolinhas com embaralhamento inteligente
+    estado.dots = gerarNivel(quantidadePares);
     estado.nivel = nivel;
-    estado.dots = def.dots.map((d, i) => ({ ...d, id: i }));
+    estado.totalPares = quantidadePares;
     estado.trilhas = {};
     estado.desenhando = null;
     estado.paresConcluidos = 0;
@@ -657,46 +770,41 @@ function iniciarNivel(nivel) {
 
     displayNivel.textContent = nivel;
     atualizarContadorPares();
-    infoInstrucao.textContent = `Nível ${nivel}: ligue ${def.pares} pares sem cruzar traços.`;
+    infoInstrucao.textContent = `Nível ${nivel}: ligue ${quantidadePares} pares sem cruzar traços.`;
 
     renderizarTudo();
     iniciarTimer();
 }
 
 function atualizarContadorPares() {
-    const total = NIVEIS[estado.nivel].pares;
-    displayPares.textContent = `${estado.paresConcluidos}/${total}`;
+    displayPares.textContent = `${estado.paresConcluidos}/${estado.totalPares}`;
 }
 
 /* ============================================================
    RENDER
    ============================================================ */
 function renderizarTudo() {
-    // Trilhas
     trailsLayer.innerHTML = '';
     for (const parId in estado.trilhas) {
         const trilha = estado.trilhas[parId];
         const path = criarPathSVG(trilha.pontos, trilha.cor, false);
         trailsLayer.appendChild(path);
     }
-    // Trilha em construção
     if (estado.desenhando && estado.desenhando.pontos.length > 1) {
         const path = criarPathSVG(estado.desenhando.pontos, estado.desenhando.cor, true);
         trailsLayer.appendChild(path);
     }
 
-    // Bolinhas
     dotsLayer.innerHTML = '';
     for (const dot of estado.dots) {
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', dot.x);
         circle.setAttribute('cy', dot.y);
-        circle.setAttribute('r', 22);
+        circle.setAttribute('r', BOARD.raioBolinha);
         circle.setAttribute('fill', dot.cor);
         circle.setAttribute('stroke', 'rgba(255,255,255,0.9)');
         circle.setAttribute('stroke-width', '3');
         circle.classList.add('dot');
-        circle.dataset.id = dot.id;
         circle.dataset.parId = dot.parId;
         circle.style.color = dot.cor;
         circle.addEventListener('pointerdown', onPointerDown);
@@ -729,24 +837,29 @@ function getSVGPoint(evt) {
 function onPointerDown(evt) {
     if (estado.concluido) return;
     const circle = evt.currentTarget;
-    const dotId = parseInt(circle.dataset.id);
-    const dot = estado.dots.find(d => d.id === dotId);
-    if (!dot) return;
+    const parId = parseInt(circle.dataset.parId);
 
-    // Se o par já foi concluído, permite remover (limpar)
-    if (estado.trilhas[dot.parId]) {
-        delete estado.trilhas[dot.parId];
+    // Se já está concluído, remover
+    if (estado.trilhas[parId]) {
+        delete estado.trilhas[parId];
         estado.paresConcluidos--;
         atualizarContadorPares();
         renderizarTudo();
         return;
     }
 
+    const dot = estado.dots.find(d => d.parId === parId && Math.hypot(
+        parseFloat(circle.getAttribute('cx')) - d.x,
+        parseFloat(circle.getAttribute('cy')) - d.y
+    ) < 1);
+    if (!dot) return;
+
     evt.preventDefault();
     estado.desenhando = {
-        parId: dot.parId,
+        parId,
         cor: dot.cor,
-        pontos: [{ x: dot.x, y: dot.y }]
+        pontos: [{ x: dot.x, y: dot.y }],
+        dotOrigem: dot
     };
 
     try { svg.setPointerCapture(evt.pointerId); } catch (_) {}
@@ -762,20 +875,17 @@ function onPointerMove(evt) {
     evt.preventDefault();
 
     const pt = getSVGPoint(evt);
-    // Limita ao tabuleiro
     pt.x = Math.max(15, Math.min(385, pt.x));
     pt.y = Math.max(15, Math.min(385, pt.y));
 
     const pontos = estado.desenhando.pontos;
     const ultimo = pontos[pontos.length - 1];
 
-    // Ignora movimentos muito pequenos
     if (Math.hypot(pt.x - ultimo.x, pt.y - ultimo.y) < 5) return;
 
-    // Verifica cruzamento com trilhas concluídas
     if (cruzariaAlgumaTrilha(ultimo, pt, estado.desenhando.parId)) {
         infoInstrucao.textContent = '⚠️ Não pode cruzar outros traços!';
-        return; // não adiciona o ponto
+        return;
     }
 
     pontos.push(pt);
@@ -791,16 +901,14 @@ function onPointerUp(evt) {
     if (!estado.desenhando) return;
 
     const pt = getSVGPoint(evt);
-    // Verifica se soltou sobre uma bolinha do mesmo par
+    const dotOrigem = estado.desenhando.dotOrigem;
     const alvo = estado.dots.find(d => {
-        return Math.hypot(d.x - pt.x, d.y - pt.y) < 30 &&
-               d.parId === estado.desenhando.parId &&
-               // Não é a bolinha de origem
-               Math.hypot(d.x - estado.desenhando.pontos[0].x, d.y - estado.desenhando.pontos[0].y) > 5;
+        return d.parId === estado.desenhando.parId &&
+               !(d === dotOrigem) &&
+               Math.hypot(d.x - pt.x, d.y - pt.y) < BOARD.raioBolinha * 1.6;
     });
 
     if (alvo && estado.desenhando.pontos.length >= 2) {
-        // Fecha o par
         estado.desenhando.pontos.push({ x: alvo.x, y: alvo.y });
         estado.trilhas[estado.desenhando.parId] = {
             cor: estado.desenhando.cor,
@@ -810,9 +918,8 @@ function onPointerUp(evt) {
         atualizarContadorPares();
         tocarSom('par');
         if (navigator.vibrate) navigator.vibrate(40);
-        infoInstrucao.textContent = `✅ Par ligado! ${estado.paresConcluidos}/${NIVEIS[estado.nivel].pares}`;
+        infoInstrucao.textContent = `✅ Par ligado! ${estado.paresConcluidos}/${estado.totalPares}`;
     } else {
-        // Cancela o traço
         infoInstrucao.textContent = 'Traço cancelado — solte sobre a bolinha par da mesma cor.';
     }
 
@@ -825,8 +932,7 @@ function onPointerUp(evt) {
    VITÓRIA
    ============================================================ */
 function verificarConclusao() {
-    const total = NIVEIS[estado.nivel].pares;
-    if (estado.paresConcluidos === total && !estado.concluido) {
+    if (estado.paresConcluidos === estado.totalPares && !estado.concluido) {
         estado.concluido = true;
         pararTimer();
         tocarSom('vitoria');
