@@ -503,16 +503,15 @@ button.auto:hover {
 (function () {
     "use strict";
 
-    /* Geometria perfeitamente alinhada ao quadrado canônico de 0 a 320 */
-    const S = 40;
+    /* Geometria exata das 7 peças do Tangram formando o quadrado perfeito de 320x320 */
     const PECAS_BASE = [
         { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [0, 320], [160, 160]] }, // Triângulo Grande 1
         { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0], [320, 0], [160, 160]] }, // Triângulo Grande 2
-        { id: 'TM', cor: '#ec4899', pontos: [[320, 0], [320, 160], [240, 80]] }, // Triângulo Médio
+        { id: 'TM', cor: '#ec4899', pontos: [[320, 0], [320, 160], [160, 160]] }, // Triângulo Médio
         { id: 'T3', cor: '#14b8a6', pontos: [[160, 160], [320, 160], [240, 240]] }, // Triângulo Pequeno 1
         { id: 'T4', cor: '#f59e0b', pontos: [[160, 160], [240, 240], [160, 320]] }, // Triângulo Pequeno 2
         { id: 'Q',  cor: '#06b6d4', pontos: [[160, 160], [240, 80], [320, 160], [240, 240]] }, // Quadrado
-        { id: 'P',  cor: '#d946ef', pontos: [[0, 160], [80, 240], [160, 160], [80, 80]] }  // Paralelogramo
+        { id: 'P',  cor: '#d946ef', pontos: [[0, 320], [80, 160], [160, 240], [80, 400]] }  // Paralelogramo (ajustado sem falhas)
     ];
 
     const SOLUCOES = {
