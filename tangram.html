@@ -547,25 +547,6 @@ button.auto:hover {
         return pontos.map(pt => `${pt[0].toFixed(2)},${pt[1].toFixed(2)}`).join(' ');
     }
 
-    function convexHull(pontos) {
-        if (pontos.length < 3) return pontos;
-        const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-        const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
-        const lower = [];
-        for (const pt of pts) {
-            while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], pt) <= 0) lower.pop();
-            lower.push(pt);
-        }
-        const upper = [];
-        for (let i = pts.length - 1; i >= 0; i--) {
-            const pt = pts[i];
-            while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], pt) <= 0) upper.pop();
-            upper.push(pt);
-        }
-        upper.pop(); lower.pop();
-        return lower.concat(upper);
-    }
-
     const estado = {
         pecas: [],
         selecionada: null,
@@ -643,18 +624,16 @@ button.auto:hover {
         }
         silhouette.style.display = '';
 
-        const solucao = SOLUCOES[estado.desafio];
-        if (!solucao) return;
-
-        const todosPontos = [];
-        for (const item of solucao) {
-            const peca = PECAS_BASE.find(pc => pc.id === item.id);
-            if (!peca) continue;
-            const pts = transformarPeca(peca, item.dx, item.dy, item.rot, item.flip);
-            todosPontos.push(...pts);
+        if (estado.desafio === 'square') {
+            // Silhueta exata do quadrado mestre correspondente aos limites (0,0) a (320,320)
+            const pts = [
+                [0, 0],
+                [320, 0],
+                [320, 320],
+                [0, 320]
+            ];
+            silhouette.setAttribute('points', pontosParaString(pts));
         }
-        const hull = convexHull(todosPontos);
-        silhouette.setAttribute('points', pontosParaString(hull));
     }
 
     function renderizarPecas() {
@@ -665,19 +644,19 @@ button.auto:hover {
             return aTop - bTop;
         });
 
-        for (const p of ordenadas) {
-            const pts = transformarPeca(p.base, p.dx, p.dy, p.rot, p.flip);
+        for (const ptItem of ordenadas) {
+            const pts = transformarPeca(ptItem.base, ptItem.dx, ptItem.dy, ptItem.rot, ptItem.flip);
             const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             el.setAttribute('points', pontosParaString(pts));
-            el.setAttribute('fill', p.cor);
+            el.setAttribute('fill', ptItem.cor);
             el.setAttribute('stroke', 'rgba(255,255,255,0.6)');
             el.setAttribute('stroke-width', '1.5');
             el.setAttribute('stroke-linejoin', 'round');
             el.classList.add('piece');
-            if (p.travada) el.classList.add('locked');
-            if (estado.selecionada === p.id) el.classList.add('selected');
-            if (estado.dragging && estado.dragging.id === p.id) el.classList.add('dragging');
-            el.dataset.id = p.id;
+            if (ptItem.travada) el.classList.add('locked');
+            if (estado.selecionada === ptItem.id) el.classList.add('selected');
+            if (estado.dragging && estado.dragging.id === ptItem.id) el.classList.add('dragging');
+            el.dataset.id = ptItem.id;
             el.addEventListener('pointerdown', onPointerDown);
             piecesLayer.appendChild(el);
         }
