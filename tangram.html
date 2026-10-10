@@ -503,17 +503,16 @@ button.auto:hover {
 (function () {
     "use strict";
 
-    const ESCALA = 40;
-    function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
-
+    /* Geometria perfeitamente alinhada ao quadrado canônico de 0 a 320 */
+    const S = 40;
     const PECAS_BASE = [
-        { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(5,5), p(1,9)] },
-        { id: 'T2', cor: '#8b5cf6', pontos: [p(1,1), p(9,1), p(5,5)] },
-        { id: 'TM', cor: '#ec4899', pontos: [p(9,1), p(9,5), p(5,5)] },
-        { id: 'T3', cor: '#14b8a6', pontos: [p(5,5), p(9,5), p(7,7)] },
-        { id: 'T4', cor: '#f59e0b', pontos: [p(5,5), p(7,7), p(5,9)] },
-        { id: 'Q',  cor: '#06b6d4', pontos: [p(5,5), p(7,3), p(9,5), p(7,7)] },
-        { id: 'P',  cor: '#d946ef', pontos: [p(1,1), p(1,5), p(3,7), p(5,3)] }
+        { id: 'T1', cor: '#6366f1', pontos: [[0, 0], [0, 320], [160, 160]] }, // Triângulo Grande 1
+        { id: 'T2', cor: '#8b5cf6', pontos: [[0, 0], [320, 0], [160, 160]] }, // Triângulo Grande 2
+        { id: 'TM', cor: '#ec4899', pontos: [[320, 0], [320, 160], [240, 80]] }, // Triângulo Médio
+        { id: 'T3', cor: '#14b8a6', pontos: [[160, 160], [320, 160], [240, 240]] }, // Triângulo Pequeno 1
+        { id: 'T4', cor: '#f59e0b', pontos: [[160, 160], [240, 240], [160, 320]] }, // Triângulo Pequeno 2
+        { id: 'Q',  cor: '#06b6d4', pontos: [[160, 160], [240, 80], [320, 160], [240, 240]] }, // Quadrado
+        { id: 'P',  cor: '#d946ef', pontos: [[0, 160], [80, 240], [160, 160], [80, 80]] }  // Paralelogramo
     ];
 
     const SOLUCOES = {
@@ -625,12 +624,11 @@ button.auto:hover {
         silhouette.style.display = '';
 
         if (estado.desafio === 'square') {
-            // Ajustado exatamente para cobrir o intervalo de p(1,1) a p(9,9) => de 0 a 320 em escala 40
             const pts = [
                 [0, 0],
-                [8 * ESCALA, 0],
-                [8 * ESCALA, 8 * ESCALA],
-                [0, 8 * ESCALA]
+                [320, 0],
+                [320, 320],
+                [0, 320]
             ];
             silhouette.setAttribute('points', pontosParaString(pts));
         }
@@ -881,21 +879,21 @@ button.auto:hover {
     function posicoesIniciais() {
         const resultado = [];
         const zonas = [
-            { x: -30, y: -30 },
-            { x: 220, y: -30 },
-            { x: -30, y: 220 },
-            { x: 220, y: 220 }
+            { x: -50, y: -50 },
+            { x: 230, y: -50 },
+            { x: -50, y: 230 },
+            { x: 230, y: 230 }
         ];
         const zonaPorPeca = { T1: 0, T2: 2, TM: 1, T3: 1, T4: 2, Q: 3, P: 3 };
 
         PECAS_BASE.forEach((peca) => {
             const zona = zonas[zonaPorPeca[peca.id] ?? 0];
             const baseCentro = centroide(peca.pontos);
-            const jitterX = (Math.random() - 0.5) * 30;
-            const jitterY = (Math.random() - 0.5) * 30;
+            const jitterX = (Math.random() - 0.5) * 20;
+            const jitterY = (Math.random() - 0.5) * 20;
 
-            const alvoX = zona.x + 60 + jitterX;
-            const alvoY = zona.y + 60 + jitterY;
+            const alvoX = zona.x + 50 + jitterX;
+            const alvoY = zona.y + 50 + jitterY;
 
             resultado.push({
                 id: peca.id,
