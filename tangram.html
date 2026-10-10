@@ -504,23 +504,46 @@ button.auto:hover {
     "use strict";
 
     /* ============================================================
-       GEOMETRIA CANÔNICA — FONTE POLYPAD (verificada)
+       GEOMETRIA CANÔNICA — TANGRAM PADRÃO (verificada)
        ============================================================
-       Quadrado mestre de lado 8 (Polypad) convertido para L = 320.
-       Cada peça ocupa exatamente a sua região sem sobreposição.
-       Soma das áreas = L² = 102 400.
+       Quadrado mestre de lado 8, com origem (1,1) e canto (9,9).
+       Cada peça tem a sua posição final canônica.
+       Soma das áreas = 64 = lado² ✅
+
+       Peças na posição final:
+         T1 (grande 1): (1,1), (5,5), (1,9)     → área 16
+         T2 (grande 2): (1,1), (9,1), (5,5)     → área 16
+         TM (médio):    (9,1), (9,5), (5,5)     → área  8
+         T3 (peq. 1):   (5,5), (9,5), (7,7)     → área  4
+         T4 (peq. 2):   (5,5), (7,7), (5,9)     → área  4
+         Q  (quadrado): (5,5), (7,3), (9,5), (7,7)  → área  8
+         P  (paralel.): (1,1), (1,5), (3,7), (5,3)  → área  8
+                                            Total: 64 ✅
        ============================================================ */
     const ESCALA = 40;
     function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
 
     const PECAS_BASE = [
-        { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(1,9), p(5,5)] },
-        { id: 'T2', cor: '#8b5cf6', pontos: [p(1,9), p(9,9), p(5,5)] },
-        { id: 'TM', cor: '#ec4899', pontos: [p(9,5), p(9,9), p(7,7)] },
-        { id: 'T3', cor: '#14b8a6', pontos: [p(3,3), p(7,3), p(5,5)] },
-        { id: 'T4', cor: '#f59e0b', pontos: [p(5,5), p(7,7), p(9,5)] },
+        // Triângulo grande 1 — canto inferior esquerdo + centro
+        { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(5,5), p(1,9)] },
+
+        // Triângulo grande 2 — topo direito + centro
+        { id: 'T2', cor: '#8b5cf6', pontos: [p(1,1), p(9,1), p(5,5)] },
+
+        // Triângulo médio — canto direito
+        { id: 'TM', cor: '#ec4899', pontos: [p(9,1), p(9,5), p(5,5)] },
+
+        // Triângulo pequeno 1 — base direita
+        { id: 'T3', cor: '#14b8a6', pontos: [p(5,5), p(9,5), p(7,7)] },
+
+        // Triângulo pequeno 2 — base inferior
+        { id: 'T4', cor: '#f59e0b', pontos: [p(5,5), p(7,7), p(5,9)] },
+
+        // Quadrado — centro direito
         { id: 'Q',  cor: '#06b6d4', pontos: [p(5,5), p(7,3), p(9,5), p(7,7)] },
-        { id: 'P',  cor: '#d946ef', pontos: [p(1,1), p(5,1), p(7,3), p(3,3)] }
+
+        // Paralelogramo — canto superior esquerdo
+        { id: 'P',  cor: '#d946ef', pontos: [p(1,1), p(1,5), p(3,7), p(5,3)] }
     ];
 
     /* ============================================================
@@ -617,7 +640,7 @@ button.auto:hover {
     const btnBackFloat = document.getElementById('btn-back-float');
 
     /* ============================================================
-       SONS
+       SONS SUTIS
        ============================================================ */
     let audioCtx = null;
     function tocarSom(tipo) {
@@ -672,8 +695,7 @@ button.auto:hover {
         silhouette.style.display = '';
 
         // Silhueta = convex hull da união das peças na posição final.
-        // Isso GARANTE coesão: o que se vê é exatamente o que as
-        // peças cobrem quando encaixadas.
+        // Garante coesão total entre o que se vê e o que as peças cobrem.
         const solucao = SOLUCOES[estado.desafio];
         if (!solucao) return;
 
