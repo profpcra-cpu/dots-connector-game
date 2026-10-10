@@ -503,72 +503,33 @@ button.auto:hover {
 (function () {
     "use strict";
 
-    /* ============================================================
-       GEOMETRIA CANÔNICA — TANGRAM PADRÃO (verificada)
-       ============================================================
-       Quadrado mestre de lado 8, com origem (1,1) e canto (9,9).
-       Cada peça tem a sua posição final canônica.
-       Soma das áreas = 64 = lado² ✅
-
-       Peças na posição final:
-         T1 (grande 1): (1,1), (5,5), (1,9)     → área 16
-         T2 (grande 2): (1,1), (9,1), (5,5)     → área 16
-         TM (médio):    (9,1), (9,5), (5,5)     → área  8
-         T3 (peq. 1):   (5,5), (9,5), (7,7)     → área  4
-         T4 (peq. 2):   (5,5), (7,7), (5,9)     → área  4
-         Q  (quadrado): (5,5), (7,3), (9,5), (7,7)  → área  8
-         P  (paralel.): (1,1), (1,5), (3,7), (5,3)  → área  8
-                                            Total: 64 ✅
-       ============================================================ */
     const ESCALA = 40;
     function p(x, y) { return [(x - 1) * ESCALA, (y - 1) * ESCALA]; }
 
     const PECAS_BASE = [
-        // Triângulo grande 1 — canto inferior esquerdo + centro
         { id: 'T1', cor: '#6366f1', pontos: [p(1,1), p(5,5), p(1,9)] },
-
-        // Triângulo grande 2 — topo direito + centro
         { id: 'T2', cor: '#8b5cf6', pontos: [p(1,1), p(9,1), p(5,5)] },
-
-        // Triângulo médio — canto direito
         { id: 'TM', cor: '#ec4899', pontos: [p(9,1), p(9,5), p(5,5)] },
-
-        // Triângulo pequeno 1 — base direita
         { id: 'T3', cor: '#14b8a6', pontos: [p(5,5), p(9,5), p(7,7)] },
-
-        // Triângulo pequeno 2 — base inferior
         { id: 'T4', cor: '#f59e0b', pontos: [p(5,5), p(7,7), p(5,9)] },
-
-        // Quadrado — centro direito
         { id: 'Q',  cor: '#06b6d4', pontos: [p(5,5), p(7,3), p(9,5), p(7,7)] },
-
-        // Paralelogramo — canto superior esquerdo
         { id: 'P',  cor: '#d946ef', pontos: [p(1,1), p(1,5), p(3,7), p(5,3)] }
     ];
 
-    /* ============================================================
-       SOLUÇÕES — apenas "square" (verificado)
-       ============================================================
-       As peças-base já estão na posição final do quadrado mestre.
-       Não há transformações — cada peça tem dx=0, dy=0, rot=0.
-       ============================================================ */
     const SOLUCOES = {
         square: PECAS_BASE.map(pc => ({ id: pc.id, dx: 0, dy: 0, rot: 0, flip: false }))
     };
 
-    /* ============================================================
-       UTILITÁRIOS GEOMÉTRICOS
-       ============================================================ */
     function centroide(pontos) {
         let x = 0, y = 0;
-        for (const p of pontos) { x += p[0]; y += p[1]; }
+        for (const pt of pontos) { x += pt[0]; y += pt[1]; }
         return [x / pontos.length, y / pontos.length];
     }
 
-    function rotacionarPonto(p, cx, cy, rot) {
+    function rotacionarPonto(pt, cx, cy, rot) {
         const rad = rot * Math.PI / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
-        const px = p[0] - cx, py = p[1] - cy;
+        const px = pt[0] - cx, py = pt[1] - cy;
         return [cos * px - sin * py + cx, sin * px + cos * py + cy];
     }
 
@@ -583,7 +544,7 @@ button.auto:hover {
     }
 
     function pontosParaString(pontos) {
-        return pontos.map(p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ');
+        return pontos.map(pt => `${pt[0].toFixed(2)},${pt[1].toFixed(2)}`).join(' ');
     }
 
     function convexHull(pontos) {
@@ -591,23 +552,20 @@ button.auto:hover {
         const pts = pontos.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
         const cross = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
         const lower = [];
-        for (const p of pts) {
-            while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
-            lower.push(p);
+        for (const pt of pts) {
+            while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], pt) <= 0) lower.pop();
+            lower.push(pt);
         }
         const upper = [];
         for (let i = pts.length - 1; i >= 0; i--) {
-            const p = pts[i];
-            while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
-            upper.push(p);
+            const pt = pts[i];
+            while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], pt) <= 0) upper.pop();
+            upper.push(pt);
         }
         upper.pop(); lower.pop();
         return lower.concat(upper);
     }
 
-    /* ============================================================
-       ESTADO
-       ============================================================ */
     const estado = {
         pecas: [],
         selecionada: null,
@@ -618,9 +576,6 @@ button.auto:hover {
         timer: null
     };
 
-    /* ============================================================
-       DOM
-       ============================================================ */
     const svg = document.getElementById('tangram-svg');
     const piecesLayer = document.getElementById('pieces-layer');
     const silhouette = document.getElementById('silhouette');
@@ -639,9 +594,6 @@ button.auto:hover {
     const themeToggle = document.getElementById('theme-toggle');
     const btnBackFloat = document.getElementById('btn-back-float');
 
-    /* ============================================================
-       SONS SUTIS
-       ============================================================ */
     let audioCtx = null;
     function tocarSom(tipo) {
         try {
@@ -680,12 +632,9 @@ button.auto:hover {
                     o.stop(audioCtx.currentTime + i * 0.1 + 0.25);
                 });
             }
-        } catch (_) { /* silencioso */ }
+        } catch (_) {}
     }
 
-    /* ============================================================
-       RENDER
-       ============================================================ */
     function desenharSilhueta() {
         if (estado.desafio === 'free') {
             silhouette.setAttribute('points', '');
@@ -694,8 +643,6 @@ button.auto:hover {
         }
         silhouette.style.display = '';
 
-        // Silhueta = convex hull da união das peças na posição final.
-        // Garante coesão total entre o que se vê e o que as peças cobrem.
         const solucao = SOLUCOES[estado.desafio];
         if (!solucao) return;
 
@@ -736,9 +683,6 @@ button.auto:hover {
         }
     }
 
-    /* ============================================================
-       INTERAÇÃO
-       ============================================================ */
     const VB_MIN = -40;
     const VB_SIZE = 400;
 
@@ -845,9 +789,6 @@ button.auto:hover {
         verificarConclusao();
     }
 
-    /* ============================================================
-       SNAP
-       ============================================================ */
     const TOLERANCIA_POS = 30;
     const TOLERANCIA_ROT = 22;
 
@@ -902,10 +843,10 @@ button.auto:hover {
         const atual = transformarPeca(peca.base, peca.dx, peca.dy, peca.rot, peca.flip);
 
         let piorDist = 0;
-        for (const p of atual) {
+        for (const pt of atual) {
             let melhor = Infinity;
             for (const q of alvo) {
-                const d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+                const d = Math.hypot(pt[0] - q[0], pt[1] - q[1]);
                 if (d < melhor) melhor = d;
             }
             if (melhor > piorDist) piorDist = melhor;
@@ -937,9 +878,6 @@ button.auto:hover {
         }
     }
 
-    /* ============================================================
-       TIMER
-       ============================================================ */
     function formatarTempo(s) {
         const m = String(Math.floor(s / 60)).padStart(2, '0');
         const ss = String(s % 60).padStart(2, '0');
@@ -961,9 +899,6 @@ button.auto:hover {
         estado.timer = null;
     }
 
-    /* ============================================================
-       POSIÇÕES INICIAIS
-       ============================================================ */
     function posicoesIniciais() {
         const resultado = [];
         const zonas = [
@@ -1019,9 +954,6 @@ button.auto:hover {
         iniciarTimer();
     }
 
-    /* ============================================================
-       ANIMAÇÃO
-       ============================================================ */
     function moverPecaParaAlvo(peca, duracaoMs, aoFinal) {
         const solucao = SOLUCOES[estado.desafio];
         if (!solucao) { if (aoFinal) aoFinal(); return; }
@@ -1072,9 +1004,6 @@ button.auto:hover {
         requestAnimationFrame(animar);
     }
 
-    /* ============================================================
-       DICA E AUTO
-       ============================================================ */
     function darDica() {
         if (estado.desafio === 'free') {
             infoInstrucao.textContent = '🎨 Modo livre não tem dica — é pura criatividade!';
@@ -1150,9 +1079,6 @@ button.auto:hover {
         });
     }
 
-    /* ============================================================
-       EVENTOS
-       ============================================================ */
     selectDesafio.addEventListener('change', () => {
         estado.desafio = selectDesafio.value;
         resetar();
@@ -1180,9 +1106,6 @@ button.auto:hover {
         if (e.key === 'Escape') { estado.selecionada = null; renderizarPecas(); }
     });
 
-    /* ============================================================
-       TEMA + SESSÃO
-       ============================================================ */
     const savedTheme = localStorage.getItem('brain_flow_theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
     atualizarTextoBotaoTema(savedTheme);
@@ -1211,9 +1134,6 @@ button.auto:hover {
         document.getElementById('display-nome').textContent = 'Visitante';
     }
 
-    /* ============================================================
-       BOTÃO FLUTUANTE
-       ============================================================ */
     function atualizarBackFloat() {
         const scrolled = window.scrollY || document.documentElement.scrollTop || 0;
         if (scrolled > 120) btnBackFloat.classList.add('visible');
@@ -1222,9 +1142,6 @@ button.auto:hover {
     window.addEventListener('scroll', atualizarBackFloat, { passive: true });
     atualizarBackFloat();
 
-    /* ============================================================
-       BOOT
-       ============================================================ */
     resetar();
 })();
 </script>
