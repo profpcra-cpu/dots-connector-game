@@ -28,8 +28,10 @@
     --c-green: #4ade80;
     --c-blue: #38bdf8;
     --c-amber: #f59e0b;
+    --c-star: #fbbf24;
     --board-bg: rgba(15, 23, 42, 0.55);
     --cell-empty: rgba(30, 41, 59, 0.55);
+    --cell-empty-rest: rgba(239, 68, 68, 0.15);
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 20px;
@@ -55,6 +57,7 @@
     --input-bg: rgba(255, 255, 255, 0.95);
     --board-bg: rgba(248, 250, 252, 0.95);
     --cell-empty: rgba(226, 232, 240, 0.7);
+    --cell-empty-rest: rgba(239, 68, 68, 0.12);
     --shadow-card: 0 20px 60px -20px rgba(30, 41, 59, 0.28);
 }
 
@@ -186,17 +189,17 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
 
 .score-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 6px;
     background: var(--input-bg);
     padding: 10px;
     border-radius: var(--radius-md);
     margin-bottom: 12px;
-    font-size: 11px;
+    font-size: 10px;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     font-weight: 600;
 }
 .score-board > div {
@@ -209,7 +212,7 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     background: rgba(255, 255, 255, 0.02);
 }
 .score-board strong {
-    font-size: 15px;
+    font-size: 14px;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
     text-transform: none;
@@ -218,13 +221,14 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
 #display-pontos { color: var(--c-green); }
 #display-tempo  { color: #60a5fa; }
 #display-pares  { color: var(--c-amber); }
+#display-estrelas { color: var(--c-star); }
 
 .instructions {
     font-size: 12.5px;
     color: var(--text-muted);
     margin: 4px 0 12px;
     line-height: 1.5;
-    min-height: 18px;
+    min-height: 36px;
 }
 
 .board-wrapper {
@@ -269,7 +273,7 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     background: var(--cell-empty);
     border-radius: 4px;
     position: relative;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -285,6 +289,17 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     0%, 100% { transform: translateX(0); }
     25%      { transform: translateX(-2px); }
     75%      { transform: translateX(2px); }
+}
+
+/* Células vazias quando todos os pares estão ligados */
+.cell.vazia-restante {
+    box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.6);
+    animation: vaziaPulse 1.6s ease-in-out infinite;
+    background: var(--cell-empty-rest);
+}
+@keyframes vaziaPulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.6); }
+    50%      { box-shadow: inset 0 0 0 4px rgba(239, 68, 68, 0.9); }
 }
 
 /* Endpoint */
@@ -339,6 +354,36 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
 @keyframes trailPulse {
     0%, 100% { transform: scale(1); opacity: 0.9; }
     50%      { transform: scale(1.25); opacity: 1; }
+}
+
+/* Cruzamento — trilha por baixo com anel dourado */
+.cell.trail.cruzada {
+    box-shadow: inset 0 0 0 3px rgba(251, 191, 36, 0.85);
+}
+.cell.trail.cruzada::before {
+    content: "⭐";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #fbbf24;
+    text-shadow: 0 0 6px rgba(251, 191, 36, 0.9);
+    animation: starTwinkle 1.6s ease-in-out infinite;
+    z-index: 5;
+    pointer-events: none;
+}
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.15); }
+}
+
+/* Cruzamento — trilha por cima com moldura dupla */
+.cell.trail.cruzando {
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.55),
+        0 0 0 2px rgba(251, 191, 36, 0.85);
 }
 
 .controls-grid {
@@ -454,8 +499,8 @@ button.magic:hover {
 @media (max-width: 440px) {
     body { padding: 10px; }
     .container { padding: 16px 14px 18px; border-radius: 16px; max-width: 100%; }
-    .score-board { font-size: 10px; }
-    .score-board strong { font-size: 13px; }
+    .score-board { font-size: 9px; }
+    .score-board strong { font-size: 12px; }
     .game-name { display: none; }
 }
 
@@ -490,10 +535,11 @@ button.magic:hover {
         <div>Pontos<br><strong id="display-pontos">0</strong></div>
         <div>Tempo<br><strong id="display-tempo">00:00</strong></div>
         <div>Pares<br><strong id="display-pares">0/3</strong></div>
+        <div>⭐<br><strong id="display-estrelas">0</strong></div>
     </div>
 
     <p class="instructions" id="info-instrucao">
-        Arraste para ligar os pares. Preencha <b>todas</b> as células sem cruzar trilhos!
+        Arraste para ligar os pares. Estenda trilhas para ganhar ⭐ e use-as para cruzar.
     </p>
 
     <div class="board-wrapper" id="board-wrapper">
@@ -528,14 +574,7 @@ const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
 if (!jogadorSessao) { window.location.href = 'index.html'; }
 
 /* ============================================================
-   PUZZLES — Grade ortogonal estilo Numberlink
-   ============================================================
-   Cada puzzle tem:
-     - tamanho: N (grade N×N)
-     - pares: lista de { cor, a: {r,c}, b: {r,c} }
-
-   As posições foram escolhidas para que exista pelo menos
-   uma solução que preenche toda a grade sem cruzamentos.
+   PUZZLES
    ============================================================ */
 const PUZZLES = {
     1: {
@@ -594,13 +633,16 @@ const estado = {
     tamanho: 5,
     grid: [],
     pares: [],
-    trilhas: {},
+    trilhas: {},              // parId -> { pontos: [{r,c}], cruzamentos: [idx] }
     desenhando: null,
+    estrelas: 0,              // ⭐ disponíveis
     pontos: 0,
     segundos: 0,
     timer: null,
     concluido: false,
-    totalPares: 0
+    totalPares: 0,
+    totalCelulas: 0,
+    cruzamentosAtivos: []     // lista de { r, c, parIdAtual, parIdAbaixo }
 };
 
 /* ============================================================
@@ -611,6 +653,7 @@ const displayNivel = document.getElementById('display-nivel');
 const displayPontos = document.getElementById('display-pontos');
 const displayTempo = document.getElementById('display-tempo');
 const displayPares = document.getElementById('display-pares');
+const displayEstrelas = document.getElementById('display-estrelas');
 const infoInstrucao = document.getElementById('info-instrucao');
 const selectNivel = document.getElementById('select-nivel');
 const btnReset = document.getElementById('btn-reset');
@@ -627,17 +670,24 @@ function tocarSom(tipo) {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        if (tipo === 'par') {
+        const emitir = (freq1, freq2, dur, vol = 0.09) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(660, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(990, audioCtx.currentTime + 0.12);
-            gain.gain.setValueAtTime(0.10, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+            osc.frequency.setValueAtTime(freq1, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freq2, audioCtx.currentTime + dur);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur + 0.06);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.18);
-        } else if (tipo === 'vitoria') {
+            osc.stop(audioCtx.currentTime + dur + 0.06);
+        };
+
+        if (tipo === 'par')      emitir(660, 990, 0.12);
+        if (tipo === 'estrela')  emitir(880, 1320, 0.15, 0.11);
+        if (tipo === 'cruzamento') emitir(440, 660, 0.18, 0.12);
+        if (tipo === 'aviso')    emitir(440, 330, 0.2, 0.08);
+        if (tipo === 'erro')     emitir(220, 110, 0.15, 0.08);
+        if (tipo === 'vitoria') {
             [523, 659, 784, 1047].forEach((freq, i) => {
                 const o = audioCtx.createOscillator();
                 const g = audioCtx.createGain();
@@ -661,34 +711,38 @@ function iniciarPuzzle(nivel) {
     estado.tamanho = puzzle.tamanho;
     estado.pares = puzzle.pares.map((p, i) => ({ ...p, id: i }));
     estado.totalPares = puzzle.pares.length;
+    estado.totalCelulas = puzzle.tamanho * puzzle.tamanho;
     estado.trilhas = {};
     estado.desenhando = null;
     estado.concluido = false;
+    estado.cruzamentosAtivos = [];
+    // Estrelas zeradas a cada nova partida
+    estado.estrelas = 0;
 
-    // Grid vazio
     estado.grid = Array.from({ length: puzzle.tamanho }, () =>
         Array.from({ length: puzzle.tamanho }, () => ({
             cor: null, parId: null, tipo: 'vazio'
         }))
     );
 
-    // Endpoints
     for (const par of estado.pares) {
         estado.grid[par.a.r][par.a.c] = { cor: par.cor, parId: par.id, tipo: 'endpoint' };
         estado.grid[par.b.r][par.b.c] = { cor: par.cor, parId: par.id, tipo: 'endpoint' };
     }
 
     displayNivel.textContent = nivel;
-    atualizarContadorPares();
-    infoInstrucao.textContent = `Nível ${nivel} (${puzzle.tamanho}×${puzzle.tamanho}): ligue os ${estado.totalPares} pares e preencha tudo.`;
+    atualizarContadores();
+    infoInstrucao.innerHTML = `Nível ${nivel} (${puzzle.tamanho}×${puzzle.tamanho}): ligue os ${estado.totalPares} pares. Estenda trilhas para ganhar ⭐.`;
 
     renderizarBoard();
     atualizarVisual();
     iniciarTimer();
 }
 
-function atualizarContadorPares() {
-    displayPares.textContent = `${Object.keys(estado.trilhas).length}/${estado.totalPares}`;
+function atualizarContadores() {
+    const paresLigados = Object.keys(estado.trilhas).length;
+    displayPares.textContent = `${paresLigados}/${estado.totalPares}`;
+    displayEstrelas.textContent = estado.estrelas;
 }
 
 /* ============================================================
@@ -714,16 +768,26 @@ function renderizarBoard() {
 
 function atualizarVisual() {
     const n = estado.tamanho;
+    const todosParesLigados = Object.keys(estado.trilhas).length === estado.totalPares;
+
+    // Limpa tudo
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
             const cell = document.getElementById(`cell-${r}-${c}`);
             if (!cell) continue;
-
-            const dado = estado.grid[r][c];
             cell.className = 'cell';
             cell.style.background = '';
             cell.innerHTML = '';
             cell.style.removeProperty('--trail-color');
+        }
+    }
+
+    // Desenha o estado atual do grid
+    for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+            const cell = document.getElementById(`cell-${r}-${c}`);
+            const dado = estado.grid[r][c];
+            if (!cell) continue;
 
             if (dado.tipo === 'endpoint') {
                 const conectado = estado.trilhas[dado.parId] ? ' connected' : '';
@@ -731,13 +795,17 @@ function atualizarVisual() {
             } else if (dado.tipo === 'trilha') {
                 cell.classList.add('trail');
                 cell.style.setProperty('--trail-color', dado.cor);
+            } else if (dado.tipo === 'vazio') {
+                if (todosParesLigados && !estado.concluido) {
+                    cell.classList.add('vazia-restante');
+                }
             }
         }
     }
 
     // Marca trilhas conectadas
     for (const parId in estado.trilhas) {
-        const t = estado.trilhas[parId];
+        const t = estado.trilhas[parId].pontos;
         if (t.length < 2) continue;
         const par = estado.pares.find(p => p.id == parId);
         if (!par) continue;
@@ -753,9 +821,18 @@ function atualizarVisual() {
         }
     }
 
+    // Marca cruzamentos visuais
+    for (const cz of estado.cruzamentosAtivos) {
+        const el = document.getElementById(`cell-${cz.r}-${cz.c}`);
+        if (el) {
+            el.classList.add('cruzada');
+            el.classList.add('cruzando');
+        }
+    }
+
     // Feedback trilha em construção
-    if (estado.desenhando && estado.desenhando.trail.length > 1) {
-        for (const p of estado.desenhando.trail) {
+    if (estado.desenhando && estado.desenhando.pontos.length > 1) {
+        for (const p of estado.desenhando.pontos) {
             if (estado.grid[p.r][p.c].tipo === 'trilha') {
                 const el = document.getElementById(`cell-${p.r}-${p.c}`);
                 if (el) el.classList.add('live');
@@ -765,7 +842,7 @@ function atualizarVisual() {
 }
 
 /* ============================================================
-   INTERAÇÃO — Arrastar (pointer events)
+   INTERAÇÃO — Pointer events
    ============================================================ */
 let activePointerId = null;
 
@@ -783,16 +860,19 @@ board.addEventListener('pointerdown', (e) => {
 
         // Se já existe trilha deste par, remove
         if (estado.trilhas[dado.parId]) {
-            limparTrilhaDoGrid(estado.trilhas[dado.parId]);
+            limparTrilhaDoGrid(estado.trilhas[dado.parId].pontos);
+            // Remove cruzamentos associados
+            estado.cruzamentosAtivos = estado.cruzamentosAtivos.filter(cz => cz.parIdAtual !== dado.parId);
             delete estado.trilhas[dado.parId];
-            atualizarContadorPares();
         }
 
         estado.desenhando = {
             parId: dado.parId,
             cor: dado.cor,
-            trail: [{ r, c }]
+            pontos: [{ r, c }],
+            cruzamentos: []
         };
+        atualizarContadores();
         atualizarVisual();
     }
 });
@@ -848,11 +928,11 @@ function cancelarDesenho() {
 }
 
 /* ============================================================
-   LÓGICA DE TRILHA
+   LÓGICA DE TRILHA — com cruzamento e estrelas
    ============================================================ */
 function estenderTrilha(r, c) {
     const d = estado.desenhando;
-    const trail = d.trail;
+    const trail = d.pontos;
     const ultima = trail[trail.length - 1];
 
     if (ultima.r === r && ultima.c === c) return;
@@ -862,9 +942,13 @@ function estenderTrilha(r, c) {
         const anterior = trail[trail.length - 2];
         if (anterior.r === r && anterior.c === c) {
             trail.pop();
-            if (estado.grid[ultima.r][ultima.c].tipo === 'trilha') {
+            // Remove marca de trilha (se não for endpoint)
+            const ult = estado.grid[ultima.r][ultima.c];
+            if (ult.tipo === 'trilha') {
                 estado.grid[ultima.r][ultima.c] = { cor: null, parId: null, tipo: 'vazio' };
             }
+            // Remove cruzamento se houver
+            d.cruzamentos = d.cruzamentos.filter(cz => !(cz.r === ultima.r && cz.c === ultima.c));
             atualizarVisual();
             return;
         }
@@ -874,15 +958,17 @@ function estenderTrilha(r, c) {
     const dr = Math.abs(r - ultima.r), dc = Math.abs(c - ultima.c);
     if (dr + dc !== 1) {
         // Backtrack para célula da trilha
-        const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
-        if (idxMesma >= 0) {
-            for (let i = idxMesma + 1; i < trail.length; i++) {
+        const idx = trail.findIndex(p => p.r === r && p.c === c);
+        if (idx >= 0) {
+            for (let i = idx + 1; i < trail.length; i++) {
                 const rem = trail[i];
-                if (estado.grid[rem.r][rem.c].tipo === 'trilha') {
+                const g = estado.grid[rem.r][rem.c];
+                if (g.tipo === 'trilha') {
                     estado.grid[rem.r][rem.c] = { cor: null, parId: null, tipo: 'vazio' };
                 }
+                d.cruzamentos = d.cruzamentos.filter(cz => !(cz.r === rem.r && cz.c === rem.c));
             }
-            trail.length = idxMesma + 1;
+            trail.length = idx + 1;
             atualizarVisual();
         }
         return;
@@ -890,12 +976,28 @@ function estenderTrilha(r, c) {
 
     const alvo = estado.grid[r][c];
 
-    // Chegou no outro endpoint do mesmo par
+    // ---- Endpoint do MESMO par ----
     if (alvo.tipo === 'endpoint' && alvo.parId === d.parId) {
         trail.push({ r, c });
-        estado.trilhas[d.parId] = [...trail];
+        estado.trilhas[d.parId] = {
+            pontos: [...trail],
+            cruzamentos: [...d.cruzamentos]
+        };
+        // Registra cruzamentos ativos
+        for (const cz of d.cruzamentos) {
+            estado.cruzamentosAtivos.push({ ...cz, parIdAtual: d.parId });
+        }
+        // Calcula estrelas ganhas
+        const estrelasGanhas = calcularEstrelasGanhas(d.parId, trail);
+        if (estrelasGanhas > 0) {
+            estado.estrelas += estrelasGanhas;
+            infoInstrucao.innerHTML = `⭐ Trilha longa! Ganhaste <b>${estrelasGanhas} estrela(s)</b>.`;
+            tocarSom('estrela');
+        } else {
+            infoInstrucao.textContent = '✅ Par ligado!';
+        }
         estado.desenhando = null;
-        atualizarContadorPares();
+        atualizarContadores();
         atualizarVisual();
         tocarSom('par');
         if (navigator.vibrate) navigator.vibrate(40);
@@ -903,44 +1005,78 @@ function estenderTrilha(r, c) {
         return;
     }
 
-    // Endpoint de outro par → bloqueia
+    // ---- Endpoint de OUTRO par → bloqueia ----
     if (alvo.tipo === 'endpoint') {
         piscarErro(r, c);
         infoInstrucao.textContent = '⚠️ Não pode passar por cima de outro número!';
         return;
     }
 
-    // Já é trilha deste par → backtrack
+    // ---- Já é trilha deste par → backtrack ----
     const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
     if (idxMesma >= 0) {
         for (let i = idxMesma + 1; i < trail.length; i++) {
             const rem = trail[i];
-            if (estado.grid[rem.r][rem.c].tipo === 'trilha') {
+            const g = estado.grid[rem.r][rem.c];
+            if (g.tipo === 'trilha') {
                 estado.grid[rem.r][rem.c] = { cor: null, parId: null, tipo: 'vazio' };
             }
+            d.cruzamentos = d.cruzamentos.filter(cz => !(cz.r === rem.r && cz.c === rem.c));
         }
         trail.length = idxMesma + 1;
         atualizarVisual();
         return;
     }
 
-    // Trilha de outro par → bloqueia
+    // ---- Trilha de OUTRO par → precisa estrela para cruzar ----
     if (alvo.tipo === 'trilha') {
-        piscarErro(r, c);
-        infoInstrucao.textContent = '⚠️ Não pode cruzar outros trilhos!';
+        if (estado.estrelas < 1) {
+            piscarErro(r, c);
+            infoInstrucao.innerHTML = '⚠️ Sem ⭐ suficientes! Estenda uma trilha antes para ganhar.';
+            tocarSom('erro');
+            return;
+        }
+        // Verifica se já não há cruzamento neste ponto
+        if (d.cruzamentos.some(cz => cz.r === r && cz.c === c)) {
+            return;
+        }
+        // Consome 1 estrela
+        estado.estrelas -= 1;
+        d.cruzamentos.push({ r, c, parIdAbaixo: alvo.parId });
+        trail.push({ r, c });
+        // Não substitui o grid (a trilha por baixo mantém-se)
+        infoInstrucao.innerHTML = `⭐ Cruzamento! Estrelas restantes: <b>${estado.estrelas}</b>`;
+        tocarSom('cruzamento');
+        if (navigator.vibrate) navigator.vibrate(60);
+        atualizarContadores();
+        atualizarVisual();
         return;
     }
 
-    // Célula vazia → adiciona
+    // ---- Célula vazia → adiciona ----
     trail.push({ r, c });
     estado.grid[r][c] = { cor: d.cor, parId: d.parId, tipo: 'trilha' };
     atualizarVisual();
 }
 
+/**
+ * Calcula quantas estrelas o par ganhou ao fechar a trilha.
+ * Fórmula: cada 2 células além do caminho mínimo = 1 estrela.
+ */
+function calcularEstrelasGanhas(parId, trail) {
+    const par = estado.pares.find(p => p.id === parId);
+    if (!par) return 0;
+    // Caminho mínimo = distância de Manhattan + 1 (inclui ambos endpoints)
+    const minimo = Math.abs(par.a.r - par.b.r) + Math.abs(par.a.c - par.b.c) + 1;
+    const extras = trail.length - minimo;
+    if (extras <= 0) return 0;
+    return Math.floor(extras / 2);
+}
+
 function finalizarTrilha() {
     const d = estado.desenhando;
     if (!d) return;
-    const trail = d.trail;
+    const trail = d.pontos;
     const par = estado.pares.find(p => p.id === d.parId);
     const inicio = trail[0], fim = trail[trail.length - 1];
     const conecta =
@@ -948,25 +1084,49 @@ function finalizarTrilha() {
         (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
 
     if (conecta && trail.length >= 2) {
-        estado.trilhas[d.parId] = [...trail];
+        estado.trilhas[d.parId] = {
+            pontos: [...trail],
+            cruzamentos: [...d.cruzamentos]
+        };
+        for (const cz of d.cruzamentos) {
+            estado.cruzamentosAtivos.push({ ...cz, parIdAtual: d.parId });
+        }
+        const estrelasGanhas = calcularEstrelasGanhas(d.parId, trail);
+        if (estrelasGanhas > 0) {
+            estado.estrelas += estrelasGanhas;
+            infoInstrucao.innerHTML = `⭐ Trilha longa! Ganhaste <b>${estrelasGanhas} estrela(s)</b>.`;
+            tocarSom('estrela');
+        } else {
+            infoInstrucao.textContent = '✅ Par ligado!';
+        }
+        tocarSom('par');
+        if (navigator.vibrate) navigator.vibrate(40);
     } else {
+        // Reverte: devolve estrelas gastas em cruzamentos e limpa
+        const estrelasGastas = d.cruzamentos.length;
+        estado.estrelas += estrelasGastas;
         limparTrilhaDoGrid(trail);
     }
     estado.desenhando = null;
-    atualizarContadorPares();
+    atualizarContadores();
     atualizarVisual();
     verificarVitoria();
 }
 
 function cancelarTrilha() {
     const d = estado.desenhando;
-    if (d) limparTrilhaDoGrid(d.trail);
+    if (d) {
+        const estrelasGastas = d.cruzamentos.length;
+        estado.estrelas += estrelasGastas;
+        limparTrilhaDoGrid(d.pontos);
+    }
     estado.desenhando = null;
+    atualizarContadores();
     atualizarVisual();
 }
 
-function limparTrilhaDoGrid(trail) {
-    for (const p of trail) {
+function limparTrilhaDoGrid(pontos) {
+    for (const p of pontos) {
         if (estado.grid[p.r][p.c].tipo === 'trilha') {
             estado.grid[p.r][p.c] = { cor: null, parId: null, tipo: 'vazio' };
         }
@@ -981,22 +1141,21 @@ function piscarErro(r, c) {
 }
 
 /* ============================================================
-   VITÓRIA — Regras Numberlink completas
-   ============================================================
-   Vitória requer AMBAS as condições:
-     1. Todos os pares ligados
-     2. Todas as células preenchidas
+   VITÓRIA — 90% + todos pares
    ============================================================ */
+const LIMIAR_VITORIA = 0.90;   // 90% das células preenchidas
+
 function verificarVitoria() {
     if (estado.concluido) return;
     const n = estado.tamanho;
+    const totalCelulas = n * n;
 
     // 1. Todos os pares ligados?
     let paresLigados = 0;
     for (const par of estado.pares) {
         const t = estado.trilhas[par.id];
-        if (!t || t.length < 2) return;
-        const inicio = t[0], fim = t[t.length - 1];
+        if (!t || t.pontos.length < 2) return;
+        const inicio = t.pontos[0], fim = t.pontos[t.pontos.length - 1];
         const conecta =
             (inicio.r === par.a.r && inicio.c === par.a.c && fim.r === par.b.r && fim.c === par.b.c) ||
             (inicio.r === par.b.r && inicio.c === par.b.c && fim.r === par.a.r && fim.c === par.a.c);
@@ -1004,15 +1163,23 @@ function verificarVitoria() {
     }
     if (paresLigados !== estado.totalPares) return;
 
-    // 2. Todas as células preenchidas?
-    let vazias = 0;
+    // 2. Atingiu 90% de preenchimento?
+    let preenchidas = 0;
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
-            if (estado.grid[r][c].tipo === 'vazio') vazias++;
+            if (estado.grid[r][c].tipo !== 'vazio') preenchidas++;
         }
     }
-    if (vazias > 0) {
-        infoInstrucao.textContent = `🎯 Todos os pares ligados! Faltam ${vazias} células para preencher.`;
+    const percentual = preenchidas / totalCelulas;
+
+    if (percentual < LIMIAR_VITORIA) {
+        const restantes = totalCelulas - preenchidas;
+        infoInstrucao.innerHTML = `
+            ✅ <b>Todos os pares ligados!</b>
+            Faltam <b>${restantes}</b> células (${(percentual * 100).toFixed(0)}% preenchido).
+            Estende trilhas ou usa ⭐ para cruzamentos.
+        `;
+        tocarSom('aviso');
         return;
     }
 
@@ -1022,11 +1189,20 @@ function verificarVitoria() {
     tocarSom('vitoria');
     if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
 
-    const ganho = estado.nivel * 40 + Math.max(0, 250 - estado.segundos);
-    estado.pontos += ganho;
+    const bonusEstrelas = estado.estrelas * 20;
+    const bonusPreenchimento = Math.round((percentual - LIMIAR_VITORIA) * 500);
+    const ganhoBase = estado.nivel * 40 + Math.max(0, 250 - estado.segundos);
+    const ganhoTotal = ganhoBase + bonusEstrelas + bonusPreenchimento;
+
+    estado.pontos += ganhoTotal;
     displayPontos.textContent = estado.pontos;
 
-    infoInstrucao.textContent = `🎉 Nível ${estado.nivel} concluído em ${formatarTempo(estado.segundos)}! +${ganho} pts.`;
+    infoInstrucao.innerHTML = `
+        🎉 <b>Nível ${estado.nivel} concluído!</b>
+        ${percentual === 1 ? '💯 Preenchimento total!' : `${(percentual * 100).toFixed(0)}% preenchido`}
+        ⭐ ${estado.estrelas} restantes → +${bonusEstrelas} bônus.
+        <b>+${ganhoTotal} pontos</b>.
+    `;
     salvarProgresso();
 }
 
@@ -1074,33 +1250,27 @@ function pararTimer() {
 }
 
 /* ============================================================
-   DICA — revela o próximo passo de uma trilha pendente
-   ============================================================
-   Simples: liga automaticamente o primeiro par ainda não
-   conectado. Não resolve o puzzle inteiro.
+   DICA — liga o próximo par pendente (sem consumir estrelas)
    ============================================================ */
 function darDica() {
     if (estado.concluido) return;
 
-    // Procura um par ainda não conectado
     for (const par of estado.pares) {
         if (estado.trilhas[par.id]) continue;
-
-        // Constrói uma trilha simples entre os dois endpoints
         const caminho = construirCaminhoSimples(par);
         if (!caminho) continue;
 
-        // Aplica a trilha
-        estado.trilhas[par.id] = caminho;
+        // Registra a trilha
+        estado.trilhas[par.id] = { pontos: caminho, cruzamentos: [] };
         for (const p of caminho) {
             if (estado.grid[p.r][p.c].tipo === 'vazio') {
                 estado.grid[p.r][p.c] = { cor: par.cor, parId: par.id, tipo: 'trilha' };
             }
         }
-        atualizarContadorPares();
+        atualizarContadores();
         atualizarVisual();
         tocarSom('par');
-        infoInstrucao.textContent = `💡 Dica: par ${par.id + 1} ligado!`;
+        infoInstrucao.innerHTML = `💡 Dica: par ${par.id + 1} ligado!`;
         verificarVitoria();
         return;
     }
@@ -1109,35 +1279,28 @@ function darDica() {
 }
 
 function construirCaminhoSimples(par) {
-    // Caminho em L simples (uma volta) para não sobrepor
     const { a, b } = par;
-    const caminho = [];
+    const caminho = [{ r: a.r, c: a.c }];
 
-    // Horizontal primeiro
     let c = a.c;
     while (c !== b.c) {
         c += Math.sign(b.c - a.c);
-        if (estado.grid[a.r][c].tipo === 'vazio' || estado.grid[a.r][c].tipo === 'endpoint') {
+        const g = estado.grid[a.r][c];
+        if (g.tipo === 'vazio' || g.tipo === 'endpoint') {
             caminho.push({ r: a.r, c });
-        } else {
-            break;
-        }
-    }
-    // Vertical depois
-    let r = a.r;
-    while (r !== b.r) {
-        r += Math.sign(b.r - a.r);
-        if (estado.grid[r][b.c].tipo === 'vazio' || estado.grid[r][b.c].tipo === 'endpoint') {
-            caminho.push({ r, c: b.c });
         } else {
             return null;
         }
     }
-
-    // Inclui o endpoint final
-    if (caminho.length > 0) {
-        caminho.unshift({ r: a.r, c: a.c });
-        caminho.push({ r: b.r, c: b.c });
+    let r = a.r;
+    while (r !== b.r) {
+        r += Math.sign(b.r - a.r);
+        const g = estado.grid[r][b.c];
+        if (g.tipo === 'vazio' || g.tipo === 'endpoint') {
+            caminho.push({ r, c: b.c });
+        } else {
+            return null;
+        }
     }
     return caminho;
 }
