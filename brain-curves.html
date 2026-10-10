@@ -468,9 +468,10 @@ if (!jogadorSessao) { window.location.href = 'index.html'; }
 const BOARD = {
     largura: 400,
     altura: 400,
-    margemSegura: 55,     // bolinha nunca fica a menos de 55px das bordas
-    minDistPares: 60,     // distância mínima entre bolinhas de pares diferentes
-    minDistPar: 220,      // distância mínima entre as duas do mesmo par
+    margemSegura: 55,      // bolinhas normais ficam a ≥ 55px das bordas
+    faixaBorda: [20, 35],  // a bolinha "de borda" fica entre 20 e 35px
+    minDistPares: 60,      // distância mínima entre pares diferentes
+    minDistPar: 220,       // distância mínima entre as duas do mesmo par
     raioBolinha: 22
 };
 
@@ -480,13 +481,13 @@ const PALETA = [
 ];
 
 /* ============================================================
-   GERADOR DE NÍVEIS — embaralhamento inteligente
+   GERADOR DE NÍVEIS
    ============================================================
-   Estratégia em 3 fases:
-     1. Dividir o tabuleiro em regiões angulares (radiais)
-     2. Para cada par, escolher uma região e posicionar as 2 bolinhas
-        nas extremidades opostas da região
-     3. Validar e regenerar se necessário
+   Fases:
+     1. Distribuir pares em regiões angulares opostas
+     2. Validar distâncias mínimas e margens
+     3. NOVO: forçar pelo menos 1 bolinha na faixa de borda
+     4. Fallback em grade se falhar 80x
    ============================================================ */
 function gerarNivel(quantidadePares) {
     const tentativasMax = 80;
@@ -494,19 +495,15 @@ function gerarNivel(quantidadePares) {
         const resultado = tentarGerar(quantidadePares);
         if (resultado) return resultado;
     }
-    // Fallback: layout em grade simples
     return gerarFallback(quantidadePares);
 }
 
 function tentarGerar(quantidadePares) {
     const dots = [];
-    const pontosUsados = [];  // pontos já ocupados (todas as bolinhas)
+    const pontosUsados = [];
 
-    // Divide o tabuleiro em N regiões angulares a partir do centro
     const centro = { x: BOARD.largura / 2, y: BOARD.altura / 2 };
     const raio = Math.min(BOARD.largura, BOARD.altura) / 2 - BOARD.margemSegura;
-
-    // Ângulo base aleatório para variar a cada partida
     const anguloBase = Math.random() * Math.PI * 2;
 
     for (let parId = 0; parId < quantidadePares; parId++) {
@@ -515,11 +512,9 @@ function tentarGerar(quantidadePares) {
 
         let posicaoA = null, posicaoB = null;
 
-        // Tenta 100 vezes gerar um par válido
         for (let tent = 0; tent < 100; tent++) {
             const anguloA = anguloCentro + (Math.random() - 0.5) * anguloSpread;
             const anguloB = anguloCentro + Math.PI + (Math.random() - 0.5) * anguloSpread;
-
             const raioA = raio * (0.6 + Math.random() * 0.4);
             const raioB = raio * (0.6 + Math.random() * 0.4);
 
@@ -532,13 +527,9 @@ function tentarGerar(quantidadePares) {
                 y: centro.y + Math.sin(anguloB) * raioB
             };
 
-            // Valida: dentro da margem segura
             if (!dentroDaMargem(a) || !dentroDaMargem(b)) continue;
-
-            // Valida: distância mínima entre as duas do par
             if (Math.hypot(a.x - b.x, a.y - b.y) < BOARD.minDistPar) continue;
 
-            // Valida: distância mínima às outras bolinhas
             let ok = true;
             for (const p of pontosUsados) {
                 if (Math.hypot(a.x - p.x, a.y - p.y) < BOARD.minDistPares ||
@@ -549,66 +540,89 @@ function tentarGerar(quantidadePares) {
             }
             if (!ok) continue;
 
-            // Valida: o segmento reto A-B não deve passar por nenhuma bolinha
-            // já existente (força curva se houver interseção com terceira bolinha)
-            // — este critério é uma PREFERÊNCIA, não um bloqueio.
-            // Aceitamos mesmo sem interseção.
-
             posicaoA = a;
             posicaoB = b;
             break;
         }
 
-        if (!posicaoA || !posicaoB) return null; // falhou, regenera o nível todo
+        if (!posicaoA || !posicaoB) return null;
 
-        // Registra as duas bolinhas
         dots.push({ ...posicaoA, cor: PALETA[parId % PALETA.length], parId });
         dots.push({ ...posicaoB, cor: PALETA[parId % PALETA.length], parId });
         pontosUsados.push(posicaoA, posicaoB);
     }
 
-    // Validação final: existe pelo menos 1 par com traço reto bloqueado?
-    const temBloqueio = verificarSeTemBloqueioReto(dots);
-    if (!temBloqueio && quantidadePares >= 3) {
-        // Tenta pelo menos 1 par bloqueado para forçar curvatura
-        // Se não conseguiu, aceita mesmo assim (mas só vale para níveis altos)
-        if (tentativasContador < 3) return null;
+    /* ============================================================
+       FORÇAR PELO MENOS UMA BOLINHA NA BORDA
+       ============================================================
+       Se nenhuma das bolinhas geradas está na faixa de borda,
+       move uma aleatória para uma posição "grudada" na borda.
+       A escolha é aleatória entre as 4 bordas.
+       ============================================================ */
+    const temBorda = dots.some(d => estaNaBorda(d));
+    if (!temBorda) {
+        // Tenta mover bolinhas até conseguir (até 20 tentativas)
+        for (let tent = 0; tent < 20; tent++) {
+            const idx = Math.floor(Math.random() * dots.length);
+            const dot = dots[idx];
+            const bordaEscolhida = Math.floor(Math.random() * 4);
+            const nova = calcularPosicaoBorda(bordaEscolhida);
+            if (!nova) continue;
+
+            // Verifica se a nova posição não colide com outras bolinhas
+            const colide = dots.some((outro, j) => {
+                if (j === idx) return false;
+                return Math.hypot(outro.x - nova.x, outro.y - nova.y) < BOARD.minDistPares;
+            });
+            if (colide) continue;
+
+            // Verifica se a nova posição não fica longe demais do par
+            const par = dots.find((o, j) => o.parId === dot.parId && j !== idx);
+            if (par && Math.hypot(par.x - nova.x, par.y - nova.y) < BOARD.minDistPar) continue;
+
+            // Aplica a mudança
+            dot.x = nova.x;
+            dot.y = nova.y;
+            break;
+        }
     }
 
     return dots;
 }
 
 /**
- * Verifica se existe pelo menos 1 par cujo segmento reto entre as duas
- * bolinhas passa perto de uma terceira bolinha (forçando o jogador a
- * fazer uma curva).
+ * Retorna true se a bolinha está dentro da faixa de borda.
  */
-function verificarSeTemBloqueioReto(dots) {
-    for (let i = 0; i < dots.length; i += 2) {
-        const a = dots[i];
-        const b = dots[i + 1];
-        for (let j = 0; j < dots.length; j++) {
-            if (j === i || j === i + 1) continue;
-            const p = dots[j];
-            const dist = distanciaPontoSegmento(p, a, b);
-            if (dist < BOARD.raioBolinha * 1.8) {
-                return true;
-            }
-        }
-    }
-    return false;
+function estaNaBorda(dot) {
+    const [min, max] = BOARD.faixaBorda;
+    const distEsq = dot.x;
+    const distDir = BOARD.largura - dot.x;
+    const distTop = dot.y;
+    const distBot = BOARD.altura - dot.y;
+    const menorDist = Math.min(distEsq, distDir, distTop, distBot);
+    return menorDist >= min && menorDist <= max;
 }
 
-function distanciaPontoSegmento(p, a, b) {
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const lenSq = dx * dx + dy * dy;
-    if (lenSq === 0) return Math.hypot(p.x - a.x, p.y - a.y);
-    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
-    t = Math.max(0, Math.min(1, t));
-    const projX = a.x + t * dx;
-    const projY = a.y + t * dy;
-    return Math.hypot(p.x - projX, p.y - projY);
+/**
+ * Calcula uma posição aleatória numa das 4 bordas, dentro da faixa.
+ * Retorna null se a borda não tem espaço útil.
+ */
+function calcularPosicaoBorda(indiceBorda) {
+    const [min, max] = BOARD.faixaBorda;
+    const dist = min + Math.random() * (max - min);
+    const margemParalela = BOARD.margemSegura;
+
+    switch (indiceBorda) {
+        case 0: // topo
+            return { x: margemParalela + Math.random() * (BOARD.largura - 2 * margemParalela), y: dist };
+        case 1: // direita
+            return { x: BOARD.largura - dist, y: margemParalela + Math.random() * (BOARD.altura - 2 * margemParalela) };
+        case 2: // base
+            return { x: margemParalela + Math.random() * (BOARD.largura - 2 * margemParalela), y: BOARD.altura - dist };
+        case 3: // esquerda
+            return { x: dist, y: margemParalela + Math.random() * (BOARD.altura - 2 * margemParalela) };
+    }
+    return null;
 }
 
 function dentroDaMargem(p) {
@@ -618,9 +632,6 @@ function dentroDaMargem(p) {
            p.y <= BOARD.altura - BOARD.margemSegura;
 }
 
-/**
- * Fallback: layout em grade — usado se o gerador falhar várias vezes.
- */
 function gerarFallback(quantidadePares) {
     const dots = [];
     const total = quantidadePares * 2;
@@ -643,10 +654,14 @@ function gerarFallback(quantidadePares) {
             idx++;
         }
     }
+
+    // Aplica a regra de borda também no fallback
+    if (dots.length > 0 && !dots.some(d => estaNaBorda(d))) {
+        dots[0].x = BOARD.faixaBorda[0] + Math.random() * (BOARD.faixaBorda[1] - BOARD.faixaBorda[0]);
+    }
+
     return dots;
 }
-
-let tentativasContador = 0;
 
 /* ============================================================
    ESTADO
@@ -757,9 +772,8 @@ function cruzariaAlgumaTrilha(p1, p2, parIdAtual) {
    INICIALIZAÇÃO DO NÍVEL
    ============================================================ */
 function iniciarNivel(nivel) {
-    const quantidadePares = nivel + 1;   // 1→2, 2→3, 3→4, 4→5
+    const quantidadePares = nivel + 1;
 
-    // Gera as bolinhas com embaralhamento inteligente
     estado.dots = gerarNivel(quantidadePares);
     estado.nivel = nivel;
     estado.totalPares = quantidadePares;
@@ -839,7 +853,6 @@ function onPointerDown(evt) {
     const circle = evt.currentTarget;
     const parId = parseInt(circle.dataset.parId);
 
-    // Se já está concluído, remover
     if (estado.trilhas[parId]) {
         delete estado.trilhas[parId];
         estado.paresConcluidos--;
