@@ -291,7 +291,6 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     75%      { transform: translateX(2px); }
 }
 
-/* Células vazias quando todos os pares estão ligados */
 .cell.vazia-restante {
     box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.6);
     animation: vaziaPulse 1.6s ease-in-out infinite;
@@ -302,7 +301,15 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     50%      { box-shadow: inset 0 0 0 4px rgba(239, 68, 68, 0.9); }
 }
 
-/* Endpoint */
+.cell.paint-selected {
+    box-shadow: inset 0 0 0 4px rgba(236, 72, 153, 0.9), 0 0 16px rgba(236, 72, 153, 0.6);
+    animation: paintPulse 1s ease-in-out infinite;
+}
+@keyframes paintPulse {
+    0%, 100% { box-shadow: inset 0 0 0 4px rgba(236, 72, 153, 0.9), 0 0 16px rgba(236, 72, 153, 0.6); }
+    50%      { box-shadow: inset 0 0 0 4px rgba(236, 72, 153, 1), 0 0 24px rgba(236, 72, 153, 0.9); }
+}
+
 .endpoint {
     width: 68%;
     height: 68%;
@@ -330,7 +337,6 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
         0 0 20px rgba(255, 255, 255, 0.6);
 }
 
-/* Trilha */
 .cell.trail {
     background: var(--trail-color, transparent);
 }
@@ -347,7 +353,6 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
 }
 .cell.trail.connected::after { background: #fff; opacity: 1; }
 
-/* Trilha em construção */
 .cell.trail.live::after {
     animation: trailPulse 0.9s ease-in-out infinite;
 }
@@ -356,7 +361,6 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     50%      { transform: scale(1.25); opacity: 1; }
 }
 
-/* Cruzamento — trilha por baixo com anel dourado */
 .cell.trail.cruzada {
     box-shadow: inset 0 0 0 3px rgba(251, 191, 36, 0.85);
 }
@@ -379,11 +383,125 @@ body::after  { width: 460px; height: 460px; background: #8b5cf6; bottom: -180px;
     50%      { opacity: 1; transform: scale(1.15); }
 }
 
-/* Cruzamento — trilha por cima com moldura dupla */
 .cell.trail.cruzando {
     box-shadow:
         inset 0 0 0 2px rgba(255, 255, 255, 0.55),
         0 0 0 2px rgba(251, 191, 36, 0.85);
+}
+
+/* Painel de escolha de cor */
+.color-picker-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+.color-picker-overlay.show { display: flex; }
+.color-picker {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.color-picker h3 {
+    margin: 0 0 4px 0;
+    font-size: 17px;
+    font-weight: 800;
+}
+.color-picker .subtitle {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 0 0 16px 0;
+}
+
+/* Preview das bolinhas */
+.color-preview {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 12px;
+    background: var(--input-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+.color-preview .preview-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.color-preview .preview-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.color-preview .preview-ball {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s ease;
+}
+.color-preview .preview-arrow {
+    font-size: 18px;
+    color: var(--btn-primary);
+    font-weight: 800;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.color-swatch {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    transition: transform var(--t-base), box-shadow var(--t-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+.color-swatch:hover {
+    transform: scale(1.1);
+    border-color: #fff;
+}
+.color-swatch.selected {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px var(--btn-primary), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.color-picker .cancel-btn {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--input-bg);
+    cursor: pointer;
+}
+.color-picker .cancel-btn:hover {
+    color: var(--text-color);
+    border-color: var(--btn-primary);
 }
 
 .controls-grid {
@@ -458,6 +576,23 @@ button.magic:hover {
     transform: translateY(-2px);
     filter: brightness(1.08);
     box-shadow: 0 10px 28px -8px rgba(245, 158, 11, 0.8);
+}
+
+button.paint {
+    background: linear-gradient(135deg, #ec4899, #f472b6);
+    box-shadow: 0 6px 20px -6px rgba(236, 72, 153, 0.6);
+}
+button.paint:hover {
+    box-shadow: 0 10px 28px -8px rgba(236, 72, 153, 0.8);
+}
+button.paint.active {
+    background: linear-gradient(135deg, #db2777, #be185d);
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.5), 0 6px 20px -6px rgba(236, 72, 153, 0.8);
+    animation: paintBtnPulse 1.2s ease-in-out infinite;
+}
+@keyframes paintBtnPulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.5), 0 6px 20px -6px rgba(236, 72, 153, 0.8); }
+    50%      { box-shadow: 0 0 0 6px rgba(236, 72, 153, 0.25), 0 6px 20px -6px rgba(236, 72, 153, 1); }
 }
 
 .back-float {
@@ -539,7 +674,7 @@ button.magic:hover {
     </div>
 
     <p class="instructions" id="info-instrucao">
-        Arraste para ligar os pares. Estenda trilhas para ganhar ⭐ e use-as para cruzar.
+        Arraste para ligar pares. Use <b>🎨 Pintar</b> para repintar bolinhas (custa 1 ⭐).
     </p>
 
     <div class="board-wrapper" id="board-wrapper">
@@ -556,8 +691,39 @@ button.magic:hover {
         <button id="btn-reset" class="action secondary">🔄 Reiniciar</button>
     </div>
 
-    <div class="controls-grid" style="grid-template-columns: 1fr; margin-top: 8px;">
+    <!-- Grid principal dos controles: Dica | Pintar | Reiniciar -->
+    <div class="controls-grid triple" style="margin-top: 8px;">
         <button id="btn-hint" class="action magic">💡 Dica</button>
+        <button id="btn-paint" class="action paint">🎨 Pintar</button>
+        <button id="btn-cancel-paint" class="action secondary" style="display:none;">✖ Cancelar</button>
+    </div>
+</div>
+
+<!-- Painel de escolha de cor -->
+<div class="color-picker-overlay" id="color-picker">
+    <div class="color-picker">
+        <h3>🎨 Escolher cor</h3>
+        <p class="subtitle">Custa 1 ⭐ — as duas bolinhas serão pintadas desta cor</p>
+
+        <div class="color-preview" id="color-preview">
+            <div class="preview-item">
+                <div class="preview-label">Bolinha 1</div>
+                <div class="preview-ball" id="preview-1"></div>
+            </div>
+            <div class="preview-arrow">→</div>
+            <div class="preview-item">
+                <div class="preview-label">Nova cor</div>
+                <div class="preview-ball" id="preview-target"></div>
+            </div>
+            <div class="preview-arrow">←</div>
+            <div class="preview-item">
+                <div class="preview-label">Bolinha 2</div>
+                <div class="preview-ball" id="preview-2"></div>
+            </div>
+        </div>
+
+        <div class="color-grid" id="color-grid"></div>
+        <button class="cancel-btn" id="color-cancel">Cancelar</button>
     </div>
 </div>
 
@@ -574,56 +740,168 @@ const jogadorSessao = JSON.parse(localStorage.getItem('brain_hub_jogador'));
 if (!jogadorSessao) { window.location.href = 'index.html'; }
 
 /* ============================================================
-   PUZZLES
+   PALETA
    ============================================================ */
-const PUZZLES = {
-    1: {
-        tamanho: 5,
-        pares: [
-            { cor: '#22c55e', a: { r: 0, c: 0 }, b: { r: 3, c: 1 } },
-            { cor: '#3b82f6', a: { r: 0, c: 2 }, b: { r: 3, c: 2 } },
-            { cor: '#ef4444', a: { r: 0, c: 4 }, b: { r: 4, c: 2 } },
-            { cor: '#f59e0b', a: { r: 4, c: 4 }, b: { r: 2, c: 4 } },
-            { cor: '#a855f7', a: { r: 4, c: 0 }, b: { r: 1, c: 3 } }
-        ]
-    },
-    2: {
-        tamanho: 6,
-        pares: [
-            { cor: '#22c55e', a: { r: 0, c: 0 }, b: { r: 4, c: 0 } },
-            { cor: '#3b82f6', a: { r: 0, c: 5 }, b: { r: 5, c: 2 } },
-            { cor: '#ef4444', a: { r: 2, c: 2 }, b: { r: 5, c: 5 } },
-            { cor: '#f59e0b', a: { r: 1, c: 3 }, b: { r: 4, c: 4 } },
-            { cor: '#a855f7', a: { r: 0, c: 2 }, b: { r: 3, c: 0 } },
-            { cor: '#06b6d4', a: { r: 5, c: 0 }, b: { r: 5, c: 4 } }
-        ]
-    },
-    3: {
-        tamanho: 7,
-        pares: [
-            { cor: '#22c55e', a: { r: 0, c: 0 }, b: { r: 0, c: 6 } },
-            { cor: '#3b82f6', a: { r: 0, c: 3 }, b: { r: 6, c: 3 } },
-            { cor: '#ef4444', a: { r: 1, c: 1 }, b: { r: 5, c: 5 } },
-            { cor: '#f59e0b', a: { r: 2, c: 0 }, b: { r: 5, c: 1 } },
-            { cor: '#a855f7', a: { r: 2, c: 6 }, b: { r: 5, c: 6 } },
-            { cor: '#06b6d4', a: { r: 6, c: 0 }, b: { r: 6, c: 5 } },
-            { cor: '#ec4899', a: { r: 3, c: 2 }, b: { r: 4, c: 4 } }
-        ]
-    },
-    4: {
-        tamanho: 8,
-        pares: [
-            { cor: '#22c55e', a: { r: 0, c: 0 }, b: { r: 7, c: 0 } },
-            { cor: '#3b82f6', a: { r: 0, c: 3 }, b: { r: 3, c: 6 } },
-            { cor: '#ef4444', a: { r: 0, c: 7 }, b: { r: 4, c: 7 } },
-            { cor: '#f59e0b', a: { r: 2, c: 1 }, b: { r: 6, c: 2 } },
-            { cor: '#a855f7', a: { r: 3, c: 0 }, b: { r: 7, c: 3 } },
-            { cor: '#06b6d4', a: { r: 4, c: 4 }, b: { r: 7, c: 6 } },
-            { cor: '#ec4899', a: { r: 1, c: 5 }, b: { r: 5, c: 5 } },
-            { cor: '#84cc16', a: { r: 6, c: 0 }, b: { r: 7, c: 7 } }
-        ]
-    }
+const PALETA = [
+    '#22c55e', '#3b82f6', '#ef4444', '#f59e0b', '#a855f7',
+    '#06b6d4', '#ec4899', '#84cc16'
+];
+
+/* ============================================================
+   GERADOR DE NÍVEIS
+   ============================================================ */
+const BOARD = {
+    largura: 400,
+    altura: 400,
+    margemSegura: 55,
+    faixaBorda: [20, 35],
+    minDistPares: 60,
+    minDistPar: 220,
+    raioBolinha: 22
 };
+
+function gerarNivel(quantidadePares) {
+    const tentativasMax = 100;
+    for (let tentativa = 0; tentativa < tentativasMax; tentativa++) {
+        const resultado = tentarGerar(quantidadePares);
+        if (resultado) return resultado;
+    }
+    return gerarFallback(quantidadePares);
+}
+
+function tentarGerar(quantidadePares) {
+    const dots = [];
+    const pontosUsados = [];
+
+    const centro = { x: BOARD.largura / 2, y: BOARD.altura / 2 };
+    const raio = Math.min(BOARD.largura, BOARD.altura) / 2 - BOARD.margemSegura;
+    const anguloBase = Math.random() * Math.PI * 2;
+
+    for (let parId = 0; parId < quantidadePares; parId++) {
+        const anguloCentro = anguloBase + (parId * 2 * Math.PI / quantidadePares);
+        const anguloSpread = (2 * Math.PI / quantidadePares) * 0.7;
+
+        let posicaoA = null, posicaoB = null;
+
+        for (let tent = 0; tent < 100; tent++) {
+            const anguloA = anguloCentro + (Math.random() - 0.5) * anguloSpread;
+            const anguloB = anguloCentro + Math.PI + (Math.random() - 0.5) * anguloSpread;
+            const raioA = raio * (0.6 + Math.random() * 0.4);
+            const raioB = raio * (0.6 + Math.random() * 0.4);
+
+            const a = {
+                x: centro.x + Math.cos(anguloA) * raioA,
+                y: centro.y + Math.sin(anguloA) * raioA
+            };
+            const b = {
+                x: centro.x + Math.cos(anguloB) * raioB,
+                y: centro.y + Math.sin(anguloB) * raioB
+            };
+
+            if (!dentroDaMargem(a) || !dentroDaMargem(b)) continue;
+            if (Math.hypot(a.x - b.x, a.y - b.y) < BOARD.minDistPar) continue;
+
+            let ok = true;
+            for (const p of pontosUsados) {
+                if (Math.hypot(a.x - p.x, a.y - p.y) < BOARD.minDistPares ||
+                    Math.hypot(b.x - p.x, b.y - p.y) < BOARD.minDistPares) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) continue;
+
+            posicaoA = a;
+            posicaoB = b;
+            break;
+        }
+
+        if (!posicaoA || !posicaoB) return null;
+
+        dots.push({ ...posicaoA, cor: PALETA[parId % PALETA.length], parId });
+        dots.push({ ...posicaoB, cor: PALETA[parId % PALETA.length], parId });
+        pontosUsados.push(posicaoA, posicaoB);
+    }
+
+    const temBorda = dots.some(d => estaNaBorda(d));
+    if (!temBorda) {
+        for (let tent = 0; tent < 20; tent++) {
+            const idx = Math.floor(Math.random() * dots.length);
+            const dot = dots[idx];
+            const borda = Math.floor(Math.random() * 4);
+            const nova = calcularPosicaoBorda(borda);
+            if (!nova) continue;
+
+            const colide = dots.some((o, j) => {
+                if (j === idx) return false;
+                return Math.hypot(o.x - nova.x, o.y - nova.y) < BOARD.minDistPares;
+            });
+            if (colide) continue;
+
+            const par = dots.find((o, j) => o.parId === dot.parId && j !== idx);
+            if (par && Math.hypot(par.x - nova.x, par.y - nova.y) < BOARD.minDistPar) continue;
+
+            dot.x = nova.x;
+            dot.y = nova.y;
+            break;
+        }
+    }
+
+    return dots;
+}
+
+function estaNaBorda(dot) {
+    const [min, max] = BOARD.faixaBorda;
+    const menorDist = Math.min(dot.x, BOARD.largura - dot.x, dot.y, BOARD.altura - dot.y);
+    return menorDist >= min && menorDist <= max;
+}
+
+function calcularPosicaoBorda(borda) {
+    const [min, max] = BOARD.faixaBorda;
+    const dist = min + Math.random() * (max - min);
+    const margem = BOARD.margemSegura;
+    switch (borda) {
+        case 0: return { x: margem + Math.random() * (BOARD.largura - 2 * margem), y: dist };
+        case 1: return { x: BOARD.largura - dist, y: margem + Math.random() * (BOARD.altura - 2 * margem) };
+        case 2: return { x: margem + Math.random() * (BOARD.largura - 2 * margem), y: BOARD.altura - dist };
+        case 3: return { x: dist, y: margem + Math.random() * (BOARD.altura - 2 * margem) };
+    }
+    return null;
+}
+
+function dentroDaMargem(p) {
+    return p.x >= BOARD.margemSegura && p.x <= BOARD.largura - BOARD.margemSegura &&
+           p.y >= BOARD.margemSegura && p.y <= BOARD.altura - BOARD.margemSegura;
+}
+
+function gerarFallback(quantidadePares) {
+    const dots = [];
+    const total = quantidadePares * 2;
+    const cols = Math.ceil(Math.sqrt(total));
+    const linhas = Math.ceil(total / cols);
+    const passoX = (BOARD.largura - 2 * BOARD.margemSegura) / (cols - 1 || 1);
+    const passoY = (BOARD.altura - 2 * BOARD.margemSegura) / (linhas - 1 || 1);
+
+    let idx = 0;
+    for (let parId = 0; parId < quantidadePares; parId++) {
+        for (let k = 0; k < 2; k++) {
+            const col = idx % cols;
+            const lin = Math.floor(idx / cols);
+            dots.push({
+                x: BOARD.margemSegura + col * passoX,
+                y: BOARD.margemSegura + lin * passoY,
+                cor: PALETA[parId % PALETA.length],
+                parId
+            });
+            idx++;
+        }
+    }
+
+    if (dots.length > 0 && !dots.some(d => estaNaBorda(d))) {
+        dots[0].x = BOARD.faixaBorda[0] + Math.random() * (BOARD.faixaBorda[1] - BOARD.faixaBorda[0]);
+    }
+    return dots;
+}
 
 /* ============================================================
    ESTADO
@@ -633,16 +911,19 @@ const estado = {
     tamanho: 5,
     grid: [],
     pares: [],
-    trilhas: {},              // parId -> { pontos: [{r,c}], cruzamentos: [idx] }
+    trilhas: {},
     desenhando: null,
-    estrelas: 0,              // ⭐ disponíveis
+    estrelas: 0,
     pontos: 0,
     segundos: 0,
     timer: null,
     concluido: false,
     totalPares: 0,
-    totalCelulas: 0,
-    cruzamentosAtivos: []     // lista de { r, c, parIdAtual, parIdAbaixo }
+    cruzamentosAtivos: [],
+    // Pintura
+    modoPintura: false,
+    pinturaSelecionadas: [],
+    corPintura: null
 };
 
 /* ============================================================
@@ -658,6 +939,14 @@ const infoInstrucao = document.getElementById('info-instrucao');
 const selectNivel = document.getElementById('select-nivel');
 const btnReset = document.getElementById('btn-reset');
 const btnHint = document.getElementById('btn-hint');
+const btnPaint = document.getElementById('btn-paint');
+const btnCancelPaint = document.getElementById('btn-cancel-paint');
+const colorPicker = document.getElementById('color-picker');
+const colorGrid = document.getElementById('color-grid');
+const colorCancel = document.getElementById('color-cancel');
+const preview1 = document.getElementById('preview-1');
+const preview2 = document.getElementById('preview-2');
+const previewTarget = document.getElementById('preview-target');
 const themeToggle = document.getElementById('theme-toggle');
 const btnBackFloat = document.getElementById('btn-back-float');
 
@@ -670,12 +959,12 @@ function tocarSom(tipo) {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        const emitir = (freq1, freq2, dur, vol = 0.09) => {
+        const emitir = (f1, f2, dur, vol = 0.09) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(freq1, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(freq2, audioCtx.currentTime + dur);
+            osc.frequency.setValueAtTime(f1, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(f2, audioCtx.currentTime + dur);
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur + 0.06);
             osc.start();
@@ -687,6 +976,7 @@ function tocarSom(tipo) {
         if (tipo === 'cruzamento') emitir(440, 660, 0.18, 0.12);
         if (tipo === 'aviso')    emitir(440, 330, 0.2, 0.08);
         if (tipo === 'erro')     emitir(220, 110, 0.15, 0.08);
+        if (tipo === 'pintar')   emitir(550, 1100, 0.22, 0.12);
         if (tipo === 'vitoria') {
             [523, 659, 784, 1047].forEach((freq, i) => {
                 const o = audioCtx.createOscillator();
@@ -703,45 +993,95 @@ function tocarSom(tipo) {
 }
 
 /* ============================================================
-   INICIALIZAÇÃO DO PUZZLE
+   INICIALIZAÇÃO
    ============================================================ */
 function iniciarPuzzle(nivel) {
-    const puzzle = PUZZLES[nivel] || PUZZLES[1];
+    const quantidadePares = nivel + 1;
+    const dots = gerarNivel(quantidadePares);
+    const tamanhoGrid = nivel + 4;
+
     estado.nivel = nivel;
-    estado.tamanho = puzzle.tamanho;
-    estado.pares = puzzle.pares.map((p, i) => ({ ...p, id: i }));
-    estado.totalPares = puzzle.pares.length;
-    estado.totalCelulas = puzzle.tamanho * puzzle.tamanho;
+    estado.tamanho = tamanhoGrid;
+    estado.totalPares = quantidadePares;
     estado.trilhas = {};
     estado.desenhando = null;
     estado.concluido = false;
     estado.cruzamentosAtivos = [];
-    // Estrelas zeradas a cada nova partida
     estado.estrelas = 0;
+    estado.modoPintura = false;
+    estado.pinturaSelecionadas = [];
+    estado.corPintura = null;
 
-    estado.grid = Array.from({ length: puzzle.tamanho }, () =>
-        Array.from({ length: puzzle.tamanho }, () => ({
+    // Reset dos botões
+    btnPaint.classList.remove('active');
+    btnCancelPaint.style.display = 'none';
+
+    const celulasUsadas = new Set();
+    estado.pares = [];
+    estado.grid = Array.from({ length: tamanhoGrid }, () =>
+        Array.from({ length: tamanhoGrid }, () => ({
             cor: null, parId: null, tipo: 'vazio'
         }))
     );
 
-    for (const par of estado.pares) {
-        estado.grid[par.a.r][par.a.c] = { cor: par.cor, parId: par.id, tipo: 'endpoint' };
-        estado.grid[par.b.r][par.b.c] = { cor: par.cor, parId: par.id, tipo: 'endpoint' };
+    const paresAgrupados = {};
+    for (const dot of dots) {
+        if (!paresAgrupados[dot.parId]) paresAgrupados[dot.parId] = [];
+        paresAgrupados[dot.parId].push(dot);
+    }
+
+    for (let parId = 0; parId < quantidadePares; parId++) {
+        const par = paresAgrupados[parId];
+        if (!par || par.length < 2) continue;
+
+        const a = converterParaGrid(par[0], tamanhoGrid, celulasUsadas);
+        const b = converterParaGrid(par[1], tamanhoGrid, celulasUsadas);
+
+        estado.pares.push({
+            id: parId,
+            cor: PALETA[parId % PALETA.length],
+            a, b
+        });
+
+        estado.grid[a.r][a.c] = { cor: PALETA[parId % PALETA.length], parId, tipo: 'endpoint' };
+        estado.grid[b.r][b.c] = { cor: PALETA[parId % PALETA.length], parId, tipo: 'endpoint' };
     }
 
     displayNivel.textContent = nivel;
     atualizarContadores();
-    infoInstrucao.innerHTML = `Nível ${nivel} (${puzzle.tamanho}×${puzzle.tamanho}): ligue os ${estado.totalPares} pares. Estenda trilhas para ganhar ⭐.`;
+    infoInstrucao.innerHTML = `Nível ${nivel} (${tamanhoGrid}×${tamanhoGrid}): ligue os ${estado.totalPares} pares.`;
 
     renderizarBoard();
     atualizarVisual();
     iniciarTimer();
 }
 
+function converterParaGrid(dot, tamanho, ocupadas) {
+    const celulaTamanho = BOARD.largura / tamanho;
+    let r = Math.floor(dot.y / celulaTamanho);
+    let c = Math.floor(dot.x / celulaTamanho);
+    r = Math.max(0, Math.min(tamanho - 1, r));
+    c = Math.max(0, Math.min(tamanho - 1, c));
+
+    if (ocupadas.has(`${r},${c}`)) {
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < tamanho && nc >= 0 && nc < tamanho &&
+                    !ocupadas.has(`${nr},${nc}`)) {
+                    r = nr; c = nc;
+                    break;
+                }
+            }
+        }
+    }
+
+    ocupadas.add(`${r},${c}`);
+    return { r, c };
+}
+
 function atualizarContadores() {
-    const paresLigados = Object.keys(estado.trilhas).length;
-    displayPares.textContent = `${paresLigados}/${estado.totalPares}`;
+    displayPares.textContent = `${Object.keys(estado.trilhas).length}/${estado.totalPares}`;
     displayEstrelas.textContent = estado.estrelas;
 }
 
@@ -770,7 +1110,6 @@ function atualizarVisual() {
     const n = estado.tamanho;
     const todosParesLigados = Object.keys(estado.trilhas).length === estado.totalPares;
 
-    // Limpa tudo
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
             const cell = document.getElementById(`cell-${r}-${c}`);
@@ -782,7 +1121,6 @@ function atualizarVisual() {
         }
     }
 
-    // Desenha o estado atual do grid
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
             const cell = document.getElementById(`cell-${r}-${c}`);
@@ -792,6 +1130,11 @@ function atualizarVisual() {
             if (dado.tipo === 'endpoint') {
                 const conectado = estado.trilhas[dado.parId] ? ' connected' : '';
                 cell.innerHTML = `<div class="endpoint${conectado}" style="background:${dado.cor}"></div>`;
+
+                if (estado.modoPintura) {
+                    const jaSel = estado.pinturaSelecionadas.some(p => p.r === r && p.c === c);
+                    if (jaSel) cell.classList.add('paint-selected');
+                }
             } else if (dado.tipo === 'trilha') {
                 cell.classList.add('trail');
                 cell.style.setProperty('--trail-color', dado.cor);
@@ -803,7 +1146,6 @@ function atualizarVisual() {
         }
     }
 
-    // Marca trilhas conectadas
     for (const parId in estado.trilhas) {
         const t = estado.trilhas[parId].pontos;
         if (t.length < 2) continue;
@@ -821,7 +1163,6 @@ function atualizarVisual() {
         }
     }
 
-    // Marca cruzamentos visuais
     for (const cz of estado.cruzamentosAtivos) {
         const el = document.getElementById(`cell-${cz.r}-${cz.c}`);
         if (el) {
@@ -830,7 +1171,6 @@ function atualizarVisual() {
         }
     }
 
-    // Feedback trilha em construção
     if (estado.desenhando && estado.desenhando.pontos.length > 1) {
         for (const p of estado.desenhando.pontos) {
             if (estado.grid[p.r][p.c].tipo === 'trilha') {
@@ -842,7 +1182,7 @@ function atualizarVisual() {
 }
 
 /* ============================================================
-   INTERAÇÃO — Pointer events
+   INTERAÇÃO
    ============================================================ */
 let activePointerId = null;
 
@@ -853,15 +1193,22 @@ board.addEventListener('pointerdown', (e) => {
     const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
     const dado = estado.grid[r][c];
 
+    if (estado.modoPintura) {
+        if (dado.tipo !== 'endpoint') {
+            infoInstrucao.textContent = '⚠️ Toque em bolinhas coloridas para pintar.';
+            return;
+        }
+        selecionarParaPintura(r, c, dado);
+        return;
+    }
+
     if (dado.tipo === 'endpoint') {
         e.preventDefault();
         activePointerId = e.pointerId;
         try { board.setPointerCapture(e.pointerId); } catch (_) {}
 
-        // Se já existe trilha deste par, remove
         if (estado.trilhas[dado.parId]) {
             limparTrilhaDoGrid(estado.trilhas[dado.parId].pontos);
-            // Remove cruzamentos associados
             estado.cruzamentosAtivos = estado.cruzamentosAtivos.filter(cz => cz.parIdAtual !== dado.parId);
             delete estado.trilhas[dado.parId];
         }
@@ -928,7 +1275,7 @@ function cancelarDesenho() {
 }
 
 /* ============================================================
-   LÓGICA DE TRILHA — com cruzamento e estrelas
+   LÓGICA DE TRILHA
    ============================================================ */
 function estenderTrilha(r, c) {
     const d = estado.desenhando;
@@ -937,33 +1284,27 @@ function estenderTrilha(r, c) {
 
     if (ultima.r === r && ultima.c === c) return;
 
-    // Backtrack imediato
     if (trail.length >= 2) {
         const anterior = trail[trail.length - 2];
         if (anterior.r === r && anterior.c === c) {
             trail.pop();
-            // Remove marca de trilha (se não for endpoint)
             const ult = estado.grid[ultima.r][ultima.c];
             if (ult.tipo === 'trilha') {
                 estado.grid[ultima.r][ultima.c] = { cor: null, parId: null, tipo: 'vazio' };
             }
-            // Remove cruzamento se houver
             d.cruzamentos = d.cruzamentos.filter(cz => !(cz.r === ultima.r && cz.c === ultima.c));
             atualizarVisual();
             return;
         }
     }
 
-    // Movimento ortogonal adjacente
     const dr = Math.abs(r - ultima.r), dc = Math.abs(c - ultima.c);
     if (dr + dc !== 1) {
-        // Backtrack para célula da trilha
         const idx = trail.findIndex(p => p.r === r && p.c === c);
         if (idx >= 0) {
             for (let i = idx + 1; i < trail.length; i++) {
                 const rem = trail[i];
-                const g = estado.grid[rem.r][rem.c];
-                if (g.tipo === 'trilha') {
+                if (estado.grid[rem.r][rem.c].tipo === 'trilha') {
                     estado.grid[rem.r][rem.c] = { cor: null, parId: null, tipo: 'vazio' };
                 }
                 d.cruzamentos = d.cruzamentos.filter(cz => !(cz.r === rem.r && cz.c === rem.c));
@@ -976,18 +1317,15 @@ function estenderTrilha(r, c) {
 
     const alvo = estado.grid[r][c];
 
-    // ---- Endpoint do MESMO par ----
     if (alvo.tipo === 'endpoint' && alvo.parId === d.parId) {
         trail.push({ r, c });
         estado.trilhas[d.parId] = {
             pontos: [...trail],
             cruzamentos: [...d.cruzamentos]
         };
-        // Registra cruzamentos ativos
         for (const cz of d.cruzamentos) {
             estado.cruzamentosAtivos.push({ ...cz, parIdAtual: d.parId });
         }
-        // Calcula estrelas ganhas
         const estrelasGanhas = calcularEstrelasGanhas(d.parId, trail);
         if (estrelasGanhas > 0) {
             estado.estrelas += estrelasGanhas;
@@ -1005,20 +1343,17 @@ function estenderTrilha(r, c) {
         return;
     }
 
-    // ---- Endpoint de OUTRO par → bloqueia ----
     if (alvo.tipo === 'endpoint') {
         piscarErro(r, c);
         infoInstrucao.textContent = '⚠️ Não pode passar por cima de outro número!';
         return;
     }
 
-    // ---- Já é trilha deste par → backtrack ----
     const idxMesma = trail.findIndex(p => p.r === r && p.c === c);
     if (idxMesma >= 0) {
         for (let i = idxMesma + 1; i < trail.length; i++) {
             const rem = trail[i];
-            const g = estado.grid[rem.r][rem.c];
-            if (g.tipo === 'trilha') {
+            if (estado.grid[rem.r][rem.c].tipo === 'trilha') {
                 estado.grid[rem.r][rem.c] = { cor: null, parId: null, tipo: 'vazio' };
             }
             d.cruzamentos = d.cruzamentos.filter(cz => !(cz.r === rem.r && cz.c === rem.c));
@@ -1028,23 +1363,18 @@ function estenderTrilha(r, c) {
         return;
     }
 
-    // ---- Trilha de OUTRO par → precisa estrela para cruzar ----
     if (alvo.tipo === 'trilha') {
         if (estado.estrelas < 1) {
             piscarErro(r, c);
-            infoInstrucao.innerHTML = '⚠️ Sem ⭐ suficientes! Estenda uma trilha antes para ganhar.';
+            infoInstrucao.innerHTML = '⚠️ Sem ⭐ suficientes! Estenda uma trilha antes.';
             tocarSom('erro');
             return;
         }
-        // Verifica se já não há cruzamento neste ponto
-        if (d.cruzamentos.some(cz => cz.r === r && cz.c === c)) {
-            return;
-        }
-        // Consome 1 estrela
+        if (d.cruzamentos.some(cz => cz.r === r && cz.c === c)) return;
+
         estado.estrelas -= 1;
         d.cruzamentos.push({ r, c, parIdAbaixo: alvo.parId });
         trail.push({ r, c });
-        // Não substitui o grid (a trilha por baixo mantém-se)
         infoInstrucao.innerHTML = `⭐ Cruzamento! Estrelas restantes: <b>${estado.estrelas}</b>`;
         tocarSom('cruzamento');
         if (navigator.vibrate) navigator.vibrate(60);
@@ -1053,20 +1383,14 @@ function estenderTrilha(r, c) {
         return;
     }
 
-    // ---- Célula vazia → adiciona ----
     trail.push({ r, c });
     estado.grid[r][c] = { cor: d.cor, parId: d.parId, tipo: 'trilha' };
     atualizarVisual();
 }
 
-/**
- * Calcula quantas estrelas o par ganhou ao fechar a trilha.
- * Fórmula: cada 2 células além do caminho mínimo = 1 estrela.
- */
 function calcularEstrelasGanhas(parId, trail) {
     const par = estado.pares.find(p => p.id === parId);
     if (!par) return 0;
-    // Caminho mínimo = distância de Manhattan + 1 (inclui ambos endpoints)
     const minimo = Math.abs(par.a.r - par.b.r) + Math.abs(par.a.c - par.b.c) + 1;
     const extras = trail.length - minimo;
     if (extras <= 0) return 0;
@@ -1102,7 +1426,6 @@ function finalizarTrilha() {
         tocarSom('par');
         if (navigator.vibrate) navigator.vibrate(40);
     } else {
-        // Reverte: devolve estrelas gastas em cruzamentos e limpa
         const estrelasGastas = d.cruzamentos.length;
         estado.estrelas += estrelasGastas;
         limparTrilhaDoGrid(trail);
@@ -1116,8 +1439,7 @@ function finalizarTrilha() {
 function cancelarTrilha() {
     const d = estado.desenhando;
     if (d) {
-        const estrelasGastas = d.cruzamentos.length;
-        estado.estrelas += estrelasGastas;
+        estado.estrelas += d.cruzamentos.length;
         limparTrilhaDoGrid(d.pontos);
     }
     estado.desenhando = null;
@@ -1141,16 +1463,173 @@ function piscarErro(r, c) {
 }
 
 /* ============================================================
-   VITÓRIA — 90% + todos pares
+   SISTEMA DE PINTURA
    ============================================================ */
-const LIMIAR_VITORIA = 0.90;   // 90% das células preenchidas
+function toggleModoPintura() {
+    if (estado.concluido) return;
+    estado.modoPintura = !estado.modoPintura;
+    estado.pinturaSelecionadas = [];
+
+    if (estado.modoPintura) {
+        btnPaint.classList.add('active');
+        btnCancelPaint.style.display = '';
+        infoInstrucao.innerHTML = `🎨 Modo pintura ativo. Toque em <b>2 bolinhas</b> (custa 1 ⭐).`;
+    } else {
+        btnPaint.classList.remove('active');
+        btnCancelPaint.style.display = 'none';
+        infoInstrucao.textContent = 'Modo pintura desativado.';
+    }
+    atualizarVisual();
+}
+
+function selecionarParaPintura(r, c, dado) {
+    const idx = estado.pinturaSelecionadas.findIndex(p => p.r === r && p.c === c);
+    if (idx >= 0) {
+        estado.pinturaSelecionadas.splice(idx, 1);
+        atualizarVisual();
+        return;
+    }
+
+    if (estado.pinturaSelecionadas.length >= 2) {
+        estado.pinturaSelecionadas.shift();
+    }
+
+    estado.pinturaSelecionadas.push({ r, c, parId: dado.parId, cor: dado.cor });
+    atualizarVisual();
+
+    if (estado.pinturaSelecionadas.length === 2) {
+        abrirColorPicker();
+    }
+}
+
+function abrirColorPicker() {
+    if (estado.estrelas < 1) {
+        infoInstrucao.innerHTML = '⚠️ Sem ⭐ suficientes para pintar!';
+        tocarSom('erro');
+        estado.pinturaSelecionadas = [];
+        atualizarVisual();
+        return;
+    }
+
+    const [sel1, sel2] = estado.pinturaSelecionadas;
+
+    // Preview: cores atuais das bolinhas
+    preview1.style.background = sel1.cor;
+    preview2.style.background = sel2.cor;
+    previewTarget.style.background = 'transparent';
+
+    // Coleta as cores dos pares do puzzle (filtra as atuais das bolinhas)
+    const coresDoPuzzle = new Set(estado.pares.map(p => p.cor));
+    const coresAtuais = [sel1.cor, sel2.cor];
+    const opcoes = [...coresDoPuzzle].filter(c => !coresAtuais.includes(c));
+
+    colorGrid.innerHTML = '';
+    for (const cor of opcoes) {
+        const swatch = document.createElement('div');
+        swatch.className = 'color-swatch';
+        swatch.style.background = cor;
+        swatch.dataset.cor = cor;
+        swatch.addEventListener('mouseenter', () => {
+            previewTarget.style.background = cor;
+        });
+        swatch.addEventListener('mouseleave', () => {
+            previewTarget.style.background = 'transparent';
+        });
+        swatch.addEventListener('click', () => {
+            escolherCor(cor);
+        });
+        colorGrid.appendChild(swatch);
+    }
+
+    colorPicker.classList.add('show');
+}
+
+function escolherCor(cor) {
+    if (estado.pinturaSelecionadas.length !== 2) return;
+    if (estado.estrelas < 1) {
+        infoInstrucao.innerHTML = '⚠️ Sem ⭐ suficientes!';
+        fecharColorPicker();
+        return;
+    }
+
+    estado.estrelas -= 1;
+    const [sel1, sel2] = estado.pinturaSelecionadas;
+    aplicarPintura(sel1, sel2, cor);
+
+    tocarSom('pintar');
+    if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+
+    infoInstrucao.innerHTML = `🎨 Bolinhas pintadas! Estrelas restantes: <b>${estado.estrelas}</b>.`;
+    atualizarContadores();
+    atualizarVisual();
+    fecharColorPicker();
+    estado.pinturaSelecionadas = [];
+    verificarVitoria();
+}
+
+function aplicarPintura(sel1, sel2, novaCor) {
+    const paresEnvolvidos = new Set([sel1.parId, sel2.parId]);
+    for (const parId of paresEnvolvidos) {
+        if (estado.trilhas[parId]) {
+            limparTrilhaDoGrid(estado.trilhas[parId].pontos);
+            estado.cruzamentosAtivos = estado.cruzamentosAtivos.filter(cz => cz.parIdAtual !== parId);
+            delete estado.trilhas[parId];
+        }
+    }
+
+    const par1 = estado.pares.find(p => p.id === sel1.parId);
+    const par2 = estado.pares.find(p => p.id === sel2.parId);
+
+    // Caso raro: mesma bolinha do mesmo par
+    if (sel1.parId === sel2.parId) {
+        if (par1) {
+            par1.cor = novaCor;
+            estado.grid[par1.a.r][par1.a.c].cor = novaCor;
+            estado.grid[par1.b.r][par1.b.c].cor = novaCor;
+        }
+        return;
+    }
+
+    if (par1 && par2) {
+        const par1Outra = (par1.a.r === sel1.r && par1.a.c === sel1.c) ? par1.b : par1.a;
+        const par2Outra = (par2.a.r === sel2.r && par2.a.c === sel2.c) ? par2.b : par2.a;
+
+        // Par 1: as duas bolinhas pintadas
+        par1.a = { r: sel1.r, c: sel1.c };
+        par1.b = { r: sel2.r, c: sel2.c };
+        par1.cor = novaCor;
+
+        // Par 2: as duas bolinhas que sobraram
+        par2.a = { r: par1Outra.r, c: par1Outra.c };
+        par2.b = { r: par2Outra.r, c: par2Outra.c };
+
+        // Atualiza grid
+        estado.grid[par1.a.r][par1.a.c] = { cor: novaCor, parId: par1.id, tipo: 'endpoint' };
+        estado.grid[par1.b.r][par1.b.c] = { cor: novaCor, parId: par1.id, tipo: 'endpoint' };
+        estado.grid[par2.a.r][par2.a.c] = { cor: par2.cor, parId: par2.id, tipo: 'endpoint' };
+        estado.grid[par2.b.r][par2.b.c] = { cor: par2.cor, parId: par2.id, tipo: 'endpoint' };
+    }
+
+    atualizarContadores();
+    atualizarVisual();
+}
+
+function fecharColorPicker() {
+    colorPicker.classList.remove('show');
+    estado.pinturaSelecionadas = [];
+    atualizarVisual();
+}
+
+/* ============================================================
+   VITÓRIA
+   ============================================================ */
+const LIMIAR_VITORIA = 0.90;
 
 function verificarVitoria() {
     if (estado.concluido) return;
     const n = estado.tamanho;
     const totalCelulas = n * n;
 
-    // 1. Todos os pares ligados?
     let paresLigados = 0;
     for (const par of estado.pares) {
         const t = estado.trilhas[par.id];
@@ -1163,7 +1642,6 @@ function verificarVitoria() {
     }
     if (paresLigados !== estado.totalPares) return;
 
-    // 2. Atingiu 90% de preenchimento?
     let preenchidas = 0;
     for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
@@ -1176,14 +1654,12 @@ function verificarVitoria() {
         const restantes = totalCelulas - preenchidas;
         infoInstrucao.innerHTML = `
             ✅ <b>Todos os pares ligados!</b>
-            Faltam <b>${restantes}</b> células (${(percentual * 100).toFixed(0)}% preenchido).
-            Estende trilhas ou usa ⭐ para cruzamentos.
+            Faltam <b>${restantes}</b> células (${(percentual * 100).toFixed(0)}%).
         `;
         tocarSom('aviso');
         return;
     }
 
-    // Vitória!
     estado.concluido = true;
     pararTimer();
     tocarSom('vitoria');
@@ -1250,7 +1726,7 @@ function pararTimer() {
 }
 
 /* ============================================================
-   DICA — liga o próximo par pendente (sem consumir estrelas)
+   DICA
    ============================================================ */
 function darDica() {
     if (estado.concluido) return;
@@ -1260,7 +1736,6 @@ function darDica() {
         const caminho = construirCaminhoSimples(par);
         if (!caminho) continue;
 
-        // Registra a trilha
         estado.trilhas[par.id] = { pontos: caminho, cruzamentos: [] };
         for (const p of caminho) {
             if (estado.grid[p.r][p.c].tipo === 'vazio') {
@@ -1313,8 +1788,15 @@ selectNivel.addEventListener('change', () => {
     if (n >= 1 && n <= 4) iniciarPuzzle(n);
 });
 
-btnReset.addEventListener('click', () => iniciarPuzzle(estado.nivel));
+btnReset.addEventListener('click', () => {
+    iniciarPuzzle(estado.nivel);
+});
 btnHint.addEventListener('click', darDica);
+btnPaint.addEventListener('click', toggleModoPintura);
+btnCancelPaint.addEventListener('click', () => {
+    if (estado.modoPintura) toggleModoPintura();
+});
+colorCancel.addEventListener('click', fecharColorPicker);
 
 /* ============================================================
    TEMA
