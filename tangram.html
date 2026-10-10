@@ -625,12 +625,12 @@ button.auto:hover {
         silhouette.style.display = '';
 
         if (estado.desafio === 'square') {
-            // Silhueta exata do quadrado mestre correspondente aos limites (0,0) a (320,320)
+            // Ajustado exatamente para cobrir o intervalo de p(1,1) a p(9,9) => de 0 a 320 em escala 40
             const pts = [
                 [0, 0],
-                [320, 0],
-                [320, 320],
-                [0, 320]
+                [8 * ESCALA, 0],
+                [8 * ESCALA, 8 * ESCALA],
+                [0, 8 * ESCALA]
             ];
             silhouette.setAttribute('points', pontosParaString(pts));
         }
